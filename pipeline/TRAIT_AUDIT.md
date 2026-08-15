@@ -73,3 +73,10 @@ monochrome portrait cannot reliably prove all of these traits.
 
 These findings are retained for transparency and possible future refinement, but are not
 an upload blocker under the approved stylized pixel-art standard.
+
+## Staging upload state — 2026-08-15
+
+All 1,776 canonical payloads were uploaded to the active chain-46630 renderer in 62 successful
+transactions and the renderer was bound before the staging mint opened. This audit remains the
+source-file evidence. A separate remote read-back of every on-chain JSON, SVG, trait and bitmap is
+still required before mainnet release; it is listed in `../STATUS.md`.

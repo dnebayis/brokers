@@ -9,7 +9,7 @@ Coattail Brokers is a 1,776-piece ERC-721 collection on Robinhood Chain. Every N
 - Fixed 1B COAT supply, no team/reserve allocation, native ETH/COAT Uniswap v4 single-sided launch.
 - 1% LP + 1% hook fee; buy-side COAT burns, sell-side ETH splits 80/10/10.
 - Permanent ownerless LP locker and informational 4.2 ETH paired-principal graduation.
-- Hourly stock keeper, six-hour Congress refresh, fail-closed 70% route-ready coverage gate.
+- Hourly stock keeper, six-hour Congress refresh and a fixed five-stock V1 route-ready universe.
 - Owner-only claim plus permissionless non-redirectable `claimFor`/five-ID `claimBatch`.
 
 ## Repository
@@ -39,7 +39,6 @@ npm ci
 npm run lint
 npm test
 npm run build
-npm run test:e2e
 ```
 
-The mandatory fork job is intentionally separate and must run with `REQUIRE_MAINNET_FORK=true` and a reliable Robinhood mainnet RPC. Deployment uses `contracts/scripts/deploy_all.sh`, uploads renderer art, binds the renderer, then opens mint only after the release operator checks the deployment.
+The mandatory fork job is intentionally separate and must run with `REQUIRE_MAINNET_FORK=true` and a reliable Robinhood mainnet RPC. Deployment uses `contracts/scripts/deploy_all.sh`, uploads renderer art, binds the renderer, then opens mint only after the release operator checks the deployment. Current testnet basket/claim status and all remaining release work are in [STATUS.md](STATUS.md).

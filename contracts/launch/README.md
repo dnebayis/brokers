@@ -29,3 +29,6 @@ forge script script/LaunchWithHook.s.sol --rpc-url "$RH_RPC"
 Dry-run first, then add `--broadcast`. The liquidity distributor must hold exactly 1B COAT. The script mines/deploys the flag-valid hook, deploys the locker, initializes and seeds the pool, verifies LP custody, burns the rounding remainder, enables the one-shot launch window, deploys CoatRouter/BuybackBurner and wires the splitter while the deployer is still its interim owner. The hardware wallet accepts pending ownership only after launch wiring is complete.
 
 Do not proceed to mainnet while any `REQUIRE_MAINNET_FORK=true` test fails. In particular, all stock route manifest probes must pass; testnet liquidity is not a substitute for mainnet route proof.
+
+The `PRIVATE_KEY` in this procedure is the separate deployment key. It belongs in the operator's
+secret store/CI deployment environment only; Vercel hosts the frontend and must not receive it.

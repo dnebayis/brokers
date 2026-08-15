@@ -38,6 +38,14 @@ python3 testnet_load.py --execute --max-actions 100   # chain 46630 only, resuma
 The bundled sample can be posted only on testnet and only with the explicit
 `--allow-sample-post` flag. It exists solely for deterministic EIP-712 testing.
 
+## Current staging state
+
+The clean chain-46630 `StrategyRegistry` is currently epoch 0 with an empty basket. This is why
+`Booster.claimable(tokenId)` and Broker TBA stock balances are zero. Before demonstrating claims,
+the operator must: (1) post a non-empty testnet-only basket, (2) fund the test venue/inventory,
+(3) run `keeper.py --execute`, and (4) run the receipt-checked claim distributor. Do not describe
+the empty staging wallet as a frontend failure or as a completed stock purchase.
+
 ## Go / no-go gates
 
 GO requires: a rotated provider key, passing snapshot health, non-empty canonical

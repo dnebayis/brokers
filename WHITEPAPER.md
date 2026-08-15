@@ -2,7 +2,7 @@
 
 > **Coattail Brokers** — ride the coattails of smart money. Own an active Broker NFT that accrues a claim on the tokenized-stock basket derived from disclosed US Congress trades, funded by the collection's own trading.
 >
-> Status: **mainnet not deployed.** A fresh chain-46630 staging deployment is live with its mint open and full renderer submission complete. The 888-wallet testnet run and final renderer evidence audit remain mainnet-release gates. An independent audit is strongly recommended but is not a mandatory gate. See `STATUS.md`. Not financial or legal advice.
+> Status: **mainnet not deployed.** A fresh chain-46630 staging deployment is live with its mint open and full renderer submission complete. Its StrategyRegistry has no posted basket yet, so no staging stock claims exist. The testnet keeper/claim cycle, 888-wallet run and final renderer read-back audit remain mainnet-release gates. See `STATUS.md`. Not financial or legal advice.
 
 ---
 
@@ -47,8 +47,9 @@ most-traded names — NVDA, MSFT, AAPL, AMZN, TSLA, GOOGL, META, AVGO, AMD, CRM,
 PANW and LMT — are tokenized. Against the bundled recent-disclosure sample the indexer measures
 canonical-token coverage. The current product scope intentionally permits only the independently
 proven five-route intersection; no unguarded or unprobed stock can enter a basket. The production
-publisher retains its 70% coverage gate until that parameter is separately changed and reviewed.
-The production basket must remain limited to the **tokenizable, liquid, route-ready intersection**;
+V1 deliberately limits its product universe to five independently route-probed stocks: AAPL, AMD,
+AMZN, COIN and CRCL. The remaining canonical addresses are discovery data, not an obligation to buy.
+The production basket must remain limited to the **tokenizable, liquid, route-ready V1 intersection**;
 a canonical token address alone does not prove that a safe swap route exists.
 
 **Risk reality:** Robinhood Stock Tokens are third-party tokenized instruments. Availability, transferability and venue access may depend on issuer terms and applicable law. See §9.
@@ -214,7 +215,7 @@ or living-portfolio art are not part of the v1 GO gate.
 
 ## 12. Decisions log
 
-**Resolved:** Smart-Money-Mirror concept · fee→stock flywheel · **The Politician only (v1)** · single collection, strategy=trait · **permissionless staged automation** · **$COAT via Uniswap v4 single-sided** · name **Coattail Brokers** · supply **1,776** · Uniswap v3+v4 bytecode-verified on RH Chain · 70% route-ready publication gate · art = **1-bit on-chain PFPs, five Type categories, slate-on-cream**, Flux Klein + quality gate.
+**Resolved:** Smart-Money-Mirror concept · fee→stock flywheel · **The Politician only (v1)** · single collection, strategy=trait · **permissionless staged automation** · **$COAT via Uniswap v4 single-sided** · name **Coattail Brokers** · supply **1,776** · five independently route-probed V1 stocks · art = **1-bit on-chain PFPs, five Type categories, slate-on-cream**, Flux Klein + quality gate.
 
 **Implemented mint/COAT model:** **mint = flat 0.0015 ETH → creator** plus **2.5% ERC-2981 royalty → current creator** · immutable **36,750 COAT activation burn** · transfer deactivates · Booster active-share weighted with guarded, route-ready stock purchases · FeeSplitter 80/10/10 · permissionless TWAP buyback · full 1B launch allocation with no reserve/team tokens · canonical v4 launch with permanent LP custody and Pons-inspired first-three-block protection.
 

@@ -29,6 +29,10 @@ bounded buyback stages.
 
 **Mint proceeds + royalty → creator.** The 0.0015 ETH mint fee goes directly to the `creator` wallet (`CoattailBroker.setCreator`). ERC-2981 reports a fixed 2.5% secondary royalty to the current creator. Permissionlessly collected LP fees go to project treasury, the hook's sell-side ETH follows FeeSplitter 80/10/10, and there is no team/creator/reserve token allocation.
 
+**Staging clarification.** The active testnet has no posted stock basket yet, so its fee path has not
+created stock claims or TBA balances. This does not change the fee model; it records that the
+testnet indexer/keeper purchase cycle is still outstanding.
+
 ---
 
 ## 2. Scenarios (monthly protocol revenue → outcomes)

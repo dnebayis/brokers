@@ -1,6 +1,6 @@
 # Coattail Brokers — Security Audit (internal)
 
-_Reviewer: Claude (Opus 4.8). Date: 2026-08-14. Commit: current working tree._
+_Internal review record. Initial review: 2026-08-14; documentation reconciled: 2026-08-15. Commit-specific findings below are historical unless marked current._
 _Scope: all in-house Solidity in `contracts/src` (excludes `lib/` OpenZeppelin and canonical Uniswap v4 / ERC-6551 code, which are treated as trusted dependencies)._
 
 > **2026-08-15 update:** the hardcoded single-hop router finding is fixed by the
@@ -27,7 +27,6 @@ Overall the code is careful: pull-based reward accounting (no 1,776-wallet loops
 | M-3 | Medium | StrategyRegistry | No rejection of zero-address tokens, duplicates, or per-element zero weights | ✅ Fixed |
 | M-4 | Medium | Booster | Fractional reward remainder is discarded on claim; dust has no sweep | ✅ Fixed |
 | L-1 | Low | CoattailBroker | `mint(0)` with ETH attached returns without refunding | Open |
-| L-2 | Low | CoattailBroker | `mint` has no `nonReentrant` (safe today via CEI + caps) | Open |
 | L-3 | Low | CoatFeeHook | `afterSwap` reverts if `stateView.getSlot0` reverts → trading liveness coupled to a dependency | Open |
 | L-4 | Low | CoattailBroker | Burning an active Broker would not deactivate it in Booster (latent; no burn fn today) | Open |
 | L-5 | Low | BrokerRenderer | `tokenURI` reverts for un-uploaded tokens; wiring the renderer before a full upload breaks their metadata | Open |
@@ -89,7 +88,7 @@ All three loop over `knownTokens`, which only ever grows (`_trackToken` never re
 ## LOW
 
 - **L-1 `CoattailBroker.mint(0)` (src/CoattailBroker.sol:104):** early-returns on `qty == 0` without refunding `msg.value` → attached ETH is stuck. Refund or revert on zero.
-- **L-2 `mint` reentrancy (src/CoattailBroker.sol:103):** `_safeMint` invokes the receiver hook before the creator payout. Currently safe (caps and `totalMinted` are updated first, each frame uses its own `msg.value`), but add `nonReentrant` for defense-in-depth.
+- **Resolved follow-up — `mint` reentrancy:** `CoattailBroker.mint` now carries `nonReentrant`; the historical L-2 note is retained here only for review traceability.
 - **L-3 `CoatFeeHook.afterSwap` (src/CoatFeeHook.sol:126):** `_recordObservation` calls `stateView.getSlot0`; a revert there would revert the swap, contradicting the "trading is never blockable" invariant. Canonical StateView makes this low, but consider wrapping the observation in try/catch so the fee/TWAP path can never brick a swap.
 - **L-4 latent burn/deactivate gap (src/CoattailBroker.sol:157):** `_update` skips deactivation when `to == address(0)`. No burn function exists today, so unreachable — but if a burn is ever added, a burned active Broker would keep its Booster share. Guard now.
 - **L-5 renderer reveal ordering (src/BrokerRenderer.sol:103):** `tokenURI` reverts for un-uploaded tokens. Only wire `setRenderer` after **all** 1,776 are uploaded (already in the DEPLOY checklist) or marketplace metadata breaks for the gaps.
@@ -108,6 +107,12 @@ All three loop over `knownTokens`, which only ever grows (`_trackToken` never re
 ## Verdict
 
 No theft-class bug was found in the core value flow. All listed HIGH and MEDIUM findings are fixed and regression-tested. Accepted informational risks remain, especially the hardware-wallet admin and trusted oracle. Current release blockers and current test counts live only in `STATUS.md`; a paid third-party audit remains advisable.
+
+## Current staging qualification
+
+The active chain-46630 deployment is a frontend/renderer staging release, not evidence of stock
+distribution: its `StrategyRegistry` remains empty and no Broker has a claimable stock balance.
+The pre-mainnet testnet keeper purchase and claim cycle is tracked only in `STATUS.md`.
 
 ### Fix log
 - **2026-08-15 — mainnet-readiness adversarial pass.** Added `AtomicV4Launcher` and an initializer-gated `0x2044` hook so hook deployment, pool initialization, LP token-ID binding and permanent-locker mint are atomic. Enforced the protected-block buy ceiling against aggregate v4 swap output (not fragmentable `take` transfers). Reworked the hook oracle to update its live cumulative on every swap while rate-limiting only historical checkpoints. Buyback and Booster now process unsolicited ETH in bounded, resumable batches; buyback uses a fee-aware 3% gross-spot gate plus a 5% net execution floor. StockRouter accounts the recipient's actual balance delta, and hook flush events report only successfully sent ETH. Deployment probes immutable registry/WETH dependencies and cross-contract launch linkage. Regression tests cover the previously exploitable TWAP reversal, fragmented launch settlement and oversized-buffer liveness cases; the atomic single-sided launch passed against real mainnet v4.
@@ -144,5 +149,7 @@ Reviewed the live, Hashlock-audited StonkBrokers docs (`stonkbrokers.cash/docs`)
 ### Current route conclusion
 - **✅ Fixed — slippage-guard ceiling.** `setMaxSlippageBps` is hard-capped at 20%; mainnet also forbids `allowUnguarded=true`.
 - **✅ Fixed — router mismatch.** Booster uses the in-repo two-hop StockRouter, not a hardcoded `exactInputSingle`. Route installation validates both token pairs and the mainnet fork executes all five manifest Rialto routes.
-- **⚠️ Coverage gate.** Working routes are not enough: the five-route intersection covers only 12.3% of the bundled sample's positive net notional. The indexer fails closed below 70%; route expansion is a GO blocker recorded in `STATUS.md`.
+- **V1 universe boundary.** The five fork-probed routes (AAPL, AMD, AMZN, COIN and CRCL) are the
+  deliberate V1 product universe. The 194-token canonical list is discovery input only; extending
+  V1 requires the same independent route, liquidity, feed and fork-probe review.
 - **ℹ️ Trust-model note.** The reference markets "no key to player funds." In ours, claimed assets live in the owner-less TBAs (safe) and `sweepToken` can only take non-owed excess — so there is no direct theft path — but the owner still influences execution quality (feeds, sinks, slippage within the 20% cap). Under the single-key decision this is the concentrated risk to protect the key against; it is a trust-model property, not a code bug.

@@ -14,3 +14,7 @@ Coattail Brokers is a non-custodial protocol on Robinhood Chain. A Broker NFT ow
 - Users should evaluate applicable obligations and third-party terms for their own circumstances.
 
 The frontend does not implement a blanket access-eligibility gate. This is an implementation statement, not a universal legal conclusion.
+
+The active chain-46630 deployment is a testnet staging environment. Its mint may be open, but its
+StrategyRegistry has no posted stock basket and no stock claim should be presented as a live-product
+distribution. Mainnet has not been deployed.

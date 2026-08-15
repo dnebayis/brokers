@@ -12,7 +12,7 @@ converts it to the final 40×40, 1-bit bitmap stored by `BrokerRenderer`.
   promoted into the canonical files.
 - `collection-1776-contact-sheet.png` is the complete numbered sheet;
   `rare-review-22.png` records the approved rare set.
-- Local completion is not an on-chain reveal. The complete 2026-08-14 audit confirmed
+- Local completion is not itself an on-chain reveal. The complete 2026-08-14 audit confirmed
   collection-wide Type, silhouette and dominant-accessory consistency. It also recorded
   expected 40×40 simplification of secondary traits and 217 same-region combinations.
   These are accepted pixel-art limitations, not upload blockers. See `TRAIT_AUDIT.md`.
@@ -20,6 +20,10 @@ converts it to the final 40×40, 1-bit bitmap stored by `BrokerRenderer`.
 Generated API attempts and temporary review files were removed after approval. Accepted source
 PNGs remain in the offline review archive but are excluded from Git; canonical `.bin`, `.traits`,
 `collection-manifest.json` and the audit report are versioned.
+
+The active chain-46630 staging renderer received all 1,776 canonical payloads in 62 successful,
+receipt-checked transactions and is bound to the testnet Broker. The remaining renderer gate is a
+full remote read-back comparison against `collection-manifest.json`; see `../STATUS.md`.
 
 ## Setup
 

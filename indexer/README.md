@@ -49,7 +49,9 @@ and relays it via `setStrategyWithSig`: the key must equal the on-chain `oracleS
 `epochOf` and submits `epoch = current + 1` (monotonic ⇒ each signature is single-use). `--role` is
 an ops fallback that calls `setStrategy` from a key holding `UPDATER_ROLE` (no signature).
 
-> **Signed post proven live on testnet** (registry epoch 1→2 via `setStrategyWithSig`). Note: the
+> **Signing is covered by tests and prior staging evidence.** The current clean testnet registry is
+> intentionally epoch 0 with an empty basket until the operator posts a dedicated test basket. Do
+> not treat historical staging epochs as evidence for this deployment. Note: the
 > array commitments hash `abi.encodePacked(tokens/weightsBps)` with **elements padded to 32 bytes**
 > (Solidity pads array elements — unlike standalone value types), which is what the contract expects.
 
@@ -80,14 +82,11 @@ the midpoint), tickers aren't always normalized (we uppercase + allowlist-check)
 
 ## Production controls
 
-- ✅ **`tokens.ADDRESS` snapshot filled** with all 194 currently active canonical RH Chain
-  Stock Token addresses from the official `/rhj/assets` registry. Run `python3 sync_tokens.py`
-  to refresh the checked-in snapshot. The official documentation warns that a
-  same-ticker/different-address token is not Robinhood's. The selected product universe is the
-  five independently probed routes; its bundled-sample coverage is 12.3%, so the current default
-  70% production publication gate still rejects an automatic epoch. A canonical address does
-  not establish a usable swap route: production basket admission must remain separately
-  route-gated until the in-house StockRouter and its all-route fork probes are complete.
+- ✅ **`tokens.ADDRESS` snapshot filled** with canonical RH Chain Stock Token addresses from the
+  official `/rhj/assets` registry. Run `python3 sync_tokens.py` to refresh the checked-in snapshot.
+  The official documentation warns that a same-ticker/different-address token is not Robinhood's.
+  V1 intentionally admits only AAPL, AMD, AMZN, COIN and CRCL after independent route probes.
+  A canonical address alone never establishes a usable route; unverified assets remain excluded.
 - Every run publishes **coverage %**, source health and the raw→basket mapping (transparency; see
   WHITEPAPER §6 — this is what earns the word "verifiable").
 - The Registry bounds per-epoch drift; the indexer refuses thin, single-trader,
@@ -102,7 +101,9 @@ the midpoint), tickers aren't always normalized (we uppercase + allowlist-check)
   works in production, wire the Booster's Chainlink slippage feeds
   (`setStockFeed` per token + an ETH/USD source) or set `allowUnguarded`.
 
-The complete operating decision and GO/NO-GO gates are in `RUNBOOK.md`.
+The complete operating decision and GO/NO-GO gates are in `RUNBOOK.md`. On current testnet, post a
+non-empty test basket and fund the test venue before expecting a keeper purchase, positive
+`claimable(tokenId)` balance or TBA stock balance.
 
 `claim_distributor.py` never assumes sequential mint order. It scans the bounded `1..1776`
 domain, verifies `ownerOf`, selects only positive claims, sends at most five IDs per transaction
@@ -127,9 +128,7 @@ python3 claim_distributor.py --execute --max-batches 20
 
 ## Honesty
 
-Brokers track **disclosed** (delayed) congressional positions, not real-time
-trades. Coverage is limited to the currently tokenizable, route-ready intersection
-of the official Robinhood Chain registry and the protocol's swap routes. The indexer
-drops unsupported names and renormalizes weights; every run reports its coverage %
-(currently 12.3% against the bundled sample disclosures; the production default remains a 70%
-publication gate).
+Brokers track **disclosed** (delayed) congressional positions, not real-time trades. Coverage is
+limited to V1's five-token, route-ready intersection of the official Robinhood Chain registry and
+the protocol's verified swap routes. The indexer drops unsupported names and renormalizes weights;
+it must never fill gaps with unsupported canonical tokens or fabricated data.

@@ -12,6 +12,7 @@ Mint is open on this staging release. The complete renderer collection was uploa
 | COAT | `0xd3f44c7dd32d12c7a6776c23c839deca8196cf07` |
 | BrokerAccount implementation | `0xf93cc17536c9f7839a9a23a1e90161ce4111aa26` |
 | StrategyRegistry | `0xd859b6ea10dd61604b55e8e86dc4a12c1e1f7ab3` |
+| ERC-6551 Registry | `0x000000006551c19487814612e58FE06813775758` |
 | Booster | `0x39e4b20401dc4ca45c0b14800c86fc3df953a245` |
 | StockRouter | `0xcf6eda70fa9c1293c7c844c3f26af307703c6d67` |
 | FeeSplitter | `0xc1250d95ee696c52ddc2636a74edab5cf32107d7` |
@@ -21,6 +22,11 @@ Mint is open on this staging release. The complete renderer collection was uploa
 | CoatRouter | `0x5fbca6b6dd403659b273ea7d6d13e6a2e2462123` |
 | BuybackBurner | `0xf6afc4614adff1aedb04d0d374ec4d0d3bbe6964` |
 | Native ETH/COAT pool ID | `0x09253fb30ff72d19ed011744fd0a12dbc0ed40529c186f621f5801563812124a` |
+
+The testnet `StrategyRegistry` is **epoch 0 with no basket** at this time. The addresses above
+do not mean test stock has been bought or claimed: the testnet indexer/keeper cycle remains a
+release task in [STATUS.md](STATUS.md). `StrategyRegistry` and the ERC-6551 registry are distinct
+contracts; frontend integrations must not substitute one for the other.
 
 ## Canonical infrastructure
 
@@ -38,9 +44,12 @@ Mint is open on this staging release. The complete renderer collection was uploa
 
 Mainnet chain ID is `4663`; testnet is `46630`. The public RPCs are `https://rpc.mainnet.chain.robinhood.com` and `https://rpc.testnet.chain.robinhood.com`.
 
-## Route-ready production intersection
+## V1 route-ready production universe
 
-The complete 194-token canonical discovery snapshot lives in `indexer/tokens.py`; canonical status alone never makes a token purchasable. The versioned route-ready manifest is `indexer/route-ready.mainnet.json`. All five entries below passed the mandatory live fork probe at L2 block `36,869,820`.
+The complete 194-token canonical discovery snapshot lives in `indexer/tokens.py`; canonical status
+alone never makes a token purchasable. V1 intentionally uses only the five entries below, recorded
+in `indexer/route-ready.mainnet.json`. Each passed a live fork probe. Other canonical assets are
+outside V1 until they independently pass the same checks.
 
 | Ticker | Canonical token | Stock pool | Guard feed |
 |---|---|---|---|

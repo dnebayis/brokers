@@ -41,6 +41,9 @@ inventory-funded WETH→USDG→stock routes.
 > them as env. If the canonical 6551 registry isn't on testnet, deploy one (or use a local
 > clone) — `test/Mocks.sol:TestERC6551Registry` is byte-identical to the canonical proxy.
 
+`PRIVATE_KEY` is a Foundry/deployment secret only. It is never a Vercel variable and must never be
+named `NEXT_PUBLIC_PRIVATE_KEY` or included in a frontend build.
+
 ```bash
 cd contracts
 RH_RPC_URL="$RH_TESTNET_RPC" PRIVATE_KEY=0x... \
