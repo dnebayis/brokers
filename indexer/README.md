@@ -83,9 +83,9 @@ the midpoint), tickers aren't always normalized (we uppercase + allowlist-check)
 - ✅ **`tokens.ADDRESS` snapshot filled** with all 194 currently active canonical RH Chain
   Stock Token addresses from the official `/rhj/assets` registry. Run `python3 sync_tokens.py`
   to refresh the checked-in snapshot. The official documentation warns that a
-  same-ticker/different-address token is not Robinhood's. The five currently probed routes cover
-  only 12.3% of positive net notional in the bundled sample, so a production post correctly fails
-  the 70% route-ready gate. A canonical address does
+  same-ticker/different-address token is not Robinhood's. The selected product universe is the
+  five independently probed routes; its bundled-sample coverage is 12.3%, so the current default
+  70% production publication gate still rejects an automatic epoch. A canonical address does
   not establish a usable swap route: production basket admission must remain separately
   route-gated until the in-house StockRouter and its all-route fork probes are complete.
 - Every run publishes **coverage %**, source health and the raw→basket mapping (transparency; see
@@ -131,4 +131,5 @@ Brokers track **disclosed** (delayed) congressional positions, not real-time
 trades. Coverage is limited to the currently tokenizable, route-ready intersection
 of the official Robinhood Chain registry and the protocol's swap routes. The indexer
 drops unsupported names and renormalizes weights; every run reports its coverage %
-(currently 12.3% against the bundled sample disclosures; below the 70% publication gate).
+(currently 12.3% against the bundled sample disclosures; the production default remains a 70%
+publication gate).

@@ -52,4 +52,6 @@ npm audit --omit=dev
 
 The app is non-custodial: it prepares transactions that the user's wallet signs.
 Receipt status must be `success` before any flow is shown as complete. No current
-deployment is promoted: the clean testnet addresses are pending the gates in `../STATUS.md`.
+mainnet deployment is promoted. The active chain-46630 staging addresses are in
+`deployments.json` and `../ADDRESSES.md`; `coattail.cash` must use
+`NEXT_PUBLIC_NETWORK=testnet` until the mainnet gates in `../STATUS.md` pass.
