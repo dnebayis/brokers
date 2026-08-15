@@ -15,6 +15,10 @@ jobs:
         with:
           submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
+      # `contracts/lib` is intentionally not versioned. Pin the exact libraries
+      # used by this release so a clean GitHub runner resolves all remappings.
+      - run: forge install foundry-rs/forge-std@467ffd422ca01fed5797a4c766a1e4e3a5327902 --no-commit
+      - run: forge install OpenZeppelin/openzeppelin-contracts@v5.1.0 --no-commit
       - run: forge fmt --check
       - run: forge lint -D notes
       - run: forge test --no-match-path 'test/Fork*.t.sol'
@@ -33,7 +37,9 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
+      # WalletConnect brings platform-optional native packages whose complete
+      # graph differs by runner OS; npm install resolves that graph on Linux.
+      - run: npm install
       - run: npm run lint
       - run: npm test
       - run: npm run build
