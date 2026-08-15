@@ -26,7 +26,7 @@ jobs:
       - run: forge test --no-match-path 'test/Fork*.t.sol'
       # RendererScale is executed by the normal test gate above. Its 1,776-item
       # payload loop exceeds Foundry coverage instrumentation's 10B gas ceiling.
-      - run: forge coverage --ir-minimum --report lcov --report-file lcov.info --no-match-test 'Fork|test_allCanonicalPayloadsUploadAndRender'
+      - run: forge coverage --ir-minimum --report lcov --report-file lcov.info --no-match-test 'test_allCanonicalPayloadsUploadAndRender'
       - run: python3 scripts/check_branch_coverage.py
 
   frontend:

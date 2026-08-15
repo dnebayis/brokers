@@ -1,6 +1,10 @@
 // Minimal ABIs (viem `as const` for full type inference) — only what the UI calls.
 
 export const brokerAbi = [
+  { type: "event", name: "Transfer", anonymous: false, inputs: [
+    { name: "from", type: "address", indexed: true }, { name: "to", type: "address", indexed: true },
+    { name: "tokenId", type: "uint256", indexed: true },
+  ] },
   { type: "event", name: "Minted", anonymous: false, inputs: [
     { name: "to", type: "address", indexed: true }, { name: "tokenId", type: "uint256", indexed: true },
     { name: "account", type: "address", indexed: false }, { name: "paidWei", type: "uint256", indexed: false },

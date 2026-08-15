@@ -9,13 +9,27 @@ import { wagmiConfig } from "@/lib/wagmi";
 export function Header() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [restoreTimedOut, setRestoreTimedOut] = useState(false);
   const [walletError, setWalletError] = useState<string | null>(null);
   const { address, isConnected, status } = useAccount();
   const { connectors, connectAsync, error, isPending, reset } = useConnect();
   const { disconnect } = useDisconnect();
-  const busy = !mounted || isPending || status === "reconnecting";
+  const busy = !mounted || isPending || (status === "reconnecting" && !restoreTimedOut);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (status !== "reconnecting") {
+      setRestoreTimedOut(false);
+      return;
+    }
+    // A wallet extension may retain a dead persisted session after a refresh. Never leave the
+    // only connect button disabled indefinitely; reset the stale wagmi connection after 3s.
+    const timer = window.setTimeout(() => {
+      wagmiConfig.setState((state) => ({ ...state, connections: new Map(), current: null, status: "disconnected" }));
+      setRestoreTimedOut(true);
+    }, 3_000);
+    return () => window.clearTimeout(timer);
+  }, [status]);
 
   async function connectWallet(connector: (typeof connectors)[number]) {
     reset();

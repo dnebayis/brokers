@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { type Address } from "viem";
-import { ADDR } from "./config";
+import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { brokerAbi } from "./abis";
 import { client } from "./client";
 import { alchemyOwnedTokenIds } from "./alchemy";
@@ -42,11 +42,23 @@ export function useOwnedBrokers() {
         }
         return;
       }
-      let candidateIds: bigint[];
+      let candidateIds: bigint[] = [];
       try {
-        candidateIds = await alchemyOwnedTokenIds(ownerAddress, ADDR.broker as Address);
+        // ERC-721 Transfer logs are authoritative and return only this wallet's inbound IDs.
+        // This replaces a 1,776-ID ownerOf scan when a third-party NFT API is delayed or denied.
+        const inbound = await client.getLogs({
+          address: ADDR.broker,
+          event: brokerAbi[0],
+          args: { to: ownerAddress },
+          fromBlock: BROKER_DEPLOYMENT_BLOCK,
+        });
+        candidateIds = [...new Set(inbound.map((log) => log.args.tokenId).filter((id): id is bigint => id !== undefined))];
       } catch {
-        candidateIds = [];
+        try {
+          candidateIds = await alchemyOwnedTokenIds(ownerAddress, ADDR.broker as Address);
+        } catch {
+          candidateIds = [];
+        }
       }
       // NFT APIs can lag directly after mint/activation and can validly return an empty
       // response without throwing. Fall back to bounded on-chain enumeration (max 1,776).
@@ -56,6 +68,7 @@ export function useOwnedBrokers() {
         }));
         // Random mint means the minted set is not 1..totalMinted. The bounded fallback must
         // inspect the complete 1..MAX_SUPPLY ID domain and tolerate unminted ownerOf calls.
+        // This is an availability-only final fallback. Normal discovery is Transfer logs above.
         candidateIds = Array.from({ length: maxSupply }, (_, i) => BigInt(i + 1));
       }
       const owned: OwnedBroker[] = [];

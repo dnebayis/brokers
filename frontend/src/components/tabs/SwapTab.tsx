@@ -76,10 +76,11 @@ export function SwapTab() {
     }
   }
 
-  function flip() {
-    setDir((d) => (d === "buy" ? "sell" : "buy"));
+  function chooseDirection(next: "buy" | "sell") {
+    setDir(next);
     setAmount("");
     setQuote("");
+    setSteps(["idle", "idle"]);
   }
 
   const doSwap = () =>
@@ -149,12 +150,13 @@ export function SwapTab() {
         <Stat k="Fee / swap" v="1% + 1% hook" />
       </div>
 
+      <div className="grid grid-cols-2 gap-2 mb-4" aria-label="Swap direction">
+        <button className={`btn ${dir === "buy" ? "btn-accent" : "btn-ghost"}`} onClick={() => chooseDirection("buy")}>BUY · ETH → COAT</button>
+        <button className={`btn ${dir === "sell" ? "btn-accent" : "btn-ghost"}`} onClick={() => chooseDirection("sell")}>SELL · COAT → ETH</button>
+      </div>
       <span className="label">You pay ({dir === "buy" ? "ETH" : "COAT"})</span>
       <div className="relative">
         <input className="fld pr-12" inputMode="decimal" placeholder="0.0" value={amount} onChange={(e) => onAmount(e.target.value)} disabled={!routerReady} />
-        <button className="btn btn-ghost shadow-pixel-sm absolute right-2 top-1/2 -translate-y-1/2 !p-2" onClick={flip} aria-label="flip" disabled={!routerReady}>
-          <Icon name="flip" />
-        </button>
       </div>
       <span className="label mt-3.5">You receive ({dir === "buy" ? "COAT" : "ETH"}, est.)</span>
       <input className="fld" readOnly value={quote} placeholder="—" />
