@@ -129,7 +129,7 @@ export function ActivateTab() {
         client.readContract({ address: ADDR.broker, abi: brokerAbi, functionName: "activated", args: [id] }),
         client.readContract({ address: ADDR.broker, abi: brokerAbi, functionName: "ownerOf", args: [id] }),
         client.readContract({ address: ADDR.broker, abi: brokerAbi, functionName: "accountOf", args: [id] }),
-        client.readContract({ address: ADDR.registry, abi: strategyRegistryAbi, functionName: "getBasket", args: [0n] }),
+        client.readContract({ address: ADDR.strategyRegistry, abi: strategyRegistryAbi, functionName: "getBasket", args: [0n] }),
         client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "claimable", args: [id] }),
       ]);
       setInfo({ id, active, owner, wallet });

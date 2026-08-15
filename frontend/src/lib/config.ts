@@ -6,7 +6,8 @@ import deployments from "../../deployments.json";
 type AddrSet = {
   broker: Address;
   coat: Address;
-  registry: Address;
+  strategyRegistry: Address;
+  erc6551Registry: Address;
   booster: Address;
   feeSplitter: Address;
   renderer: Address;
@@ -44,7 +45,8 @@ export const CONTRACTS_FOR_DOCS: { name: string; key: keyof AddrSet }[] = [
   { name: "CoatFeeHook", key: "feeHook" },
   { name: "Booster", key: "booster" },
   { name: "FeeSplitter", key: "feeSplitter" },
-  { name: "StrategyRegistry", key: "registry" },
+  { name: "StrategyRegistry", key: "strategyRegistry" },
+  { name: "ERC-6551 Registry", key: "erc6551Registry" },
   { name: "BrokerRenderer", key: "renderer" },
   { name: "BrokerAccount (6551)", key: "accountImpl" },
   { name: "StockRouter", key: "stockRouter" },
