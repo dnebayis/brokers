@@ -10,6 +10,7 @@ import {
     SwapParams,
     BalanceDelta,
     IPoolManagerMinimal,
+    IHooks,
     HookFlags
 } from "../src/v4/V4Types.sol";
 
@@ -43,6 +44,10 @@ contract MockHookPoolManager is IPoolManagerMinimal {
         returns (bytes4, int128)
     {
         return hook.afterSwap(address(this), key, params, delta, "");
+    }
+
+    function callBefore(CoatFeeHook hook, address sender, PoolKey memory key) external view returns (bytes4) {
+        return hook.beforeInitialize(sender, key, 0);
     }
 }
 
@@ -154,6 +159,51 @@ contract CoatFeeHookTest is Test {
         vm.expectRevert();
         vm.prank(makeAddr("notOwner"));
         hook.setEthSink(payable(address(1)));
+    }
+
+    function test_beforeInitializeAcceptsOnlyAtomicLauncherAndExpectedPool() public {
+        assertEq(pm.callBefore(hook, address(this), key), IHooks.beforeInitialize.selector);
+
+        PoolKey memory wrong = key;
+        wrong.fee = 500;
+        vm.expectRevert(CoatFeeHook.WrongPool.selector);
+        pm.callBefore(hook, address(this), wrong);
+
+        vm.expectRevert(CoatFeeHook.NotLaunchInitializer.selector);
+        pm.callBefore(hook, makeAddr("attacker"), key);
+    }
+
+    function test_constructorRejectsZeroLaunchInitializer() public {
+        bytes memory args = abi.encode(
+            address(this), IPoolManagerMinimal(address(pm)), IStateViewHook(address(state)), address(coat), ethSink, address(0)
+        );
+        bytes32 hash = keccak256(abi.encodePacked(type(CoatFeeHook).creationCode, args));
+        uint160 target = HookFlags.BEFORE_INITIALIZE_FLAG | HookFlags.AFTER_SWAP_FLAG
+            | HookFlags.AFTER_SWAP_RETURNS_DELTA_FLAG;
+        for (uint256 i; i < 1_000_000; ++i) {
+            bytes32 salt = bytes32(i);
+            if (uint160(vm.computeCreate2Address(salt, hash, address(this))) & HookFlags.ALL_FLAGS_MASK == target) {
+                vm.expectRevert(CoatFeeHook.NotLaunchInitializer.selector);
+                new CoatFeeHook{salt: salt}(
+                    address(this), IPoolManagerMinimal(address(pm)), IStateViewHook(address(state)), address(coat), ethSink, address(0)
+                );
+                return;
+            }
+        }
+        revert("salt");
+    }
+
+    function test_consultsRejectPreHistoryAndInterpolateBetweenCheckpoints() public {
+        _observe(BalanceDelta.wrap(0));
+        vm.warp(block.timestamp + 1);
+        vm.expectRevert(CoatFeeHook.InsufficientHistory.selector);
+        hook.consultPriceX96(2);
+
+        vm.warp(block.timestamp + 59);
+        state.set(uint160(20 * Q96), 200);
+        _observe(BalanceDelta.wrap(0));
+        vm.warp(block.timestamp + 30);
+        assertEq(hook.consult(60), 150);
     }
 
     function test_zeroAmountFailedSinkAndEmptyFlushBranches() public {

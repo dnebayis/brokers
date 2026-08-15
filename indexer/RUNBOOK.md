@@ -40,11 +40,16 @@ The bundled sample can be posted only on testnet and only with the explicit
 
 ## Current staging state
 
-The clean chain-46630 `StrategyRegistry` is currently epoch 0 with an empty basket. This is why
-`Booster.claimable(tokenId)` and Broker TBA stock balances are zero. Before demonstrating claims,
-the operator must: (1) post a non-empty testnet-only basket, (2) fund the test venue/inventory,
-(3) run `keeper.py --execute`, and (4) run the receipt-checked claim distributor. Do not describe
-the empty staging wallet as a frontend failure or as a completed stock purchase.
+The active chain-46630 `StrategyRegistry` is epoch 1 with AMZN/AAPL/COIN test weights
+6,196/2,654/1,150 bps. The signed post, purchase and `claimBatch([487,742])` receipts are recorded
+in `reports/testnet-basket-2026-08-15.json` and `../ADDRESSES.md`; each target TBA holds the three
+test assets and has zero remaining claimable balance from that cycle. The sample was explicitly
+allowed only for testnet and bypassed the production coverage threshold. It is lifecycle evidence,
+not a production basket endorsement.
+
+The inventory venue models ETH at exactly 2,000 USD. Its manual guard expires after 30 minutes, so
+refresh that staging value before another keeper purchase. Do not use a manual fallback on mainnet
+when a fresh ETH/USD feed is required.
 
 ## Go / no-go gates
 

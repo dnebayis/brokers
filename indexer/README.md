@@ -49,9 +49,10 @@ and relays it via `setStrategyWithSig`: the key must equal the on-chain `oracleS
 `epochOf` and submits `epoch = current + 1` (monotonic ⇒ each signature is single-use). `--role` is
 an ops fallback that calls `setStrategy` from a key holding `UPDATER_ROLE` (no signature).
 
-> **Signing is covered by tests and prior staging evidence.** The current clean testnet registry is
-> intentionally epoch 0 with an empty basket until the operator posts a dedicated test basket. Do
-> not treat historical staging epochs as evidence for this deployment. Note: the
+> **Current staging evidence:** testnet registry epoch 1 contains the deterministic AMZN/AAPL/COIN
+> sample basket. Its EIP-712 posting, keeper purchase and two-TBA claim receipts are recorded in
+> `reports/testnet-basket-2026-08-15.json` and `../ADDRESSES.md`. The sample override used
+> `MIN_ROUTE_COVERAGE=0` and is testnet-only; it must never be used for production posting. Note: the
 > array commitments hash `abi.encodePacked(tokens/weightsBps)` with **elements padded to 32 bytes**
 > (Solidity pads array elements — unlike standalone value types), which is what the contract expects.
 
@@ -101,9 +102,10 @@ the midpoint), tickers aren't always normalized (we uppercase + allowlist-check)
   works in production, wire the Booster's Chainlink slippage feeds
   (`setStockFeed` per token + an ETH/USD source) or set `allowUnguarded`.
 
-The complete operating decision and GO/NO-GO gates are in `RUNBOOK.md`. On current testnet, post a
-non-empty test basket and fund the test venue before expecting a keeper purchase, positive
-`claimable(tokenId)` balance or TBA stock balance.
+The complete operating decision and GO/NO-GO gates are in `RUNBOOK.md`. Current staging has already
+completed one three-asset purchase and two receipt-checked TBA claims. Before each additional test
+purchase, refresh the venue's deliberately short-lived 2,000 USD/ETH manual guard; production uses
+a live ETH/USD feed instead.
 
 `claim_distributor.py` never assumes sequential mint order. It scans the bounded `1..1776`
 domain, verifies `ownerOf`, selects only positive claims, sends at most five IDs per transaction

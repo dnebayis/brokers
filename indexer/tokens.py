@@ -213,14 +213,16 @@ ADDRESS: dict[str, str] = {
 import json
 from pathlib import Path
 
-# RH Chain TESTNET (chain 46630) tokenized stocks — the subset live on testnet.
-# Used when NETWORK=testnet so the posted basket resolves to addresses that exist there.
+# Coattail's chain 46630 test venue. These five inventory-backed assets are deployed
+# by DeployTestnetVenue.s.sol and have a StockRouter route plus Booster feed. They
+# deliberately differ from Robinhood mainnet canonical addresses, so test baskets
+# cannot accidentally point at an unconfigured external testnet token.
 TESTNET_ADDRESS: dict[str, str] = {
-    "TSLA": "0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E",
-    "AMZN": "0x5884aD2f920c162CFBbACc88C9C51AA75eC09E02",
-    "PLTR": "0x1FBE1a0e43594b3455993B5dE5Fd0A7A266298d0",
-    "NFLX": "0x3b8262A63d25f0477c4DDE23F83cfe22Cb768C93",
-    "AMD": "0x71178BAc73cBeb415514eB542a8995b82669778d",
+    "AAPL": "0x44B8DA4948e3Eacb0f2E20a42c694Af49942e5C9",
+    "AMD": "0x1da4C1144c2f67605B1277C4d9502e0dc8810c66",
+    "AMZN": "0xb756cF281453663FB7Ebe6a72Ba482a968fa0184",
+    "COIN": "0x86DA23E43Ab30Dff3CF67333B1BA740D89A38ccF",
+    "CRCL": "0x90efCfb5513A69E62cd0E8Ca9dE30BE8c7119D2A",
 }
 
 from config import NETWORK  # noqa: E402

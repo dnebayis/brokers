@@ -23,10 +23,15 @@ Mint is open on this staging release. The complete renderer collection was uploa
 | BuybackBurner | `0xf6afc4614adff1aedb04d0d374ec4d0d3bbe6964` |
 | Native ETH/COAT pool ID | `0x09253fb30ff72d19ed011744fd0a12dbc0ed40529c186f621f5801563812124a` |
 
-The testnet `StrategyRegistry` is **epoch 0 with no basket** at this time. The addresses above
-do not mean test stock has been bought or claimed: the testnet indexer/keeper cycle remains a
-release task in [STATUS.md](STATUS.md). `StrategyRegistry` and the ERC-6551 registry are distinct
-contracts; frontend integrations must not substitute one for the other.
+The testnet `StrategyRegistry` is **epoch 1**. A deterministic, test-only sample basket was posted
+as AMZN 6,196 bps, AAPL 2,654 bps and COIN 1,150 bps in
+[`ebb4…c95d2`](https://explorer.testnet.chain.robinhood.com/tx/0xebb4dfb9661a4ae0573107d8b986d85d20be1e3ac154cd6fce05565faa2c95d).
+The hook-funded purchase succeeded in
+[`f3bc…c3481`](https://explorer.testnet.chain.robinhood.com/tx/0xf3bcdd892d80a896cc3da2c8fa4ff691f4d104635d105a0e0da40c0f35fc3481),
+and `claimBatch([487,742])` delivered the three assets to the corresponding distinct TBAs in
+[`6da0…8c09`](https://explorer.testnet.chain.robinhood.com/tx/0x6da08869ec2be051cb5fa3c9fbe2684b5aa0e6191983162a614e2f47e0258c09).
+This uses the inventory-backed test venue only; it is not mainnet route or liquidity evidence.
+`StrategyRegistry` and the ERC-6551 registry are distinct contracts; frontend integrations must not substitute one for the other.
 
 ## Canonical infrastructure
 

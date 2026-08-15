@@ -19,17 +19,20 @@ _Updated 2026-08-15. This is the only canonical remaining-work list. It describe
 - The mainnet fork component suites and all five V1 stock-route probes have passed with the configured archive RPC. This is route evidence, not a mainnet deployment.
 - All 1,776 canonical bitmap/trait payloads pass the collection audit. The active testnet renderer was uploaded in 62 receipt-checked transactions, bound to the Broker, and the staging mint was opened.
 - The frontend builds, type-checks, lints and runs its non-browser unit checks. It reads canonical on-chain artwork, distinguishes BUY from SELL before requesting a signature, recovers from a stale wallet restore, and finds owned NFTs from Transfer logs rather than a 1,776-ID scan.
+- CI branch coverage now clears its 85% gate: `BuybackBurner` 100%, `COAT` 90%, `CoatFeeHook` 88% and `CoatRouter` 87.5%.
+- A test-only basket was posted as registry epoch 1: AMZN 6,196 bps, AAPL 2,654 bps and COIN 1,150 bps. The hook → splitter → Booster purchase succeeded and receipt-checked `claimBatch([487,742])` delivered all three test assets to both corresponding TBAs. Evidence is in `indexer/reports/testnet-basket-2026-08-15.json` and [ADDRESSES.md](ADDRESSES.md).
 
 ## Active testnet facts
 
 - The deployment addresses are in [ADDRESSES.md](ADDRESSES.md) and `frontend/deployments.json`.
-- The staging `StrategyRegistry` is deployed but has **epoch 0 and an empty basket**. `Booster.claimable` is therefore zero and Broker TBAs contain no stock yet. This is expected until the testnet indexer posts a test basket, keeper inventory is funded, and the keeper completes a purchase/claim cycle.
+- The staging `StrategyRegistry` is at **epoch 1** with the three-asset deterministic test basket above. Brokers `#487` and `#742` have independently received AMZN, AAPL and COIN into their TBAs; their post-claim pending balances are zero.
+- The test venue uses a fixed 2,000 USD/ETH guard input. Its manual guard expires after 30 minutes by design, so staging keeper demonstrations must refresh it before a new purchase. Production must use a fresh ETH/USD feed, not this test convenience.
 - Testnet stock inventory is a lifecycle venue only. It is not evidence that a mainnet stock route is liquid or guarded.
 
 ## Remaining blockers before mainnet GO
 
-1. Configure a non-empty, testnet-only basket; fund the test venue; run the keeper and receipt-checked claim distributor. Verify stock appears in representative Broker TBAs and that transfer/reactivation preserves the documented per-token behaviour.
-2. Run the resumable 888-actor testnet load process: one `mint(2)` per actor, activation, keeper purchase and claim distribution. Persist every nonce, transaction hash, receipt, retry and reconciliation result. No failed receipt may be ignored.
+1. Run the resumable 888-actor testnet load process: one `mint(2)` per actor, activation, keeper purchase and claim distribution. Persist every nonce, transaction hash, receipt, retry and reconciliation result. No failed receipt may be ignored.
+2. Complete the representative testnet transfer → deactivation → reactivation check after the successful claim cycle, proving that only the transferred token's accounting changes.
 3. Produce one final mainnet-fork release report combining launch, protection, five V1 routes, stock claims, buyback/TWAP, graduation, LP-fee collection, supply/reward reconciliation and the renderer hash audit.
 4. Complete the remote read-back audit of every active testnet renderer JSON/SVG/trait/bitmap against `pipeline/collection-manifest.json`.
 5. Configure production owner/deployer/keeper/oracle identities and provider credentials. Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet` until a verified mainnet manifest exists.
