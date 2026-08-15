@@ -175,17 +175,30 @@ contract CoatFeeHookTest is Test {
 
     function test_constructorRejectsZeroLaunchInitializer() public {
         bytes memory args = abi.encode(
-            address(this), IPoolManagerMinimal(address(pm)), IStateViewHook(address(state)), address(coat), ethSink, address(0)
+            address(this),
+            IPoolManagerMinimal(address(pm)),
+            IStateViewHook(address(state)),
+            address(coat),
+            ethSink,
+            address(0)
         );
         bytes32 hash = keccak256(abi.encodePacked(type(CoatFeeHook).creationCode, args));
         uint160 target = HookFlags.BEFORE_INITIALIZE_FLAG | HookFlags.AFTER_SWAP_FLAG
             | HookFlags.AFTER_SWAP_RETURNS_DELTA_FLAG;
         for (uint256 i; i < 1_000_000; ++i) {
             bytes32 salt = bytes32(i);
-            if (uint160(vm.computeCreate2Address(salt, hash, address(this))) & HookFlags.ALL_FLAGS_MASK == target) {
+            if (
+                uint160(vm.computeCreate2Address(salt, hash, address(this))) & HookFlags.ALL_FLAGS_MASK
+                    == target
+            ) {
                 vm.expectRevert(CoatFeeHook.NotLaunchInitializer.selector);
                 new CoatFeeHook{salt: salt}(
-                    address(this), IPoolManagerMinimal(address(pm)), IStateViewHook(address(state)), address(coat), ethSink, address(0)
+                    address(this),
+                    IPoolManagerMinimal(address(pm)),
+                    IStateViewHook(address(state)),
+                    address(coat),
+                    ethSink,
+                    address(0)
                 );
                 return;
             }
