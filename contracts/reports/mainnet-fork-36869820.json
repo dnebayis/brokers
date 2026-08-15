@@ -1,0 +1,49 @@
+{
+  "chainId": 4663,
+  "forkL2Block": 36869820,
+  "rpc": "https://rpc.mainnet.chain.robinhood.com",
+  "requiredFork": true,
+  "parameterSha256": "fe6418cd2bb524d0671ff8d73df44367e99878f66a6a1f6d5d9cd56614ee1758",
+  "summary": {
+    "suites": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "aggregateHarnessGas": 84034034
+  },
+  "tests": {
+    "mainnetGuard": { "gas": 5069550, "passed": true },
+    "singleSidedLaunch": {
+      "gas": 1964268,
+      "passed": true,
+      "startTick": 184400,
+      "coatSeededWei": "999999999999999999999991607",
+      "ethSeededWei": "0"
+    },
+    "hook": {
+      "gas": 25451159,
+      "passed": true,
+      "buyFeeCoatWei": "3419776600599649040065126",
+      "sellFeeEthWei": "28777881251015637"
+    },
+    "fullProductionPath": {
+      "gas": 48808563,
+      "passed": true,
+      "hookEthFeeWei": "19863520863315",
+      "boosterEthSpentWei": "15890816690652",
+      "aaplBoughtRaw": "97586430197137",
+      "aaplClaimedToTbaRaw": "48793215098568",
+      "coatSupplyAfterBurnsWei": "999879874635931958132429935"
+    },
+    "stockRoutes": {
+      "gas": 2740494,
+      "passed": true,
+      "symbols": ["AAPL", "AMD", "AMZN", "COIN", "CRCL"]
+    }
+  },
+  "limitations": [
+    "Gas values include Foundry harness and deployment work; they are not live transaction percentiles.",
+    "The 5-suite run proves a representative canonical ERC-6551 claim; the separate 1,776-address scale fork is tracked independently.",
+    "Fork execution has no broadcast transaction hashes or receipts."
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "chainId": 4663,
+  "coreForkL2Block": 36974090,
+  "routeProbeL2Block": 36971715,
+  "rpc": "https://rpc.mainnet.chain.robinhood.com",
+  "requiredFork": true,
+  "parameterSha256": "fe6418cd2bb524d0671ff8d73df44367e99878f66a6a1f6d5d9cd56614ee1758",
+  "summary": {
+    "componentSuites": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "aggregateHarnessGas": 80776276
+  },
+  "tests": {
+    "mainnetGuard": { "gas": 5197402, "passed": true },
+    "atomicSingleSidedLaunch": {
+      "gas": 15497908,
+      "passed": true,
+      "startTick": 184400,
+      "coatSeededWei": "999999999999999999999991607",
+      "ethSeededWei": "0"
+    },
+    "hook": {
+      "gas": 24940644,
+      "passed": true,
+      "buyFeeCoatWei": "3419776600599649040065126",
+      "sellFeeEthWei": "28777881251015637"
+    },
+    "fullProductionPath": {
+      "gas": 32307743,
+      "passed": true,
+      "hookEthFeeWei": "19863520863315",
+      "boosterEthSpentWei": "15890816690652",
+      "aaplBoughtRaw": "97483016512829",
+      "aaplClaimedToTbaRaw": "48741508256414",
+      "coatSupplyAfterBurnsWei": "999879874635931958132429935"
+    },
+    "stockRoutes": {
+      "gas": 2832579,
+      "passed": true,
+      "symbols": ["AAPL", "AMD", "AMZN", "COIN", "CRCL"]
+    }
+  },
+  "scaleReleaseGate": {
+    "passed": true,
+    "harnessGas": 665770258,
+    "elapsedSeconds": 2188.52,
+    "randomIdPermutationHash": "0x6d2a89080177251d23ac16f880c2b1dad09e346efaa63f68ae7e53eebf9ba914",
+    "aaplBoughtRaw": "6083904931373404531",
+    "aaplClaimedRaw": "6083904931373403408",
+    "rpcMode": "configured private archive RPC through a local origin-header proxy"
+  },
+  "limitations": [
+    "Gas values include Foundry harness and deployment work; they are not live transaction percentiles.",
+    "The all-1,776 real-stock scale gate passed on the configured private archive RPC.",
+    "Fork execution has no broadcast transaction hashes or receipts."
+  ]
+}

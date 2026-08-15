@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-cream text-ink font-sans;
+  }
+  /* crisp pixel edges on small decorative SVGs */
+  svg.pixelate {
+    shape-rendering: crispEdges;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-cream-2 border-2 border-ink shadow-pixel p-5 sm:p-6;
+  }
+  .pixel-title {
+    @apply font-pixel text-ink-strong;
+  }
+  .stat {
+    @apply border border-line bg-cream px-3 py-2.5;
+  }
+  .btn {
+    @apply font-pixel text-xs inline-flex items-center justify-center gap-2 border-2 border-ink bg-ink text-cream px-4 py-3 shadow-pixel transition-transform active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-ghost {
+    @apply bg-cream-2 text-ink-strong;
+  }
+  .btn-accent {
+    @apply bg-accent border-accent text-white;
+  }
+  .fld {
+    @apply w-full font-sans text-base text-ink-strong bg-cream border-2 border-ink px-3 py-2.5 outline-none focus:shadow-pixel-sm;
+  }
+  .label {
+    @apply block text-[11px] uppercase tracking-widest text-ink-soft mb-1.5;
+  }
+  .badge {
+    @apply font-pixel text-[10px] px-2 py-1 border-[1.5px] border-ink bg-cream-2 text-ink-strong;
+  }
+}

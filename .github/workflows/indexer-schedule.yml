@@ -1,0 +1,40 @@
+name: indexer-schedule
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+concurrency:
+  group: testnet-indexer
+  cancel-in-progress: false
+
+jobs:
+  update-and-poke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: indexer
+    env:
+      NETWORK: testnet
+      INDEXER_DATA_SOURCE: unusual_whales
+      UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
+      STRATEGY_REGISTRY_ADDRESS: ${{ vars.TESTNET_STRATEGY_REGISTRY_ADDRESS }}
+      UPDATER_PRIVATE_KEY: ${{ secrets.TESTNET_ORACLE_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: indexer/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: python run.py --post --out latest-basket.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: latest-indexer-basket
+          path: indexer/latest-basket.json

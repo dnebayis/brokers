@@ -1,0 +1,41 @@
+# Secrets and local overrides
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build, dependency and test output
+**/node_modules/
+**/.next/
+**/out/
+**/cache/
+**/broadcast/
+**/output/playwright/
+**/playwright-report/
+**/__pycache__/
+**/*.pyc
+**/*.tsbuildinfo
+contracts/lcov.info
+
+# Local editor / OS files
+.DS_Store
+**/.DS_Store
+.claude/
+
+# High-resolution art sources stay in the reviewed offline archive. Canonical
+# .bin/.traits files and their cryptographic manifest remain versioned.
+pipeline/collection/*.src.png
+pipeline/collection/*.png
+pipeline/collection/*.jsonl
+pipeline/*contact-sheet*.png
+pipeline/*review*.png
+pipeline/zombie-*.png
+pipeline/trait-audit/sheets/
+
+# Runtime state and reports containing live transaction progress
+indexer/claim-state.*.json
+indexer/renderer-upload-state.json
+indexer/testnet-load-state.json
+reports/deployments/*.json

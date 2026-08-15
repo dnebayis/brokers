@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "chainId": 4663,
+  "maxLifetimeTokens": 128,
+  "sourceRouter": "0xa88F54239Be5124afFea441eDDF423BB138B00C4",
+  "entries": {
+    "AAPL": {
+      "token": "0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9",
+      "midPool": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
+      "midToken": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      "stockPool": "0x957BB4b86CCC706D44983fb889ED63c6F9Bdc662",
+      "poolKind": "Rialto",
+      "feed": "0x6B22A786bAa607d76728168703a39Ea9C99f2cD0",
+      "probeOk": true,
+      "probeBlock": 36869820
+    },
+    "AMD": {
+      "token": "0x86923f96303D656E4aa86D9d42D1e57ad2023fdC",
+      "midPool": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
+      "midToken": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      "stockPool": "0xaF7e236Fd675a4dE1A393516105dB8AFb53DC1EB",
+      "poolKind": "Rialto",
+      "feed": "0x943A29E7ae51A4798823ca9eEd2ed533B2A22C72",
+      "probeOk": true,
+      "probeBlock": 36869820
+    },
+    "AMZN": {
+      "token": "0x12f190a9F9d7D37a250758b26824B97CE941bF54",
+      "midPool": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
+      "midToken": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      "stockPool": "0x3785715B43Ed03Da120f4aE7B23bB1274d5E02Dd",
+      "poolKind": "Rialto",
+      "feed": "0xD5a1508ceD74c084eBf3cBe853e2C968fB2a651C",
+      "probeOk": true,
+      "probeBlock": 36869820
+    },
+    "COIN": {
+      "token": "0x6330D8C3178a418788dF01a47479c0ce7CCF450b",
+      "midPool": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
+      "midToken": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      "stockPool": "0x33918df3a039312217524491f60e9e69000c30c9",
+      "poolKind": "Rialto",
+      "feed": "0xA3a468A452940B7D6b69991207B508c609a98Ef2",
+      "probeOk": true,
+      "probeBlock": 36869820
+    },
+    "CRCL": {
+      "token": "0xdF0992E440dD0be65BD8439b609d6D4366bf1CB5",
+      "midPool": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
+      "midToken": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      "stockPool": "0x2099FEde2Ae9C852c753280b6011E6D622868C08",
+      "poolKind": "Rialto",
+      "feed": "0x6652eDf64bA3731C4F2D3ce821A0Fb1f1f6b482a",
+      "probeOk": true,
+      "probeBlock": 36869820
+    }
+  }
+}

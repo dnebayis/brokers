@@ -1,0 +1,20 @@
+[
+  {"symbol": "NVDA", "transactionDate": "2026-07-20", "type": "Purchase", "amount": "$250,001 - $500,000", "who": "Rep A"},
+  {"symbol": "NVDA", "transactionDate": "2026-07-05", "type": "Purchase", "amount": "$100,001 - $250,000", "who": "Sen B"},
+  {"symbol": "MSFT", "transactionDate": "2026-07-12", "type": "Purchase", "amount": "$100,001 - $250,000", "who": "Rep C"},
+  {"symbol": "MSFT", "transactionDate": "2026-06-30", "type": "Sale", "amount": "$15,001 - $50,000", "who": "Rep C"},
+  {"symbol": "AAPL", "transactionDate": "2026-07-18", "type": "Purchase", "amount": "$50,001 - $100,000", "who": "Sen D"},
+  {"symbol": "AMZN", "transactionDate": "2026-07-15", "type": "Purchase", "amount": "$100,001 - $250,000", "who": "Rep E"},
+  {"symbol": "TSLA", "transactionDate": "2026-07-09", "type": "Purchase", "amount": "$50,001 - $100,000", "who": "Sen F"},
+  {"symbol": "GOOGL", "transactionDate": "2026-07-02", "type": "Purchase", "amount": "$15,001 - $50,000", "who": "Rep G"},
+  {"symbol": "PLTR", "transactionDate": "2026-07-22", "type": "Purchase", "amount": "$250,001 - $500,000", "who": "Rep H"},
+  {"symbol": "META", "transactionDate": "2026-07-11", "type": "Purchase", "amount": "$50,001 - $100,000", "who": "Sen I"},
+  {"symbol": "LMT", "transactionDate": "2026-07-08", "type": "Purchase", "amount": "$15,001 - $50,000", "who": "Rep J"},
+  {"symbol": "AVGO", "transactionDate": "2026-07-14", "type": "Purchase", "amount": "$100,001 - $250,000", "who": "Sen K"},
+  {"symbol": "COIN", "transactionDate": "2026-07-19", "type": "Purchase", "amount": "$15,001 - $50,000", "who": "Rep L"},
+  {"symbol": "KO",   "transactionDate": "2026-07-06", "type": "Purchase", "amount": "$100,001 - $250,000", "who": "Sen M"},
+  {"symbol": "JPM",  "transactionDate": "2026-07-16", "type": "Purchase", "amount": "$250,001 - $500,000", "who": "Rep N"},
+  {"symbol": "TSLA", "transactionDate": "2026-07-21", "type": "Sale", "amount": "$15,001 - $50,000", "who": "Sen F"},
+  {"symbol": "PANW", "transactionDate": "2026-07-13", "type": "Purchase", "amount": "$15,001 - $50,000", "who": "Rep O"},
+  {"symbol": "SMCI", "transactionDate": "2026-04-01", "type": "Purchase", "amount": "$1,000,001 - $5,000,000", "who": "Rep P (stale, out of window)"}
+]

@@ -1,0 +1,30 @@
+name: mandatory-mainnet-fork-release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fork:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: contracts
+    env:
+      REQUIRE_MAINNET_FORK: "true"
+      RH_MAINNET_RPC_URL: ${{ secrets.RH_MAINNET_RPC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: Require the full current-state fork suite
+        run: forge test --match-path 'test/Fork*.t.sol' --no-match-path 'test/ForkTestnet.t.sol' --fork-url "$RH_MAINNET_RPC_URL" -vv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mainnet-fork-release-output
+          path: contracts/reports/

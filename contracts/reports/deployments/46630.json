@@ -1,0 +1,23 @@
+{
+  "chainId": 46630,
+  "mintOpen": false,
+  "poolPair": "native ETH/COAT",
+  "contracts": {
+    "broker": "0x1f6e75a3add9c7debc8594d4f41fa557fc33ddaf",
+    "coat": "0xd3f44c7dd32d12c7a6776c23c839deca8196cf07",
+    "booster": "0x39e4b20401dc4ca45c0b14800c86fc3df953a245",
+    "stockRouter": "0xcf6eda70fa9c1293c7c844c3f26af307703c6d67",
+    "feeSplitter": "0xc1250d95ee696c52ddc2636a74edab5cf32107d7",
+    "renderer": "0x87af3a4333914ee050a4395e8897ba6e87574739",
+    "atomicLauncher": "0x759fa2fc641fd5737e5f7844b9af1058ed21c115",
+    "feeHook": "0xabc22a662a1bf11f6306ba192ce33acef31d2044",
+    "lpLocker": "0x2f02674d9783e6f7baba681aca0880afe9c08511",
+    "router": "0x5fbca6b6dd403659b273ea7d6d13e6a2e2462123",
+    "buybackBurner": "0xf6afc4614adff1aedb04d0d374ec4d0d3bbe6964"
+  },
+  "evidence": {
+    "deployBroadcast": "broadcast/Deploy.s.sol/46630/run-latest.json",
+    "launchBroadcast": "broadcast/LaunchWithHook.s.sol/46630/run-latest.json",
+    "testnetVenueReport": "reports/testnet-venue-46630.json"
+  }
+}

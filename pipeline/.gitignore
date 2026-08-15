@@ -1,0 +1,5 @@
+.env
+__pycache__/
+*.pyc
+collection/*.attempt-*.src.png
+collection/*.review.*

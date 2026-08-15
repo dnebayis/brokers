@@ -1,0 +1,10 @@
+{
+  "collectionSize": 1776,
+  "uploadBatchSize": 5,
+  "allUploaded": true,
+  "allTokenUriRendered": true,
+  "tokenUriAggregateHash": "0x2b3ac6e4544b0661f1b98b051016823093f694232b7a05c7b81b9f496c4c77c1",
+  "canonicalPayloadAggregateSha256": "cfee4e655045cc4cb034433be3ea8ef8a50099072f566515e6d59ffa0b9818d6",
+  "harnessGas": 7167293143,
+  "note": "Harness gas aggregates 356 production-sized upload batches and all 1776 tokenURI renders inside one local test call; it is not a single deployment transaction estimate."
+}
