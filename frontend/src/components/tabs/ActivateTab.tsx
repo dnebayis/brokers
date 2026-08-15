@@ -10,7 +10,7 @@ import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
 import { fmt, short } from "@/lib/format";
-import { BrokerAvatar } from "@/lib/brokerArt";
+import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
 import { StepFlow, type StepState } from "@/components/ui/StepFlow";
@@ -360,7 +360,7 @@ export function ActivateTab() {
           <>
             <div className="flex items-center gap-3 mb-3">
               <div className="border border-line bg-cream shrink-0">
-                <BrokerAvatar tokenId={info.id} size={72} />
+                <BrokerArtwork tokenId={info.id} size={72} />
               </div>
               <div>
                 <div className="font-pixel text-sm text-ink-strong">Broker #{info.id.toString()}</div>

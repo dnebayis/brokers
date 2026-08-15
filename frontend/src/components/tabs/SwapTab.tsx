@@ -21,6 +21,7 @@ export function SwapTab() {
   
   const { writeContractAsync } = useWriteContract();
   const swap = useTx();
+  const approval = useTx();
 
   const [dir, setDir] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
@@ -32,6 +33,13 @@ export function SwapTab() {
   const { data: coat } = useReadContract({
     address: ADDR.coat, abi: coatAbi, functionName: "balanceOf",
     args: address ? [address] : undefined, query: { enabled: !!address },
+  });
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: ADDR.coat,
+    abi: coatAbi,
+    functionName: "allowance",
+    args: address && routerReady ? [address, ADDR.router as `0x${string}`] : undefined,
+    query: { enabled: !!address && routerReady && dir === "sell" },
   });
 
   // pre-flight balance check so a doomed swap never reaches the wallet
@@ -51,6 +59,7 @@ export function SwapTab() {
         ? `Not enough ${dir === "buy" ? "ETH" : "$COAT"}.`
         : "";
   const canSwap = routerReady && !!address && amountWei !== undefined && !insufficient;
+  const needsApproval = dir === "sell" && amountWei !== undefined && (allowance as bigint | undefined ?? 0n) < amountWei;
 
   async function onAmount(v: string) {
     setAmount(v);
@@ -94,13 +103,8 @@ export function SwapTab() {
         await waitForSuccessfulReceipt(h);
       } else {
         const coatIn = parseUnits(amount, 18);
-        const allowance = (await client.readContract({ address: ADDR.coat, abi: coatAbi, functionName: "allowance", args: [address!, router] })) as bigint;
-        if (allowance < coatIn) {
-          setStep(0, "doing");
-          swap.setStatus("Approving $COAT for the router…");
-          const ah = await writeContractAsync({ address: ADDR.coat, abi: coatAbi, functionName: "approve", args: [router, coatIn], chainId: activeChain.id });
-          await waitForSuccessfulReceipt(ah);
-        }
+        const currentAllowance = (await client.readContract({ address: ADDR.coat, abi: coatAbi, functionName: "allowance", args: [address!, router] })) as bigint;
+        if (currentAllowance < coatIn) throw new Error("Approve $COAT first. Approval never performs a swap.");
         setStep(0, "done");
         setStep(1, "doing");
         // simulate the real sell (needs the allowance above) for an accurate minimum-out
@@ -117,11 +121,26 @@ export function SwapTab() {
       swap.setStatus("Swap complete.", "ok");
     });
 
+  const approveSell = () =>
+    approval.run(async () => {
+      if (!address || amountWei === undefined || dir !== "sell") throw new Error("Enter a $COAT amount first.");
+      const router = ADDR.router as `0x${string}`;
+      approval.setStatus(`Confirm approval for ${amount} $COAT. This transaction cannot swap or spend COAT.`);
+      const hash = await writeContractAsync({
+        address: ADDR.coat, abi: coatAbi, functionName: "approve", args: [router, amountWei], chainId: activeChain.id,
+      });
+      await waitForSuccessfulReceipt(hash);
+      await refetchAllowance();
+      setStep(0, "done");
+      approval.setStatus("Approval complete. Press SELL COAT to submit the separate swap.", "ok");
+    });
+
   return (
     <div className="card max-w-xl">
       <h2 className="pixel-title text-[15px] mb-1">Swap $COAT</h2>
       <p className="text-ink-soft text-sm mb-5">
-        Buy $COAT with ETH (or sell back) on the live Uniswap v4 pool. Approve + swap in one click.
+        Buy $COAT with ETH or sell back on the live Uniswap v4 pool. Buying never needs approval;
+        selling requires a separate approval followed by a separate sell confirmation.
       </p>
 
       <div className="grid grid-cols-3 gap-2.5 mb-4">
@@ -141,12 +160,13 @@ export function SwapTab() {
       <input className="fld" readOnly value={quote} placeholder="—" />
       <p className="text-ink-soft text-sm mt-2">Slippage 3% · minimum shown on confirm.</p>
 
-      <button className="btn btn-accent w-full mt-4" onClick={doSwap} disabled={!canSwap || swap.busy}>
-        <Icon name="swap" /> {swap.busy ? "SWAPPING…" : "SWAP"}
+      <button className="btn btn-accent w-full mt-4" onClick={needsApproval ? approveSell : doSwap} disabled={!canSwap || swap.busy || approval.busy}>
+        <Icon name="swap" /> {approval.busy ? "APPROVING…" : swap.busy ? "SWAPPING…" : dir === "buy" ? "BUY COAT" : needsApproval ? "APPROVE COAT" : "SELL COAT"}
       </button>
       {reason && <p className="text-accent text-sm mt-2">{reason}</p>}
-      <StepFlow steps={[{ label: "approve", state: steps[0] }, { label: "swap", state: steps[1] }]} />
+      <StepFlow steps={[{ label: dir === "buy" ? "quote" : "approve COAT", state: steps[0] }, { label: dir === "buy" ? "buy" : "sell", state: steps[1] }]} />
       <StatusLine msg={swap.msg} kind={swap.kind} />
+      <StatusLine msg={approval.msg} kind={approval.kind} />
 
       {!routerReady && (
         <div className="border-l-[3px] border-accent bg-cream-2 px-4 py-3 mt-4 text-sm">

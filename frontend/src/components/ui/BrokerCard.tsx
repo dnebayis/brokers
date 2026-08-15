@@ -1,6 +1,6 @@
 "use client";
 
-import { BrokerAvatar, traitsOf } from "@/lib/brokerArt";
+import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
 
 export function BrokerCard({
   id,
@@ -13,7 +13,6 @@ export function BrokerCard({
   selected?: boolean;
   onSelect?: () => void;
 }) {
-  const t = traitsOf(id);
   return (
     <button
       onClick={onSelect}
@@ -22,7 +21,7 @@ export function BrokerCard({
       }`}
     >
       <div className="border border-line bg-cream">
-        <BrokerAvatar tokenId={id} size={104} />
+        <BrokerArtwork tokenId={id} size={104} />
       </div>
       <div className="flex items-center justify-between mt-1.5">
         <span className="font-pixel text-[11px] text-ink-strong">#{id.toString()}</span>
@@ -34,9 +33,7 @@ export function BrokerCard({
           {active ? "ON" : "OFF"}
         </span>
       </div>
-      <div className="text-[10px] text-ink-soft mt-0.5 truncate">
-        {t.type} · {t.accessory !== "None" ? t.accessory : t.eyes !== "None" ? t.eyes : t.headwear}
-      </div>
+      <div className="text-[10px] text-ink-soft mt-0.5 truncate">On-chain artwork</div>
     </button>
   );
 }

@@ -8,7 +8,7 @@ import { brokerAbi } from "@/lib/abis";
 import { activeChain } from "@/lib/chains";
 import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
-import { BrokerAvatar } from "@/lib/brokerArt";
+import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
 
@@ -135,7 +135,7 @@ export function MintTab() {
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
             {mintedIds.map((id) => (
               <div key={id.toString()} className="border border-line bg-cream p-1">
-                <BrokerAvatar tokenId={id} size={96} />
+                <BrokerArtwork tokenId={id} size={96} />
                 <div className="font-pixel text-[10px] text-ink-strong text-center mt-1">#{id.toString()}</div>
               </div>
             ))}

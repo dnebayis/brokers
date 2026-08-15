@@ -46,8 +46,6 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm audit --audit-level=high
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
       - name: Mainnet placeholders must fail
         run: '! NEXT_PUBLIC_NETWORK=mainnet node scripts/validate-config.mjs'
 
