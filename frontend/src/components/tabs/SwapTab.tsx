@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAccount, useBalance, useReadContract, useWriteContract } from "wagmi";
-import { parseEther, parseUnits } from "viem";
+import { formatUnits, parseEther, parseUnits } from "viem";
 import { ADDR } from "@/lib/config";
 import { coatAbi, routerAbi } from "@/lib/abis";
 import { activeChain } from "@/lib/chains";
@@ -60,6 +60,7 @@ export function SwapTab() {
         : "";
   const canSwap = routerReady && !!address && amountWei !== undefined && !insufficient;
   const needsApproval = dir === "sell" && amountWei !== undefined && (allowance as bigint | undefined ?? 0n) < amountWei;
+  const rawSellAmount = amountWei !== undefined && dir === "sell" ? formatUnits(amountWei, 18) : "";
 
   async function onAmount(v: string) {
     setAmount(v);
@@ -81,6 +82,11 @@ export function SwapTab() {
     setAmount("");
     setQuote("");
     setSteps(["idle", "idle"]);
+  }
+
+  function useMaxCoat() {
+    const balance = coat as bigint | undefined;
+    if (balance !== undefined && balance > 0n) void onAmount(formatUnits(balance, 18));
   }
 
   const doSwap = () =>
@@ -154,16 +160,28 @@ export function SwapTab() {
         <button className={`btn ${dir === "buy" ? "btn-accent" : "btn-ghost"}`} onClick={() => chooseDirection("buy")}>BUY · ETH → COAT</button>
         <button className={`btn ${dir === "sell" ? "btn-accent" : "btn-ghost"}`} onClick={() => chooseDirection("sell")}>SELL · COAT → ETH</button>
       </div>
-      <span className="label">You pay ({dir === "buy" ? "ETH" : "COAT"})</span>
-      <div className="relative">
-        <input className="fld pr-12" inputMode="decimal" placeholder="0.0" value={amount} onChange={(e) => onAmount(e.target.value)} disabled={!routerReady} />
+      <div className="flex items-center justify-between gap-3">
+        <span className="label">You pay ({dir === "buy" ? "ETH" : "COAT"})</span>
+        {dir === "sell" && (
+          <button className="text-[11px] font-pixel text-accent hover:text-ink-strong" onClick={useMaxCoat} disabled={!coat}>
+            MAX COAT
+          </button>
+        )}
       </div>
+      <div className="relative">
+        <input className="fld" inputMode="decimal" placeholder="0.0" value={amount} onChange={(e) => onAmount(e.target.value)} disabled={!routerReady} />
+      </div>
+      {dir === "sell" && rawSellAmount && (
+        <p className="text-ink-soft text-sm mt-2">
+          Order amount: <b className="text-ink-strong tabular-nums">{rawSellAmount} COAT</b>. Use MAX to sell the full balance; dots in this field are decimal points, not thousands separators.
+        </p>
+      )}
       <span className="label mt-3.5">You receive ({dir === "buy" ? "COAT" : "ETH"}, est.)</span>
       <input className="fld" readOnly value={quote} placeholder="—" />
       <p className="text-ink-soft text-sm mt-2">Slippage 3% · minimum shown on confirm.</p>
 
       <button className="btn btn-accent w-full mt-4" onClick={needsApproval ? approveSell : doSwap} disabled={!canSwap || swap.busy || approval.busy}>
-        <Icon name="swap" /> {approval.busy ? "APPROVING…" : swap.busy ? "SWAPPING…" : dir === "buy" ? "BUY COAT" : needsApproval ? "APPROVE COAT" : "SELL COAT"}
+        <Icon name="swap" /> {approval.busy ? "APPROVING…" : swap.busy ? "SWAPPING…" : dir === "buy" ? "BUY COAT" : needsApproval ? `APPROVE ${rawSellAmount} COAT` : `SELL ${rawSellAmount} COAT`}
       </button>
       {reason && <p className="text-accent text-sm mt-2">{reason}</p>}
       <StepFlow steps={[{ label: dir === "buy" ? "quote" : "approve COAT", state: steps[0] }, { label: dir === "buy" ? "buy" : "sell", state: steps[1] }]} />

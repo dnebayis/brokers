@@ -8,6 +8,8 @@ React Query **5.101.4**. The wallet UI is project-owned; RainbowKit is not used.
 - **Mint** — closed by default; flat 0.0015 ETH, primary cap 2, receipt-status checks and event-derived random token IDs.
 - **Swap** — explicit `BUY · ETH → COAT` and `SELL · COAT → ETH` modes through `CoatRouter`.
   Buying never requests approval. Selling requests an exact COAT approval first, then a separate sell transaction.
+  The sell field uses an unlocalized raw decimal amount and provides `MAX COAT`; formatted wallet
+  balances must never be copied into a transaction field because locale separators are ambiguous.
 - **Activate** — lists only NFTs owned by the connected account, burns COAT to activate,
   reads `Booster.claimable(tokenId)`, claims into the ERC-6551 wallet and transfers
   accumulated stock from that wallet.
