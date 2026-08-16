@@ -2,7 +2,7 @@
 
 > **Coattail Brokers** — ride the coattails of smart money. Own an active Broker NFT that accrues a claim on the tokenized-stock basket derived from disclosed US Congress trades, funded by the collection's own trading.
 >
-> Status: **mainnet not deployed.** A fresh chain-46630 staging deployment is live with its mint open and full renderer submission complete. Its StrategyRegistry has no posted basket yet, so no staging stock claims exist. The testnet keeper/claim cycle, 888-wallet run and final renderer read-back audit remain mainnet-release gates. See `STATUS.md`. Not financial or legal advice.
+> Status: **mainnet not deployed.** A fresh chain-46630 staging deployment is live with its mint open and full renderer submission complete. Its StrategyRegistry is at epoch 1 with a deterministic test basket, and Brokers #487 and #742 have received the basket assets into their TBAs via receipt-checked claims. The full 888-wallet load, a clean market-hours mainnet-fork report, the renderer read-back sweep and production key/provider configuration remain mainnet-release gates. See `STATUS.md`. Not financial or legal advice.
 
 ---
 
@@ -221,7 +221,7 @@ or living-portfolio art are not part of the v1 GO gate.
 
 **Historical testnet proof:** the earlier deployment established the ERC-6551, signed-basket, activation/deactivation, selected reward-claim and v4 fee-routing mechanics. Those addresses are retired; they are not release evidence for the new clean deployment.
 
-**Still open (pre-mainnet):** the authoritative live list is only `STATUS.md`. The principal gates are the 888-wallet transaction run, wallet-backed frontend E2E, production key/provider configuration and final combined evidence. Ownership is the designated hardware wallet; deployer, keeper and oracle keys remain separate.
+**Still open (pre-mainnet):** the authoritative live list is only `STATUS.md`. The principal gates are the 888-wallet transaction run, a clean market-hours mainnet-fork release report, the renderer read-back sweep, and production key/provider configuration. A wallet-backed frontend E2E is **not** a gate (project decision, 2026-08-16): frontend correctness rests on the contract tests, the render-level E2E suite and a manual pre-launch click-through. The target key model separates a hardware-wallet owner from distinct deployer, keeper and oracle keys; today only a deployer key exists, so creating those production identities is part of the configuration gate.
 
 ---
 

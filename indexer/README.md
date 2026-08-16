@@ -94,12 +94,19 @@ the midpoint), tickers aren't always normalized (we uppercase + allowlist-check)
   stale, empty or malformed source snapshots.
 - ✅ **EIP-712 signed posting implemented** (`setStrategyWithSig`, epoch-monotonic,
   deadline-bounded). The production signer, relayer/deployer and keeper are separate keys.
+- Every on-chain script builds its Web3 client through `config.make_web3()`, which presents a
+  browser User-Agent (the RH public RPC's Cloudflare rejects the default python UA) and verifies
+  the chain id, so the automation runs against the public endpoint as well as a private one.
 - `.github/workflows/indexer-schedule.yml` polls every six hours and posts only a
   changed canonical basket. `.github/workflows/keeper-schedule.yml` independently
-  checks the full hook → splitter → Booster → buyback path every hour and runs the
-  threshold-aware staged keeper, so a Congress API/indexer failure never pauses
-  purchases against the last valid basket. Before `poke`
-  works in production, wire the Booster's Chainlink slippage feeds
+  checks the full hook → splitter → Booster → buyback path every hour, runs the
+  threshold-aware staged keeper and distributes claims into TBAs, so a Congress
+  API/indexer failure never pauses purchases against the last valid basket. Both
+  workflows have the public staging addresses baked in, so the **only** configuration
+  needed is their repository secrets: `TESTNET_KEEPER_PRIVATE_KEY` for the keeper/distributor,
+  and `UNUSUAL_WHALES_API_KEY` (or `FMP_API_KEY`) plus `TESTNET_ORACLE_PRIVATE_KEY` for the
+  basket poster. Until those secrets are set the scheduled jobs fail (they cannot sign without a
+  key). Before `poke` works in production, wire the Booster's Chainlink slippage feeds
   (`setStockFeed` per token + an ETH/USD source) or set `allowUnguarded`.
 
 The complete operating decision and GO/NO-GO gates are in `RUNBOOK.md`. Current staging has already

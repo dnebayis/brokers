@@ -407,12 +407,14 @@ export function ActivateTab() {
             )}
           </>
         )}
-        <button className="btn btn-ghost w-full mt-4" onClick={claim} disabled={!isOwner || !hasClaimable || claimTx.busy}>
-          <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM ACCRUED STOCK → WALLET"}
+        <button className="btn btn-ghost w-full mt-4" onClick={claim} disabled={!isOwner || !(info?.active || hasClaimable) || claimTx.busy}>
+          <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM NOW → WALLET"}
         </button>
-        {info && isOwner && !hasClaimable && (
+        {info && isOwner && (
           <p className="text-ink-soft text-sm mt-2">
-            {holdings.length ? "All accrued stocks are already in this Broker wallet." : "Nothing to claim yet."}
+            Rewards are distributed to your Broker&apos;s wallet automatically about once an hour — you can claim now
+            instead of waiting.
+            {!hasClaimable && (holdings.length ? " Everything accrued is already in this wallet." : " Nothing is pending right now.")}
           </p>
         )}
         <StatusLine msg={claimTx.msg} kind={claimTx.kind} />
