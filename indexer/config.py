@@ -93,6 +93,9 @@ def make_web3(rpc_url: str = RPC_URL, expect_chain: int | None = CHAIN_ID):
     return w3
 STRATEGY_REGISTRY = os.environ.get("STRATEGY_REGISTRY_ADDRESS", "")  # 0x...
 BROKER_ADDRESS = os.environ.get("BROKER_ADDRESS", "")
+# Block the Broker was deployed at — bounds Transfer-log scans (mint discovery).
+BROKER_DEPLOYMENT_BLOCK = int(os.environ.get(
+    "BROKER_DEPLOYMENT_BLOCK", "101454451" if NETWORK == "testnet" else "0"))
 BOOSTER_ADDRESS = os.environ.get("BOOSTER_ADDRESS", "")
 UPDATER_PRIVATE_KEY = os.environ.get("UPDATER_PRIVATE_KEY", "")      # oracle bot key = oracleSigner
 KEEPER_PRIVATE_KEY = os.environ.get("KEEPER_PRIVATE_KEY", "")        # gas-funded poke relayer; no on-chain role

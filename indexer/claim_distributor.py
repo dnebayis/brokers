@@ -13,7 +13,15 @@ import json
 from pathlib import Path
 from typing import Callable
 
-from config import BOOSTER_ADDRESS, BROKER_ADDRESS, CHAIN_ID, KEEPER_PRIVATE_KEY, NETWORK, make_web3
+from config import (
+    BOOSTER_ADDRESS,
+    BROKER_ADDRESS,
+    BROKER_DEPLOYMENT_BLOCK,
+    CHAIN_ID,
+    KEEPER_PRIVATE_KEY,
+    NETWORK,
+    make_web3,
+)
 
 MAX_SUPPLY = 1776
 MAX_BATCH = 5
@@ -78,6 +86,19 @@ def main() -> None:
         "inputs": [{"name": "tokenId", "type": "uint256"}],
         "outputs": [{"name": "", "type": "address"}],
     }])
+    # Discover the minted token ids once from mint Transfer logs (from = 0x0) instead
+    # of calling ownerOf across all 1..1776 ids each batch — the latter is thousands of
+    # RPC calls and times out the scheduled run. Only ~minted ids are then price-checked.
+    transfer_topic = "0x" + Web3.keccak(text="Transfer(address,address,uint256)").hex().lstrip("0x")
+    zero_topic = "0x" + "0" * 64
+    mint_logs = w3.eth.get_logs({
+        "address": broker_address,
+        "fromBlock": BROKER_DEPLOYMENT_BLOCK,
+        "toBlock": "latest",
+        "topics": [transfer_topic, zero_topic],
+    })
+    minted_ids = {int(log["topics"][3].hex(), 16) for log in mint_logs}
+    print(json.dumps({"mintedDiscovered": len(minted_ids)}))
     booster = w3.eth.contract(address=booster_address, abi=[
         {"type": "function", "name": "claimable", "stateMutability": "view",
          "inputs": [{"name": "tokenId", "type": "uint256"}],
@@ -89,11 +110,7 @@ def main() -> None:
     state = _read_state(args.state)
 
     def is_minted(token_id: int) -> bool:
-        try:
-            broker.functions.ownerOf(token_id).call()
-            return True
-        except Exception:
-            return False
+        return token_id in minted_ids
 
     def has_claim(token_id: int) -> bool:
         _, amounts = booster.functions.claimable(token_id).call()
