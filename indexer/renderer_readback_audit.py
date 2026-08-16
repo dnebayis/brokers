@@ -19,10 +19,11 @@ Add --fail-fast to stop on the first mismatch instead of auditing all 1,776 toke
 from __future__ import annotations
 
 import argparse
-import base64
 import hashlib
 import json
 import os
+import time
+import urllib.request
 from datetime import date
 from pathlib import Path
 
@@ -31,6 +32,41 @@ from renderer_uploader import decode_uri
 
 MAX_SUPPLY = 1776
 SCRIPT_DIR = Path(__file__).resolve().parent
+
+# RH Chain's public RPC sits behind Cloudflare, which 403s the default
+# python User-Agent (error 1010); present a browser UA on every request.
+RPC_HEADERS = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"}
+SELECTOR = {"bitmapOf": "0x59df2902", "traitsOf": "0x5efab6e4", "tokenURI": "0xc87b56dd"}
+
+
+def rpc_batch(url: str, calls: list[dict], attempts: int = 4) -> list[dict]:
+    """POST a JSON-RPC 2.0 batch, retrying transient transport errors."""
+    body = json.dumps(calls).encode()
+    for attempt in range(attempts):
+        try:
+            req = urllib.request.Request(url, data=body, headers=RPC_HEADERS)
+            with urllib.request.urlopen(req, timeout=60) as response:
+                payload = json.loads(response.read().decode())
+            if not isinstance(payload, list):
+                raise RuntimeError(f"unexpected RPC response: {str(payload)[:200]}")
+            return sorted(payload, key=lambda item: item["id"])
+        except Exception:  # noqa: BLE001 - transient RPC/transport; retry with backoff
+            if attempt == attempts - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
+
+
+def eth_call(to: str, selector: str, token_id: int, req_id: int) -> dict:
+    data = selector + f"{token_id:064x}"
+    return {"jsonrpc": "2.0", "id": req_id, "method": "eth_call",
+            "params": [{"to": to, "data": data}, "latest"]}
+
+
+def decode_bytes(result: str) -> bytes:
+    """Decode an ABI dynamic `bytes`/`string` return (offset, length, data)."""
+    raw = bytes.fromhex(result[2:] if result.startswith("0x") else result)
+    length = int.from_bytes(raw[32:64], "big")
+    return raw[64:64 + length]
 
 
 def load_manifest(path: Path) -> tuple[dict, dict]:
@@ -43,12 +79,9 @@ def load_manifest(path: Path) -> tuple[dict, dict]:
     return manifest, by_id
 
 
-def audit_token(renderer, token_id: int, expected: dict) -> dict:
-    """Return {tokenId, ok, bitmapSha256, traitsSha256, errors[]} for one token."""
+def audit_token(token_id: int, expected: dict, bitmap: bytes, traits: bytes, uri: str) -> dict:
+    """Compare one token's on-chain bytes against the manifest. No network here."""
     errors: list[str] = []
-
-    bitmap = bytes(renderer.functions.bitmapOf(token_id).call())
-    traits = bytes(renderer.functions.traitsOf(token_id).call())
     bitmap_sha = hashlib.sha256(bitmap).hexdigest()
     traits_sha = hashlib.sha256(traits).hexdigest()
 
@@ -65,7 +98,7 @@ def audit_token(renderer, token_id: int, expected: dict) -> dict:
 
     # Structural JSON/SVG proof of the on-chain render path.
     try:
-        decode_uri(renderer.functions.tokenURI(token_id).call(), token_id)
+        decode_uri(uri, token_id)
     except Exception as exc:  # noqa: BLE001 - surfaced per token, never aborts the sweep
         errors.append(f"tokenURI: {exc}")
 
@@ -78,6 +111,41 @@ def audit_token(renderer, token_id: int, expected: dict) -> dict:
     }
 
 
+KIND = ("bitmapOf", "traitsOf", "tokenURI")
+
+
+def _usable(result) -> bool:
+    # This RPC intermittently returns an empty "0x" for a valid eth_call under
+    # load. A real return is always at least one 32-byte word.
+    return isinstance(result, str) and result.startswith("0x") and len(result) >= 66
+
+
+def fetch_chunk(to: str, token_ids: list[int], rounds: int = 6) -> dict[int, tuple[bytes, bytes, str]]:
+    """Batch bitmapOf/traitsOf/tokenURI for many tokens, re-requesting empties."""
+    results: dict[int, str] = {}
+    pending = [(token_id, kind) for token_id in token_ids for kind in range(3)]
+    for attempt in range(rounds):
+        calls = [eth_call(to, SELECTOR[KIND[kind]], token_id, token_id * 10 + kind)
+                 for token_id, kind in pending]
+        for item in rpc_batch(RPC_URL, calls):
+            if _usable(item.get("result")):
+                results[item["id"]] = item["result"]
+        pending = [(t, k) for t, k in pending if (t * 10 + k) not in results]
+        if not pending:
+            break
+        time.sleep(1.0 + attempt)
+    if pending:
+        raise RuntimeError(f"RPC never returned {len(pending)} calls, e.g. {pending[:3]}")
+
+    out: dict[int, tuple[bytes, bytes, str]] = {}
+    for token_id in token_ids:
+        bitmap = decode_bytes(results[token_id * 10 + 0])
+        traits = bytes.fromhex(results[token_id * 10 + 1][2:])[:8]  # bytes8, left-aligned
+        uri = decode_bytes(results[token_id * 10 + 2]).decode()
+        out[token_id] = (bitmap, traits, uri)
+    return out
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path,
@@ -85,57 +153,53 @@ def main() -> None:
     parser.add_argument("--out", type=Path,
                         default=SCRIPT_DIR / f"reports/renderer-readback-{date.today().isoformat()}.json")
     parser.add_argument("--fail-fast", action="store_true")
+    parser.add_argument("--chunk", type=int, default=12, help="tokens per RPC batch")
+    parser.add_argument("--delay", type=float, default=0.5, help="seconds between batches")
     args = parser.parse_args()
 
-    renderer_address = os.environ.get("RENDERER_ADDRESS", "")
-    if not renderer_address:
-        raise RuntimeError("RENDERER_ADDRESS is required")
+    renderer_address = os.environ.get("RENDERER_ADDRESS", "").lower()
+    if not renderer_address.startswith("0x") or len(renderer_address) != 42:
+        raise RuntimeError("RENDERER_ADDRESS must be a 0x-prefixed 20-byte address")
 
     manifest, by_id = load_manifest(args.manifest)
 
-    from web3 import Web3
-
-    # RH Chain's public RPC is behind Cloudflare, which 403s the default
-    # python-requests User-Agent (error 1010). Present a browser UA.
-    w3 = Web3(Web3.HTTPProvider(RPC_URL, request_kwargs={
-        "headers": {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"},
-        "timeout": 30,
-    }))
-    if not w3.is_connected() or w3.eth.chain_id != CHAIN_ID:
-        raise RuntimeError("RPC unavailable or wrong chain")
-    renderer = w3.eth.contract(address=Web3.to_checksum_address(renderer_address), abi=[
-        {"type": "function", "name": "bitmapOf", "stateMutability": "view",
-         "inputs": [{"name": "tokenId", "type": "uint256"}],
-         "outputs": [{"name": "", "type": "bytes"}]},
-        {"type": "function", "name": "traitsOf", "stateMutability": "view",
-         "inputs": [{"name": "tokenId", "type": "uint256"}],
-         "outputs": [{"name": "", "type": "bytes8"}]},
-        {"type": "function", "name": "tokenURI", "stateMutability": "view",
-         "inputs": [{"name": "tokenId", "type": "uint256"}],
-         "outputs": [{"name": "", "type": "string"}]},
-    ])
+    # Confirm the endpoint is the expected chain before auditing.
+    chain_hex = rpc_batch(RPC_URL, [{"jsonrpc": "2.0", "id": 0,
+                                     "method": "eth_chainId", "params": []}])[0]["result"]
+    if int(chain_hex, 16) != CHAIN_ID:
+        raise RuntimeError(f"RPC chain {int(chain_hex, 16)} != expected {CHAIN_ID}")
 
     aggregate = hashlib.sha256()
     rows: list[dict] = []
     failures: list[dict] = []
-    for token_id in range(1, MAX_SUPPLY + 1):
-        row = audit_token(renderer, token_id, by_id[token_id])
-        rows.append(row)
-        # Re-derive the manifest aggregate over on-chain bytes, in id order.
-        aggregate.update(token_id.to_bytes(2, "big"))
-        aggregate.update(bytes.fromhex(row["bitmapSha256"]))
-        aggregate.update(bytes.fromhex(row["traitsSha256"]))
-        if not row["ok"]:
-            failures.append(row)
-            if args.fail_fast:
-                break
+    stop = False
+    for start in range(1, MAX_SUPPLY + 1, args.chunk):
+        ids = list(range(start, min(start + args.chunk, MAX_SUPPLY + 1)))
+        fetched = fetch_chunk(renderer_address, ids)
+        for token_id in ids:
+            bitmap, traits, uri = fetched[token_id]
+            row = audit_token(token_id, by_id[token_id], bitmap, traits, uri)
+            rows.append(row)
+            # Re-derive the manifest aggregate over on-chain bytes, in id order.
+            aggregate.update(token_id.to_bytes(2, "big"))
+            aggregate.update(bytes.fromhex(row["bitmapSha256"]))
+            aggregate.update(bytes.fromhex(row["traitsSha256"]))
+            if not row["ok"]:
+                failures.append(row)
+                if args.fail_fast:
+                    stop = True
+                    break
+        print(json.dumps({"progress": rows[-1]["tokenId"], "failures": len(failures)}))
+        if stop:
+            break
+        time.sleep(args.delay)
 
     onchain_aggregate = aggregate.hexdigest()
     aggregate_ok = (not failures) and onchain_aggregate == manifest["aggregateSha256"]
 
     report = {
         "chainId": CHAIN_ID,
-        "renderer": renderer.address,
+        "renderer": renderer_address,
         "audited": len(rows),
         "failures": len(failures),
         "manifestAggregateSha256": manifest["aggregateSha256"],
