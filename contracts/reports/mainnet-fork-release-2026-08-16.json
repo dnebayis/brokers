@@ -1,0 +1,26 @@
+{
+  "schema": "coattail-mainnet-fork-release-v1",
+  "runAt": "2026-08-16T16:49:00Z",
+  "chainId": 4663,
+  "forkMode": "live-head",
+  "forkBlock": 38128407,
+  "rpc": "https://rpc.mainnet.chain.robinhood.com",
+  "command": "REQUIRE_MAINNET_FORK=true forge test --match-path 'test/Fork*.t.sol' --no-match-path 'test/ForkTestnet.t.sol' --fork-url <rpc> -vv",
+  "summary": {"suites": 6, "passed": 4, "failed": 2},
+  "suites": [
+    {"name": "ForkMainnet", "result": "pass"},
+    {"name": "ForkLaunch", "result": "pass"},
+    {"name": "ForkHook", "result": "pass"},
+    {"name": "ForkStockRoutes", "result": "pass", "note": "all five V1 routes (AAPL, AMD, AMZN, COIN, CRCL) probed against live pools"},
+    {"name": "ForkFullSystem", "result": "fail", "revert": "BadFeed()"},
+    {"name": "ForkScaleClaims", "result": "fail", "revert": "BadFeed()"}
+  ],
+  "finding": {
+    "id": "fork-badfeed-weekend",
+    "severity": "not-a-regression",
+    "cause": "Booster.sol:395 reverts BadFeed() when block.timestamp - feed.updatedAt > stockFeedStaleAfter (1 day). The run forked live HEAD on Sunday 2026-08-16; the AAPL equity feed (0x6B22A786bAa607d76728168703a39Ea9C99f2cD0) last updated Friday 2026-08-14 (updatedAt=1786717307), ~2.1 days before the fork timestamp (1786898942), so the equity feed was legitimately stale.",
+    "evidence": "On-chain latestRoundData().updatedAt read at HEAD = 1786717307; HEAD block.timestamp = 1786898942; delta 181635s > 86400s staleAfter.",
+    "conclusion": "The two failures are a market-calendar artifact of forking at a weekend HEAD, not a code defect. The four feed-independent suites (including all five live stock routes) pass. ForkFullSystem and ForkScaleClaims set a live equity feed and require it fresh.",
+    "remaining": "Reproduce a clean 6/6 by forking a US-market-hours weekday block where the equity feeds are within their staleness window. The public RPC prunes historical state (metadata not found beyond ~1.26M blocks back), so this final release run needs an archive RPC or must run live during market hours."
+  }
+}
