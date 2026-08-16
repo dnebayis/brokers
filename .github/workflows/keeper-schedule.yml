@@ -21,12 +21,15 @@ jobs:
         working-directory: indexer
     env:
       NETWORK: testnet
-      BROKER_ADDRESS: ${{ vars.TESTNET_BROKER_ADDRESS }}
-      BOOSTER_ADDRESS: ${{ vars.TESTNET_BOOSTER_ADDRESS }}
-      HOOK_ADDRESS: ${{ vars.TESTNET_HOOK_ADDRESS }}
-      FEE_SPLITTER_ADDRESS: ${{ vars.TESTNET_FEE_SPLITTER_ADDRESS }}
-      BUYBACK_BURNER_ADDRESS: ${{ vars.TESTNET_BUYBACK_BURNER_ADDRESS }}
+      # Public chain-46630 staging addresses (see ADDRESSES.md / frontend/deployments.json).
+      # Baked in so the only thing to configure is the keeper signing secret below.
+      BROKER_ADDRESS: "0x1f6e75a3add9c7debc8594d4f41fa557fc33ddaf"
+      BOOSTER_ADDRESS: "0x39e4b20401dc4ca45c0b14800c86fc3df953a245"
+      HOOK_ADDRESS: "0xabc22a662a1bf11f6306ba192ce33acef31d2044"
+      FEE_SPLITTER_ADDRESS: "0xc1250d95ee696c52ddc2636a74edab5cf32107d7"
+      BUYBACK_BURNER_ADDRESS: "0xf6afc4614adff1aedb04d0d374ec4d0d3bbe6964"
       BUYBACK_THRESHOLD_WEI: 1000000000000000
+      # Required repository secret: a gas-funded testnet key with no on-chain role.
       KEEPER_PRIVATE_KEY: ${{ secrets.TESTNET_KEEPER_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
