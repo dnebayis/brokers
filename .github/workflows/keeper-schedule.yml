@@ -28,7 +28,8 @@ jobs:
       HOOK_ADDRESS: "0xabc22a662a1bf11f6306ba192ce33acef31d2044"
       FEE_SPLITTER_ADDRESS: "0xc1250d95ee696c52ddc2636a74edab5cf32107d7"
       BUYBACK_BURNER_ADDRESS: "0xf6afc4614adff1aedb04d0d374ec4d0d3bbe6964"
-      BUYBACK_THRESHOLD_WEI: 1000000000000000
+      # Quoted so GitHub passes the literal string, not a float rendered as "1E+15".
+      BUYBACK_THRESHOLD_WEI: "1000000000000000"
       # Required repository secret: a gas-funded testnet key with no on-chain role.
       KEEPER_PRIVATE_KEY: ${{ secrets.TESTNET_KEEPER_PRIVATE_KEY }}
     steps:

@@ -19,6 +19,7 @@ from config import (
     HOOK_ADDRESS,
     KEEPER_PRIVATE_KEY,
     make_web3,
+    wei_env,
 )
 
 
@@ -134,7 +135,7 @@ def main() -> None:
         raise RuntimeError("KEEPER_PRIVATE_KEY not set for keeper relay")
 
     account = w3.eth.account.from_key(KEEPER_PRIVATE_KEY)
-    poke_max_wei = int(os.environ.get("KEEPER_POKE_MAX_WEI", "1000000000000000000"))
+    poke_max_wei = wei_env("KEEPER_POKE_MAX_WEI", "1000000000000000000")
     failed_actions = []
 
     def submit(label: str, fn: Callable) -> bool:

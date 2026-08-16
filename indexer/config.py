@@ -99,4 +99,13 @@ KEEPER_PRIVATE_KEY = os.environ.get("KEEPER_PRIVATE_KEY", "")        # gas-funde
 HOOK_ADDRESS = os.environ.get("HOOK_ADDRESS", "")
 FEE_SPLITTER_ADDRESS = os.environ.get("FEE_SPLITTER_ADDRESS", "")
 BUYBACK_BURNER_ADDRESS = os.environ.get("BUYBACK_BURNER_ADDRESS", "")
-BUYBACK_THRESHOLD_WEI = int(os.environ.get("BUYBACK_THRESHOLD_WEI", "1000000000000000"))
+def wei_env(name: str, default: str) -> int:
+    """Parse a wei env value exactly, tolerating scientific notation like '1E+15'
+    that a YAML host can produce from a large unquoted integer. Decimal keeps full
+    precision where int(float(...)) would round values above 2**53."""
+    from decimal import Decimal
+
+    return int(Decimal(os.environ.get(name, default)))
+
+
+BUYBACK_THRESHOLD_WEI = wei_env("BUYBACK_THRESHOLD_WEI", "1000000000000000")
