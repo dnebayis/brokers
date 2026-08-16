@@ -1,0 +1,80 @@
+# Vercel Web Analytics Installation Report
+
+## Summary
+Successfully installed and configured Vercel Web Analytics for this Next.js 16.3.0 project using the App Router.
+
+## Changes Made
+
+### 1. Package Installation
+- **Package**: `@vercel/analytics` (version 1.4.1)
+- **Package Manager**: npm
+- **Installation Method**: `npm install @vercel/analytics`
+
+### 2. Configuration Files Modified
+
+#### frontend/package.json
+- Added `@vercel/analytics` to dependencies
+
+#### frontend/package-lock.json
+- Updated with new package and its 655 dependencies
+- No vulnerabilities detected
+
+#### frontend/src/app/layout.tsx
+- Added import statement: `import { Analytics } from "@vercel/analytics/next";`
+- Added `<Analytics />` component inside the `<body>` element, after the `<Providers>` component
+
+## Implementation Details
+
+### Framework Detection
+This project uses:
+- **Framework**: Next.js 16.3.0
+- **Router**: App Router (confirmed by presence of `src/app/layout.tsx`)
+- **Language**: TypeScript
+
+### Documentation Source
+Fetched the latest installation instructions from the official Vercel documentation:
+- URL: https://vercel.com/docs/analytics/quickstart
+- Instructions followed: Next.js (App Router) specific guidelines
+
+### Code Changes
+The Analytics component was added to the root layout file following the official Next.js App Router pattern:
+- Import from `@vercel/analytics/next`
+- Component placed inside the `<body>` element
+- Preserves all existing functionality and code structure
+
+## Verification
+
+### Build Verification ✓
+```
+npm run build
+```
+- Build completed successfully with no errors
+- TypeScript compilation passed
+- All pages generated correctly
+
+### Linting Verification ✓
+```
+npm run lint
+```
+- No ESLint errors or warnings
+
+### Test Suite ✓
+```
+npm run test
+```
+- All 4 tests passed
+- No test failures or regressions
+
+## Next Steps
+
+To enable Web Analytics in production:
+1. Deploy this code to Vercel using `vercel deploy` or via Git integration
+2. Enable Web Analytics in the Vercel dashboard under the Analytics section
+3. Analytics data will start appearing after users visit your deployed site
+4. Verify tracking by checking the browser Network tab for `/<unique-path>/view` requests
+
+## Notes
+- The Analytics component will automatically track page views and user interactions
+- No additional configuration is required for basic analytics functionality
+- The component is non-blocking and won't affect page load performance
+- Analytics works in production mode; development mode may show limited functionality

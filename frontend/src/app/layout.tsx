@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Silkscreen, Space_Grotesk } from "next/font/google";
 import { cookieToInitialState } from "wagmi";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { wagmiConfig } from "@/lib/wagmi";
@@ -31,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={`${silkscreen.variable} ${grotesk.variable}`}>
       <body>
         <Providers initialState={initialState}>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
