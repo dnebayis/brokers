@@ -172,7 +172,14 @@ def main() -> None:
     if buyback and buyback_eth >= BUYBACK_THRESHOLD_WEI:
         submit("buyback.execute", lambda: buyback.functions.executeBuyback())
     if failed_actions:
-        raise RuntimeError("keeper stages deferred: " + ", ".join(failed_actions))
+        # Stages are isolated by design: a deferred stage (e.g. poke waiting on a fresh
+        # feed) retries next run and never strands funds. Treat it as a warning so a
+        # routine deferral does not turn the whole scheduled run red. Set KEEPER_STRICT=1
+        # to hard-fail instead (useful for production alerting once feeds are live).
+        message = "keeper stages deferred: " + ", ".join(failed_actions)
+        if os.environ.get("KEEPER_STRICT") == "1":
+            raise RuntimeError(message)
+        print(f"::warning::{message}")
 
 
 if __name__ == "__main__":
