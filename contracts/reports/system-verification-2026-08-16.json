@@ -1,0 +1,33 @@
+{
+  "schema": "coattail-system-verification-v1",
+  "runAt": "2026-08-16T17:30:00Z",
+  "scope": "Whole-system confirmation: buy/sell, indexer, booster, feesplitter, hook, COAT, registry, launch guard.",
+  "testSuites": {
+    "coreForge": {"suites": 18, "tests": 130, "passed": 130, "failed": 0, "note": "non-fork: Booster, CoatRouter, CoatFeeHook, FeeSplitter, BuybackBurner, Tokenomics(+invariant), Integration, ScaleLifecycle, StockRouter, renderer, locker"},
+    "mainnetFork": {"suites": 6, "passed": 4, "failed": 2, "note": "ForkMainnet/Launch/Hook/StockRoutes pass; FullSystem+ScaleClaims BadFeed() = weekend equity-feed staleness, not a regression (see mainnet-fork-release-2026-08-16.json)"},
+    "indexer": {"tests": 12, "passed": 12, "failed": 0},
+    "pipeline": {"tests": 8, "passed": 8, "failed": 0}
+  },
+  "liveTestnet": {
+    "chainId": 46630,
+    "buySell": {
+      "router": "0x5fbca6b6dd403659b273ea7d6d13e6a2e2462123",
+      "quoteBuy_0.001ETH_coatOut": "99753973762541752900329",
+      "quoteSell_1000COAT_ethOut": "10024663301939",
+      "executedBuy": "actor 0 bought COAT during the load smoke run"
+    },
+    "feeSplitter": {
+      "address": "0xc1250d95ee696c52ddc2636a74edab5cf32107d7",
+      "boosterBps": 8000, "treasuryBps": 1000, "buybackBps": 1000,
+      "buybackSink": "0xf6afc4614adff1aedb04d0d374ec4d0d3bbe6964",
+      "boosterSink": "0x39e4b20401dc4ca45c0b14800c86fc3df953a245",
+      "note": "80/10/10 split and sinks wired correctly"
+    },
+    "booster": {"strategyId": 0, "activeShares": 6, "knownTokens0": "0xb756cF281453663FB7Ebe6a72Ba482a968fa0184"},
+    "strategyRegistry": {"epochOf0": 1, "note": "test basket posted"},
+    "coat": {"totalSupply": "999772583936791815041974506", "note": "under 1B by cumulative activation burns; deflation working"},
+    "launchGuard": {"tradingEnabled": true, "restrictionsEndBlock": 11493328, "currentBlock": 102276202, "note": "opening-block protection window closed as designed"},
+    "hook": {"address": "0xabc22a662a1bf11f6306ba192ce33acef31d2044", "coat": "0xd3f44c7dd32d12c7a6776c23c839deca8196cf07", "note": "bound to pool; launch guard lives on COAT via ICoatLaunchGuard"}
+  },
+  "conclusion": "All core components verified in tests and confirmed responding/wired on live testnet. Remaining mainnet-GO gates are unchanged (STATUS.md 1-7): full 888-actor load, transfer/reactivation live demo, clean market-hours fork report, renderer read-back sweep, production identities, and the wallet-signing E2E extension."
+}
