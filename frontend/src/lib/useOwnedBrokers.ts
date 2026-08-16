@@ -19,18 +19,24 @@ export function useOwnedBrokers() {
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const requestId = useRef(0);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent === true;
     const request = ++requestId.current;
     const ownerAddress = address;
     const ownerKey = ownerAddress?.toLowerCase() ?? null;
-    setBrokers([]);
-    setLoadedFor(null);
+    // A silent (background poll) refresh keeps the current list on screen while it
+    // revalidates, so periodic updates never flash an empty grid.
+    if (!silent) {
+      setBrokers([]);
+      setLoadedFor(null);
+    }
     if (!ownerAddress) {
       setBrokers([]);
+      setLoadedFor(null);
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const expected = Number(await client.readContract({
         address: ADDR.broker, abi: brokerAbi, functionName: "balanceOf", args: [ownerAddress],
@@ -106,8 +112,13 @@ export function useOwnedBrokers() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    if (!address) return;
+    // Poll on-chain ownership/active state so the UI reflects mints, activations
+    // and keeper distributions without a manual page refresh.
+    const timer = setInterval(() => void load({ silent: true }), 20_000);
+    return () => clearInterval(timer);
+  }, [load, address]);
 
   const visibleBrokers = loadedFor === (address?.toLowerCase() ?? null) ? brokers : [];
-  return { brokers: visibleBrokers, loading, reload: load };
+  return { brokers: visibleBrokers, loading, reload: () => load() };
 }

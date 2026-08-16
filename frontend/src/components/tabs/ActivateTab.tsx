@@ -120,9 +120,22 @@ export function ActivateTab() {
     return () => { cancelled = true; };
   }, [brokers]);
 
-  async function check(idStr?: string) {
+  // Silently revalidate the selected Broker's status, holdings and claimable so the
+  // claim button and balances track keeper distributions without a page refresh.
+  useEffect(() => {
+    if (!info) return;
+    const id = info.id.toString();
+    const timer = setInterval(() => {
+      if (!act.busy && !claimTx.busy && !xfer.busy) void check(id, { silent: true });
+    }, 20_000);
+    return () => clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [info?.id, act.busy, claimTx.busy, xfer.busy]);
+
+  async function check(idStr?: string, opts?: { silent?: boolean }) {
+    const silent = opts?.silent === true;
     const raw = idStr ?? tokenId;
-    if (!raw) return act.setStatus("Enter a token id.", "err");
+    if (!raw) return silent ? undefined : act.setStatus("Enter a token id.", "err");
     try {
       const id = BigInt(raw);
       const [active, owner, wallet, basket, claimable] = await Promise.all([
@@ -133,7 +146,7 @@ export function ActivateTab() {
         client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "claimable", args: [id] }),
       ]);
       setInfo({ id, active, owner, wallet });
-      act.setStatus(`Owner ${short(owner)}${address && owner.toLowerCase() === address.toLowerCase() ? " (you)" : ""}`);
+      if (!silent) act.setStatus(`Owner ${short(owner)}${address && owner.toLowerCase() === address.toLowerCase() ? " (you)" : ""}`);
       const tokens = basket[0];
       const balances = await Promise.all(tokens.map(async (token) => {
         const [bal, symbol, decimals] = await Promise.all([
@@ -151,8 +164,10 @@ export function ActivateTab() {
         return { sym: holding?.sym ?? short(token), bal: claimable[1][i] };
       }).filter((h) => h.bal > 0n));
     } catch {
-      act.setStatus("Token not found — is the id right?", "err");
-      setInfo(null);
+      if (!silent) {
+        act.setStatus("Token not found — is the id right?", "err");
+        setInfo(null);
+      }
     }
   }
 
@@ -236,6 +251,8 @@ export function ActivateTab() {
       });
       await waitForSuccessfulReceipt(h);
       claimTx.setStatus("Claimed — stock moved into the Broker's wallet.", "ok");
+      refetch();
+      reloadBrokers();
       check();
     });
 
