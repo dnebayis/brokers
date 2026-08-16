@@ -18,7 +18,7 @@ from config import (
     FEE_SPLITTER_ADDRESS,
     HOOK_ADDRESS,
     KEEPER_PRIVATE_KEY,
-    RPC_URL,
+    make_web3,
 )
 
 
@@ -71,9 +71,7 @@ def main() -> None:
     address = os.environ.get("BOOSTER_ADDRESS", "")
     if not address:
         raise RuntimeError("BOOSTER_ADDRESS not set")
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
-    if not w3.is_connected():
-        raise RuntimeError(f"RPC unavailable: {RPC_URL}")
+    w3 = make_web3()
     booster_address = Web3.to_checksum_address(address)
     booster_abi = [
         {"type": "function", "name": "pokeThreshold", "stateMutability": "view", "inputs": [],

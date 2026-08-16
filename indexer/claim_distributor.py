@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Callable
 
-from config import BOOSTER_ADDRESS, BROKER_ADDRESS, CHAIN_ID, KEEPER_PRIVATE_KEY, NETWORK, RPC_URL
+from config import BOOSTER_ADDRESS, BROKER_ADDRESS, CHAIN_ID, KEEPER_PRIVATE_KEY, NETWORK, make_web3
 
 MAX_SUPPLY = 1776
 MAX_BATCH = 5
@@ -70,9 +70,7 @@ def main() -> None:
 
     from web3 import Web3
 
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
-    if not w3.is_connected() or w3.eth.chain_id != CHAIN_ID:
-        raise RuntimeError("RPC unavailable or wrong chain")
+    w3 = make_web3()
     broker_address = Web3.to_checksum_address(BROKER_ADDRESS)
     booster_address = Web3.to_checksum_address(BOOSTER_ADDRESS)
     broker = w3.eth.contract(address=broker_address, abi=[{

@@ -38,13 +38,13 @@ def _post_onchain(strategy_id, tokens, weights, force=False):
     from web3 import Web3
     from eth_account import Account
     from eth_account.messages import encode_typed_data
-    from config import RPC_URL, STRATEGY_REGISTRY, UPDATER_PRIVATE_KEY, CHAIN_ID
+    from config import STRATEGY_REGISTRY, UPDATER_PRIVATE_KEY, CHAIN_ID, make_web3
     if not (STRATEGY_REGISTRY and UPDATER_PRIVATE_KEY):
         raise RuntimeError("Set STRATEGY_REGISTRY_ADDRESS and UPDATER_PRIVATE_KEY to post")
     if any(a is None for a in tokens):
         raise RuntimeError("Some tickers have no on-chain address (fill tokens.ADDRESS)")
 
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
+    w3 = make_web3()
     acct = w3.eth.account.from_key(UPDATER_PRIVATE_KEY)
     registry = Web3.to_checksum_address(STRATEGY_REGISTRY)
     check = [Web3.to_checksum_address(a) for a in tokens]
@@ -142,13 +142,13 @@ def _post_role_onchain(strategy_id, tokens, weights, force=False):
     (_post_onchain) is the production default; this is a convenience for keys with the role.
     """
     from web3 import Web3
-    from config import RPC_URL, STRATEGY_REGISTRY, UPDATER_PRIVATE_KEY, CHAIN_ID
+    from config import STRATEGY_REGISTRY, UPDATER_PRIVATE_KEY, CHAIN_ID, make_web3
     if not (STRATEGY_REGISTRY and UPDATER_PRIVATE_KEY):
         raise RuntimeError("Set STRATEGY_REGISTRY_ADDRESS and UPDATER_PRIVATE_KEY to post")
     if any(a is None for a in tokens):
         raise RuntimeError("Some tickers have no on-chain address (fill tokens.ADDRESS)")
 
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
+    w3 = make_web3()
     acct = w3.eth.account.from_key(UPDATER_PRIVATE_KEY)
     registry = Web3.to_checksum_address(STRATEGY_REGISTRY)
     check = [Web3.to_checksum_address(a) for a in tokens]
