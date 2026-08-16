@@ -36,6 +36,7 @@ _Updated 2026-08-15. This is the only canonical remaining-work list. It describe
 3. Produce one final mainnet-fork release report combining launch, protection, five V1 routes, stock claims, buyback/TWAP, graduation, LP-fee collection, supply/reward reconciliation and the renderer hash audit.
 4. Complete the remote read-back audit of every active testnet renderer JSON/SVG/trait/bitmap against `pipeline/collection-manifest.json`.
 5. Configure production owner/deployer/keeper/oracle identities and provider credentials. Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet` until a verified mainnet manifest exists.
-6. Resolve every critical/high internal finding and obtain an independent security audit before committing real value. The independent audit is strongly recommended; it is not represented as complete here.
+6. Resolve every critical/high internal finding before committing real value. Project decision (2026-08-16): no third-party independent audit will be commissioned; the release relies on the internal finding review only. This removes an external safety check and is a deliberate risk acceptance by the owner.
+7. Run the wallet-backed frontend E2E suite (`frontend/e2e/app.spec.ts`) against a live-signing wallet and record its result as a release gate: connect/restore, BUY-vs-SELL signing, activation and claim flows must pass with `success` receipts. Project decision (2026-08-16): frontend E2E is a required GO gate.
 
-Browser-driven Playwright runs are intentionally not part of the current release procedure.
+The wallet-backed frontend E2E in item 7 is a required gate; other browser-driven Playwright coverage beyond that suite is not part of the release procedure.
