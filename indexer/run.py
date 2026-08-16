@@ -243,10 +243,15 @@ def main():
 
     if args.post:
         if cov < MIN_ROUTE_COVERAGE:
-            raise RuntimeError(
-                f"Refusing on-chain post: route-ready net-notional coverage {cov:.2%} "
-                f"is below required {MIN_ROUTE_COVERAGE:.2%}; previous epoch remains active"
-            )
+            # A safe operational decision, not a crash: keep the last valid epoch and
+            # skip this post. Warn (so it is visible) rather than failing the scheduled
+            # run. INDEXER_STRICT=1 restores hard-fail.
+            message = (f"route-ready net-notional coverage {cov:.2%} is below required "
+                       f"{MIN_ROUTE_COVERAGE:.2%}; previous epoch remains active")
+            if os.environ.get("INDEXER_STRICT") == "1":
+                raise RuntimeError("Refusing on-chain post: " + message)
+            print(f"::warning::Skipping on-chain post: {message}")
+            return None
         if not health["ok"] and not args.sample:
             raise RuntimeError("Refusing on-chain post: source snapshot failed health gates")
         if args.sample and not args.allow_sample_post:

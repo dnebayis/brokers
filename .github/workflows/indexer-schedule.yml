@@ -21,6 +21,10 @@ jobs:
     env:
       NETWORK: testnet
       INDEXER_DATA_SOURCE: unusual_whales
+      # Testnet's tokenizable universe is deliberately just five stocks, so route-ready
+      # coverage of real Congress buying is always small; allow posting it anyway here.
+      # Production keeps the default 0.70 gate.
+      MIN_ROUTE_COVERAGE: "0"
       # Public chain-46630 staging registry (see ADDRESSES.md); baked in so only the
       # signing/API secrets below need configuring.
       STRATEGY_REGISTRY_ADDRESS: "0xd859b6ea10dd61604b55e8e86dc4a12c1e1f7ab3"
