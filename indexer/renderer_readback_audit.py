@@ -95,7 +95,12 @@ def main() -> None:
 
     from web3 import Web3
 
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
+    # RH Chain's public RPC is behind Cloudflare, which 403s the default
+    # python-requests User-Agent (error 1010). Present a browser UA.
+    w3 = Web3(Web3.HTTPProvider(RPC_URL, request_kwargs={
+        "headers": {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"},
+        "timeout": 30,
+    }))
     if not w3.is_connected() or w3.eth.chain_id != CHAIN_ID:
         raise RuntimeError("RPC unavailable or wrong chain")
     renderer = w3.eth.contract(address=Web3.to_checksum_address(renderer_address), abi=[
