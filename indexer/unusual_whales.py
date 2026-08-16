@@ -35,7 +35,9 @@ def fetch_congress_trades() -> List[Dict]:
         "Authorization": f"Bearer {UNUSUAL_WHALES_API_KEY}",
         "Accept": "application/json",
     }
-    newer_than = int((datetime.now(timezone.utc) - timedelta(days=TRAILING_DAYS)).timestamp())
+    # The API validates transaction_newer_than as a YYYY-MM-DD date, not a unix
+    # timestamp (a timestamp returns 422 Unprocessable Entity).
+    newer_than = (datetime.now(timezone.utc) - timedelta(days=TRAILING_DAYS)).date().isoformat()
     rows: List[Dict] = []
     for page in range(1, UW_MAX_PAGES + 1):
         response = requests.get(
