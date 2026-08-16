@@ -55,7 +55,12 @@ def main() -> None:
 
     from web3 import Web3
 
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
+    # RH Chain's public RPC is behind Cloudflare, which 403s the default
+    # python User-Agent (error 1010); present a browser UA.
+    w3 = Web3(Web3.HTTPProvider(RPC_URL, request_kwargs={
+        "headers": {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"},
+        "timeout": 60,
+    }))
     if not w3.is_connected() or w3.eth.chain_id != 46630:
         raise RuntimeError("RPC unavailable or wrong chain")
     if args.init:
@@ -123,7 +128,10 @@ def main() -> None:
         # Build complete, explicitly priced transactions so both plain funding
         # transfers and contract calls can be signed by offline actor keys.
         transaction.setdefault("gas", int(w3.eth.estimate_gas(transaction) * 12 // 10))
-        transaction.setdefault("gasPrice", w3.eth.gas_price)
+        # build_transaction() already fills EIP-1559 fee fields; only price a plain
+        # (fund) transfer, and never mix gasPrice with maxFeePerGas on one tx.
+        if "maxFeePerGas" not in transaction and "maxPriorityFeePerGas" not in transaction:
+            transaction.setdefault("gasPrice", w3.eth.gas_price)
         signed = account.sign_transaction(transaction)
         raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
         tx_hash = Web3.keccak(raw)
@@ -182,12 +190,21 @@ def main() -> None:
         elif not actor_state["tokenIds"]:
             receipt = send(
                 actor,
-                broker.functions.mint(MINT_QTY).build_transaction({"value": mint_price * MINT_QTY}),
+                broker.functions.mint(MINT_QTY).build_transaction(
+                    {"from": actor.address, "value": mint_price * MINT_QTY}),
                 "mint",
                 index,
             )
-            events = broker.events.Minted().process_receipt(receipt)
-            ids = [int(event["args"]["tokenId"]) for event in events if event["args"]["to"] == actor.address]
+            # web3 6.0.0b8's event instance lacks process_receipt; decode the
+            # Minted logs directly. topics = [sig, to(indexed), tokenId(indexed)].
+            minted_sig = Web3.keccak(text="Minted(address,uint256,address,uint256)")
+            ids = [
+                int(log["topics"][2].hex(), 16)
+                for log in receipt.logs
+                if log["address"].lower() == broker.address.lower()
+                and bytes(log["topics"][0]) == bytes(minted_sig)
+                and int(log["topics"][1].hex(), 16) == int(actor.address, 16)
+            ]
             if len(ids) != MINT_QTY or len(set(ids)) != MINT_QTY or any(not 1 <= token_id <= 1776 for token_id in ids):
                 raise RuntimeError(f"actor {index} invalid random mint receipt: {ids}")
             used = {token_id for row in state["actors"] for token_id in row.get("tokenIds", [])}
@@ -198,7 +215,7 @@ def main() -> None:
             send(
                 actor,
                 coat_router.functions.buy(2 * ACTIVATION_BURN, actor.address)
-                    .build_transaction({"value": activation_buy_wei}),
+                    .build_transaction({"from": actor.address, "value": activation_buy_wei}),
                 "buy-coat",
                 index,
             )
@@ -206,14 +223,16 @@ def main() -> None:
         elif not actor_state["approved"]:
             send(
                 actor,
-                coat.functions.approve(broker.address, 2 * ACTIVATION_BURN).build_transaction(),
+                coat.functions.approve(broker.address, 2 * ACTIVATION_BURN)
+                    .build_transaction({"from": actor.address}),
                 "approve-coat",
                 index,
             )
             actor_state["approved"] = True
         elif len(actor_state["activated"]) < MINT_QTY:
             token_id = actor_state["tokenIds"][len(actor_state["activated"])]
-            send(actor, broker.functions.activate(token_id).build_transaction(), "activate", index)
+            send(actor, broker.functions.activate(token_id)
+                 .build_transaction({"from": actor.address}), "activate", index)
             actor_state["activated"].append(token_id)
         else:
             continue
