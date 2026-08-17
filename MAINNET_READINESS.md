@@ -1,0 +1,77 @@
+# Coattail Brokers — mainnet deploy readiness
+
+_Updated 2026-08-17. Pre-deploy GO checklist and deploy-day sequence. Mechanics live in
+[contracts/DEPLOY.md](contracts/DEPLOY.md); the canonical remaining-work list is [STATUS.md](STATUS.md).
+This is not a GO notice — it is the readiness board the owner works through before broadcasting._
+
+## Verified this session (2026-08-16 → 17)
+
+- **Contracts:** non-fork suite 130/130 pass. Deploy scripts compile with the default pipeline
+  (`forge build --skip test` clean) — the `LaunchWithHook` stack-too-deep that would have broken a
+  mainnet launch is fixed, with no contract bytecode change.
+- **Mainnet fork (live RH mainnet, weekday, fresh feeds):** ForkMainnet, ForkLaunch, ForkHook and
+  ForkFullSystem pass; ForkStockRoutes (all five V1 routes) passes; ForkScaleClaims re-run in
+  progress. The earlier weekend `BadFeed()` failures were stale-feed artifacts, now resolved.
+- **Automation (GitHub Actions, green):** the indexer posts a real oracle-signed Congress basket
+  on-chain (epoch advanced), and the keeper runs the flush → split → poke → buyback → claim
+  distribution path. Five integration bugs found and fixed along the way (secret scope, `1E+15`
+  env parse, distributor timeout, Unusual Whales date format, coverage gate).
+- **Live testnet system check:** buy/sell quotes, FeeSplitter 80/10/10 sinks, Booster shares,
+  registry epoch, deflating COAT supply and the closed launch-protection window all confirmed.
+
+## Hard GO gates (status)
+
+| Gate | Status |
+|---|---|
+| Non-fork contract suite + coverage | ✅ 130/130, 85% branch gate |
+| Mainnet-fork release report (clean 6/6) | 🟡 5/6 confirmed today; ScaleClaims re-running — capture the full 6/6 report before GO |
+| Deploy scripts compile + dry-run | ✅ compile fixed; dry-run on mainnet fork before broadcast |
+| 888-actor testnet load at scale | 🔴 runner fixed + 1 actor proven; needs funding + full run |
+| Renderer read-back sweep | 🔴 tool ready; run the full 1,776 on-chain sweep |
+| Internal critical/high finding review | 🟡 owner accepted no third-party audit; close internal findings |
+| Production identities configured | 🔴 owner action (below) |
+
+## Before you broadcast — owner actions
+
+1. **Create the production keys.** Separate, never shared:
+   - **Owner/admin → hardware wallet** (Ledger/Trezor). This holds Broker/Booster/StockRouter/
+     Renderer/FeeSplitter/hook admin. Set `OWNER` and `HOOK_OWNER` to it.
+   - **Deployer** — a funded EOA that runs the deploy, then hands ownership 2-step to the hardware
+     wallet and is discarded (`PRIVATE_KEY`).
+   - **Keeper** — gas-funded, no on-chain role (`TESTNET_KEEPER_PRIVATE_KEY` → a mainnet equivalent).
+   - **Oracle signer** — signs baskets; must equal the registry `oracleSigner`.
+2. **Wire the price feeds after deploy** (see DEPLOY.md §3.2):
+   - `booster.setStockFeed(token, feed)` for each of the five V1 tokens — addresses from
+     `indexer/route-ready.mainnet.json`. These auto-update; no refresher.
+   - `booster.setEthUsdFeed(<ETH/USD proxy>)` — RH Chain publishes a Chainlink ETH/USD feed; read the
+     current proxy from the official feeds page. (`setEthUsdManual` + refresh is a fallback only.)
+3. **Re-probe the five routes** against the final mainnet deployment and record the block before
+   opening activation.
+4. **Set the GitHub Actions secrets** for the mainnet indexer/keeper (a Congress API key, the mainnet
+   keeper and oracle keys, addresses) and switch the schedule env to mainnet.
+5. **Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet`** until a verified mainnet manifest exists — the
+   frontend build already refuses a mainnet config with placeholder addresses or a leaked key.
+
+## Deploy-day sequence (mechanics in DEPLOY.md)
+
+1. **Dry-run** `deploy_all.sh` / `LaunchWithHook` against a mainnet fork; review the manifest.
+2. **Broadcast core** — `scripts/deploy_all.sh` deploys BrokerAccount, COAT, StrategyRegistry,
+   CoattailBroker, StockRouter, Booster, BrokerRenderer, FeeSplitter and wires them. Mint stays closed.
+3. **Launch $COAT** — `script/LaunchWithHook.s.sol` mines the flag-valid hook, atomically initializes
+   the guarded v4 pool, mints LP to the permanent locker, burns the rounding remainder, opens the
+   one-shot protection window, deploys CoatRouter + BuybackBurner and wires the 10% sink.
+4. **Accept ownership** — the hardware wallet `acceptOwnership()` on every admin contract; confirm the
+   deployer holds no roles afterward.
+5. **Wire feeds** (owner action 2), **post the first basket** via the oracle (`setStrategyWithSig`,
+   confirm `epochOf(0) == 1`), **probe routes** (owner action 3).
+6. **Upload + bind renderer**, verify every token, then `broker.setRenderer(renderer)`.
+7. **Open activation / mint** only after the release operator checks every address, feed and route.
+8. Record all addresses in [ADDRESSES.md](ADDRESSES.md) and the verified mainnet manifest in
+   `frontend/deployments.json`; only then flip Vercel to mainnet.
+
+## Post-deploy verification
+
+- Confirm `royaltyInfo` returns 2.5% to `creator`; `FeeSplitter.buyback()` is the BuybackBurner; the
+  hardware wallet owns FeeSplitter and the hook; the deployer owns neither.
+- Confirm the permanent locker holds the LP position and has no principal-withdrawal path.
+- Run one live keeper cycle (flush → poke → distribute) and one claim/withdraw from the frontend.
