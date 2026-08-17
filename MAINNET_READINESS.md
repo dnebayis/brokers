@@ -55,9 +55,23 @@ This is not a GO notice — it is the readiness board the owner works through be
      current proxy from the official feeds page. (`setEthUsdManual` + refresh is a fallback only.)
 3. **Re-probe the five routes** against the final mainnet deployment and record the block before
    opening activation.
-4. **Set the GitHub Actions secrets** for the mainnet indexer/keeper (a Congress API key, the mainnet
-   keeper and oracle keys, addresses) and switch the schedule env to mainnet.
-5. **Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet`** until a verified mainnet manifest exists — the
+4. **Activate the pre-staged mainnet automation.** The mainnet keeper/indexer workflows already exist
+   (`keeper-schedule-mainnet.yml`, `indexer-schedule-mainnet.yml`) and stay **inert** — every job is
+   guarded on the mainnet address variables — until the owner fills them in post-deploy. Already set:
+   `RH_MAINNET_RPC_URL` (secret), `RH_RPC_ORIGIN` (var), `UNUSUAL_WHALES_API_KEY` (secret). Set after
+   deploy:
+   - **Secrets:** `MAINNET_KEEPER_PRIVATE_KEY` (gas-funded, no on-chain role),
+     `MAINNET_ORACLE_PRIVATE_KEY` (must equal the registry `oracleSigner`).
+   - **Variables:** `MAINNET_BROKER_ADDRESS`, `MAINNET_BOOSTER_ADDRESS`, `MAINNET_HOOK_ADDRESS`,
+     `MAINNET_FEE_SPLITTER_ADDRESS`, `MAINNET_BUYBACK_BURNER_ADDRESS`, `MAINNET_BROKER_DEPLOYMENT_BLOCK`,
+     `MAINNET_STRATEGY_REGISTRY_ADDRESS`.
+   The moment the `MAINNET_BROKER_ADDRESS` / `MAINNET_STRATEGY_REGISTRY_ADDRESS` variables are set, the
+   scheduled mainnet keeper/indexer activate automatically (strict mode, 0.70 coverage gate).
+5. **Set the Vercel server env** so the live Congress feed is real: `UNUSUAL_WHALES_API_KEY` (server-side,
+   not `NEXT_PUBLIC_*`). The `/api/feed` route is verified against live data (89 real trades) and returns
+   an honest `unconfigured` state until this is set — it never fabricates rows. Flip
+   `NEXT_PUBLIC_NETWORK`/addresses to mainnet only once a verified manifest exists (owner action 6 below).
+6. **Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet`** until a verified mainnet manifest exists — the
    frontend build already refuses a mainnet config with placeholder addresses or a leaked key.
 
 ## Mainnet env/config (from the code review)

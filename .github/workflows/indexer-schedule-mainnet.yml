@@ -1,0 +1,52 @@
+name: indexer-schedule-mainnet
+
+# Mainnet Congress indexer. Pre-staged and inert: guarded on the mainnet registry variable, so
+# scheduled runs cleanly skip until the owner sets it post-deploy. To activate after launch, set
+# the repository VARIABLE MAINNET_STRATEGY_REGISTRY_ADDRESS and the SECRET
+# MAINNET_ORACLE_PRIVATE_KEY (must equal the registry's on-chain oracleSigner). Reuses the shared
+# UNUSUAL_WHALES_API_KEY secret and the Origin-allowlisted Alchemy RPC (RH_MAINNET_RPC_URL).
+# Unlike testnet, mainnet keeps the default 0.70 route-coverage gate and runs strict.
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+concurrency:
+  group: mainnet-indexer
+  cancel-in-progress: false
+
+jobs:
+  update-and-poke:
+    if: ${{ vars.MAINNET_STRATEGY_REGISTRY_ADDRESS != '' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: indexer
+    env:
+      NETWORK: mainnet
+      INDEXER_DATA_SOURCE: unusual_whales
+      RH_RPC_URL: ${{ secrets.RH_MAINNET_RPC_URL }}
+      RH_RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
+      STRATEGY_REGISTRY_ADDRESS: ${{ vars.MAINNET_STRATEGY_REGISTRY_ADDRESS }}
+      # Production runs strict: a thin-coverage / stale-feed refusal fails loudly, never silently.
+      INDEXER_STRICT: "1"
+      UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
+      UPDATER_PRIVATE_KEY: ${{ secrets.MAINNET_ORACLE_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: indexer/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: python run.py --post --out latest-basket.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: latest-indexer-basket-mainnet
+          path: indexer/latest-basket.json
