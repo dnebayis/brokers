@@ -15,14 +15,29 @@ jobs:
         working-directory: contracts
     env:
       REQUIRE_MAINNET_FORK: "true"
-      RH_MAINNET_RPC_URL: ${{ secrets.RH_MAINNET_RPC_URL }}
+      RH_UPSTREAM_RPC: ${{ secrets.RH_MAINNET_RPC_URL }}
+      # The mainnet Alchemy endpoint is allowlisted to the coattail.cash Origin; the proxy
+      # adds that header so Foundry's fork client (which cannot) can reach the archive RPC.
+      RH_RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
+      RH_PROXY_PORT: "18545"
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
+      # contracts/lib is not versioned; pin the exact libraries like ci.yml does.
+      - run: forge install foundry-rs/forge-std@467ffd422ca01fed5797a4c766a1e4e3a5327902
+      - run: forge install OpenZeppelin/openzeppelin-contracts@v5.1.0
+      - name: Start the Origin proxy to the archive RPC
+        run: |
+          nohup python3 scripts/rpc_origin_proxy.py > /tmp/rpc_proxy.log 2>&1 &
+          for i in $(seq 1 20); do
+            curl -sf -X POST http://127.0.0.1:18545 -H 'Content-Type: application/json' \
+              -d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' && break
+            sleep 1
+          done
       - name: Require the full current-state fork suite
-        run: forge test --match-path 'test/Fork*.t.sol' --no-match-path 'test/ForkTestnet.t.sol' --fork-url "$RH_MAINNET_RPC_URL" -vv
+        run: forge test --match-path 'test/Fork*.t.sol' --no-match-path 'test/ForkTestnet.t.sol' --fork-url http://127.0.0.1:18545 --fork-retries 12 -vv
       - uses: actions/upload-artifact@v4
         if: always()
         with:
