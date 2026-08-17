@@ -147,7 +147,12 @@ export function ActivateTab() {
       ]);
       setInfo({ id, active, owner, wallet });
       if (!silent) act.setStatus(`Owner ${short(owner)}${address && owner.toLowerCase() === address.toLowerCase() ? " (you)" : ""}`);
-      const tokens = basket[0];
+      // Show every stock the Broker wallet can hold — the current basket plus every
+      // token the Booster has ever bought (claimable[0] == knownTokens) — so stocks
+      // claimed under an earlier basket don't vanish when the basket rotates.
+      const seen = new Map<string, Address>();
+      for (const token of [...basket[0], ...claimable[0]]) seen.set(token.toLowerCase(), token);
+      const tokens = [...seen.values()];
       const balances = await Promise.all(tokens.map(async (token) => {
         const [bal, symbol, decimals] = await Promise.all([
           client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [wallet] }),
