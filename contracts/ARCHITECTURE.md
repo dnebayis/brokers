@@ -2,7 +2,7 @@
 
 ## Lifecycle
 
-1. `CoattailBroker.mint(qty)` charges an immutable 0.0015 ETH per NFT, enforces the 2-NFT primary-mint wallet cap and creates an ERC-6551 account. Each ID is drawn without replacement from the sparse pseudo-random `1..1776` pool; the NFT starts inactive.
+1. `CoattailBroker.mint(qty)` charges 0.001 ETH per NFT (owner may only lower it, down to 0 for a free mint), enforces the 2-NFT primary-mint wallet cap and creates an ERC-6551 account. Each ID is drawn without replacement from the sparse pseudo-random `1..1776` pool; the NFT starts inactive. The owner can also cut the sellable `mintCap` downward (never below what is minted; the 1,776-ID art space is fixed) and `refundAndBurn` a problem mint (owner-funded ETH back to the holder, token burned).
 2. The owner approves and calls `activate(tokenId)`. Exactly 36,750 COAT is burned and the token becomes one active Booster share.
 3. Sell-side COAT hook fees reach FeeSplitter. Its 80/10/10 outputs fund stock purchases, project treasury and the TWAP buyback burner.
 4. `Booster.poke()` reads the signed route-ready basket, derives a Chainlink-protected minimum and calls `StockRouter` with each ETH slice.

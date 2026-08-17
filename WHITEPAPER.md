@@ -82,7 +82,7 @@ The whole collection = "follow Congress." Razor-sharp promise, best data-fit, fa
 
 ## 5. How a Broker works (user journey)
 
-1. **Mint a Broker** — flat **0.0015 ETH**. Mint proceeds go **directly to the creator**. The Broker gets its **ERC-6551 wallet** automatically, but starts **inactive**.
+1. **Mint a Broker** — **0.001 ETH** (the owner may only lower this, down to a free mint; it is never raised). Mint proceeds go **directly to the creator**. The Broker gets its **ERC-6551 wallet** automatically, but starts **inactive**.
 2. **Activate it** — buy $COAT from the v4 pool and **burn `36,750 COAT`**. Each token ID is independent: two active NFTs cost `73,500 COAT` and earn two equal shares; one active NFT earns one share.
 3. The **Politician strategy has live target weights** (e.g. 22% NVDA, 15% MSFT, 11% AAPL…), refreshed as new congressional disclosures land.
 4. **Fee pool buys real stock.** The staged keeper advances `CoatFeeHook.flush → FeeSplitter.flush`; **80% reaches the Booster**, and an eligible permissionless `poke()` buys the target basket. Purchases create pro-rata `claimable` balances; they do not push 1,776 wallet transfers.
@@ -171,7 +171,7 @@ We have **no capital to seed a pool**, so we deposit **only $COAT** (no paired E
 
 ### Broker NFT economics
 - **Supply 1,776**, art = **1-bit on-chain PFP portraits** — exact Alien/Ape/Zombie/Female/Male and accessory distributions (see §4 The collection), rendered as 40×40 200-byte on-chain bitmaps.
-- **Mint price = flat 0.0015 ETH** (RH Chain's gas token is ETH; no Chainlink needed). Mint proceeds go to the creator. ERC-2981 reports a fixed **2.5% secondary royalty directly to the current creator**. The real "cost" of a working Broker is the **COAT activation burn**, which scales naturally with COAT's market value.
+- **Mint price = 0.001 ETH, owner-lowerable only** (down to free; never raised — RH Chain's gas token is ETH, no Chainlink needed). The sellable supply can also be cut downward and a problem mint refunded+burned. Mint proceeds go to the creator. ERC-2981 reports a fixed **2.5% secondary royalty directly to the current creator**. The real "cost" of a working Broker is the **COAT activation burn**, which scales naturally with COAT's market value.
 - **Primary-distribution guard:** per-wallet mint cap 2. It does not restrict secondary-market ownership.
 - **Bootstrap liquidity** comes from the $COAT single-sided launch as buyers acquire $COAT. Royalties are creator revenue and do not fund the flywheel.
 - The Broker's value = its ERC-6551 stock holdings + expected future reward flow (if kept active) + collectible/scarcity premium.
@@ -191,7 +191,7 @@ We have **no capital to seed a pool**, so we deposit **only $COAT** (no paired E
 
 ## 10. Technical architecture (sketch)
 
-- `CoattailBroker` (ERC-721) — the collection; flat 0.0015 ETH mint (→ `creator`) deploys an ERC-6551 account via the canonical registry. `activate(tokenId)` burns COAT and flips the Broker on; `_update` (transfer hook) flips it off and notifies the Booster.
+- `CoattailBroker` (ERC-721) — the collection; 0.001 ETH mint (→ `creator`, owner-lowerable to free) deploys an ERC-6551 account via the canonical registry. `activate(tokenId)` burns COAT and flips the Broker on; `_update` (transfer hook) flips it off and notifies the Booster.
 - `StrategyRegistry` — `strategyId → { tokenAddresses[], targetWeights[], epoch }`; **EIP-712 signed** weight vectors (`setStrategyWithSig`, monotonic epoch, per-epoch drift cap) with an AccessControl role fallback.
 - `Booster` — receives fee ETH, market-buys through the validated two-hop `StockRouter`, and credits active token IDs pro-rata (`accPerShare / activeShares`). Owner `claim(tokenId)` moves whole raw-token amounts into the TBA.
 - `COAT` (ERC-20, burnable) + its Uniswap **v4** single-sided launch. `AtomicV4Launcher` makes hook deployment, guarded initialization, LP ID binding and permanent-locker mint one transaction.
@@ -217,7 +217,7 @@ or living-portfolio art are not part of the v1 GO gate.
 
 **Resolved:** Smart-Money-Mirror concept · fee→stock flywheel · **The Politician only (v1)** · single collection, strategy=trait · **permissionless staged automation** · **$COAT via Uniswap v4 single-sided** · name **Coattail Brokers** · supply **1,776** · five independently route-probed V1 stocks · art = **1-bit on-chain PFPs, five Type categories, slate-on-cream**, Flux Klein + quality gate.
 
-**Implemented mint/COAT model:** **mint = flat 0.0015 ETH → creator** plus **2.5% ERC-2981 royalty → current creator** · immutable **36,750 COAT activation burn** · transfer deactivates · Booster active-share weighted with guarded, route-ready stock purchases · FeeSplitter 80/10/10 · permissionless TWAP buyback · full 1B launch allocation with no reserve/team tokens · canonical v4 launch with permanent LP custody and Pons-inspired first-three-block protection.
+**Implemented mint/COAT model:** **mint = 0.001 ETH → creator (owner-lowerable to free)** plus **2.5% ERC-2981 royalty → current creator** · immutable **36,750 COAT activation burn** · transfer deactivates · Booster active-share weighted with guarded, route-ready stock purchases · FeeSplitter 80/10/10 · permissionless TWAP buyback · full 1B launch allocation with no reserve/team tokens · canonical v4 launch with permanent LP custody and Pons-inspired first-three-block protection.
 
 **Historical testnet proof:** the earlier deployment established the ERC-6551, signed-basket, activation/deactivation, selected reward-claim and v4 fee-routing mechanics. Those addresses are retired; they are not release evidence for the new clean deployment.
 

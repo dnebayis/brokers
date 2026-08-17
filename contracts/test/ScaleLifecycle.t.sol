@@ -67,7 +67,7 @@ contract ScaleLifecycleTest is Test {
             coat.transfer(actor, 2 * BURN);
         }
 
-        uint256 mintPrice = broker.MINT_PRICE();
+        uint256 mintPrice = broker.mintPriceWei();
         for (uint256 i; i < ACTORS; ++i) {
             address actor = address(uint160(10_000 + ((i * 137) % ACTORS)));
             vm.deal(actor, 2 * mintPrice);
@@ -93,7 +93,7 @@ contract ScaleLifecycleTest is Test {
         assertEq(mintedIds.length, 1_776);
         assertEq(broker.totalMinted(), 1_776);
         assertEq(booster.activeShares(), 1_776);
-        assertEq(creator.balance, 2.664 ether);
+        assertEq(creator.balance, 1_776 * mintPrice); // 1,776 × 0.001 ETH = 1.776 ETH
         assertEq(coat.totalSupply(), SUPPLY - 1_776 * BURN);
         assertEq(coat.balanceOf(poolManager), SUPPLY - 1_776 * BURN);
 

@@ -28,7 +28,7 @@ interface IBrokerRenderer {
 ///         amounts into that wallet by claiming. Mint is a flat 0.0015 ETH.
 ///
 ///         Two-step model:
-///           1. mint()     — 0.0015 ETH, one-time. You get an *inactive* Broker + wallet.
+///           1. mint()     — 0.001 ETH (owner-lowerable to free), one-time. Inactive Broker + wallet.
 ///           2. activate()  — burn $COAT to switch the Broker ON so it starts accruing
 ///                            claimable balances for the strategy basket.
 ///         Transferring an *active* Broker deactivates it. Unclaimed entitlement follows
@@ -39,7 +39,11 @@ interface IBrokerRenderer {
 ///      Flat ETH price avoids a Chainlink dependency (RH Chain has no ETH/USD feed).
 contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     // --- supply / config ---
+    // MAX_SUPPLY is the fixed 1,776-ID art space (the Fisher-Yates draw pool and the renderer's
+    // token universe). It never changes. `mintCap` is the how-many-will-be-sold ceiling: it starts
+    // at MAX_SUPPLY and the owner may only cut it downward (never below what is already minted).
     uint256 public constant MAX_SUPPLY = 1776;
+    uint256 public mintCap = MAX_SUPPLY; // effective sellable supply; owner-cuttable, downward-only
     uint256 public constant WALLET_CAP = 2; // primary mint cap; secondary ownership is unrestricted
 
     // v1: every Broker is THE_POLITICIAN. Trait kept for future strategies.
@@ -51,7 +55,10 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     bytes32 public constant SALT = bytes32(0);
 
     // --- pricing ---
-    uint256 public constant MINT_PRICE = 0.0015 ether;
+    // The mint price is a distribution lever, not a revenue source. It starts at 0.001 ETH and the
+    // owner may only lower it — down to 0 for a free mint — never raise it.
+    uint256 public constant INITIAL_MINT_PRICE = 0.001 ether;
+    uint256 public mintPrice = INITIAL_MINT_PRICE;
     uint256 public constant ACTIVATION_BURN = 36_750 ether;
 
     // --- state ---
@@ -78,11 +85,17 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     event CreatorUpdated(address creator);
     event CoatUpdated(address coat);
     event MintStateChanged(bool open);
+    event MintPriceChanged(uint256 newPrice);
+    event MintCapCut(uint256 newCap);
+    event Refunded(uint256 indexed tokenId, address indexed to, uint256 amountWei);
 
     error SoldOut();
     error WalletCapReached();
     error InsufficientPayment(uint256 required, uint256 sent);
     error RefundFailed();
+    error PriceIncrease();
+    error CapNotLower();
+    error CapBelowMinted();
     error NotOwner();
     error AlreadyActivated();
     error CoatNotSet();
@@ -106,15 +119,15 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
         _baseTokenUri = baseUri_;
     }
 
-    /// @notice Mint `qty` Brokers at 0.0015 ETH each. Deploys an ERC-6551 wallet per token.
+    /// @notice Mint `qty` Brokers at the current `mintPrice` each. Deploys an ERC-6551 wallet per token.
     function mint(uint256 qty) external payable nonReentrant returns (uint256[] memory tokenIds) {
         if (!mintOpen) revert MintClosed();
         tokenIds = new uint256[](qty);
         if (qty == 0) return tokenIds;
-        if (totalMinted + qty > MAX_SUPPLY) revert SoldOut();
+        if (totalMinted + qty > mintCap) revert SoldOut();
         if (mintedBy[msg.sender] + qty > WALLET_CAP) revert WalletCapReached();
 
-        uint256 unit = MINT_PRICE;
+        uint256 unit = mintPrice;
         uint256 required = unit * qty;
         if (msg.value < required) revert InsufficientPayment(required, msg.value);
 
@@ -130,9 +143,11 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
             emit Minted(msg.sender, tokenId, acct, unit);
         }
 
-        // mint proceeds go to the creator; refund overpay
-        (bool ok,) = creator.call{value: required}("");
-        require(ok, "creator xfer");
+        // mint proceeds go to the creator; refund overpay. A free mint (price 0) forwards nothing.
+        if (required > 0) {
+            (bool ok,) = creator.call{value: required}("");
+            require(ok, "creator xfer");
+        }
         uint256 refund = msg.value - required;
         if (refund > 0) {
             (bool r,) = msg.sender.call{value: refund}("");
@@ -147,9 +162,40 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
         emit MintStateChanged(open);
     }
 
-    /// @notice Current mint price in wei (flat). Kept as a function for script/UI stability.
-    function mintPriceWei() public pure returns (uint256) {
-        return MINT_PRICE;
+    /// @notice Current mint price in wei. Kept as a function for script/UI stability.
+    function mintPriceWei() public view returns (uint256) {
+        return mintPrice;
+    }
+
+    /// @notice Lower the mint price (never raise). Set to 0 for a free mint. Distribution lever only.
+    function setMintPrice(uint256 newPrice) external onlyOwner {
+        if (newPrice > mintPrice) revert PriceIncrease();
+        mintPrice = newPrice;
+        emit MintPriceChanged(newPrice);
+    }
+
+    /// @notice Cut the sellable supply. `newCap` must be strictly lower than the current cap and
+    ///         not below what is already minted. MAX_SUPPLY (the art/ID space) is unaffected.
+    function cutMintCap(uint256 newCap) external onlyOwner {
+        if (newCap >= mintCap) revert CapNotLower();
+        if (newCap < totalMinted) revert CapBelowMinted();
+        mintCap = newCap;
+        emit MintCapCut(newCap);
+    }
+
+    /// @notice Owner-funded refund + reversal for a problem mint. Burns `tokenId` (an active Broker
+    ///         is deactivated first via _update) and forwards the attached ETH to its current holder.
+    ///         The contract holds no mint proceeds (they go straight to the creator), so the refund
+    ///         amount is supplied here as msg.value. Burning permanently reduces circulating supply;
+    ///         it does not return the ID to the mintable pool or decrement totalMinted.
+    function refundAndBurn(uint256 tokenId) external payable onlyOwner nonReentrant {
+        address holder = ownerOf(tokenId); // reverts if the token does not exist
+        _burn(tokenId);
+        if (msg.value > 0) {
+            (bool ok,) = holder.call{value: msg.value}("");
+            if (!ok) revert RefundFailed();
+        }
+        emit Refunded(tokenId, holder, msg.value);
     }
 
     /// @notice Turn a Broker ON by burning `ACTIVATION_BURN` $COAT. It then starts earning
@@ -168,12 +214,13 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
         emit Activated(tokenId, msg.sender, ACTIVATION_BURN);
     }
 
-    /// @dev On any real transfer of an *active* Broker, deactivate it: earning stops and
-    ///      the new owner must re-activate (re-burn $COAT). Unclaimed Booster entitlement
-    ///      stays keyed to tokenId. Claimed wallet assets follow only while left there.
+    /// @dev On any real transfer of an *active* Broker — or a burn (refundAndBurn) — deactivate it:
+    ///      earning stops and a new owner must re-activate (re-burn $COAT). Unclaimed Booster
+    ///      entitlement stays keyed to tokenId. Claimed wallet assets follow only while left there.
     function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
         address from = super._update(to, tokenId, auth);
-        if (from != address(0) && to != address(0) && from != to && activated[tokenId]) {
+        // from != 0 excludes mint; from != to covers both a transfer (to != 0) and a burn (to == 0).
+        if (from != address(0) && from != to && activated[tokenId]) {
             activated[tokenId] = false;
             if (address(booster) != address(0)) booster.deactivate(tokenId);
             emit Deactivated(tokenId);

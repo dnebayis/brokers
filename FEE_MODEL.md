@@ -12,7 +12,7 @@ royalty revenue are deliberately outside it:
 | Source | Fee rate | Volume needed for ~10 ETH/mo | Realistic driver? |
 |---|---|---|---|
 | **$COAT swap fees (`CoatFeeHook`)** | immutable 1% | ~1,000 ETH/mo of $COAT volume | **Yes — this is the real engine** |
-| Mint proceeds | 0.0015 ETH × 1,776 | one-time = 2.664 ETH | → **creator** (not the flywheel) |
+| Mint proceeds | 0.001 ETH × 1,776 | one-time = 1.776 ETH | → **creator** (not the flywheel) |
 | NFT secondary royalty | 2.5% ERC-2981 | marketplace-dependent | → **creator** (not the flywheel) |
 
 **Key insight:** the flywheel is powered mainly by **$COAT trading volume via the `CoatFeeHook`** (a real Uniswap v4 `afterSwap` hook — see below), not NFT royalties. The activation model *reinforces* this: every mint-to-activate and every re-activation after a resale is a **forced buy-and-burn of $COAT through the pool**, generating hook swap fees *and* shrinking supply. So $COAT volume isn't just speculative — it's structurally driven by the collection's own activation demand. Treat $COAT volume as the primary fuel.
@@ -27,7 +27,7 @@ brick trading. `FeeSplitter.flush()` independently pays or parks each leg, so on
 recipient cannot block the others. The hourly keeper advances the hook, splitter, Booster and
 bounded buyback stages.
 
-**Mint proceeds + royalty → creator.** The 0.0015 ETH mint fee goes directly to the `creator` wallet (`CoattailBroker.setCreator`). ERC-2981 reports a fixed 2.5% secondary royalty to the current creator. Permissionlessly collected LP fees go to project treasury, the hook's sell-side ETH follows FeeSplitter 80/10/10, and there is no team/creator/reserve token allocation.
+**Mint proceeds + royalty → creator.** The 0.001 ETH mint fee goes directly to the `creator` wallet (`CoattailBroker.setCreator`). ERC-2981 reports a fixed 2.5% secondary royalty to the current creator. Permissionlessly collected LP fees go to project treasury, the hook's sell-side ETH follows FeeSplitter 80/10/10, and there is no team/creator/reserve token allocation.
 
 **Staging clarification.** The active testnet StrategyRegistry is at epoch 1 with a deterministic
 test basket, and a receipt-checked hook → splitter → Booster purchase delivered its assets into two
@@ -54,7 +54,7 @@ Per-Broker reward = Booster ÷ **active** Brokers. The table above assumes all 1
 
 **Reading it:**
 - **Low volume is the danger zone.** ~$32/yr/Broker (all active) is barely perceptible. If only 500 Brokers are active, the same Low scenario is about $115/yr per active Broker.
-- **Base scenario:** the example annualized flow is illustrative only; a Broker mints for 0.0015 ETH and rewards remain volume-funded, variable and not guaranteed.
+- **Base scenario:** the example annualized flow is illustrative only; a Broker mints for 0.001 ETH and rewards remain volume-funded, variable and not guaranteed.
 - **High is a flywheel.** ~$811/yr/Broker (all active) is economically meaningful, but remains variable volume-funded rewards rather than guaranteed yield.
 
 ---

@@ -4,7 +4,7 @@ Coattail Brokers is a 1,776-piece ERC-721 collection on Robinhood Chain. Every N
 
 ## Locked v1
 
-- `0.0015 ETH` mint, closed by default, primary cap 2.
+- `0.001 ETH` mint, closed by default, primary cap 2.
 - Unique pseudo-random IDs drawn without replacement from `1..1776`; no sequential-ID assumption.
 - Fixed 1B COAT supply, no team/reserve allocation, native ETH/COAT Uniswap v4 single-sided launch.
 - 1% LP + 1% hook fee; buy-side COAT burns, sell-side ETH splits 80/10/10.

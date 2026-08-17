@@ -23,9 +23,11 @@ contract CoattailBrokerTest is Test {
         broker.setMintOpen(true);
     }
 
-    function test_mintPrice_isFlat() public view {
-        assertEq(broker.mintPriceWei(), 0.0015 ether);
-        assertEq(broker.MINT_PRICE(), 0.0015 ether);
+    function test_mintPrice_defaults() public view {
+        assertEq(broker.mintPriceWei(), 0.001 ether);
+        assertEq(broker.INITIAL_MINT_PRICE(), 0.001 ether);
+        assertEq(broker.mintPrice(), 0.001 ether);
+        assertEq(broker.mintCap(), broker.MAX_SUPPLY());
         assertEq(broker.ACTIVATION_BURN(), 36_750 ether);
     }
 
@@ -66,7 +68,7 @@ contract CoattailBrokerTest is Test {
     function test_mintStartsClosed_andOwnerCanPauseResume() public {
         CoattailBroker closed =
             new CoattailBroker(owner, treasury, IERC6551Registry(address(registry)), impl, "");
-        uint256 closedPrice = closed.MINT_PRICE();
+        uint256 closedPrice = closed.mintPriceWei();
         vm.deal(user, 1 ether);
         vm.prank(user);
         vm.expectRevert(CoattailBroker.MintClosed.selector);
@@ -84,7 +86,7 @@ contract CoattailBrokerTest is Test {
     }
 
     function test_batchMint_drawsTwoDistinctIds() public {
-        uint256 unit = broker.MINT_PRICE();
+        uint256 unit = broker.mintPriceWei();
         vm.deal(user, 1 ether);
         vm.prank(user);
         broker.mint{value: unit * 2}(2);
@@ -95,7 +97,7 @@ contract CoattailBrokerTest is Test {
 
     function test_revertedMintConsumesNoIdOrSupply() public {
         uint256 beforeMinted = broker.totalMinted();
-        uint256 price = broker.MINT_PRICE();
+        uint256 price = broker.mintPriceWei();
         vm.deal(user, 1 ether);
         vm.prank(user);
         vm.expectRevert();
@@ -141,7 +143,7 @@ contract CoattailBrokerTest is Test {
 
     function test_activationRequiresCompleteWiring() public {
         vm.deal(user, 1 ether);
-        uint256 price = broker.MINT_PRICE();
+        uint256 price = broker.mintPriceWei();
         vm.prank(user);
         broker.mint{value: price}(1);
         uint256 tokenId = _firstOwned(user);
@@ -187,6 +189,127 @@ contract CoattailBrokerTest is Test {
         assertTrue(broker.supportsInterface(0x2a55205a));
     }
 
+    // --- mint price: lower-only + free mint ---
+    function test_setMintPrice_lowersAndAllowsFreeMint() public {
+        vm.prank(owner);
+        broker.setMintPrice(0.0005 ether);
+        assertEq(broker.mintPriceWei(), 0.0005 ether);
+        vm.deal(user, 1 ether);
+        vm.prank(user);
+        broker.mint{value: 0.0005 ether}(1);
+        assertEq(treasury.balance, 0.0005 ether);
+
+        // drop to zero: a free mint takes no ETH and forwards nothing to the creator.
+        vm.prank(owner);
+        broker.setMintPrice(0);
+        assertEq(broker.mintPriceWei(), 0);
+        uint256 treasuryBefore = treasury.balance;
+        address freeMinter = makeAddr("freeMinter");
+        vm.prank(freeMinter);
+        broker.mint(1);
+        assertEq(broker.balanceOf(freeMinter), 1);
+        assertEq(treasury.balance, treasuryBefore); // creator received nothing on a free mint
+    }
+
+    function test_setMintPrice_cannotRaise_andOwnerOnly() public {
+        vm.prank(owner);
+        vm.expectRevert(CoattailBroker.PriceIncrease.selector);
+        broker.setMintPrice(0.002 ether);
+
+        vm.prank(user);
+        vm.expectRevert();
+        broker.setMintPrice(0);
+    }
+
+    // --- supply cut ---
+    function test_cutMintCap_reducesSellableSupply() public {
+        uint256 unit = broker.mintPriceWei();
+        vm.deal(user, 1 ether);
+        vm.prank(user);
+        broker.mint{value: unit}(1); // totalMinted = 1
+
+        vm.prank(owner);
+        broker.cutMintCap(1); // cap down to exactly what is minted
+        assertEq(broker.mintCap(), 1);
+        assertEq(broker.MAX_SUPPLY(), 1776); // art/ID space untouched
+
+        address late = makeAddr("late");
+        vm.deal(late, 1 ether);
+        vm.prank(late);
+        vm.expectRevert(CoattailBroker.SoldOut.selector);
+        broker.mint{value: unit}(1);
+    }
+
+    function test_cutMintCap_guards() public {
+        vm.startPrank(owner);
+        vm.expectRevert(CoattailBroker.CapNotLower.selector);
+        broker.cutMintCap(1776); // not lower
+        vm.expectRevert(CoattailBroker.CapNotLower.selector);
+        broker.cutMintCap(2000); // cannot raise
+        vm.stopPrank();
+
+        uint256 unit = broker.mintPriceWei();
+        vm.deal(user, 1 ether);
+        vm.prank(user);
+        broker.mint{value: unit * 2}(2); // totalMinted = 2
+        vm.prank(owner);
+        vm.expectRevert(CoattailBroker.CapBelowMinted.selector);
+        broker.cutMintCap(1); // below already minted
+
+        vm.prank(user);
+        vm.expectRevert();
+        broker.cutMintCap(2); // onlyOwner
+    }
+
+    // --- refund + reversal ---
+    function test_refundAndBurn_returnsEthAndBurns() public {
+        uint256 unit = broker.mintPriceWei();
+        vm.deal(user, 1 ether);
+        vm.prank(user);
+        broker.mint{value: unit}(1);
+        uint256 tokenId = _firstOwned(user);
+        uint256 userBefore = user.balance;
+
+        vm.deal(owner, 1 ether);
+        vm.prank(owner);
+        broker.refundAndBurn{value: unit}(tokenId);
+
+        assertEq(user.balance, userBefore + unit); // holder made whole
+        vm.expectRevert(); // token no longer exists
+        broker.ownerOf(tokenId);
+        assertEq(broker.balanceOf(user), 0);
+    }
+
+    function test_refundAndBurn_deactivatesActiveAndOwnerOnly() public {
+        MockCoat mockCoat = new MockCoat();
+        MockBooster mockBooster = new MockBooster();
+        vm.startPrank(owner);
+        broker.setCoat(ICoatBurnable(address(mockCoat)));
+        broker.setBooster(IBoosterHook(address(mockBooster)));
+        vm.stopPrank();
+
+        uint256 unit = broker.mintPriceWei();
+        vm.deal(user, 1 ether);
+        vm.prank(user);
+        broker.mint{value: unit}(1);
+        uint256 tokenId = _firstOwned(user);
+        vm.prank(user);
+        broker.activate(tokenId);
+        assertTrue(broker.activated(tokenId));
+
+        // non-owner cannot refund
+        vm.prank(user);
+        vm.expectRevert();
+        broker.refundAndBurn(tokenId);
+
+        vm.deal(owner, 1 ether);
+        vm.prank(owner);
+        broker.refundAndBurn{value: unit}(tokenId);
+        assertTrue(mockBooster.wasDeactivated(tokenId)); // burn deactivated it in the Booster
+        vm.expectRevert();
+        broker.ownerOf(tokenId);
+    }
+
     function _prefix(string memory s, uint256 n) internal pure returns (string memory) {
         bytes memory b = bytes(s);
         bytes memory out = new bytes(n);
@@ -209,5 +332,23 @@ contract CoattailBrokerTest is Test {
             } catch {}
         }
         assertEq(found, expected, "owned random IDs not found");
+    }
+}
+
+// Minimal wiring mocks for the activate → refund-burn deactivation path.
+contract MockCoat is ICoatBurnable {
+    function burnFrom(address, uint256) external {}
+}
+
+contract MockBooster is IBoosterHook {
+    mapping(uint256 => bool) public wasActivated;
+    mapping(uint256 => bool) public wasDeactivated;
+
+    function activate(uint256 tokenId) external {
+        wasActivated[tokenId] = true;
+    }
+
+    function deactivate(uint256 tokenId) external {
+        wasDeactivated[tokenId] = true;
     }
 }

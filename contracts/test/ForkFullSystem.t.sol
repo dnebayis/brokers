@@ -127,7 +127,7 @@ contract ForkFullSystemTest is Test {
         uint256 coatBought = coatRouter.buy{value: 0.01 ether}(1, alice);
         assertGt(coatBought, 300_000 ether, "activation inventory not bought from live v4 pool");
 
-        uint256 mintPrice = broker.MINT_PRICE();
+        uint256 mintPrice = broker.mintPriceWei();
         vm.prank(alice);
         broker.mint{value: 2 * mintPrice}(2);
         uint256[] memory ids = _ownedIds(alice, 2);

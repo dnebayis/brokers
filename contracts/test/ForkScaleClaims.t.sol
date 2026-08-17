@@ -143,7 +143,7 @@ contract ForkScaleClaimsTest is Test {
             ForkScaleActor actor = new ForkScaleActor();
             scaleCoat.transfer(address(actor), 2 * BURN);
             uint256[] memory pair =
-                actor.mintAndActivate{value: 2 * scaleBroker.MINT_PRICE()}(scaleBroker, scaleCoat);
+                actor.mintAndActivate{value: 2 * scaleBroker.mintPriceWei()}(scaleBroker, scaleCoat);
 
             for (uint256 j; j < 2; ++j) {
                 uint256 tokenId = pair[j];
@@ -164,7 +164,7 @@ contract ForkScaleClaimsTest is Test {
         }
         assertEq(
             address(scaleTreasury).balance - treasuryBefore,
-            SUPPLY * scaleBroker.MINT_PRICE(),
+            SUPPLY * scaleBroker.mintPriceWei(),
             "mint revenue mismatch"
         );
         assertEq(scaleBooster.activeShares(), SUPPLY);
