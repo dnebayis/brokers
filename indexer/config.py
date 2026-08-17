@@ -80,6 +80,13 @@ RPC_URL = os.environ.get("RH_RPC_URL", _NET["rpc"])
 # works against the public RPC as well as a private endpoint.
 RPC_HEADERS = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"}
 
+# A domain-allowlisted provider (e.g. the mainnet Alchemy endpoint restricted to
+# coattail.cash) rejects server-side requests unless they carry a matching Origin.
+# Set RH_RPC_ORIGIN=https://www.coattail.cash for the mainnet indexer/keeper.
+RPC_ORIGIN = os.environ.get("RH_RPC_ORIGIN", "")
+if RPC_ORIGIN:
+    RPC_HEADERS["Origin"] = RPC_ORIGIN
+
 
 def make_web3(rpc_url: str = RPC_URL, expect_chain: int | None = CHAIN_ID):
     """Return a connected Web3 for `rpc_url`, verifying the chain id when given."""
