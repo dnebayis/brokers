@@ -71,7 +71,10 @@ class KeeperTests(unittest.TestCase):
         document = {
             "name": "Coattail Broker #731",
             "image": image,
-            "attributes": [{"trait_type": str(i), "value": "x"} for i in range(7)],
+            # The dynamic renderer always emits Type at index 0, then a variable set of
+            # visual traits (None omitted) plus live Status/holdings.
+            "attributes": [{"trait_type": "Type", "value": "Broker"}]
+            + [{"trait_type": str(i), "value": "x"} for i in range(1, 7)],
         }
         uri = "data:application/json;base64," + base64.b64encode(json.dumps(document).encode()).decode()
         self.assertEqual(decode_uri(uri, 731)["name"], "Coattail Broker #731")

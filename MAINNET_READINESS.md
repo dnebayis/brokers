@@ -49,8 +49,10 @@ This is not a GO notice — it is the readiness board the owner works through be
    - **Keeper** — gas-funded, no on-chain role (`TESTNET_KEEPER_PRIVATE_KEY` → a mainnet equivalent).
    - **Oracle signer** — signs baskets; must equal the registry `oracleSigner`.
 2. **Wire the price feeds after deploy** (see DEPLOY.md §3.2):
-   - `booster.setStockFeed(token, feed)` for each of the five V1 tokens — addresses from
-     `indexer/route-ready.mainnet.json`. These auto-update; no refresher.
+   - `booster.setStockFeed(token, feed)` **and** `stockRouter.setRoute(...)` for each of the 23
+     route-ready tokens (5 V1 + 18 V2) — addresses from `indexer/route-ready.mainnet.json`, every one
+     mainnet-fork-probed (V2 via CI run 32066225360). These feeds auto-update; no refresher. Wiring
+     more routes later is a repeat of this owner op — no redeploy.
    - `booster.setEthUsdFeed(<ETH/USD proxy>)` — RH Chain publishes a Chainlink ETH/USD feed; read the
      current proxy from the official feeds page. (`setEthUsdManual` + refresh is a fallback only.)
 3. **Re-probe the five routes** against the final mainnet deployment and record the block before
