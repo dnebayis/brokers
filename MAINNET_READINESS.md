@@ -9,14 +9,11 @@ This is not a GO notice — it is the readiness board the owner works through be
 - **Contracts:** non-fork suite 130/130 pass. Deploy scripts compile with the default pipeline
   (`forge build --skip test` clean) — the `LaunchWithHook` stack-too-deep that would have broken a
   mainnet launch is fixed, with no contract bytecode change.
-- **Mainnet fork (live RH mainnet, weekday, fresh feeds):** ForkMainnet, ForkLaunch, ForkHook,
-  ForkFullSystem and ForkStockRoutes (all five V1 routes) pass — 5/6. The earlier weekend
-  `BadFeed()` failures were stale-feed artifacts and are now resolved. ForkScaleClaims (the heavy
-  356-transaction scale test) could not complete on the **public** RPC — it aborts with
-  a code or feed failure. Against the archive Alchemy RPC (through the Origin proxy) the state-pruning
-  error is gone, but the 356-transaction run is heavy enough that the remote endpoint intermittently
-  resets or times out a request under the call volume. The `mainnet-fork-release.yml` CI job (better
-  network to Alchemy, fork retries) is the authoritative attempt for the full 6/6.
+- **Mainnet fork (live RH mainnet, archive RPC via CI):** ✅ **full 6/6** — `mainnet-fork-release.yml`
+  run 32005090190 (7m59s) passed ForkMainnet, ForkLaunch, ForkHook, ForkFullSystem, ForkStockRoutes
+  (all five V1 routes) and ForkScaleClaims. The last one drives all 1,776 random IDs to claim real
+  AAPL into distinct TBAs (444s). The earlier public-RPC `metadata is not found` was historical-state
+  pruning; the archive Alchemy RPC (through the Origin proxy, with fork retries) resolves it.
 - **Automation (GitHub Actions, green):** the indexer posts a real oracle-signed Congress basket
   on-chain (epoch advanced), and the keeper runs the flush → split → poke → buyback → claim
   distribution path. Five integration bugs found and fixed along the way (secret scope, `1E+15`
@@ -29,7 +26,7 @@ This is not a GO notice — it is the readiness board the owner works through be
 | Gate | Status |
 |---|---|
 | Non-fork contract suite + coverage | ✅ 130/130, 85% branch gate |
-| Mainnet-fork release report (clean 6/6) | 🟡 5/6 pass live today; ScaleClaims needs an archive RPC (public endpoint prunes state) — run in CI for the full 6/6 |
+| Mainnet-fork release report (clean 6/6) | ✅ full 6/6 in CI (run 32005090190) against the archive Alchemy RPC |
 | Deploy scripts compile + dry-run | ✅ compile fixed; dry-run on mainnet fork before broadcast |
 | 888-actor testnet load at scale | 🔴 runner fixed + 1 actor proven; needs funding + full run |
 | Renderer read-back sweep | 🔴 tool ready; run the full 1,776 on-chain sweep |
