@@ -50,9 +50,14 @@ export function MintTab() {
 
   // pre-flight: don't let the user submit a tx that will revert (and waste gas)
   const soldOut = minted >= max;
+  // Closed with supply still available reads as "not opened yet", not "ended" — the launch
+  // flips `mintOpen` on-chain and this state clears itself with no redeploy.
+  const preLaunch = !mintOpen && !soldOut;
   const overCap = mintedBy !== undefined && Number(mintedBy) + qty > PARAMS.walletCap;
   const insufficient = !!(address && ethBal && totalCost !== undefined && ethBal.value < totalCost);
-  const reason = !address
+  const reason = preLaunch
+    ? "Mint opens at launch — watch for the announcement."
+    : !address
     ? "Connect your wallet to mint."
     : !mintOpen
       ? "Mint is currently closed."
@@ -94,7 +99,14 @@ export function MintTab() {
 
   return (
     <div className="card">
-      <h2 className="pixel-title text-[15px] mb-1">Mint a Broker</h2>
+      <div className="flex items-center gap-2 mb-1">
+        <h2 className="pixel-title text-[15px]">Mint a Broker</h2>
+        {preLaunch && (
+          <span className="font-pixel text-[10px] uppercase tracking-widest text-accent border border-accent px-1.5 py-0.5">
+            Launching soon
+          </span>
+        )}
+      </div>
       <p className="text-ink-soft text-sm mb-5">
         {priceEth} ETH per mint. Each mint draws a unique pseudo-random ID from the remaining
         collection and creates its own on-chain wallet. Brokers arrive inactive.
@@ -124,7 +136,7 @@ export function MintTab() {
       <p className="text-ink-soft text-sm mt-2">Total: {total === "—" ? "—" : `${total} ETH`}</p>
 
       <button className="btn btn-accent w-full mt-4" onClick={mint} disabled={busy || !canMint}>
-        <Icon name="stamp" /> {busy ? "MINTING…" : "MINT"}
+        <Icon name="stamp" /> {busy ? "MINTING…" : preLaunch ? "OPENS AT LAUNCH" : "MINT"}
       </button>
       {reason && <p className="text-accent text-sm mt-2">{reason}</p>}
       <StatusLine msg={msg} kind={kind} />
