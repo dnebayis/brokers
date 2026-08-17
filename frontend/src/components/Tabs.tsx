@@ -1,12 +1,13 @@
 "use client";
 
 import { Icon } from "./ui/Icon";
+import { SWAP_ENABLED } from "@/lib/config";
 
 export type TabId = "mint" | "swap" | "activate" | "feed" | "docs";
 
 const TABS: { id: TabId; label: string; icon: "stamp" | "swap" | "power" | "book" | "list" }[] = [
   { id: "mint", label: "Mint", icon: "stamp" },
-  { id: "swap", label: "Swap", icon: "swap" },
+  ...(SWAP_ENABLED ? [{ id: "swap" as const, label: "Swap", icon: "swap" as const }] : []),
   { id: "activate", label: "Activate", icon: "power" },
   { id: "feed", label: "Feed", icon: "list" },
   { id: "docs", label: "Docs", icon: "book" },
