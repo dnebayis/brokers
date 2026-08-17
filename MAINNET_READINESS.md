@@ -9,6 +9,12 @@ This is not a GO notice — it is the readiness board the owner works through be
 - **Contracts:** non-fork suite 130/130 pass. Deploy scripts compile with the default pipeline
   (`forge build --skip test` clean) — the `LaunchWithHook` stack-too-deep that would have broken a
   mainnet launch is fixed, with no contract bytecode change.
+- **Deploy script (`Deploy.s.sol`) dry-run:** simulated end-to-end against the live **testnet** fork —
+  full deploy + wiring, every post-deploy assert (supply, liquidity allocation, wiring, creator,
+  80/10/10 split) passes, and the distinct-owner run exercises the 2-step ownership handoff
+  (transferOwnership + registry admin grant/renounce + pending-owner asserts). ~17.4M gas. The
+  mainnet-state dry-run (chain-4663 canonical-dependency + shared-key guard) is staged as the
+  `mainnet-deploy-dryrun.yml` CI job, to dispatch once it reaches the default branch.
 - **Mainnet fork (live RH mainnet, archive RPC via CI):** ✅ **full 6/6** — `mainnet-fork-release.yml`
   run 32005090190 (7m59s) passed ForkMainnet, ForkLaunch, ForkHook, ForkFullSystem, ForkStockRoutes
   (all five V1 routes) and ForkScaleClaims. The last one drives all 1,776 random IDs to claim real
@@ -27,7 +33,7 @@ This is not a GO notice — it is the readiness board the owner works through be
 |---|---|
 | Non-fork contract suite + coverage | ✅ 130/130, 85% branch gate |
 | Mainnet-fork release report (clean 6/6) | ✅ full 6/6 in CI (run 32005090190) against the archive Alchemy RPC |
-| Deploy scripts compile + dry-run | ✅ compile fixed; dry-run on mainnet fork before broadcast |
+| Deploy scripts compile + dry-run | ✅ compile fixed; `Deploy.s.sol` simulates clean on the testnet fork (shared-key **and** 2-step owner-handoff paths). Mainnet-state dry-run staged as `mainnet-deploy-dryrun.yml` (dispatch after it lands on the default branch) |
 | 888-actor testnet load at scale | ✅ dropped as a GO gate (2026-08-17) — 1,776-scale proven by ScaleLifecycle/Integration tests + ForkScaleClaims 6/6; live 888 run is optional/post-launch |
 | Renderer read-back sweep | ✅ full 1,776 swept on testnet — 0 failures, aggregate matches manifest (re-run on the mainnet renderer post-upload) |
 | Internal critical/high finding review | 🟡 owner accepted no third-party audit; close internal findings |
