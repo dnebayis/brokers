@@ -1,0 +1,10 @@
+{
+  "aggregateMatch": true,
+  "audited": 1776,
+  "chainId": 46630,
+  "failingTokens": [],
+  "failures": 0,
+  "manifestAggregateSha256": "cfee4e655045cc4cb034433be3ea8ef8a50099072f566515e6d59ffa0b9818d6",
+  "onchainAggregateSha256": "cfee4e655045cc4cb034433be3ea8ef8a50099072f566515e6d59ffa0b9818d6",
+  "renderer": "0x87af3a4333914ee050a4395e8897ba6e87574739"
+}

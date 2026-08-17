@@ -46,7 +46,11 @@ _Updated 2026-08-16. This is the only canonical remaining-work list. It describe
    ForkScaleClaims — the last one drives all 1,776 random IDs to claim real AAPL into distinct TBAs
    (444s). The earlier public-RPC `metadata is not found` was state pruning, not a code/feed failure;
    the archive endpoint resolves it. Deploy scripts compile with the default pipeline (`forge build` clean).
-4. **Renderer read-back sweep.** `indexer/renderer_readback_audit.py` reads each token's on-chain bitmap/traits/tokenURI, proves it against the manifest hashes and re-derives the aggregate digest. The offline half and a 3-token on-chain spot check pass; the full 1,776-token sweep is deferred by owner decision. The gate stays open until it reports `failures: 0` and `aggregateMatch: true`.
+4. **Renderer read-back sweep.** ✅ **CLOSED (2026-08-17).** `indexer/renderer_readback_audit.py` swept
+   all 1,776 tokens on the live testnet renderer (`0x87af…4739`): `audited: 1776`, `failures: 0`,
+   `aggregateMatch: true` — the on-chain aggregate digest equals the manifest
+   (`cfee4e655045cc4cb034433be3ea8ef8a50099072f566515e6d59ffa0b9818d6`). Evidence:
+   `indexer/reports/renderer-readback-2026-08-17.json`. Re-run against the mainnet renderer after upload.
 5. **Production identities and provider credentials.** Owner decision (2026-08-17): deploy with the existing shared deployer key rather than a separate hardware-wallet owner — set `ALLOW_DEPLOYER_OWNER=true`, which the deploy scripts now honor (the role-separation requires stay the default otherwise). Point the mainnet indexer/keeper at the Alchemy RPC with `RH_RPC_ORIGIN=https://www.coattail.cash` (the endpoint is Origin-allowlisted), set `BROKER_DEPLOYMENT_BLOCK` and run `KEEPER_STRICT=1`/`INDEXER_STRICT=1`. Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet` until a verified mainnet manifest exists; the build already refuses a mainnet config with placeholder addresses or a leaked key. Full config list in [MAINNET_READINESS.md](MAINNET_READINESS.md).
 6. **Internal finding review.** Resolve every critical/high internal finding before committing real value. Project decision (2026-08-16): no third-party independent audit will be commissioned — a deliberate risk acceptance by the owner that removes an external safety check.
 
