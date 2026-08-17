@@ -122,37 +122,60 @@ contract LaunchWithHook is Script {
         if (remainder != 0) COAT(coat).burn(remainder);
         COAT(coat).enableTrading();
 
-        // 4) deploy the permanent router + TWAP buyback burner and enforce the 10% sink.
+        // 4) deploy the permanent router + buyback burner, wire the sink, stop the broadcast
+        // and persist the manifest — all in a helper so run()'s locals stay under the stack
+        // limit (the deploy script must compile without --via-ir).
+        _finishLaunch(address(hook), address(locker), address(atomicLauncher));
+    }
+
+    /// @dev Deploy the permanent router + TWAP buyback burner, enforce the 10% sink, end the
+    ///      broadcast and persist the launch manifest. Split out of `run()` for stack depth;
+    ///      re-reads the env values so the call site passes only the freshly-created addresses.
+    function _finishLaunch(address hook, address locker, address atomicLauncher) internal {
+        address coat = vm.envAddress("COAT_ADDRESS");
+        address payable feeSplitter = payable(vm.envAddress("FEE_SPLITTER"));
+        address me = vm.addr(vm.envUint("PRIVATE_KEY"));
         CoatRouter router = new CoatRouter(
-            IPoolManagerFull(address(POOL_MANAGER)), IStateView(address(STATE_VIEW)), coat, address(hook)
+            IPoolManagerFull(address(POOL_MANAGER)), IStateView(address(STATE_VIEW)), coat, hook
         );
         BuybackBurner burner =
-            new BuybackBurner(ICoatBuybackRouter(address(router)), ICoatTwap(address(hook)), ICoatBurn(coat));
-        IFeeSplitterLaunch splitter = configuredSplitter;
+            new BuybackBurner(ICoatBuybackRouter(address(router)), ICoatTwap(hook), ICoatBurn(coat));
+        IFeeSplitterLaunch splitter = IFeeSplitterLaunch(feeSplitter);
         require(splitter.owner() == me, "deployer must own FeeSplitter until launch wiring");
         splitter.setSinks(splitter.booster(), splitter.treasury(), payable(address(burner)));
         require(splitter.buyback() == address(burner), "buyback wiring failed");
 
         vm.stopBroadcast();
 
-        // `hook` and `locker` are created by AtomicV4Launcher, so Foundry's top-level
-        // broadcast file does not list them as standalone creations. Persist their
-        // canonical addresses for the deploy manifest and downstream verification.
+        _persistLaunch(atomicLauncher, hook, locker, address(router), address(burner), feeSplitter, coat);
+    }
+
+    /// @dev Write the launch manifest and log the deployed addresses. Kept separate from
+    ///      `run()` so its string/log temporaries do not overflow the caller's stack.
+    function _persistLaunch(
+        address atomicLauncher,
+        address hook,
+        address locker,
+        address router,
+        address burner,
+        address feeSplitter,
+        address coat
+    ) internal {
         string memory report = "launch";
-        vm.serializeAddress(report, "atomicLauncher", address(atomicLauncher));
-        vm.serializeAddress(report, "feeHook", address(hook));
-        vm.serializeAddress(report, "lpLocker", address(locker));
-        vm.serializeAddress(report, "router", address(router));
-        string memory json = vm.serializeAddress(report, "buybackBurner", address(burner));
+        vm.serializeAddress(report, "atomicLauncher", atomicLauncher);
+        vm.serializeAddress(report, "feeHook", hook);
+        vm.serializeAddress(report, "lpLocker", locker);
+        vm.serializeAddress(report, "router", router);
+        string memory json = vm.serializeAddress(report, "buybackBurner", burner);
         vm.writeJson(json, string.concat("reports/launch-", vm.toString(block.chainid), ".json"));
 
         console2.log("hook deployed + pool initialized + seeded single-sided.");
-        console2.log("hook:", address(hook));
+        console2.log("hook:", hook);
         console2.log("fee splitter (ETH sink):", feeSplitter);
         console2.log("buy-side COAT fees: real totalSupply burn");
-        console2.log("permanent LP locker:", address(locker));
-        console2.log("CoatRouter:", address(router));
-        console2.log("BuybackBurner (10% sink):", address(burner));
+        console2.log("permanent LP locker:", locker);
+        console2.log("CoatRouter:", router);
+        console2.log("BuybackBurner (10% sink):", burner);
         console2.log("COAT now in PoolManager:", IERC20(coat).balanceOf(address(POOL_MANAGER)));
     }
 
