@@ -191,6 +191,10 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     ///         The contract holds no mint proceeds (they go straight to the creator), so the refund
     ///         amount is supplied here as msg.value. Burning permanently reduces circulating supply;
     ///         it does not return the ID to the mintable pool or decrement totalMinted.
+    /// @dev WARNING: a burned NFT's ERC-6551 account loses its controller, and any unclaimed Booster
+    ///      entitlement keyed to this tokenId becomes permanently unclaimable. Only use this on a
+    ///      Broker whose TBA is drained and whose rewards are claimed/forfeited — intended for a fresh,
+    ///      inactive, empty problem mint. It will not brick other tokens, but it strands this one's assets.
     function refundAndBurn(uint256 tokenId) external payable onlyOwner nonReentrant {
         address holder = ownerOf(tokenId); // reverts if the token does not exist
         _burn(tokenId);
