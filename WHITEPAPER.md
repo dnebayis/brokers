@@ -171,7 +171,7 @@ We have **no capital to seed a pool**, so we deposit **only $COAT** (no paired E
 
 ### Broker NFT economics
 - **Supply 1,776**, art = **1-bit on-chain PFP portraits** — exact Alien/Ape/Zombie/Female/Male and accessory distributions (see §4 The collection), rendered as 40×40 200-byte on-chain bitmaps.
-- **Mint price = 0.001 ETH, owner-lowerable only** (down to free; never raised — RH Chain's gas token is ETH, no Chainlink needed). The sellable supply can also be cut downward and a buyer refunded for a problem mint (owner-funded ETH; the NFT is untouched). Mint proceeds go to the creator. ERC-2981 reports a fixed **2.5% secondary royalty directly to the current creator**. The real "cost" of a working Broker is the **COAT activation burn**, which scales naturally with COAT's market value.
+- **Mint price = 0.001 ETH, owner-lowerable only** (down to free; never raised — RH Chain's gas token is ETH, no Chainlink needed). The sellable supply can also be cut downward, and the deployer can mass-refund every current holder their recorded mint payment (deployer-funded, batched, NFTs untouched). Mint proceeds go to the creator. ERC-2981 reports a fixed **2.5% secondary royalty directly to the current creator**. The real "cost" of a working Broker is the **COAT activation burn**, which scales naturally with COAT's market value.
 - **Primary-distribution guard:** per-wallet mint cap 2. It does not restrict secondary-market ownership.
 - **Bootstrap liquidity** comes from the $COAT single-sided launch as buyers acquire $COAT. Royalties are creator revenue and do not fund the flywheel.
 - The Broker's value = its ERC-6551 stock holdings + expected future reward flow (if kept active) + collectible/scarcity premium.

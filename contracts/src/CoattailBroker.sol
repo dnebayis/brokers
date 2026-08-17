@@ -62,6 +62,9 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     uint256 public constant ACTIVATION_BURN = 36_750 ether;
 
     // --- state ---
+    // The EOA that deployed this contract. It is the sole caller of the mass refund, independent of
+    // ownership (which may be handed to a hardware wallet).
+    address public immutable deployer;
     uint256 public totalMinted;
     bool public mintOpen;
     address public creator; // receives mint proceeds directly
@@ -73,6 +76,7 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     mapping(uint256 tokenId => uint256 strategyId) public strategyOf;
     mapping(address minter => uint256 count) public mintedBy;
     mapping(uint256 tokenId => bool) public activated; // earning the strategy basket?
+    mapping(uint256 tokenId => uint256 weiPaid) public mintPaid; // per-token mint payment; 0 once refunded
 
     // Sparse Fisher-Yates table. An empty slot means its untouched value is index + 1.
     // Drawing swaps the chosen slot with the last remaining slot, so every ID in
@@ -99,6 +103,8 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     error CapNotLower();
     error CapBelowMinted();
     error NotAuthorizedRefresh();
+    error NotDeployer();
+    error BadRange();
     error NotOwner();
     error AlreadyActivated();
     error CoatNotSet();
@@ -115,6 +121,7 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
         string memory baseUri_
     ) ERC721("Coattail Brokers", "COATB") Ownable(owner_) {
         if (creator_ == address(0)) revert ZeroAddress();
+        deployer = msg.sender;
         creator = creator_;
         _setDefaultRoyalty(creator_, 250);
         registry = registry_;
@@ -140,6 +147,7 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
             uint256 tokenId = _drawRandomId(msg.sender, i);
             tokenIds[i] = tokenId;
             strategyOf[tokenId] = STRATEGY_POLITICIAN;
+            mintPaid[tokenId] = unit; // recorded for a possible deployer-triggered mass refund
             _safeMint(msg.sender, tokenId);
             address acct = registry.createAccount(accountImpl, SALT, block.chainid, address(this), tokenId);
             // Brokers mint *inactive*; owner burns $COAT via activate() to start earning.
@@ -186,17 +194,34 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
         emit MintCapCut(newCap);
     }
 
-    /// @notice Owner-funded refund helper — makes a buyer whole for a problem mint. The contract
-    ///         holds no mint proceeds (they go straight to the creator), so the owner supplies the
-    ///         refund amount here as msg.value and it is forwarded to `to`. This deliberately does
-    ///         NOT touch the NFT: a refund does not confiscate or destroy the token, so no bound
-    ///         assets can be stranded. If a returned token is also wanted, arrange that separately
-    ///         (the holder transfers it back).
-    function refund(address to) external payable onlyOwner nonReentrant {
-        if (to == address(0)) revert ZeroAddress();
-        (bool ok,) = to.call{value: msg.value}("");
-        if (!ok) revert RefundFailed();
-        emit Refunded(to, msg.value);
+    /// @notice Deployer-only mass refund. Walks token IDs in [fromId, toId] and returns each
+    ///         still-owned token's recorded mint payment to its CURRENT owner, exactly once
+    ///         (`mintPaid` is zeroed as it pays, so re-running never double-refunds). The contract
+    ///         holds no mint proceeds (they went to the creator), so the deployer funds the batch
+    ///         with msg.value; any unspent remainder is returned to the deployer. Refunding does not
+    ///         touch the NFTs — holders keep their Brokers. Call in batches across the 1..1776 range
+    ///         (e.g. 200 IDs per call) to stay under the block gas limit.
+    /// @dev Gated on the immutable deployer, not the owner, so a handed-off owner cannot trigger it.
+    function refundHolders(uint256 fromId, uint256 toId) external payable nonReentrant {
+        if (msg.sender != deployer) revert NotDeployer();
+        if (fromId < 1 || toId > MAX_SUPPLY || fromId > toId) revert BadRange();
+        uint256 spent;
+        for (uint256 id = fromId; id <= toId; ++id) {
+            uint256 amt = mintPaid[id];
+            if (amt == 0) continue; // free mint, never minted, or already refunded
+            address o = _ownerOf(id);
+            if (o == address(0)) continue; // not currently minted
+            mintPaid[id] = 0; // effect before interaction (CEI) — no double refund
+            spent += amt;
+            (bool ok,) = o.call{value: amt}(""); // fails if the batch is underfunded → whole tx reverts
+            if (!ok) revert RefundFailed();
+            emit Refunded(o, amt);
+        }
+        uint256 remainder = msg.value - spent;
+        if (remainder > 0) {
+            (bool r,) = msg.sender.call{value: remainder}("");
+            if (!r) revert RefundFailed();
+        }
     }
 
     /// @notice Turn a Broker ON by burning `ACTIVATION_BURN` $COAT. It then starts earning

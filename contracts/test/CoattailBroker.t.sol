@@ -261,34 +261,53 @@ contract CoattailBrokerTest is Test {
         broker.cutMintCap(2); // onlyOwner
     }
 
-    // --- refund (owner-funded, does not touch the NFT) ---
-    function test_refund_forwardsEthAndKeepsNft() public {
+    // --- deployer-only mass refund (does not touch the NFTs) ---
+    function test_refundHolders_refundsCurrentOwnersOnce() public {
+        // This test contract deployed `broker` in setUp, so it is the `deployer`.
+        vm.deal(address(this), 5 ether);
         uint256 unit = broker.mintPriceWei();
         vm.deal(user, 1 ether);
         vm.prank(user);
-        broker.mint{value: unit}(1);
-        uint256 tokenId = _firstOwned(user);
-        uint256 userBefore = user.balance;
+        broker.mint{value: unit * 2}(2);
+        uint256[] memory ids = _ownedIds(user, 2);
+        assertEq(broker.mintPaid(ids[0]), unit);
 
-        vm.deal(owner, 1 ether);
-        vm.prank(owner);
-        broker.refund{value: unit}(user);
-
-        assertEq(user.balance, userBefore + unit); // buyer made whole
-        assertEq(broker.ownerOf(tokenId), user); // NFT untouched — refund does not confiscate
-        assertEq(broker.balanceOf(user), 1);
-    }
-
-    function test_refund_onlyOwner_andRejectsZero() public {
+        // Transfer one to a buyer — the refund must follow to the CURRENT owner.
+        address buyer = makeAddr("buyer");
         vm.prank(user);
-        vm.expectRevert();
-        broker.refund{value: 0}(user);
+        broker.transferFrom(user, buyer, ids[0]);
 
-        vm.deal(owner, 1 ether);
-        vm.prank(owner);
-        vm.expectRevert(CoattailBroker.ZeroAddress.selector);
-        broker.refund{value: 1}(address(0));
+        uint256 userBefore = user.balance;
+        uint256 buyerBefore = buyer.balance;
+        broker.refundHolders{value: unit * 2}(1, broker.MAX_SUPPLY());
+        assertEq(buyer.balance, buyerBefore + unit); // current owner of ids[0]
+        assertEq(user.balance, userBefore + unit); // still owns ids[1]
+        assertEq(broker.mintPaid(ids[0]), 0);
+        assertEq(broker.mintPaid(ids[1]), 0);
+        assertEq(broker.ownerOf(ids[0]), buyer); // NFTs untouched
+        assertEq(broker.ownerOf(ids[1]), user);
+
+        // Idempotent: a second sweep refunds nothing and returns the full funding.
+        uint256 selfBefore = address(this).balance;
+        broker.refundHolders{value: 1 ether}(1, broker.MAX_SUPPLY());
+        assertEq(address(this).balance, selfBefore); // remainder fully returned
     }
+
+    function test_refundHolders_onlyDeployerAndRange() public {
+        vm.prank(makeAddr("stranger"));
+        vm.expectRevert(CoattailBroker.NotDeployer.selector);
+        broker.refundHolders(1, 1776);
+
+        vm.expectRevert(CoattailBroker.BadRange.selector);
+        broker.refundHolders(0, 10);
+        vm.expectRevert(CoattailBroker.BadRange.selector);
+        broker.refundHolders(5, 4);
+        vm.expectRevert(CoattailBroker.BadRange.selector);
+        broker.refundHolders(1, 1777);
+    }
+
+    // Deployer of `broker`; must accept the mass-refund remainder.
+    receive() external payable {}
 
     function _prefix(string memory s, uint256 n) internal pure returns (string memory) {
         bytes memory b = bytes(s);
