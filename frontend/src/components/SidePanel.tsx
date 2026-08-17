@@ -69,7 +69,7 @@ export function SidePanel() {
       <div className="card !p-4">
         <div className="font-pixel text-[11px] text-ink-strong mb-2">How it works</div>
         <ol className="text-[13px] text-ink-soft leading-relaxed list-decimal ml-4 space-y-1">
-          <li>Mint a Broker (0.0015 ETH)</li>
+          <li>Mint a Broker (0.001 ETH)</li>
           <li>Burn 36,750 $COAT per Broker to activate</li>
           <li>Claim earned stocks into its wallet</li>
         </ol>

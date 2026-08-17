@@ -1,6 +1,6 @@
 // Dependency-free line-icon set (24x24, stroke = currentColor). Clean, not sloppy.
 type Name =
-  | "stamp" | "swap" | "power" | "book" | "wallet" | "search"
+  | "stamp" | "swap" | "power" | "book" | "wallet" | "search" | "home"
   | "download" | "plus" | "minus" | "flip" | "check" | "copy" | "external" | "arrow-right" | "list";
 
 const paths: Record<Name, React.ReactNode> = {
@@ -19,6 +19,7 @@ const paths: Record<Name, React.ReactNode> = {
   external: <><path d="M14 4h6v6" /><path d="M20 4 10 14" /><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" /></>,
   "arrow-right": <><path d="M4 12h16" /><path d="m14 6 6 6-6 6" /></>,
   list: <><path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3.5 6h.01" /><path d="M3.5 12h.01" /><path d="M3.5 18h.01" /></>,
+  home: <><path d="m3 11 9-7 9 7" /><path d="M5 10v10h14V10" /><path d="M9 20v-6h6v6" /></>,
 };
 
 export function Icon({ name, className = "w-4 h-4" }: { name: Name; className?: string }) {

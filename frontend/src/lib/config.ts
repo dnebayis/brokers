@@ -34,7 +34,7 @@ export const ADDR: AddrSet = ACTIVE_NETWORK === "mainnet" ? MAINNET : TESTNET;
 export const BROKER_DEPLOYMENT_BLOCK = ACTIVE_NETWORK === "testnet" ? 0x60cdc73n : 0n;
 
 export const PARAMS = {
-  mintPriceEth: "0.0015",
+  mintPriceEth: "0.001",
   activationBurn: 36_750,
   maxSupply: 1776,
   walletCap: 2,

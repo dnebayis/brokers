@@ -96,7 +96,7 @@ export function MintTab() {
     <div className="card">
       <h2 className="pixel-title text-[15px] mb-1">Mint a Broker</h2>
       <p className="text-ink-soft text-sm mb-5">
-        Flat {priceEth} ETH. Each mint draws a unique pseudo-random ID from the remaining
+        {priceEth} ETH per mint. Each mint draws a unique pseudo-random ID from the remaining
         collection and creates its own on-chain wallet. Brokers arrive inactive.
       </p>
 

@@ -54,7 +54,7 @@ export function DocsTab() {
 
       <H>How it works</H>
       <ol className="list-decimal ml-5 space-y-1.5 text-ink my-2.5">
-        <li><b>Mint</b> up to two Brokers — flat 0.0015 ETH each. Every mint draws a unique non-sequential ID from the remaining collection and creates an ERC-6551 wallet.</li>
+        <li><b>Mint</b> up to two Brokers — 0.001 ETH each (owner-lowerable to free). Every mint draws a unique non-sequential ID from the remaining collection and creates an ERC-6551 wallet.</li>
         <li><b>Activate</b> it — burn 36,750 $COAT (<Code>activate()</Code>). The Broker switches ON and joins the earning set. Burning is a pure sink: nothing is handed back, so there&apos;s no mint-and-dump.</li>
         <li><b>Earn</b> — a staged permissionless keeper flushes fees and, above threshold, buys the latest valid Congress basket. Purchases become <Code>claimable(tokenId)</Code>; the owner claims them into the Broker wallet.</li>
         <li><b>Transfer</b> — selling an active Broker turns it OFF. Unclaimed entitlement and assets left in its wallet follow the NFT; the buyer re-burns $COAT to resume.</li>
@@ -103,7 +103,7 @@ export function DocsTab() {
             ["Strategic reserve", "None — no team/reserve allocation"],
             ["Activation burn", "36,750 $COAT / Broker (immutable)"],
             ["Primary mint cap", "2 per address; secondary ownership unrestricted"],
-            ["Mint price", "0.0015 ETH → creator"],
+            ["Mint price", "0.001 ETH → creator (owner-lowerable)"],
             ["Secondary royalty", "2.5% → current creator (ERC-2981)"],
             ["Fee split", "80% stock / 10% project / 10% buyback-burn"],
           ].map(([k, v]) => (
@@ -162,7 +162,7 @@ export function DocsTab() {
         <li><b>Explicit amounts.</b> Every mint/activate/swap shows the exact value, and swaps show a minimum-received floor before you sign.</li>
         <li><b>Network guard.</b> Actions refuse to send unless you&apos;re on {activeChain.name} ({activeChain.id}).</li>
         <li><b>Permissionless progress.</b> Fee flush, stock purchase and buyback entry points can be called by third parties; our keeper is convenience, not automatic contract execution.</li>
-        <li><b>Unaudited.</b> These contracts have not had a professional audit yet. Testnet only.</li>
+        <li><b>Unaudited.</b> These contracts have not had a professional independent audit.</li>
       </ul>
 
       <H>Risk &amp; legal</H>

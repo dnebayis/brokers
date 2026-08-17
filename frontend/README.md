@@ -5,7 +5,7 @@ React Query **5.101.4**. The wallet UI is project-owned; RainbowKit is not used.
 
 ## User flows
 
-- **Mint** — closed by default; flat 0.0015 ETH, primary cap 2, receipt-status checks and event-derived random token IDs.
+- **Mint** — closed by default; 0.001 ETH, primary cap 2, receipt-status checks and event-derived random token IDs.
 - **Swap** — explicit `BUY · ETH → COAT` and `SELL · COAT → ETH` modes through `CoatRouter`.
   Buying never requests approval. Selling requests an exact COAT approval first, then a separate sell transaction.
   The sell field uses an unlocalized raw decimal amount and provides `MAX COAT`; formatted wallet

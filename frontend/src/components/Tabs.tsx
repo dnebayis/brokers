@@ -3,9 +3,10 @@
 import { Icon } from "./ui/Icon";
 import { SWAP_ENABLED } from "@/lib/config";
 
-export type TabId = "mint" | "swap" | "activate" | "feed" | "docs";
+export type TabId = "home" | "mint" | "swap" | "activate" | "feed" | "docs";
 
-const TABS: { id: TabId; label: string; icon: "stamp" | "swap" | "power" | "book" | "list" }[] = [
+const TABS: { id: TabId; label: string; icon: "home" | "stamp" | "swap" | "power" | "book" | "list" }[] = [
+  { id: "home", label: "Home", icon: "home" },
   { id: "mint", label: "Mint", icon: "stamp" },
   ...(SWAP_ENABLED ? [{ id: "swap" as const, label: "Swap", icon: "swap" as const }] : []),
   { id: "activate", label: "Activate", icon: "power" },
