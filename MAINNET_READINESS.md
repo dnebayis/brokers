@@ -101,7 +101,10 @@ first; deploy the COAT token and the Broker NFT only after explicit approval.
    deployer holds no roles afterward.
 5. **Wire feeds** (owner action 2), **post the first basket** via the oracle (`setStrategyWithSig`,
    confirm `epochOf(0) == 1`), **probe routes** (owner action 3).
-6. **Upload + bind renderer**, verify every token, then `broker.setRenderer(renderer)`.
+6. **Upload + bind renderer**, verify every token, then `broker.setRenderer(renderer)`. Also wire the
+   dynamic metadata: `renderer.setBroker(broker)` and `renderer.setStockTokens([5 V1 tokens],[symbols])`
+   so `Status` and TBA holdings render. Then run the full 1,776-ID remote read-back (schema + gas/size)
+   against the deployed renderer before opening mint (blocker 7).
 7. **Open activation / mint** only after the release operator checks every address, feed and route.
 8. Record all addresses in [ADDRESSES.md](ADDRESSES.md) and the verified mainnet manifest in
    `frontend/deployments.json`; only then flip Vercel to mainnet.

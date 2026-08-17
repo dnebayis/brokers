@@ -300,6 +300,7 @@ contract Booster is ReentrancyGuard, Ownable2Step {
         bool active = isActive[tokenId];
 
         uint256 n = knownTokens.length;
+        bool moved;
         for (uint256 i; i < n; ++i) {
             address token = knownTokens[i];
             // pending (crystallized while active) + live accrual if still active. Everything is
@@ -318,8 +319,11 @@ contract Booster is ReentrancyGuard, Ownable2Step {
                 totalClaimed[token] += whole;
                 IERC20(token).safeTransfer(tba, whole);
                 emit Claimed(tokenId, tba, token, whole);
+                moved = true;
             }
         }
+        // A claim changed the TBA holdings → signal an EIP-4906 metadata refresh on the NFT.
+        if (moved) brokers.refreshMetadata(tokenId);
     }
 
     /// @notice Recover tokens the Booster holds that are NOT owed to any Broker — i.e. accidental

@@ -55,9 +55,19 @@ _Updated 2026-08-17. This is the only canonical remaining-work list. It describe
 5. **Production identities and provider credentials.** Owner decision (2026-08-17): deploy with the existing shared deployer key rather than a separate hardware-wallet owner — set `ALLOW_DEPLOYER_OWNER=true`, which the deploy scripts now honor (the role-separation requires stay the default otherwise). Point the mainnet indexer/keeper at the Alchemy RPC with `RH_RPC_ORIGIN=https://www.coattail.cash` (the endpoint is Origin-allowlisted), set `BROKER_DEPLOYMENT_BLOCK` and run `KEEPER_STRICT=1`/`INDEXER_STRICT=1`. Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet` until a verified mainnet manifest exists; the build already refuses a mainnet config with placeholder addresses or a leaked key. Full config list in [MAINNET_READINESS.md](MAINNET_READINESS.md).
 6. **Internal finding review.** Resolve every critical/high internal finding before committing real value. Project decision (2026-08-16): no third-party independent audit will be commissioned — a deliberate risk acceptance by the owner that removes an external safety check.
 
-7. **Final static + dynamic metadata renderer.** The staging renderer proves the locked art (blocker 4
-   read-back ✅), but the final marketplace metadata is not built yet. This is a hard GO gate; the current
-   staging renderer is **not** final evidence for it. Carry the same design into the fresh mainnet deploy.
+7. **Final static + dynamic metadata renderer.** 🟡 **Built + unit-proven (2026-08-17); remote read-back
+   pending a fresh deployment.** `BrokerRenderer` now omits `None` traits, reads live `Status`
+   Active/Inactive from the Broker, and lists TBA holdings from `balanceOf(accountOf(tokenId))` over a
+   bounded owner-set V1 stock list (never `claimable`), formatted with ERC-8056 decimals/`uiMultiplier`.
+   `CoattailBroker` emits EIP-4906 `MetadataUpdate` on activate, transfer/deactivate and (via the
+   Booster) on claim, plus an owner/TBA-callable `refreshMetadata` for withdrawals; `supportsInterface`
+   reports `0x49064906`. `test/RendererDynamic.t.sol` (7 tests) covers None omission, status, holdings
+   vs claimable, holdings persisting across transfer, the ERC-4906 events, a bounded-gas/valid-shape
+   check and the full #742-style lifecycle (inactive → active → accrue → claim → hold → withdraw →
+   transfer → reactivate). **Remaining:** deploy this renderer, wire `setBroker`/`setStockTokens`, then
+   run the full 1,776-ID remote read-back (schema + gas/size) against it — the on-chain staging renderer
+   currently deployed is still the old static one, so it is **not** final evidence. Carry into mainnet.
+   The historical static-art read-back (blocker 4) remains ✅ for the art bytes, which are unchanged.
    - Omit every optional attribute whose value is `None`; keep the locked art, token IDs, trait bytes and
      rarity counts unchanged.
    - Add `Status: Active|Inactive`, sourced from the Broker's canonical per-token activation state

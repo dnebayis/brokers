@@ -88,6 +88,8 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     event MintPriceChanged(uint256 newPrice);
     event MintCapCut(uint256 newCap);
     event Refunded(uint256 indexed tokenId, address indexed to, uint256 amountWei);
+    // EIP-4906: signal marketplaces to re-read a token's metadata (status/holdings changed).
+    event MetadataUpdate(uint256 _tokenId);
 
     error SoldOut();
     error WalletCapReached();
@@ -96,6 +98,7 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     error PriceIncrease();
     error CapNotLower();
     error CapBelowMinted();
+    error NotAuthorizedRefresh();
     error NotOwner();
     error AlreadyActivated();
     error CoatNotSet();
@@ -212,6 +215,19 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
         coat.burnFrom(msg.sender, ACTIVATION_BURN);
         booster.activate(tokenId);
         emit Activated(tokenId, msg.sender, ACTIVATION_BURN);
+        emit MetadataUpdate(tokenId); // status → Active
+    }
+
+    /// @notice Signal a marketplace metadata refresh (EIP-4906) for a token whose Status or TBA
+    ///         holdings changed off the transfer path — a Booster claim or a stock withdrawal.
+    ///         Callable by the Booster (on claim), the current owner, or the token's own TBA.
+    function refreshMetadata(uint256 tokenId) external {
+        _requireOwned(tokenId);
+        if (
+            msg.sender != address(booster) && msg.sender != ownerOf(tokenId)
+                && msg.sender != accountOf(tokenId)
+        ) revert NotAuthorizedRefresh();
+        emit MetadataUpdate(tokenId);
     }
 
     /// @dev On any real transfer of an *active* Broker — or a burn (refundAndBurn) — deactivate it:
@@ -224,6 +240,7 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
             activated[tokenId] = false;
             if (address(booster) != address(0)) booster.deactivate(tokenId);
             emit Deactivated(tokenId);
+            if (to != address(0)) emit MetadataUpdate(tokenId); // status → Inactive (skip on burn)
         }
         return from;
     }
@@ -280,7 +297,8 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC2981) returns (bool) {
-        return super.supportsInterface(interfaceId);
+        // 0x49064906 = EIP-4906 (metadata update events).
+        return interfaceId == bytes4(0x49064906) || super.supportsInterface(interfaceId);
     }
 
     /// @dev Immediate pseudo-random selection is a UX choice, not a VRF guarantee. Robinhood
