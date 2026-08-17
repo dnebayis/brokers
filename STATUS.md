@@ -1,16 +1,17 @@
 # Coattail Brokers — canonical release status
 
-_Updated 2026-08-16. This is the only canonical remaining-work list. It describes the active chain-46630 staging deployment; it is not a mainnet GO notice._
+_Updated 2026-08-17. This is the only canonical remaining-work list. It describes the active chain-46630 staging deployment; it is not a mainnet GO notice._
 
 ## Locked v1 decisions
 
-- **NFTs:** 1,776 total; `0.0015 ETH` mint; primary mint cap 2; 2.5% ERC-2981 royalty. Fresh deployments start closed. The current testnet mint is open.
+- **NFTs:** 1,776 total; `0.001 ETH` mint; primary mint cap 2; 2.5% ERC-2981 royalty. Fresh deployments start closed. The current testnet mint is open. The mint price is owner-settable **downward only** (including `0` for a free mint), max supply can be **cut** (never raised, never below what is already minted), and buyers can be refunded on-chain for a mint that needs reversing.
 - **Random IDs:** sparse Fisher–Yates selection without replacement from `1..1776`. `totalMinted` is a count, never the next token ID. This is pseudo-random, not VRF.
 - **Multi-NFT accounting:** every token ID has an independent TBA, activation flag, reward debt and claim. Each activation burns exactly `36,750 COAT`; two active NFTs consume `73,500 COAT` and earn two shares. Transfer deactivates only the transferred NFT.
 - **COAT and pool:** fixed 1B initial supply, no team/reserve allocation; native ETH/COAT v4 single-sided liquidity; 1% LP fee + 1% hook fee; sell-side ETH is split 80/10/10. The permanent locker has no principal-withdrawal or position-transfer path. Graduation is informational at `pairedPrincipal >= 4.2 ETH`.
 - **Launch protection:** no buy in the opening block; the following two blocks cap a buy at 5.5% of supply and receiver balance at 5%; sales and transfers remain open. The restriction closes permanently after that window.
 - **Stocks:** V1 is deliberately limited to five independently fork-probed routes: AAPL, AMD, AMZN, COIN and CRCL. The 194-address Robinhood canonical list is discovery data, not a purchase obligation. A new asset requires canonical-address, route, liquidity, feed and fork-probe verification. The five-token V1 universe is the coverage denominator for V1; unverified canonical assets are excluded, never approximated.
 - **Automation:** Congress refresh every six hours; keeper eligibility check every hour; keeper also distributes claims into TBAs. An invalid/new data snapshot cannot replace the last valid basket. Mainnet requires guarded routes (`allowUnguarded=false`).
+- **Marketplace metadata:** visual traits remain fixed, but `None` values are omitted from public JSON. Metadata is otherwise dynamic: it reports the Broker's current `Active`/`Inactive` state and the tokenized stocks actually held by its ERC-6551 account (`balanceOf(accountOf(tokenId))`), formatted with ERC-8056 decimals/`uiMultiplier`. Booster `claimable` balances are pending entitlements and are never presented as wallet holdings. The contract emits ERC-4906 refresh signals on activation, transfer-triggered deactivation, successful claim and Broker-executed withdrawal.
 - **Keys (target):** the owner/admin should be a hardware wallet, with distinct deployer, oracle-signer and keeper keys, and no blockchain private key in the Vercel frontend. **Current reality (2026-08-16):** only a single deployer key exists; the hardware wallet and the separate keeper/oracle identities are not yet created. See blocker 5.
 - **Wallet-signing E2E:** dropped as a GO gate (project decision, 2026-08-16). Frontend correctness is covered by contract tests, the render-level E2E suite, the claim-reactivity fix below, and a manual pre-launch click-through instead.
 
@@ -53,5 +54,38 @@ _Updated 2026-08-16. This is the only canonical remaining-work list. It describe
    `indexer/reports/renderer-readback-2026-08-17.json`. Re-run against the mainnet renderer after upload.
 5. **Production identities and provider credentials.** Owner decision (2026-08-17): deploy with the existing shared deployer key rather than a separate hardware-wallet owner — set `ALLOW_DEPLOYER_OWNER=true`, which the deploy scripts now honor (the role-separation requires stay the default otherwise). Point the mainnet indexer/keeper at the Alchemy RPC with `RH_RPC_ORIGIN=https://www.coattail.cash` (the endpoint is Origin-allowlisted), set `BROKER_DEPLOYMENT_BLOCK` and run `KEEPER_STRICT=1`/`INDEXER_STRICT=1`. Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet` until a verified mainnet manifest exists; the build already refuses a mainnet config with placeholder addresses or a leaked key. Full config list in [MAINNET_READINESS.md](MAINNET_READINESS.md).
 6. **Internal finding review.** Resolve every critical/high internal finding before committing real value. Project decision (2026-08-16): no third-party independent audit will be commissioned — a deliberate risk acceptance by the owner that removes an external safety check.
+
+7. **Final static + dynamic metadata renderer.** The staging renderer proves the locked art (blocker 4
+   read-back ✅), but the final marketplace metadata is not built yet. This is a hard GO gate; the current
+   staging renderer is **not** final evidence for it. Carry the same design into the fresh mainnet deploy.
+   - Omit every optional attribute whose value is `None`; keep the locked art, token IDs, trait bytes and
+     rarity counts unchanged.
+   - Add `Status: Active|Inactive`, sourced from the Broker's canonical per-token activation state
+     (Broker and Booster activation state must stay equal).
+   - Read holdings from `balanceOf(Broker.accountOf(tokenId))` — not the NFT owner's wallet, not
+     `Booster.claimable(tokenId)`.
+   - Publish each non-zero V1 stock as a holding; where a balance is shown, format it with the ERC-8056
+     token decimals and `uiMultiplier` — never label a raw balance as a display-share balance.
+   - Use a bounded, deployment-verified V1 stock-token list. `tokenURI` must not loop arbitrary wallet
+     tokens or an unbounded registry. A stock-universe expansion requires an explicit renderer/version bump.
+   - Emit ERC-4906 metadata-refresh signals from the NFT contract after activation, transfer-triggered
+     deactivation, a successful Booster claim and a Broker-executed stock withdrawal.
+   - Document the cache limit: an ERC-20 sent directly into the TBA cannot notify the NFT contract;
+     `tokenURI` still returns the correct live balance on reread, but a marketplace may need a manual refresh.
+   - Claimed holdings stay attached across a transfer unless the seller withdrew them; transfer flips status
+     to `Inactive`, not the TBA balances. Pending claimable stays separately accounted until claimed.
+   - Acceptance: token #742 (and one empty-TBA Broker) through inactive → active → accrue → claim → hold →
+     withdraw → transfer → reactivate. No response carries a `None` attribute; holdings appear only after
+     claim, vanish after withdrawal, survive a transfer when left in the TBA, and status follows every step.
+   - Run all-1,776 `tokenURI` generation + gas/size tests, marketplace JSON-schema tests, ERC-4906
+     interface/event tests and remote read-back before marking complete.
+
+8. **Frontend "Your Broker's wallet" lifecycle acceptance.** Most of this shipped (owned-ID discovery
+   from Transfer logs, claimable-driven claim/withdraw, 20s silent refetch without reload, receipt-boundary
+   refresh). Remaining: a working full-TBA-address copy control (Clipboard API + fallback, copies the full
+   address never the shortened label), and a formal multi-Broker acceptance run — selector shows exactly the
+   owned active+inactive Brokers, switching IDs updates address/status/claimable/holdings, a fresh empty TBA
+   can claim, balances update after the successful receipt without reload, and a failed receipt leaves the
+   displayed state unchanged while showing the error.
 
 Browser-driven Playwright coverage beyond the render-level suite is not part of the release procedure.
