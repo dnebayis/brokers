@@ -4,33 +4,47 @@ No COAT **mainnet** deployment is recorded yet. The active clean chain-46630 sta
 
 ## Active testnet staging (chain 46630)
 
-Mint is open on this staging release. The complete renderer collection was uploaded in 62 successful transactions; renderer binding and mint opening were both confirmed with `status=1`.
+Clean full redeploy of 2026-08-17 (the previous staging set is superseded). Mint is open at
+**0.001 ETH** on this release; the complete 1,776-token renderer collection was uploaded, and
+renderer binding (`renderer.broker() == CoattailBroker`) plus mint opening were confirmed on-chain.
+All twelve addresses below were re-verified to hold code (`codesize > 0`) against the live chain.
 
 | Component | Address |
 |---|---|
-| CoattailBroker | `0x1f6e75a3add9c7debc8594d4f41fa557fc33ddaf` |
-| COAT | `0xd3f44c7dd32d12c7a6776c23c839deca8196cf07` |
-| BrokerAccount implementation | `0xf93cc17536c9f7839a9a23a1e90161ce4111aa26` |
-| StrategyRegistry | `0xd859b6ea10dd61604b55e8e86dc4a12c1e1f7ab3` |
+| CoattailBroker | `0x2Dc7BAD968061bBb5B19066F3769EC90271e09C7` |
+| COAT | `0x1fa24Ce38f1B956ADfe1ffF87d2f1d234844203E` |
+| BrokerAccount implementation | `0x386032c56f72Ee4652f651BeA859DB6B5F004CdB` |
+| StrategyRegistry | `0x90252Ef04cC9b40d3E684edff9b7ae213e454e6A` |
 | ERC-6551 Registry | `0x000000006551c19487814612e58FE06813775758` |
-| Booster | `0x39e4b20401dc4ca45c0b14800c86fc3df953a245` |
-| StockRouter | `0xcf6eda70fa9c1293c7c844c3f26af307703c6d67` |
-| FeeSplitter | `0xc1250d95ee696c52ddc2636a74edab5cf32107d7` |
-| BrokerRenderer | `0x87af3a4333914ee050a4395e8897ba6e87574739` |
-| CoatFeeHook | `0xabc22a662a1bf11f6306ba192ce33acef31d2044` |
-| Permanent LP Locker | `0x2f02674d9783e6f7baba681aca0880afe9c08511` |
-| CoatRouter | `0x5fbca6b6dd403659b273ea7d6d13e6a2e2462123` |
-| BuybackBurner | `0xf6afc4614adff1aedb04d0d374ec4d0d3bbe6964` |
-| Native ETH/COAT pool ID | `0x09253fb30ff72d19ed011744fd0a12dbc0ed40529c186f621f5801563812124a` |
+| Booster | `0xE683Db9bbb74a6296Cd24F4e1B8E540C19d6BeA7` |
+| StockRouter | `0x76Bdf1a1823d94325e7169805Ecd5BcCA7864CD4` |
+| FeeSplitter | `0x9ECe12983b0d2f61d7De59491F952D7EAB2803C0` |
+| BrokerRenderer | `0x3013495E7dfE69621e81b488D1F756659Eba019a` |
+| CoatFeeHook | `0x72541564B8496E1adD14145cd268f7E1bbc9E044` |
+| Permanent LP Locker | `0x49161Ef0362c1317Dc6d3Bb59918BE2DfE0835Ff` |
+| CoatRouter | `0x995A4dd800EF2d99550B81097F82fDa79A43208b` |
+| BuybackBurner | `0x7FCA13D8baa643310C50BaeDf84BDBaa2Ca227c4` |
+| Native ETH/COAT pool ID | `0x335dbf1ee4929ae204ef8d318c80392ab043299802b8ae1ed1443fe140fab4bd` |
 
-The testnet `StrategyRegistry` is **epoch 1**. A deterministic, test-only sample basket was posted
-as AMZN 6,196 bps, AAPL 2,654 bps and COIN 1,150 bps in
-[`ebb4…c95d2`](https://explorer.testnet.chain.robinhood.com/tx/0xebb4dfb9661a4ae0573107d8b986d85d20be1e3ac154cd6fce05565faa2c95d).
-The hook-funded purchase succeeded in
-[`f3bc…c3481`](https://explorer.testnet.chain.robinhood.com/tx/0xf3bcdd892d80a896cc3da2c8fa4ff691f4d104635d105a0e0da40c0f35fc3481),
-and `claimBatch([487,742])` delivered the three assets to the corresponding distinct TBAs in
-[`6da0…8c09`](https://explorer.testnet.chain.robinhood.com/tx/0x6da08869ec2be051cb5fa3c9fbe2684b5aa0e6191983162a614e2f47e0258c09).
-This uses the inventory-backed test venue only; it is not mainnet route or liquidity evidence.
+The pool ID above was independently confirmed: it equals the `CoatFeeHook.poolId()` immutable read
+from chain **and** `keccak256(abi.encode(PoolKey{currency0:0, currency1:COAT, fee:10000,
+tickSpacing:200, hooks:CoatFeeHook}))`.
+
+This staging carries the new mint-economics surface: `mintPrice = 0.001 ETH` (owner-lowerable via
+`setMintPrice`, down-only), the deployer-only mass `refundHolders(fromId,toId)`, and `cutMintCap`.
+Its **live `mintCap` is `500`** — the clean-room E2E exercised `cutMintCap` (1,776 → 500) as part of
+the full lifecycle test, so this figure is a deliberate test artefact on staging, not the mainnet
+supply (mainnet launches at the full 1,776). The dynamic renderer is wired (`setBroker` +
+`setStockTokens`), so `tokenURI` reflects live `Status` and per-TBA stock holdings.
+
+The testnet `StrategyRegistry` is **epoch 1**. The full clean-room E2E drove the entire contract set
+end-to-end against the live pool: mint at 0.001 ETH → activation (COAT bought from the live v4 pool)
+→ `Status: Active` in metadata → oracle basket (tAAPL 100%) → keeper poke buying tAAPL → claim into
+the token-bound account → `"AAPL shares"` rendered in `tokenURI` → transfer flipping `Status` to
+`Inactive` while holdings persisted → COAT buy/sell swaps accruing the hook's 1% skim → `flush` →
+FeeSplitter 80/10/10 split → `executeBuyback` correctly reverting `InsufficientHistory` on the fresh
+pool's TWAP guard → `cutMintCap` → `refundHolders` returning exactly 0.001 ETH. This uses the
+inventory-backed test venue only; it is not mainnet route or liquidity evidence.
 `StrategyRegistry` and the ERC-6551 registry are distinct contracts; frontend integrations must not substitute one for the other.
 
 ## Canonical infrastructure
