@@ -247,18 +247,44 @@ export function ActivateTab() {
       reloadBrokers();
     });
 
-  const claim = () =>
+  // Withdraw = get earned stock all the way into the connected wallet. The keeper
+  // already claims Booster → Broker wallet automatically; this button first claims
+  // anything still pending, then moves the Broker wallet's stock out to the holder.
+  const withdraw = () =>
     claimTx.run(async () => {
       if (!info) throw new Error("Check a Broker first.");
-      claimTx.setStatus("Confirm claim…");
-      const h = await writeContractAsync({
-        address: ADDR.booster, abi: boosterAbi, functionName: "claim", args: [info.id], chainId: activeChain.id,
-      });
-      await waitForSuccessfulReceipt(h);
-      claimTx.setStatus("Claimed — stock moved into the Broker's wallet.", "ok");
+      if (!address || !isOwner) throw new Error("You don't own this Broker.");
+      if (hasClaimable) {
+        claimTx.setStatus("Claiming accrued stock into the Broker wallet…");
+        const c = await writeContractAsync({
+          address: ADDR.booster, abi: boosterAbi, functionName: "claim", args: [info.id], chainId: activeChain.id,
+        });
+        await waitForSuccessfulReceipt(c);
+      }
+      // Re-read the Broker wallet's balances (post-claim) across every known token.
+      const [basketNow, claimableNow] = await Promise.all([
+        client.readContract({ address: ADDR.strategyRegistry, abi: strategyRegistryAbi, functionName: "getBasket", args: [0n] }),
+        client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "claimable", args: [info.id] }),
+      ]);
+      const seen = new Map<string, Address>();
+      for (const token of [...basketNow[0], ...claimableNow[0]]) seen.set(token.toLowerCase(), token);
+      let moved = 0;
+      for (const token of seen.values()) {
+        const bal = (await client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [info.wallet] })) as bigint;
+        if (bal <= 0n) continue;
+        moved += 1;
+        claimTx.setStatus(`Withdrawing ${short(token)} to your wallet…`);
+        const transferCall = encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [address, bal] });
+        const h = await writeContractAsync({
+          address: info.wallet, abi: brokerAccountAbi, functionName: "execute",
+          args: [token, 0n, transferCall, 0], chainId: activeChain.id,
+        });
+        await waitForSuccessfulReceipt(h);
+      }
+      claimTx.setStatus(moved ? `Withdrew ${moved} stock${moved > 1 ? "s" : ""} to your wallet.` : "Nothing to withdraw yet.", "ok");
       refetch();
       reloadBrokers();
-      check();
+      check(info.id.toString());
     });
 
   const selectedHolding = holdings.find((holding) => holding.token === selectedStock);
@@ -406,20 +432,20 @@ export function ActivateTab() {
             )}
             {pending.length > 0 && (
               <div className="mt-4 border-t border-line pt-3">
-                <div className="label">Ready to claim</div>
+                <div className="label">Accruing — auto-claimed to this wallet hourly</div>
                 {pending.map((h) => <div key={h.sym} className="text-sm">{h.sym}: {fmt(h.bal, 18, 4)}</div>)}
               </div>
             )}
           </>
         )}
-        <button className="btn btn-ghost w-full mt-4" onClick={claim} disabled={!isOwner || !(info?.active || hasClaimable) || claimTx.busy}>
-          <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM NOW → WALLET"}
+        <button className="btn btn-ghost w-full mt-4" onClick={withdraw} disabled={!isOwner || !(hasClaimable || holdings.length) || claimTx.busy}>
+          <Icon name="download" /> {claimTx.busy ? "WITHDRAWING…" : "WITHDRAW → MY WALLET"}
         </button>
         {info && isOwner && (
           <p className="text-ink-soft text-sm mt-2">
-            Rewards are distributed to your Broker&apos;s wallet automatically about once an hour — you can claim now
-            instead of waiting.
-            {!hasClaimable && (holdings.length ? " Everything accrued is already in this wallet." : " Nothing is pending right now.")}
+            Earned stock is claimed into your Broker&apos;s wallet automatically about once an hour. This moves it out
+            to your connected wallet (claiming anything still pending first).
+            {!hasClaimable && !holdings.length && " Nothing to withdraw yet."}
           </p>
         )}
         <StatusLine msg={claimTx.msg} kind={claimTx.kind} />
