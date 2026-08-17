@@ -44,8 +44,8 @@ export function FeedTab() {
         )}
       </div>
       <p className="text-ink-soft text-sm mb-4">
-        The latest US Congress stock trades (STOCK Act, via Financial Modeling Prep) — the raw feed the
-        Politician basket is built from. Disclosures lag up to ~45 days; this is what was <i>filed</i>.
+        The latest US Congress stock trades (STOCK Act disclosures) — the raw feed the Politician
+        basket is built from. Disclosures lag up to ~45 days; this is what was <i>filed</i>.
       </p>
 
       {isLoading && <p className="text-ink-soft text-sm">Loading disclosures…</p>}
