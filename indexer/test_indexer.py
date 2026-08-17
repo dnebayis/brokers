@@ -21,7 +21,14 @@ class AggregationTests(unittest.TestCase):
         self.assertEqual(sum(weight for _, weight in basket), 10_000)
 
     def test_unprobed_routes_fail_closed(self):
-        self.assertEqual(to_basket({"NVDA": 30_000}), [])
+        # NFLX is canonical but intentionally NOT route-ready (never fork-probed), so it must
+        # never enter a basket. Uses a ticker outside route-ready.mainnet.json on purpose — if
+        # NFLX is ever promoted, swap this for another canonical-but-unprobed ticker.
+        from tokens import ADDRESS, ROUTE_READY_ADDRESS
+
+        self.assertIn("NFLX", ADDRESS)
+        self.assertNotIn("NFLX", ROUTE_READY_ADDRESS)
+        self.assertEqual(to_basket({"NFLX": 30_000}), [])
 
 
 class HealthTests(unittest.TestCase):
