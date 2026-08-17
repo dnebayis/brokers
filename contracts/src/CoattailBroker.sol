@@ -87,7 +87,7 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
     event MintStateChanged(bool open);
     event MintPriceChanged(uint256 newPrice);
     event MintCapCut(uint256 newCap);
-    event Refunded(uint256 indexed tokenId, address indexed to, uint256 amountWei);
+    event Refunded(address indexed to, uint256 amountWei);
     // EIP-4906: signal marketplaces to re-read a token's metadata (status/holdings changed).
     event MetadataUpdate(uint256 _tokenId);
 
@@ -186,23 +186,17 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
         emit MintCapCut(newCap);
     }
 
-    /// @notice Owner-funded refund + reversal for a problem mint. Burns `tokenId` (an active Broker
-    ///         is deactivated first via _update) and forwards the attached ETH to its current holder.
-    ///         The contract holds no mint proceeds (they go straight to the creator), so the refund
-    ///         amount is supplied here as msg.value. Burning permanently reduces circulating supply;
-    ///         it does not return the ID to the mintable pool or decrement totalMinted.
-    /// @dev WARNING: a burned NFT's ERC-6551 account loses its controller, and any unclaimed Booster
-    ///      entitlement keyed to this tokenId becomes permanently unclaimable. Only use this on a
-    ///      Broker whose TBA is drained and whose rewards are claimed/forfeited — intended for a fresh,
-    ///      inactive, empty problem mint. It will not brick other tokens, but it strands this one's assets.
-    function refundAndBurn(uint256 tokenId) external payable onlyOwner nonReentrant {
-        address holder = ownerOf(tokenId); // reverts if the token does not exist
-        _burn(tokenId);
-        if (msg.value > 0) {
-            (bool ok,) = holder.call{value: msg.value}("");
-            if (!ok) revert RefundFailed();
-        }
-        emit Refunded(tokenId, holder, msg.value);
+    /// @notice Owner-funded refund helper — makes a buyer whole for a problem mint. The contract
+    ///         holds no mint proceeds (they go straight to the creator), so the owner supplies the
+    ///         refund amount here as msg.value and it is forwarded to `to`. This deliberately does
+    ///         NOT touch the NFT: a refund does not confiscate or destroy the token, so no bound
+    ///         assets can be stranded. If a returned token is also wanted, arrange that separately
+    ///         (the holder transfers it back).
+    function refund(address to) external payable onlyOwner nonReentrant {
+        if (to == address(0)) revert ZeroAddress();
+        (bool ok,) = to.call{value: msg.value}("");
+        if (!ok) revert RefundFailed();
+        emit Refunded(to, msg.value);
     }
 
     /// @notice Turn a Broker ON by burning `ACTIVATION_BURN` $COAT. It then starts earning
@@ -234,17 +228,16 @@ contract CoattailBroker is ERC721, ERC2981, Ownable2Step, ReentrancyGuard {
         emit MetadataUpdate(tokenId);
     }
 
-    /// @dev On any real transfer of an *active* Broker — or a burn (refundAndBurn) — deactivate it:
-    ///      earning stops and a new owner must re-activate (re-burn $COAT). Unclaimed Booster
-    ///      entitlement stays keyed to tokenId. Claimed wallet assets follow only while left there.
+    /// @dev On any real transfer of an *active* Broker, deactivate it: earning stops and the new
+    ///      owner must re-activate (re-burn $COAT). Unclaimed Booster entitlement stays keyed to
+    ///      tokenId. Claimed wallet assets follow only while left there.
     function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
         address from = super._update(to, tokenId, auth);
-        // from != 0 excludes mint; from != to covers both a transfer (to != 0) and a burn (to == 0).
-        if (from != address(0) && from != to && activated[tokenId]) {
+        if (from != address(0) && to != address(0) && from != to && activated[tokenId]) {
             activated[tokenId] = false;
             if (address(booster) != address(0)) booster.deactivate(tokenId);
             emit Deactivated(tokenId);
-            if (to != address(0)) emit MetadataUpdate(tokenId); // status → Inactive (skip on burn)
+            emit MetadataUpdate(tokenId); // status → Inactive
         }
         return from;
     }

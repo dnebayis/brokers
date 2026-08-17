@@ -4,7 +4,7 @@ _Updated 2026-08-17. This is the only canonical remaining-work list. It describe
 
 ## Locked v1 decisions
 
-- **NFTs:** 1,776 total; `0.001 ETH` mint; primary mint cap 2; 2.5% ERC-2981 royalty. Fresh deployments start closed. The current testnet mint is open. The mint price is owner-settable **downward only** (including `0` for a free mint), max supply can be **cut** (never raised, never below what is already minted), and buyers can be refunded on-chain for a mint that needs reversing.
+- **NFTs:** 1,776 total; `0.001 ETH` mint; primary mint cap 2; 2.5% ERC-2981 royalty. Fresh deployments start closed. The current testnet mint is open. The mint price is owner-settable **downward only** (including `0` for a free mint), max supply can be **cut** (never raised, never below what is already minted), and buyers can be refunded on-chain (owner-funded ETH, NFT untouched) for a problem mint.
 - **Random IDs:** sparse Fisher–Yates selection without replacement from `1..1776`. `totalMinted` is a count, never the next token ID. This is pseudo-random, not VRF.
 - **Multi-NFT accounting:** every token ID has an independent TBA, activation flag, reward debt and claim. Each activation burns exactly `36,750 COAT`; two active NFTs consume `73,500 COAT` and earn two shares. Transfer deactivates only the transferred NFT.
 - **COAT and pool:** fixed 1B initial supply, no team/reserve allocation; native ETH/COAT v4 single-sided liquidity; 1% LP fee + 1% hook fee; sell-side ETH is split 80/10/10. The permanent locker has no principal-withdrawal or position-transfer path. Graduation is informational at `pairedPrincipal >= 4.2 ETH`.

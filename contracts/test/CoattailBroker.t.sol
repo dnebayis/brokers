@@ -261,8 +261,8 @@ contract CoattailBrokerTest is Test {
         broker.cutMintCap(2); // onlyOwner
     }
 
-    // --- refund + reversal ---
-    function test_refundAndBurn_returnsEthAndBurns() public {
+    // --- refund (owner-funded, does not touch the NFT) ---
+    function test_refund_forwardsEthAndKeepsNft() public {
         uint256 unit = broker.mintPriceWei();
         vm.deal(user, 1 ether);
         vm.prank(user);
@@ -272,42 +272,22 @@ contract CoattailBrokerTest is Test {
 
         vm.deal(owner, 1 ether);
         vm.prank(owner);
-        broker.refundAndBurn{value: unit}(tokenId);
+        broker.refund{value: unit}(user);
 
-        assertEq(user.balance, userBefore + unit); // holder made whole
-        vm.expectRevert(); // token no longer exists
-        broker.ownerOf(tokenId);
-        assertEq(broker.balanceOf(user), 0);
+        assertEq(user.balance, userBefore + unit); // buyer made whole
+        assertEq(broker.ownerOf(tokenId), user); // NFT untouched — refund does not confiscate
+        assertEq(broker.balanceOf(user), 1);
     }
 
-    function test_refundAndBurn_deactivatesActiveAndOwnerOnly() public {
-        MockCoat mockCoat = new MockCoat();
-        MockBooster mockBooster = new MockBooster();
-        vm.startPrank(owner);
-        broker.setCoat(ICoatBurnable(address(mockCoat)));
-        broker.setBooster(IBoosterHook(address(mockBooster)));
-        vm.stopPrank();
-
-        uint256 unit = broker.mintPriceWei();
-        vm.deal(user, 1 ether);
-        vm.prank(user);
-        broker.mint{value: unit}(1);
-        uint256 tokenId = _firstOwned(user);
-        vm.prank(user);
-        broker.activate(tokenId);
-        assertTrue(broker.activated(tokenId));
-
-        // non-owner cannot refund
+    function test_refund_onlyOwner_andRejectsZero() public {
         vm.prank(user);
         vm.expectRevert();
-        broker.refundAndBurn(tokenId);
+        broker.refund{value: 0}(user);
 
         vm.deal(owner, 1 ether);
         vm.prank(owner);
-        broker.refundAndBurn{value: unit}(tokenId);
-        assertTrue(mockBooster.wasDeactivated(tokenId)); // burn deactivated it in the Booster
-        vm.expectRevert();
-        broker.ownerOf(tokenId);
+        vm.expectRevert(CoattailBroker.ZeroAddress.selector);
+        broker.refund{value: 1}(address(0));
     }
 
     function _prefix(string memory s, uint256 n) internal pure returns (string memory) {
@@ -332,23 +312,5 @@ contract CoattailBrokerTest is Test {
             } catch {}
         }
         assertEq(found, expected, "owned random IDs not found");
-    }
-}
-
-// Minimal wiring mocks for the activate → refund-burn deactivation path.
-contract MockCoat is ICoatBurnable {
-    function burnFrom(address, uint256) external {}
-}
-
-contract MockBooster is IBoosterHook {
-    mapping(uint256 => bool) public wasActivated;
-    mapping(uint256 => bool) public wasDeactivated;
-
-    function activate(uint256 tokenId) external {
-        wasActivated[tokenId] = true;
-    }
-
-    function deactivate(uint256 tokenId) external {
-        wasDeactivated[tokenId] = true;
     }
 }
