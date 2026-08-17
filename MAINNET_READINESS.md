@@ -13,9 +13,10 @@ This is not a GO notice — it is the readiness board the owner works through be
   ForkFullSystem and ForkStockRoutes (all five V1 routes) pass — 5/6. The earlier weekend
   `BadFeed()` failures were stale-feed artifacts and are now resolved. ForkScaleClaims (the heavy
   356-transaction scale test) could not complete on the **public** RPC — it aborts with
-  `metadata is not found` because that endpoint prunes historical state mid-run, not a code or feed
-  failure. Run it against the CI archive RPC (`mainnet-fork-release.yml` / `RH_MAINNET_RPC_URL`) to
-  capture the full 6/6.
+  a code or feed failure. Against the archive Alchemy RPC (through the Origin proxy) the state-pruning
+  error is gone, but the 356-transaction run is heavy enough that the remote endpoint intermittently
+  resets or times out a request under the call volume. The `mainnet-fork-release.yml` CI job (better
+  network to Alchemy, fork retries) is the authoritative attempt for the full 6/6.
 - **Automation (GitHub Actions, green):** the indexer posts a real oracle-signed Congress basket
   on-chain (epoch advanced), and the keeper runs the flush → split → poke → buyback → claim
   distribution path. Five integration bugs found and fixed along the way (secret scope, `1E+15`
@@ -55,6 +56,35 @@ This is not a GO notice — it is the readiness board the owner works through be
    keeper and oracle keys, addresses) and switch the schedule env to mainnet.
 5. **Keep Vercel on `NEXT_PUBLIC_NETWORK=testnet`** until a verified mainnet manifest exists — the
    frontend build already refuses a mainnet config with placeholder addresses or a leaked key.
+
+## Mainnet env/config (from the code review)
+
+These are the settings the mainnet deploy and automation need that differ from testnet:
+
+- **Deploy scripts:** set `ALLOW_DEPLOYER_OWNER=true` to deploy with a shared deployer/owner key
+  (owner's accepted risk); without it the mainnet deploy reverts requiring distinct roles.
+- **Indexer/keeper RPC:** point `RH_RPC_URL` at the Alchemy mainnet endpoint and set
+  `RH_RPC_ORIGIN=https://www.coattail.cash` — the endpoint is allowlisted to that Origin and rejects
+  server-side calls without it. Use Alchemy (RPC + NFT API), not the public RPC.
+- **Claim distributor:** set `BROKER_DEPLOYMENT_BLOCK` to the mainnet Broker deploy block. It defaults
+  to 0 on mainnet, which makes the mint-discovery `getLogs` scan the whole chain and can be rejected.
+- **Strict mode:** run the mainnet keeper and indexer with `KEEPER_STRICT=1` and `INDEXER_STRICT=1`
+  so a genuinely deferred poke, stale feed or thin-coverage refusal fails loudly instead of warning.
+- **CI fork release:** `mainnet-fork-release.yml` now forks the archive Alchemy RPC through the
+  Origin proxy — repo secret `RH_MAINNET_RPC_URL` and variable `RH_RPC_ORIGIN` are set.
+- **Frontend:** the Swap tab is hidden behind `SWAP_ENABLED=false` until the CA is public; keep
+  `NEXT_PUBLIC_NETWORK=testnet` until a verified mainnet manifest exists.
+
+## Deploy sequence — critical contracts first, then token + NFT (owner-gated)
+
+Per the deploy plan, do **not** deploy everything at once. Deploy and verify the critical contracts
+first; deploy the COAT token and the Broker NFT only after explicit approval.
+
+1. **Phase 1 — critical infrastructure:** deploy and verify the registry/account/booster/router/
+   splitter/renderer core (mint stays closed, no token/NFT economic launch yet). Check every address,
+   role and wiring on-chain.
+2. **Phase 2 — token + NFT (requires approval):** only after Phase 1 is checked and approved, deploy
+   COAT, run the v4 launch (`LaunchWithHook`), and open the Broker NFT mint.
 
 ## Deploy-day sequence (mechanics in DEPLOY.md)
 
