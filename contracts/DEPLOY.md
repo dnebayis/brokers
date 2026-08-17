@@ -95,6 +95,81 @@ RH_RPC_URL=https://rpc.mainnet.chain.robinhood.com scripts/deploy_all.sh
 
 Before opening activation, configure the in-repo StockRouter and probe every route in
 `indexer/route-ready.mainnet.json`. A route is not publishable until its canonical token,
-pool pair/direction, liquidity, feed and ETH/USD guard all pass. The five current manifest
-routes passed against live Rialto pools at L2 block `36869820`; repeat the probe against the
+pool pair/direction, liquidity, feed and ETH/USD guard all pass. The manifest now carries **23**
+fork-probed routes (5 V1 at L2 block `36869820`; 18 V2 at the block in
+`reports/route-candidate-probe-25777207.json`, CI run 32066225360). Repeat the probe against the
 final deployment and record the new block before opening activation.
+
+## 4. Closed launch → open mint + $COAT together (deploy-day flip)
+
+Goal: deploy the **entire** system, wire it, and verify it on-chain while **both** the NFT mint and
+$COAT trading stay shut — then flip both live in one coordinated step at announcement time. This is
+fully supported by the contracts; nothing here needs a redeploy.
+
+**Why it works.** `CoattailBroker.mint()` reverts `MintClosed` while `mintOpen == false`
+([setMintOpen](src/CoattailBroker.sol) is owner-only, two-way). `COAT._update` reverts
+`LaunchBlockBuyBlocked` on every buy out of the PoolManager while `tradingEnabled == false`; only the
+`launchController` can call `enableTrading()`, and it is **one-shot** (trading cannot be re-closed).
+The anti-snipe protection window is measured from the block `enableTrading()` runs, so the pool can
+sit seeded-but-closed for any length of time with no loss of protection.
+
+### 4a. Deploy closed (do NOT open)
+
+1. Run §2 core deploy and `LaunchWithHook.s.sol` (§3.3) as normal — this seeds the pool and locks the
+   LP. **Do not call `enableTrading()`.** The launch script only needs to stop short of that call.
+2. Leave `mintOpen = false` (it is false on a fresh deploy — do **not** call `setMintOpen`).
+3. Complete every other post-deploy step while closed: accept ownership (§3.1), wire all 23
+   `setStockFeed` + `setRoute` (§3.2 and below), set the ETH/USD feed, post the first basket (§3.4),
+   upload + bind the renderer (§3.6), re-probe routes.
+
+### 4b. Verify the closed state on-chain
+
+```bash
+RPC=https://rpc.mainnet.chain.robinhood.com
+BROKER=0x...   COAT=0x...   PM=0x8366a39CC670B4001A1121B8F6A443A643e40951
+cast call $BROKER "mintOpen()(bool)"            --rpc-url $RPC   # expect false
+cast call $COAT   "tradingEnabled()(bool)"      --rpc-url $RPC   # expect false
+cast call $COAT   "balanceOf(address)(uint256)" $PM --rpc-url $RPC  # expect > 0 (pool seeded)
+# routes/feeds wired while closed — spot-check a couple:
+cast call $STOCKROUTER "routeReady(address)(bool)" $NVDA_TOKEN --rpc-url $RPC  # expect true
+```
+
+At this point the public site shows the "Launching soon" mint state and no buyable $COAT.
+
+### 4c. Flip both live, together
+
+`enableTrading()` is called by the **launchController** (the address COAT was constructed with);
+`setMintOpen(true)` is called by the **owner** (hardware wallet). Send them back-to-back so they land
+in the same block / same minute — order does not matter (mint does not depend on trading):
+
+```bash
+# 1) open $COAT trading (launchController key). Requires the pool already seeded (4b).
+cast send $COAT "enableTrading()" --rpc-url $RPC --private-key $LAUNCH_CONTROLLER_KEY
+# 2) open the NFT mint (owner / hardware wallet)
+cast send $BROKER "setMintOpen(bool)" true --rpc-url $RPC --private-key $OWNER_KEY
+```
+
+If the shared-key launch option is used (owner == deployer == launchController, the accepted-risk
+path), both can be issued from the one key in immediate succession, or batched in a tiny script.
+
+### 4d. Verify open + smoke-test, then announce
+
+```bash
+cast call $BROKER "mintOpen()(bool)"       --rpc-url $RPC   # expect true
+cast call $COAT   "tradingEnabled()(bool)" --rpc-url $RPC   # expect true
+cast call $COAT   "launchBlock()(uint64)"  --rpc-url $RPC   # non-zero = protection window armed
+```
+
+Only after both read open, do the frontend flip and publish the announcement:
+
+- `frontend/deployments.json` → fill the `mainnet` block with the verified addresses + `poolId`.
+- `frontend/src/lib/chains.ts` env: set `NEXT_PUBLIC_NETWORK=mainnet` and
+  `NEXT_PUBLIC_RPC_URL_MAINNET` (Alchemy) in Vercel. The build refuses a mainnet config with
+  placeholder/zero addresses, so this can only succeed once 4a–4c are done.
+- `frontend/src/lib/config.ts` → set `SWAP_ENABLED = true` and ensure `deployments.mainnet.router`
+  (CoatRouter) is filled, to reveal the Swap tab. The Mint tab clears its "Launching soon" state on
+  its own from the on-chain `mintOpen` flag — no code change needed there.
+- Redeploy Vercel, confirm mint + swap are live against mainnet, then post the announcement.
+
+> The mint gate is reversible (`setMintOpen(false)` re-closes it); `enableTrading()` is **not** — once
+> $COAT trading opens it stays open. Treat 4c as the irreversible launch moment.
