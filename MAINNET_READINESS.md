@@ -28,7 +28,7 @@ This is not a GO notice — it is the readiness board the owner works through be
 | Non-fork contract suite + coverage | ✅ 130/130, 85% branch gate |
 | Mainnet-fork release report (clean 6/6) | ✅ full 6/6 in CI (run 32005090190) against the archive Alchemy RPC |
 | Deploy scripts compile + dry-run | ✅ compile fixed; dry-run on mainnet fork before broadcast |
-| 888-actor testnet load at scale | 🔴 runner fixed + 1 actor proven; needs funding + full run |
+| 888-actor testnet load at scale | ✅ dropped as a GO gate (2026-08-17) — 1,776-scale proven by ScaleLifecycle/Integration tests + ForkScaleClaims 6/6; live 888 run is optional/post-launch |
 | Renderer read-back sweep | 🔴 tool ready; run the full 1,776 on-chain sweep |
 | Internal critical/high finding review | 🟡 owner accepted no third-party audit; close internal findings |
 | Production identities configured | 🔴 owner action (below) |

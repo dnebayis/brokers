@@ -32,7 +32,13 @@ _Updated 2026-08-16. This is the only canonical remaining-work list. It describe
 
 ## Remaining blockers before mainnet GO
 
-1. **888-actor load at scale.** The resumable runner `indexer/testnet_load.py` was fixed (2026-08-16): it presents a browser User-Agent, builds gas estimates from the sender, avoids the EIP-1559/gasPrice conflict, and decodes Minted logs directly. One actor completed fund → mint → buy COAT → approve → activate end-to-end on-chain. Running the full 888 needs a funder wallet with roughly 9+ testnet ETH; persist every nonce, tx, receipt, retry and reconciliation, ignoring no failed receipt.
+1. **888-actor load at scale.** ✅ **CLOSED as a GO gate (owner decision, 2026-08-17).** 1,776-scale
+   accounting is already proven at the contract level (`ScaleLifecycle.t.sol`, `Integration.t.sol`) and
+   end-to-end on the live mainnet fork (`ForkScaleClaims` drives all 1,776 random IDs to claim real
+   AAPL into distinct TBAs — 6/6 CI, blocker 3). The resumable runner `indexer/testnet_load.py` is
+   fixed and one actor completed fund → mint → buy COAT → approve → activate on-chain; a full 888-actor
+   live run needs ~9 testnet ETH in a funder wallet (`LOAD_FUNDER_PRIVATE_KEY`) and can be run
+   post-launch if desired, but it is no longer a launch blocker.
 2. **Transfer → deactivation → reactivation live demo.** Logic is proven in `contracts/test/Integration.t.sol` and `ScaleLifecycle.t.sol` (pass). The live demonstration is scripted in `indexer/transfer_reactivation_check.py`; it needs a source key holding two activated Brokers and a new-owner key funded with COAT + gas.
 3. **Clean mainnet-fork release report.** ✅ **CLOSED (2026-08-17).** `mainnet-fork-release.yml`
    (run 32005090190, 7m59s) passed the full **6/6** against the archive Alchemy RPC through the Origin
