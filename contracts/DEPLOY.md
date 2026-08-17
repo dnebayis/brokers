@@ -73,8 +73,11 @@ RH_RPC_URL=https://rpc.mainnet.chain.robinhood.com scripts/deploy_all.sh
    holds none of those roles afterward. `LaunchWithHook.s.sol` wires FeeSplitter's BuybackBurner
    before that acceptance step.
 2. **Slippage feeds:** `booster.setStockFeed(token, chainlinkStockFeed)` for every basket
-   token; set/refresh `booster.setEthUsdManual(...)` (RH Chain has no ETH/USD feed → needs a
-   refresher bot) or `setEthUsdFeed(...)` if one exists.
+   token. For ETH/USD, prefer `booster.setEthUsdFeed(...)`: Robinhood Chain publishes Chainlink
+   crypto feeds (including ETH/USD) — read the current proxy address from the official feeds page
+   (docs.chain.link Robinhood network / docs.robinhood.com chain oracles) rather than hardcoding.
+   `setEthUsdManual(...)` (refreshed within its 30-minute window) is only a fallback if the live
+   feed is temporarily unavailable.
 3. **Launch $COAT:** use `script/LaunchWithHook.s.sol` to deploy the hook, v4 pool,
    permanent CoatRouter and BuybackBurner, then wire the splitter's 10% sink. Set
    `HOOK_OWNER` = hardware wallet. Its one-shot atomic launcher prevents pool-price and global
