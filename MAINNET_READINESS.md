@@ -58,13 +58,13 @@ This is not a GO notice — it is the readiness board the owner works through be
 4. **Activate the pre-staged mainnet automation.** The mainnet keeper/indexer workflows already exist
    (`keeper-schedule-mainnet.yml`, `indexer-schedule-mainnet.yml`) and stay **inert** — every job is
    guarded on the mainnet address variables — until the owner fills them in post-deploy. Already set:
-   `RH_MAINNET_RPC_URL` (secret), `RH_RPC_ORIGIN` (var), `UNUSUAL_WHALES_API_KEY` (secret). Set after
-   deploy:
-   - **Secrets:** `MAINNET_KEEPER_PRIVATE_KEY` (gas-funded, no on-chain role),
-     `MAINNET_ORACLE_PRIVATE_KEY` (must equal the registry `oracleSigner`).
-   - **Variables:** `MAINNET_BROKER_ADDRESS`, `MAINNET_BOOSTER_ADDRESS`, `MAINNET_HOOK_ADDRESS`,
-     `MAINNET_FEE_SPLITTER_ADDRESS`, `MAINNET_BUYBACK_BURNER_ADDRESS`, `MAINNET_BROKER_DEPLOYMENT_BLOCK`,
-     `MAINNET_STRATEGY_REGISTRY_ADDRESS`.
+   `RH_MAINNET_RPC_URL` (secret), `RH_RPC_ORIGIN` (var), `UNUSUAL_WHALES_API_KEY` (secret), and the
+   **keeper/oracle keys are reused** from the existing `TESTNET_KEEPER_PRIVATE_KEY` /
+   `TESTNET_ORACLE_PRIVATE_KEY` secrets (shared-key launch, the owner's accepted-risk decision — no
+   new key secrets needed; the mainnet oracle key must equal the registry `oracleSigner`). Set after
+   deploy — only **variables**: `MAINNET_BROKER_ADDRESS`, `MAINNET_BOOSTER_ADDRESS`,
+   `MAINNET_HOOK_ADDRESS`, `MAINNET_FEE_SPLITTER_ADDRESS`, `MAINNET_BUYBACK_BURNER_ADDRESS`,
+   `MAINNET_BROKER_DEPLOYMENT_BLOCK`, `MAINNET_STRATEGY_REGISTRY_ADDRESS`.
    The moment the `MAINNET_BROKER_ADDRESS` / `MAINNET_STRATEGY_REGISTRY_ADDRESS` variables are set, the
    scheduled mainnet keeper/indexer activate automatically (strict mode, 0.70 coverage gate).
 5. **Set the Vercel server env** so the live Congress feed is real: `UNUSUAL_WHALES_API_KEY` (server-side,

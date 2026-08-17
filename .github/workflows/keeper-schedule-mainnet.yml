@@ -4,9 +4,10 @@ name: keeper-schedule-mainnet
 # variables, so scheduled runs cleanly skip until the owner sets them post-deploy. To activate
 # after the mainnet launch, set the repository VARIABLES (Settings → Secrets and variables →
 # Actions → Variables): MAINNET_BROKER_ADDRESS, MAINNET_BOOSTER_ADDRESS, MAINNET_HOOK_ADDRESS,
-# MAINNET_FEE_SPLITTER_ADDRESS, MAINNET_BUYBACK_BURNER_ADDRESS, MAINNET_BROKER_DEPLOYMENT_BLOCK,
-# and the SECRET MAINNET_KEEPER_PRIVATE_KEY (a gas-funded key with no on-chain role). The Alchemy
-# mainnet RPC (secret RH_MAINNET_RPC_URL) is Origin-allowlisted; RH_RPC_ORIGIN adds that header.
+# MAINNET_FEE_SPLITTER_ADDRESS, MAINNET_BUYBACK_BURNER_ADDRESS, MAINNET_BROKER_DEPLOYMENT_BLOCK.
+# The keeper key reuses the existing TESTNET_KEEPER_PRIVATE_KEY secret (shared-key launch, the
+# owner's accepted-risk decision) — no new secret needed. The Alchemy mainnet RPC (secret
+# RH_MAINNET_RPC_URL) is Origin-allowlisted; RH_RPC_ORIGIN adds that header.
 
 permissions:
   contents: read
@@ -43,7 +44,8 @@ jobs:
       BUYBACK_THRESHOLD_WEI: "1000000000000000"
       # Production runs strict: a deferred poke / stale feed fails loudly instead of warning.
       KEEPER_STRICT: "1"
-      KEEPER_PRIVATE_KEY: ${{ secrets.MAINNET_KEEPER_PRIVATE_KEY }}
+      # Reuses the existing keeper key (shared-key launch, accepted-risk decision).
+      KEEPER_PRIVATE_KEY: ${{ secrets.TESTNET_KEEPER_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

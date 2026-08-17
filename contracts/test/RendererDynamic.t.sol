@@ -151,7 +151,9 @@ contract RendererDynamicTest is Test {
         address buyer = makeAddr("buyer");
         vm.prank(user);
         broker.transferFrom(user, buyer, id);
-        assertTrue(_has(renderer.renderJSON(id), '"trait_type":"Status","value":"Inactive"'), "inactive after xfer");
+        assertTrue(
+            _has(renderer.renderJSON(id), '"trait_type":"Status","value":"Inactive"'), "inactive after xfer"
+        );
         assertTrue(_has(renderer.renderJSON(id), "AAPL shares"), "holding persists across transfer");
         assertEq(stock.balanceOf(tba), held, "TBA balance unchanged by transfer");
 

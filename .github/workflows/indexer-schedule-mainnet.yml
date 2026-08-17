@@ -2,10 +2,10 @@ name: indexer-schedule-mainnet
 
 # Mainnet Congress indexer. Pre-staged and inert: guarded on the mainnet registry variable, so
 # scheduled runs cleanly skip until the owner sets it post-deploy. To activate after launch, set
-# the repository VARIABLE MAINNET_STRATEGY_REGISTRY_ADDRESS and the SECRET
-# MAINNET_ORACLE_PRIVATE_KEY (must equal the registry's on-chain oracleSigner). Reuses the shared
-# UNUSUAL_WHALES_API_KEY secret and the Origin-allowlisted Alchemy RPC (RH_MAINNET_RPC_URL).
-# Unlike testnet, mainnet keeps the default 0.70 route-coverage gate and runs strict.
+# the repository VARIABLE MAINNET_STRATEGY_REGISTRY_ADDRESS. The oracle key reuses the existing
+# TESTNET_ORACLE_PRIVATE_KEY secret (shared-key launch, accepted-risk decision) and must equal the
+# mainnet registry's on-chain oracleSigner. Reuses the shared UNUSUAL_WHALES_API_KEY secret and the
+# Origin-allowlisted Alchemy RPC (RH_MAINNET_RPC_URL). Mainnet keeps the default 0.70 coverage gate.
 
 permissions:
   contents: read
@@ -35,7 +35,8 @@ jobs:
       # Production runs strict: a thin-coverage / stale-feed refusal fails loudly, never silently.
       INDEXER_STRICT: "1"
       UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
-      UPDATER_PRIVATE_KEY: ${{ secrets.MAINNET_ORACLE_PRIVATE_KEY }}
+      # Reuses the existing oracle key (shared-key launch, accepted-risk decision).
+      UPDATER_PRIVATE_KEY: ${{ secrets.TESTNET_ORACLE_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
