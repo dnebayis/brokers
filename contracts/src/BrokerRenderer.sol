@@ -297,11 +297,25 @@ contract BrokerRenderer is Ownable2Step {
     }
 
     /// @dev ERC-8056 display shares: raw · uiMultiplier / 1e18, then rendered with token decimals.
+    ///      `uiMultiplier`/`decimals` are read defensively: a stock token that lacks either (or
+    ///      reverts) must never brick tokenURI for the whole collection, so we fall back to a 1e18
+    ///      multiplier (no scaling) and 18 decimals rather than propagating the revert.
     function _formatShares(uint256 rawBal, address stock) internal view returns (string memory) {
-        uint256 mult = IStockToken(stock).uiMultiplier();
-        uint8 dec = IStockToken(stock).decimals();
+        uint256 mult = _tryUint(stock, IStockToken.uiMultiplier.selector, 1e18);
+        uint8 dec = uint8(_tryUint(stock, IStockToken.decimals.selector, 18));
         uint256 display = mult == 0 ? rawBal : (rawBal * mult) / 1e18;
         return _formatUnits(display, dec);
+    }
+
+    /// @dev A view staticcall returning a uint, with a default when the call reverts or is absent.
+    function _tryUint(address target, bytes4 selector, uint256 fallbackValue)
+        internal
+        view
+        returns (uint256)
+    {
+        (bool ok, bytes memory data) = target.staticcall(abi.encodeWithSelector(selector));
+        if (ok && data.length >= 32) return abi.decode(data, (uint256));
+        return fallbackValue;
     }
 
     /// @dev Fixed-point → decimal string with trailing zeros trimmed (e.g. 1_230000000000000000,18 → "1.23").

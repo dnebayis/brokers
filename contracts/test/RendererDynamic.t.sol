@@ -202,6 +202,25 @@ contract RendererDynamicTest is Test {
         assertTrue(_has(json, '"trait_type":"Status"'), "status attr");
     }
 
+    // A stock token that lacks uiMultiplier()/decimals() (or reverts) must NOT brick tokenURI.
+    function test_holdingRendersEvenIfTokenLacksUiMultiplier() public {
+        NoMultiplierStock bad = new NoMultiplierStock();
+        address[] memory tks = new address[](1);
+        string[] memory syms = new string[](1);
+        tks[0] = address(bad);
+        syms[0] = "BAD";
+        vm.prank(owner);
+        renderer.setStockTokens(tks, syms);
+
+        uint256 id = _mintOne();
+        _upload(id, bytes8(0x0400000000000000));
+        address tba = broker.accountOf(id);
+        bad.mint(tba, 2e18); // 18-decimal default, no uiMultiplier → shows "2"
+
+        string memory json = renderer.renderJSON(id); // must not revert
+        assertTrue(_has(json, '"trait_type":"BAD shares","value":"2"'), "renders with 1e18 fallback");
+    }
+
     function test_refreshMetadata_onlyAuthorized() public {
         uint256 id = _mintOne();
         _upload(id, bytes8(0x0400000000000000));
@@ -255,5 +274,19 @@ contract RendererDynamicTest is Test {
             if (ok) return true;
         }
         return false;
+    }
+}
+
+// A minimal stock token that implements balanceOf + decimals but NOT uiMultiplier() — the renderer
+// must fall back gracefully instead of reverting the whole tokenURI.
+contract NoMultiplierStock {
+    mapping(address => uint256) public balanceOf;
+
+    function decimals() external pure returns (uint8) {
+        return 18;
+    }
+
+    function mint(address to, uint256 amt) external {
+        balanceOf[to] += amt;
     }
 }
