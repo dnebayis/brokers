@@ -31,8 +31,20 @@ def decode_uri(uri: str, token_id: int) -> dict:
     document = json.loads(base64.b64decode(uri[len(prefix):]))
     if document.get("name") != f"Coattail Broker #{token_id}":
         raise RuntimeError(f"token {token_id} name mismatch")
-    if len(document.get("attributes", [])) != 7:
-        raise RuntimeError(f"token {token_id} trait count mismatch")
+    # Dynamic metadata format: `Type` is always present (index 0 is a real value); the other visual
+    # traits omit their `None` option, so the count varies (1..7). When the renderer is wired to the
+    # Broker, live `Status` and per-stock holdings may append more. Validate structure, not a fixed
+    # count, and assert None is never emitted.
+    attrs = document.get("attributes", [])
+    if not isinstance(attrs, list) or not attrs:
+        raise RuntimeError(f"token {token_id} has no attributes")
+    trait_types = [a.get("trait_type") for a in attrs]
+    if "Type" not in trait_types:
+        raise RuntimeError(f"token {token_id} missing Type attribute")
+    if any(a.get("value") == "None" for a in attrs):
+        raise RuntimeError(f"token {token_id} still emits a None trait")
+    if len(attrs) > 15:  # 7 visual + Status + up to ~5 holdings — generous upper bound
+        raise RuntimeError(f"token {token_id} unexpected attribute count {len(attrs)}")
     image_prefix = "data:image/svg+xml;base64,"
     image = document.get("image", "")
     if not image.startswith(image_prefix):

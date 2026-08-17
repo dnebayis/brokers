@@ -1,0 +1,306 @@
+{
+  "note": "V2 expansion candidates: Rialto-liquid AND canonical RH tokens, NOT yet route-verified. Each still needs its (stock/USDG) Rialto stockPool + Chainlink feed, then a fork-probe, before promotion into route-ready.mainnet.json. Pool/feed discovery needs Rialto partner data or an API key (the public /quote endpoint is auth-gated).",
+  "source": "https://rialto-trade-api.rialto.xyz/tokens",
+  "midToken_USDG": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+  "midPool_WETH_USDG": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
+  "routerRegistry": "0x71a120CbBf3Ce7cD910a3c50fF77aFc62735687E",
+  "activeRouter_feature2": "0xC94135b63772b91D79d0A2DaAb2a8801f32359bD",
+  "alreadyV1": [
+    "AAPL",
+    "AMD",
+    "AMZN",
+    "COIN",
+    "CRCL"
+  ],
+  "candidateCount": 32,
+  "candidates": [
+    {
+      "symbol": "NVDA",
+      "token": "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "TSLA",
+      "token": "0x322F0929c4625eD5bAd873c95208D54E1c003b2d",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "MSFT",
+      "token": "0xe93237C50D904957Cf27E7B1133b510C669c2e74",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "GOOGL",
+      "token": "0x2e0847E8910a9732eB3fb1bb4b70a580ADAD4FE3",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "META",
+      "token": "0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "PLTR",
+      "token": "0x894E1EC2D74FFE5AEF8Dc8A9e84686acCB964F2A",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "ORCL",
+      "token": "0xb0992820E760d836549ba69BC7598b4af75dEE03",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "NFLX",
+      "token": "0xE0444EF8BF4eD74f74FD73686e2ddF4C1c5591E8",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "MU",
+      "token": "0xfF080c8ce2E5feadaCa0Da81314Ae59D232d4afD",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "INTC",
+      "token": "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "TSM",
+      "token": "0x58FfE4a942d3885bAa22D7520691F611EF09e7AA",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "ASML",
+      "token": "0x47F93d52cBeC7C6D2CfC080e154002370a60dAEA",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "MSTR",
+      "token": "0xec262a75e413fAfD0dF80480274532C79D42da09",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "COST",
+      "token": "0x4EA005168D7F09a7A0Ba9D1DEf21a479950E44C2",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "SOFI",
+      "token": "0x98E75885157C80992A8D41b696D8c9C6Fb30A926",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "RBLX",
+      "token": "0xF0C4BF4C582cb3836e98394b1d4e7B7281101bE8",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "RDDT",
+      "token": "0x05b37Fb53A299a1b874A619e1c4C404D52C36F4C",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "DELL",
+      "token": "0x941AE714EC6D8130c7B75d67160Ca08f1e7d11Dd",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "GME",
+      "token": "0x1b0E319c6A659F002271B69dB8A7df2F911c153E",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "NU",
+      "token": "0x408c14038a04f7bD235329E26d2bf569ee20e250",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "BE",
+      "token": "0x822CC93fFD030293E9842c30BBD678F530701867",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "CRWV",
+      "token": "0x5f10A1C971B69e47e059e1dC91901B59b3fB49C3",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "SNDK",
+      "token": "0xB90A19fF0Af67f7779afF50A882A9CfF42446400",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "SKHY",
+      "token": "0x84CAb63bc87912E71ad199ff14A0bA45de68FeF8",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "USAR",
+      "token": "0xd917B029C761D264c6A312BBbcDA868658eF86a6",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "SPCX",
+      "token": "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa",
+      "category": "stock",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "QQQ",
+      "token": "0xD5f3879160bc7c32ebb4dC785F8a4F505888de68",
+      "category": "etf",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "SGOV",
+      "token": "0x92FD66527192E3e61d4DDd13322Aa222DE86F9B5",
+      "category": "etf",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "SLV",
+      "token": "0x411eFb0E7f985935DAec3D4C3ebaEa0d0AD7D89f",
+      "category": "etf",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "SPY",
+      "token": "0x117cc2133c37B721F49dE2A7a74833232B3B4C0C",
+      "category": "etf",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "USO",
+      "token": "0xa30FA36Db767ad9eD3f7a60fC79526fB4d56D344",
+      "category": "etf",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    },
+    {
+      "symbol": "XLK",
+      "token": "0x15Cd20759CE7F3285c29A319dE2D1A2e098c6f43",
+      "category": "etf",
+      "rialtoLiquid": true,
+      "stockPool": null,
+      "feed": null,
+      "probeOk": false
+    }
+  ]
+}
