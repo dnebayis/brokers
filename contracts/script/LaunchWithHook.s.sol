@@ -76,7 +76,8 @@ contract LaunchWithHook is Script {
             "unwired fee splitter"
         );
         if (mainnet) {
-            require(hookOwner != me, "deployer fallback");
+            // ALLOW_DEPLOYER_OWNER=true opts into a shared deployer/owner key (see Deploy.s.sol).
+            require(vm.envOr("ALLOW_DEPLOYER_OWNER", false) || hookOwner != me, "deployer fallback");
             require(coat.code.length != 0 && feeSplitter.code.length != 0, "deployment contracts required");
         }
 

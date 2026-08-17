@@ -94,12 +94,17 @@ contract Deploy is Script {
         require(c.updater != address(0) && c.oracleSigner != address(0), "zero operator");
         if (mainnet) {
             require(c.registry6551 == DEF_REGISTRY && c.weth == DEF_WETH, "non-canonical dependency");
-            require(
-                c.owner != deployer && c.treasury != deployer && c.creator != deployer
-                    && c.buyback != deployer && c.updater != deployer && c.oracleSigner != deployer,
-                "deployer fallback"
-            );
-            require(c.owner != deployer, "OWNER must be distinct hardware wallet");
+            // By default mainnet roles must be distinct from the deployer. Set
+            // ALLOW_DEPLOYER_OWNER=true to deploy with shared keys (an explicit,
+            // opt-in risk acceptance by the operator).
+            if (!vm.envOr("ALLOW_DEPLOYER_OWNER", false)) {
+                require(
+                    c.owner != deployer && c.treasury != deployer && c.creator != deployer
+                        && c.buyback != deployer && c.updater != deployer && c.oracleSigner != deployer,
+                    "deployer fallback"
+                );
+                require(c.owner != deployer, "OWNER must be distinct hardware wallet");
+            }
         }
     }
 
