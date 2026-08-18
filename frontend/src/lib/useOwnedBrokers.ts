@@ -66,34 +66,38 @@ export function useOwnedBrokers() {
           candidateIds = [];
         }
       }
-      // NFT APIs can lag directly after mint/activation and can validly return an empty
-      // response without throwing. Fall back to bounded on-chain enumeration (max 1,776).
-      if (candidateIds.length < expected) {
+
+      // Resolve current ownership for a set of candidate IDs, in bounded multicall batches.
+      // Public RPC providers commonly reject oversized multicalls, so keep each batch small.
+      const resolveOwned = async (ids: bigint[]): Promise<OwnedBroker[]> => {
+        const out: OwnedBroker[] = [];
+        for (let offset = 0; offset < ids.length; offset += 200) {
+          const batch = ids.slice(offset, offset + 200);
+          const calls = batch.flatMap((id) => [
+            { address: ADDR.broker, abi: brokerAbi, functionName: "ownerOf", args: [id] } as const,
+            { address: ADDR.broker, abi: brokerAbi, functionName: "activated", args: [id] } as const,
+          ]);
+          const results = await client.multicall({ contracts: calls, allowFailure: true });
+          batch.forEach((id, i) => {
+            const owner = results[i * 2]?.result as string | undefined;
+            const active = results[i * 2 + 1]?.result as boolean | undefined;
+            if (owner && owner.toLowerCase() === ownerKey) out.push({ id, active: !!active });
+          });
+        }
+        return out;
+      };
+
+      let owned = await resolveOwned(candidateIds);
+      // The fast path can under-count: a lagging/rejected NFT API, a truncated getLogs range,
+      // or a dropped multicall result (allowFailure) all yield fewer IDs than `balanceOf`.
+      // Whenever the resolved count is short of the on-chain balance, fall back to enumerating
+      // the complete 1..MAX_SUPPLY domain so every owned Broker is found. Random mint means the
+      // minted set is not 1..totalMinted, so the full domain is required.
+      if (owned.length < expected) {
         const maxSupply = Number(await client.readContract({
           address: ADDR.broker, abi: brokerAbi, functionName: "MAX_SUPPLY",
         }));
-        // Random mint means the minted set is not 1..totalMinted. The bounded fallback must
-        // inspect the complete 1..MAX_SUPPLY ID domain and tolerate unminted ownerOf calls.
-        // This is an availability-only final fallback. Normal discovery is Transfer logs above.
-        candidateIds = Array.from({ length: maxSupply }, (_, i) => BigInt(i + 1));
-      }
-      const owned: OwnedBroker[] = [];
-      // Keep each RPC batch bounded. Public RPC providers commonly reject oversized
-      // multicalls even though the collection itself is capped at 1,776.
-      for (let offset = 0; offset < candidateIds.length; offset += 200) {
-        const ids = candidateIds.slice(offset, offset + 200);
-        const calls = ids.flatMap((id) => [
-          { address: ADDR.broker, abi: brokerAbi, functionName: "ownerOf", args: [id] } as const,
-          { address: ADDR.broker, abi: brokerAbi, functionName: "activated", args: [id] } as const,
-        ]);
-        const results = await client.multicall({ contracts: calls, allowFailure: true });
-        ids.forEach((id, i) => {
-          const owner = results[i * 2]?.result as string | undefined;
-          const active = results[i * 2 + 1]?.result as boolean | undefined;
-          if (owner && owner.toLowerCase() === ownerKey) {
-            owned.push({ id, active: !!active });
-          }
-        });
+        owned = await resolveOwned(Array.from({ length: maxSupply }, (_, i) => BigInt(i + 1)));
       }
       owned.sort((a, b) => (a.id < b.id ? -1 : 1));
       if (request === requestId.current) {

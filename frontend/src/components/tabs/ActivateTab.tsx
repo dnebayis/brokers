@@ -247,6 +247,43 @@ export function ActivateTab() {
       reloadBrokers();
     });
 
+  // Claim ALL owned Brokers in one flow, using claimBatch (up to MAX_CLAIM_BATCH=5 Brokers per
+  // tx). A holder with many Brokers signs one tx per 5, not one per Broker. Each claimBatch call
+  // settles every earned token for every Broker in the batch into their wallets.
+  const claimAll = () =>
+    claimTx.run(async () => {
+      if (!address) throw new Error("Connect your wallet.");
+      // Fresh read of which Brokers actually have something to claim.
+      const ready: bigint[] = [];
+      for (let offset = 0; offset < brokers.length; offset += 25) {
+        const chunk = brokers.slice(offset, offset + 25);
+        const results = await Promise.all(chunk.map((b) => client.readContract({
+          address: ADDR.booster, abi: boosterAbi, functionName: "claimable", args: [b.id],
+        }).catch(() => null)));
+        chunk.forEach((b, i) => {
+          const r = results[i];
+          if (r && r[1].some((amount) => amount > 0n)) ready.push(b.id);
+        });
+      }
+      if (ready.length === 0) {
+        claimTx.setStatus("Nothing to claim — earned stock is already in your Broker wallets.", "ok");
+        return;
+      }
+      let done = 0;
+      for (let i = 0; i < ready.length; i += 5) {
+        const batch = ready.slice(i, i + 5);
+        claimTx.setStatus(`Claiming Brokers ${done + 1}–${done + batch.length} of ${ready.length}…`);
+        const h = await writeContractAsync({
+          address: ADDR.booster, abi: boosterAbi, functionName: "claimBatch", args: [batch], chainId: activeChain.id,
+        });
+        await waitForSuccessfulReceipt(h);
+        done += batch.length;
+      }
+      claimTx.setStatus(`Claimed ${ready.length} Broker${ready.length > 1 ? "s" : ""} into their wallets.`, "ok");
+      refetch();
+      reloadBrokers();
+    });
+
   // Claim = pull accrued stock from the Booster into the Broker's own ERC-6551 wallet.
   // A single tx that settles every token at once; the stock then lives in the Broker
   // wallet and travels with the NFT. This is the normal, one-signature path.
@@ -374,6 +411,11 @@ export function ActivateTab() {
         {address && inactiveOwned > 1 && (
           <button className="btn btn-ghost w-full mt-4" onClick={activateAll} disabled={act.busy}>
             <Icon name="power" /> ACTIVATE ALL INACTIVE ({inactiveOwned})
+          </button>
+        )}
+        {address && claimReadyCount > 0 && (
+          <button className="btn btn-accent w-full mt-2" onClick={claimAll} disabled={claimTx.busy}>
+            <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : `CLAIM ALL (${claimReadyCount})`}
           </button>
         )}
       </div>
