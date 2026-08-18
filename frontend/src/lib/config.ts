@@ -2,8 +2,8 @@ import { ACTIVE_NETWORK } from "./chains";
 import type { Address } from "viem";
 import deployments from "../../deployments.json";
 
-// Hide the COAT Swap tab until the contract address is public. Flip to true to restore it.
-export const SWAP_ENABLED = false;
+// COAT trading is live on mainnet (enableTrading executed 2026-08-18) — Swap tab enabled.
+export const SWAP_ENABLED = true;
 
 // Deployment manifests are deliberately zeroed until the clean release deployment passes.
 type AddrSet = {
