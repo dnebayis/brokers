@@ -247,9 +247,34 @@ export function ActivateTab() {
       reloadBrokers();
     });
 
+  // Claim = pull accrued stock from the Booster into the Broker's own ERC-6551 wallet.
+  // A single tx that settles every token at once; the stock then lives in the Broker
+  // wallet and travels with the NFT. This is the normal, one-signature path.
+  const claimOnly = () =>
+    claimTx.run(async () => {
+      if (!info) throw new Error("Check a Broker first.");
+      if (!address || !isOwner) throw new Error("You don't own this Broker.");
+      if (!hasClaimable) {
+        claimTx.setStatus("Nothing to claim — earned stock is already in your Broker wallet.", "ok");
+        return;
+      }
+      claimTx.setStatus("Claiming accrued stock into your Broker wallet…");
+      const c = await writeContractAsync({
+        address: ADDR.booster, abi: boosterAbi, functionName: "claim", args: [info.id], chainId: activeChain.id,
+      });
+      await waitForSuccessfulReceipt(c);
+      claimTx.setStatus("Claimed — your stock is in your Broker wallet.", "ok");
+      refetch();
+      reloadBrokers();
+      check(info.id.toString());
+    });
+
   // Withdraw = get earned stock all the way into the connected wallet. The keeper
   // already claims Booster → Broker wallet automatically; this button first claims
   // anything still pending, then moves the Broker wallet's stock out to the holder.
+  // Optional/advanced: this sends one transfer tx per token, since the ERC-6551 account
+  // executes a single call per tx. Most holders never need it — the stock is already
+  // theirs, held in the Broker wallet that moves with the NFT.
   const withdraw = () =>
     claimTx.run(async () => {
       if (!info) throw new Error("Check a Broker first.");
@@ -438,14 +463,21 @@ export function ActivateTab() {
             )}
           </>
         )}
-        <button className="btn btn-ghost w-full mt-4" onClick={withdraw} disabled={!isOwner || !(hasClaimable || holdings.length) || claimTx.busy}>
-          <Icon name="download" /> {claimTx.busy ? "WITHDRAWING…" : "WITHDRAW → MY WALLET"}
+        <button className="btn btn-accent w-full mt-4" onClick={claimOnly} disabled={!isOwner || !hasClaimable || claimTx.busy}>
+          <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM → BROKER WALLET"}
         </button>
+        {info && isOwner && holdings.length > 0 && (
+          <button className="btn btn-ghost w-full mt-2" onClick={withdraw} disabled={claimTx.busy}>
+            {claimTx.busy ? "WITHDRAWING…" : "Withdraw to my wallet (optional)"}
+          </button>
+        )}
         {info && isOwner && (
           <p className="text-ink-soft text-sm mt-2">
-            Earned stock is claimed into your Broker&apos;s wallet automatically about once an hour. This moves it out
-            to your connected wallet (claiming anything still pending first).
-            {!hasClaimable && !holdings.length && " Nothing to withdraw yet."}
+            Earned stock is claimed into your Broker&apos;s wallet automatically about once an hour, and one Claim
+            settles anything still pending in a single transaction. It lives in your Broker&apos;s self-custodial
+            wallet and moves with the NFT — no further step needed. Optionally, &quot;Withdraw&quot; moves it out to your
+            connected wallet (one transfer per token).
+            {!hasClaimable && !holdings.length && " Nothing to claim yet."}
           </p>
         )}
         <StatusLine msg={claimTx.msg} kind={claimTx.kind} />
