@@ -1,6 +1,7 @@
 "use client";
 
 import type { TabId } from "@/components/Tabs";
+import { HomeMetrics } from "@/components/HomeMetrics";
 
 // Featured rare Brokers (fully on-chain 1-bit art; served from /public/gallery).
 const RARES: { src: string; id: string; kind: string }[] = [
@@ -54,6 +55,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
           </div>
         ))}
       </section>
+
+      {/* Live on-chain metrics */}
+      <HomeMetrics />
 
       {/* Rare gallery */}
       <section className="card">

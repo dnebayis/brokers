@@ -30,10 +30,14 @@ export const coatAbi = [
   { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "value", type: "uint256" }], outputs: [{ type: "bool" }] },
   { type: "function", name: "allowance", stateMutability: "view", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "totalSupply", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
 
 export const boosterAbi = [
   { type: "function", name: "activeShares", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "totalBought", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "stockFeed", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "address" }] },
+  { type: "function", name: "ethUsdFeed", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", name: "claim", stateMutability: "nonpayable", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [] },
   { type: "function", name: "claimFor", stateMutability: "nonpayable", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [] },
   { type: "function", name: "claimBatch", stateMutability: "nonpayable", inputs: [{ name: "tokenIds", type: "uint256[]" }], outputs: [] },
@@ -64,6 +68,15 @@ export const brokerAccountAbi = [
     { name: "data", type: "bytes" },
     { name: "operation", type: "uint8" },
   ], outputs: [{ type: "bytes" }] },
+] as const;
+
+// Chainlink-style price feed (USD, 8 decimals; stock feeds bake in the uiMultiplier).
+export const aggregatorAbi = [
+  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  { type: "function", name: "latestRoundData", stateMutability: "view", inputs: [], outputs: [
+    { name: "roundId", type: "uint80" }, { name: "answer", type: "int256" },
+    { name: "startedAt", type: "uint256" }, { name: "updatedAt", type: "uint256" }, { name: "answeredInRound", type: "uint80" },
+  ] },
 ] as const;
 
 // CoatRouter — thin wrapper over the v4 pool (deploy separately, then set ADDR.router).
