@@ -25,11 +25,30 @@ by the deployer; FeeSplitter split `8000/1000/1000` (80/10/10); `broker.mintOpen
 `coat.tradingEnabled = false`; COAT total supply 1e27 held entirely by the deployer (awaiting the
 Phase 2 launch). `MAINNET_BROKER_DEPLOYMENT_BLOCK = 39460869`.
 
-**Phase 2 (not yet done):** run `LaunchWithHook` (seeds the pool + locks LP; do **not** call
-`enableTrading`), wire the 23 route feeds/routes, upload art + `setRenderer`, then the coordinated
-open (`enableTrading()` + `setMintOpen(true)`) per [contracts/DEPLOY.md](contracts/DEPLOY.md) §4.
-FeeSplitter `buyback` currently points at the deployer as a placeholder and becomes the BuybackBurner
-during Phase 2.
+### Phase 2 launch (closed) + routes — done 2026-08-18
+
+`LaunchWithHook` ran with `OPEN_TRADING=false`: the v4 pool is seeded single-sided (~1B COAT, 0 ETH),
+the LP position NFT is held by the permanent locker, the rounding dust is burned, and **$COAT trading
+stays CLOSED** (`enableTrading` not called). All 23 routes + stock feeds + the ETH/USD feed are wired
+and verified (`routeReady=true` for every ticker).
+
+| Component | Mainnet address |
+|---|---|
+| CoatFeeHook | `0x51149a925E9193EA13Ae406Da6Cc154EccD0A044` |
+| Permanent LP Locker | `0x7EEc1cD28947bb41bdBa8E0C46087d8135F22bCf` |
+| CoatRouter | `0x740baEEF895444a659fD0fc5Dc213BEDe7d1EaaF` |
+| BuybackBurner (10% sink) | `0xa8547410E681dd43aE43bB828b648e3f303ebe3b` |
+| Native ETH/COAT pool ID | `0x2d503dda028be83d2e133e5e73a8839f1f202d9f6447e3d863e33ad2c8ebc3d2` |
+| ETH/USD feed (Booster guard) | `0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9` |
+
+Verified post-launch: `hook.poolId()` == the computed PoolKey hash; `POSM.balanceOf(locker) == 1`;
+`FeeSplitter.buyback` re-pointed to the BuybackBurner; `hook.owner = deployer`; `coat.tradingEnabled
+= false`; deployer holds 0 COAT (all seeded/burned). The hook address low bits `0xA044 & 0x3FFF =
+0x2044` (BEFORE_INITIALIZE | AFTER_SWAP | AFTER_SWAP_RETURNS_DELTA).
+
+**Still to do (Phase 2 remainder):** upload art + `renderer.setBroker`/`setStockTokens`/
+`broker.setRenderer`, then the coordinated open (`enableTrading()` + `setMintOpen(true)`) per
+[contracts/DEPLOY.md](contracts/DEPLOY.md) §4. Both mint and trading remain closed until then.
 
 ## Active testnet staging (chain 46630)
 
