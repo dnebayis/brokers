@@ -46,9 +46,16 @@ Verified post-launch: `hook.poolId()` == the computed PoolKey hash; `POSM.balanc
 = false`; deployer holds 0 COAT (all seeded/burned). The hook address low bits `0xA044 & 0x3FFF =
 0x2044` (BEFORE_INITIALIZE | AFTER_SWAP | AFTER_SWAP_RETURNS_DELTA).
 
-**Still to do (Phase 2 remainder):** upload art + `renderer.setBroker`/`setStockTokens`/
-`broker.setRenderer`, then the coordinated open (`enableTrading()` + `setMintOpen(true)`) per
-[contracts/DEPLOY.md](contracts/DEPLOY.md) §4. Both mint and trading remain closed until then.
+Art + renderer done 2026-08-18: all **1,776** bitmaps uploaded to the mainnet BrokerRenderer
+(verified 1776/1776 via Multicall3), `renderer.setBroker` + `renderer.setStockTokens` (16 display
+stocks — the renderer caps holdings display at MAX_STOCKS=16; earning is unaffected across all 23
+routes) + `broker.setRenderer` all wired and verified. `renderer.tokenURI` renders the on-chain art
+plus the live `Status` (reads `Inactive` while mint is closed). Frontend `deployments.json` mainnet
+block is filled and pushed; the site stays on testnet until `NEXT_PUBLIC_NETWORK=mainnet` is set.
+
+**Only the coordinated open remains (Phase 2 step 4, owner-gated):** `enableTrading()` +
+`setMintOpen(true)` per [contracts/DEPLOY.md](contracts/DEPLOY.md) §4, then flip the frontend to
+mainnet. Both mint and $COAT trading remain CLOSED until that step.
 
 ## Active testnet staging (chain 46630)
 
