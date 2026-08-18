@@ -31,7 +31,7 @@ export const ADDR: AddrSet = ACTIVE_NETWORK === "mainnet" ? MAINNET : TESTNET;
 
 // Ownership discovery starts at the known deployment block, never at genesis. This makes the
 // Transfer-log path a small, deterministic request even if an NFT indexing API is unavailable.
-export const BROKER_DEPLOYMENT_BLOCK = ACTIVE_NETWORK === "testnet" ? 0x60cdc73n : 0n;
+export const BROKER_DEPLOYMENT_BLOCK = ACTIVE_NETWORK === "testnet" ? 0x60cdc73n : 39460869n;
 
 export const PARAMS = {
   mintPriceEth: "0.001",
