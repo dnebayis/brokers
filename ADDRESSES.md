@@ -1,6 +1,35 @@
 # Robinhood Chain addresses
 
-No COAT **mainnet** deployment is recorded yet. The active clean chain-46630 staging deployment is listed below; it is the only address set the frontend may use until mainnet release gates pass.
+## Mainnet Phase 1 — core infrastructure (chain 4663)
+
+Deployed 2026-08-18, blocks `39460869`–`39461182` (12 txs), via `Deploy.s.sol` with the shared-key
+model (`ALLOW_DEPLOYER_OWNER=true`). **Both mint and $COAT trading are intentionally CLOSED** — this
+is Phase 1 only; the v4 launch (`LaunchWithHook`) and mint opening are Phase 2. All eight contracts
+were verified on-chain (codesize > 0, roles, closed-state) immediately after broadcast.
+
+| Component | Mainnet address |
+|---|---|
+| CoattailBroker | `0x1122dB21998707F8c2eD8182734356C947fA5e98` |
+| COAT | `0x93a887Beda77a9E2F6D6ed0C9742f04CcEBc8833` |
+| StrategyRegistry | `0xA20f9D47E0c41e52a57d65feA9A9322732aF86Aa` |
+| Booster | `0x7bAf435847A4b45c2e22a7fd13549C3192C95953` |
+| StockRouter | `0x99F3f896B58bcb8A515ED3C7174c017B5a55075a` |
+| FeeSplitter | `0x8cE36Fa4aa2d934cA6aD7bE9de31a8eeFeDf8aE8` |
+| BrokerRenderer | `0xB1b64E0CE411135DfaB728a482b21981B07fAd31` |
+| BrokerAccount (6551 impl) | `0x32A055D504840E69B7a0B2136264EEF643f6312C` |
+| ERC-6551 Registry (canonical) | `0x000000006551c19487814612e58FE06813775758` |
+
+Verified state at deploy: `broker.owner = broker.creator = booster.owner = FeeSplitter.treasury =
+deployer 0x9e643731…C440`; `registry.oracleSigner = 0x822864D8…7608e`; `registry` UPDATER_ROLE held
+by the deployer; FeeSplitter split `8000/1000/1000` (80/10/10); `broker.mintOpen = false`;
+`coat.tradingEnabled = false`; COAT total supply 1e27 held entirely by the deployer (awaiting the
+Phase 2 launch). `MAINNET_BROKER_DEPLOYMENT_BLOCK = 39460869`.
+
+**Phase 2 (not yet done):** run `LaunchWithHook` (seeds the pool + locks LP; do **not** call
+`enableTrading`), wire the 23 route feeds/routes, upload art + `setRenderer`, then the coordinated
+open (`enableTrading()` + `setMintOpen(true)`) per [contracts/DEPLOY.md](contracts/DEPLOY.md) §4.
+FeeSplitter `buyback` currently points at the deployer as a placeholder and becomes the BuybackBurner
+during Phase 2.
 
 ## Active testnet staging (chain 46630)
 
