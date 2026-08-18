@@ -2,8 +2,8 @@ import { ACTIVE_NETWORK } from "./chains";
 import type { Address } from "viem";
 import deployments from "../../deployments.json";
 
-// COAT trading is live on mainnet (enableTrading executed 2026-08-18) — Swap tab enabled.
-export const SWAP_ENABLED = true;
+// Swap tab hidden — COAT trading happens off-site for now. Flip to true to restore the in-app swap.
+export const SWAP_ENABLED = false;
 
 // Deployment manifests are deliberately zeroed until the clean release deployment passes.
 type AddrSet = {
