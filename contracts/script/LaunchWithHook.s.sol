@@ -121,7 +121,10 @@ contract LaunchWithHook is Script {
         // reserve/team allocation remains, then open the one-shot launch protection window.
         uint256 remainder = IERC20(coat).balanceOf(me);
         if (remainder != 0) COAT(coat).burn(remainder);
-        COAT(coat).enableTrading();
+        // Closed-launch: seed the pool + lock LP now, but keep $COAT un-buyable until the
+        // coordinated open. OPEN_TRADING is opt-in (default false) so the launch never opens
+        // trading as a side effect; the operator calls enableTrading() at announcement time.
+        if (vm.envOr("OPEN_TRADING", false)) COAT(coat).enableTrading();
 
         // 4) deploy the permanent router + buyback burner, wire the sink, stop the broadcast
         // and persist the manifest — all in a helper so run()'s locals stay under the stack
