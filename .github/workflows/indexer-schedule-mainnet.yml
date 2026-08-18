@@ -5,7 +5,8 @@ name: indexer-schedule-mainnet
 # the repository VARIABLE MAINNET_STRATEGY_REGISTRY_ADDRESS. The oracle key reuses the existing
 # TESTNET_ORACLE_PRIVATE_KEY secret (shared-key launch, accepted-risk decision) and must equal the
 # mainnet registry's on-chain oracleSigner. Reuses the shared UNUSUAL_WHALES_API_KEY secret and the
-# Origin-allowlisted Alchemy RPC (RH_MAINNET_RPC_URL). Mainnet keeps the default 0.70 coverage gate.
+# Origin-allowlisted Alchemy RPC (RH_MAINNET_RPC_URL). Coverage floor is 0.40 (MIN_ROUTE_COVERAGE
+# repo variable) — below it, run.py retains the previous epoch and skips the post as a clean no-op.
 
 permissions:
   contents: read
@@ -32,8 +33,11 @@ jobs:
       RH_RPC_URL: ${{ secrets.RH_MAINNET_RPC_URL }}
       RH_RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
       STRATEGY_REGISTRY_ADDRESS: ${{ vars.MAINNET_STRATEGY_REGISTRY_ADDRESS }}
-      # Production runs strict: a thin-coverage / stale-feed refusal fails loudly, never silently.
-      INDEXER_STRICT: "1"
+      # Low tokenizable coverage is a normal wait-state, not a failure: run.py keeps the previous
+      # epoch and skips the post cleanly (green). Real anomalies (snapshot health, sample data)
+      # still hard-fail regardless of strict. The coverage floor reflects RH Chain's tokenized
+      # universe (~40-50% of Congress net-buying); tune via the MIN_ROUTE_COVERAGE repo variable.
+      MIN_ROUTE_COVERAGE: ${{ vars.MIN_ROUTE_COVERAGE || '0.40' }}
       UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
       # Reuses the existing oracle key (shared-key launch, accepted-risk decision).
       UPDATER_PRIVATE_KEY: ${{ secrets.TESTNET_ORACLE_PRIVATE_KEY }}

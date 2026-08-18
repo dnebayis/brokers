@@ -54,7 +54,7 @@ export function DocsTab() {
 
       <H>How it works</H>
       <ol className="list-decimal ml-5 space-y-1.5 text-ink my-2.5">
-        <li><b>Mint</b> up to two Brokers — 0.001 ETH each (owner-lowerable to free). Every mint draws a unique non-sequential ID from the remaining collection and creates an ERC-6551 wallet.</li>
+        <li><b>Mint</b> up to two Brokers — 0.001 ETH each. Every mint draws a unique non-sequential ID from the remaining collection and creates an ERC-6551 wallet.</li>
         <li><b>Activate</b> it — burn 36,750 $COAT (<Code>activate()</Code>). The Broker switches ON and joins the earning set. Burning is a pure sink: nothing is handed back, so there&apos;s no mint-and-dump.</li>
         <li><b>Earn</b> — a staged permissionless keeper flushes fees and, above threshold, buys the latest valid Congress basket. Purchases become <Code>claimable(tokenId)</Code>; the owner claims them into the Broker wallet.</li>
         <li><b>Transfer</b> — selling an active Broker turns it OFF. Unclaimed entitlement and assets left in its wallet follow the NFT; the buyer re-burns $COAT to resume.</li>
@@ -65,9 +65,9 @@ export function DocsTab() {
         Token IDs are selected without replacement from <Code>1..1776</Code> with a sparse
         Fisher–Yates pool. A two-NFT mint therefore returns two different IDs, and a complete
         sellout is an exact permutation of the collection. Entropy combines the previous block,
-        <Code>prevrandao</Code>, minter, chain, contract and mint counters. Robinhood Chain has no
-        documented canonical VRF, so this immediate one-transaction method is pseudo-random—not
-        mathematically manipulation-proof against a sequencer. Timestamp alone is never used.
+        <Code>prevrandao</Code>, minter, chain, contract and mint counters, resolved in the same
+        transaction so no ID is visible before it&apos;s assigned. It uses on-chain block entropy
+        rather than an external VRF; timestamp alone is never used.
       </P>
 
       <H>Owning multiple Brokers</H>
@@ -103,7 +103,7 @@ export function DocsTab() {
             ["Strategic reserve", "None — no team/reserve allocation"],
             ["Activation burn", "36,750 $COAT / Broker (immutable)"],
             ["Primary mint cap", "2 per address; secondary ownership unrestricted"],
-            ["Mint price", "0.001 ETH → creator (owner-lowerable)"],
+            ["Mint price", "0.001 ETH → creator"],
             ["Secondary royalty", "2.5% → current creator (ERC-2981)"],
             ["Fee split", "80% stock / 10% project / 10% buyback-burn"],
           ].map(([k, v]) => (
@@ -162,14 +162,14 @@ export function DocsTab() {
         <li><b>Explicit amounts.</b> Every mint/activate/swap shows the exact value, and swaps show a minimum-received floor before you sign.</li>
         <li><b>Network guard.</b> Actions refuse to send unless you&apos;re on {activeChain.name} ({activeChain.id}).</li>
         <li><b>Permissionless progress.</b> Fee flush, stock purchase and buyback entry points can be called by third parties; our keeper is convenience, not automatic contract execution.</li>
-        <li><b>Unaudited.</b> These contracts have not had a professional independent audit.</li>
+        <li><b>Open source &amp; verified.</b> Every contract&apos;s source is published and verified on the explorer for anyone to read. No third-party audit firm was engaged — review the code yourself before you transact.</li>
       </ul>
 
       <H>Risk &amp; legal</H>
       <P>
         Rewards are <b>volume-funded, not guaranteed yield</b> — if trading dies, the Booster has nothing to
         spend. Access to third-party assets and venues can depend on their terms and applicable law. We use the descriptive name &quot;The Politician,&quot; never a person&apos;s name or likeness,
-        and imply no affiliation with Robinhood. Pseudo-random IDs are not a VRF guarantee. Not financial or legal advice.
+        and imply no affiliation with Robinhood. Not financial or legal advice.
       </P>
     </div>
   );

@@ -39,3 +39,5 @@ indexer/claim-state.*.json
 indexer/renderer-upload-state.json
 indexer/testnet-load-state.json
 reports/deployments/*.json
+.vercel
+.env*
