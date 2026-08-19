@@ -118,6 +118,17 @@ def main() -> None:
         hook_eth, hook_coat, splitter_eth, booster_balance, threshold, shares,
         buyback_eth, BUYBACK_THRESHOLD_WEI,
     )
+    # Report the relay wallet's own gas here so an external watchdog can read the balance
+    # straight out of this run's log. Running dry is the keeper's most common real outage and
+    # it is otherwise invisible until a stage fails mid-run.
+    keeper_gas_wei = 0
+    if KEEPER_PRIVATE_KEY:
+        try:
+            keeper_gas_wei = int(
+                w3.eth.get_balance(w3.eth.account.from_key(KEEPER_PRIVATE_KEY).address)
+            )
+        except Exception:  # never let a reporting read break the keeper
+            keeper_gas_wei = 0
     status: Dict = {
         "activeShares": shares,
         "boosterBalanceWei": booster_balance,
@@ -127,6 +138,7 @@ def main() -> None:
         "splitterBalanceWei": splitter_eth,
         "buybackBalanceWei": buyback_eth,
         "buybackThresholdWei": BUYBACK_THRESHOLD_WEI,
+        "keeperGasWei": keeper_gas_wei,
         "planned": plan,
     }
     print(json.dumps(status, sort_keys=True))
