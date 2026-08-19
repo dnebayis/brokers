@@ -138,12 +138,21 @@ def main() -> None:
     poke_max_wei = wei_env("KEEPER_POKE_MAX_WEI", "1000000000000000000")
     failed_actions = []
 
-    def submit(label: str, fn: Callable) -> bool:
+    # RH Chain's proxied RPC can briefly serve a stale balance right after a dependent tx is
+    # mined — e.g. splitter.flush's gas estimate landing before hook.flush's ETH is visible —
+    # so eth_estimateGas returns the cheap `if (bal == 0) return` path (~24k) and the tx is sent
+    # under-gassed, reverting out-of-gas (receipt status 0). Guard every stage with an explicit
+    # floor plus a 2x buffer over the estimate. RH gas is ~0.02 gwei, so an oversized limit costs
+    # nothing (only gas actually used is billed); this only removes the OOG failure mode.
+    def submit(label: str, fn: Callable, min_gas: int = 300_000) -> bool:
         try:
-            tx = fn().build_transaction({
+            call = fn()
+            estimate = call.estimate_gas({"from": account.address})
+            tx = call.build_transaction({
                 "from": account.address,
                 "nonce": w3.eth.get_transaction_count(account.address, "pending"),
                 "chainId": CHAIN_ID,
+                "gas": max(int(estimate * 2), min_gas),
             })
             signed = account.sign_transaction(tx)
             raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
@@ -168,10 +177,13 @@ def main() -> None:
     # Re-read balances after upstream flushes instead of trusting projections.
     booster_balance = int(w3.eth.get_balance(booster_address))
     if is_poke_eligible(booster_balance, threshold, shares):
-        submit("booster.poke", lambda: booster.functions.poke(poke_max_wei))
+        # poke buys the whole basket in one tx; real usage scales with the number of routes
+        # (observed 0.24M–1.0M). Floor high so a stale-low estimate can never under-gas it.
+        submit("booster.poke", lambda: booster.functions.poke(poke_max_wei), min_gas=2_000_000)
     buyback_eth = int(w3.eth.get_balance(buyback_address)) if buyback_address else 0
     if buyback and buyback_eth >= BUYBACK_THRESHOLD_WEI:
-        submit("buyback.execute", lambda: buyback.functions.executeBuyback())
+        # buyback is a single v4 swap + burn.
+        submit("buyback.execute", lambda: buyback.functions.executeBuyback(), min_gas=800_000)
     if failed_actions:
         # Stages are isolated by design: a deferred stage retries next run and never
         # strands funds. `buyback.execute` legitimately defers early (SpotTooFarFromTwap
