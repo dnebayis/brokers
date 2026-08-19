@@ -148,15 +148,27 @@ def main() -> None:
         try:
             call = fn()
             estimate = call.estimate_gas({"from": account.address})
-            tx = call.build_transaction({
-                "from": account.address,
-                "nonce": w3.eth.get_transaction_count(account.address, "pending"),
-                "chainId": CHAIN_ID,
-                "gas": max(int(estimate * 2), min_gas),
-            })
-            signed = account.sign_transaction(tx)
-            raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
-            tx_hash = w3.eth.send_raw_transaction(raw)
+            gas_limit = max(int(estimate * 2), min_gas)
+            # The same proxied-RPC lag can serve a stale get_transaction_count(pending) right after a
+            # preceding stage's tx is mined, so a fresh read collides ("nonce too low"). Retry the send
+            # re-reading the nonce; a nonce-error deferral would otherwise fail the whole run.
+            tx_hash = None
+            for send_try in range(4):
+                tx = call.build_transaction({
+                    "from": account.address,
+                    "nonce": w3.eth.get_transaction_count(account.address, "pending"),
+                    "chainId": CHAIN_ID,
+                    "gas": gas_limit,
+                })
+                signed = account.sign_transaction(tx)
+                raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
+                try:
+                    tx_hash = w3.eth.send_raw_transaction(raw)
+                    break
+                except Exception as exc:
+                    if "nonce" in str(exc).lower() and send_try < 3:
+                        continue
+                    raise
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
             if receipt.status != 1:
                 raise RuntimeError(f"receipt status {receipt.status}")

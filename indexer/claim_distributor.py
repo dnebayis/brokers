@@ -120,6 +120,12 @@ def main() -> None:
     if args.execute and account is None:
         raise RuntimeError("KEEPER_PRIVATE_KEY is required with --execute")
 
+    # Seed the nonce once and track it locally. RH's proxied RPC lags on
+    # get_transaction_count(pending) right after a send, so re-querying it per tx returns a stale
+    # value that collides ("nonce too low") across the many claimBatch txs in one run. Increment
+    # locally after each send; re-sync from the chain only when a send actually reports a nonce error.
+    nonce = w3.eth.get_transaction_count(account.address, "pending") if account else 0
+
     for _ in range(args.max_batches):
         batch, next_cursor = select_claim_batch(int(state["nextTokenId"]), is_minted, has_claim)
         print(json.dumps({"cursor": state["nextTokenId"], "batch": batch, "nextCursor": next_cursor}))
@@ -137,15 +143,26 @@ def main() -> None:
         # billed). See the matching guard in keeper.py.
         call = booster.functions.claimBatch(batch)
         estimate = call.estimate_gas({"from": account.address})
-        tx = call.build_transaction({
-            "from": account.address,
-            "nonce": w3.eth.get_transaction_count(account.address, "pending"),
-            "chainId": CHAIN_ID,
-            "gas": max(int(estimate * 2), 2_500_000),
-        })
-        signed = account.sign_transaction(tx)
-        raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
-        tx_hash = w3.eth.send_raw_transaction(raw)
+        gas_limit = max(int(estimate * 2), 2_500_000)
+        tx_hash = None
+        for send_try in range(4):
+            tx = call.build_transaction({
+                "from": account.address,
+                "nonce": nonce,
+                "chainId": CHAIN_ID,
+                "gas": gas_limit,
+            })
+            signed = account.sign_transaction(tx)
+            raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
+            try:
+                tx_hash = w3.eth.send_raw_transaction(raw)
+                break
+            except Exception as exc:
+                if "nonce" in str(exc).lower() and send_try < 3:
+                    nonce = w3.eth.get_transaction_count(account.address, "pending")
+                    continue
+                raise
+        nonce += 1
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
         if receipt.status != 1:
             raise RuntimeError(f"claimBatch receipt status {receipt.status}: {tx_hash.hex()}")
