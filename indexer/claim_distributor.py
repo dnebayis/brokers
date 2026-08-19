@@ -130,10 +130,18 @@ def main() -> None:
         if not args.execute:
             break
 
-        tx = booster.functions.claimBatch(batch).build_transaction({
+        # A full 5-NFT batch pushes up to ~15 stock transfers (~1.0M gas observed). RH's proxied
+        # RPC can serve a stale state to eth_estimateGas right after a preceding tx, undersizing
+        # the limit and reverting out-of-gas (which hard-stops the cursor here). Floor + 2x buffer
+        # removes that: RH gas is ~0.02 gwei so an oversized limit costs nothing (only used gas is
+        # billed). See the matching guard in keeper.py.
+        call = booster.functions.claimBatch(batch)
+        estimate = call.estimate_gas({"from": account.address})
+        tx = call.build_transaction({
             "from": account.address,
             "nonce": w3.eth.get_transaction_count(account.address, "pending"),
             "chainId": CHAIN_ID,
+            "gas": max(int(estimate * 2), 2_500_000),
         })
         signed = account.sign_transaction(tx)
         raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
