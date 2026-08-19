@@ -57,7 +57,7 @@ jobs:
       - name: Check threshold and poke the last valid basket
         run: python keeper.py --execute
       - name: Claim resumable five-NFT batches to TBAs
-        run: python claim_distributor.py --execute --max-batches 20
+        run: python claim_distributor.py --execute --max-batches 50
       - uses: actions/upload-artifact@v4
         if: always()
         with:
