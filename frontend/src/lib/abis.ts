@@ -34,6 +34,10 @@ export const coatAbi = [
 ] as const;
 
 export const boosterAbi = [
+  { type: "event", name: "Bought", anonymous: false, inputs: [
+    { name: "token", type: "address", indexed: true },
+    { name: "ethIn", type: "uint256", indexed: false }, { name: "tokenOut", type: "uint256", indexed: false },
+  ] },
   { type: "function", name: "activeShares", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalBought", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "stockFeed", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "address" }] },
@@ -76,6 +80,14 @@ export const aggregatorAbi = [
   { type: "function", name: "latestRoundData", stateMutability: "view", inputs: [], outputs: [
     { name: "roundId", type: "uint80" }, { name: "answer", type: "int256" },
     { name: "startedAt", type: "uint256" }, { name: "updatedAt", type: "uint256" }, { name: "answeredInRound", type: "uint80" },
+  ] },
+] as const;
+
+// BuybackBurner — buys $COAT with accrued fees and burns it (deflationary flywheel).
+export const buybackBurnerAbi = [
+  { type: "event", name: "BuybackExecuted", anonymous: false, inputs: [
+    { name: "caller", type: "address", indexed: true },
+    { name: "ethIn", type: "uint256", indexed: false }, { name: "coatBurned", type: "uint256", indexed: false },
   ] },
 ] as const;
 

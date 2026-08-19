@@ -34,6 +34,16 @@ export const ACTIVE_NETWORK =
 
 export const activeChain = ACTIVE_NETWORK === "mainnet" ? rhMainnet : rhTestnet;
 
+// Canonical Blockscout explorer for the active chain. robinhoodchain.blockscout.com is the
+// official mainnet instance; rh-scan.com is a lookalike scam and must never be linked.
+export const EXPLORER_BASE =
+  ACTIVE_NETWORK === "mainnet"
+    ? "https://robinhoodchain.blockscout.com"
+    : "https://robinhoodchain-testnet.blockscout.com";
+
+export const explorerTx = (hash: string) => `${EXPLORER_BASE}/tx/${hash}`;
+export const explorerAddress = (addr: string) => `${EXPLORER_BASE}/address/${addr}`;
+
 // Ordered RPC list for the active chain (primary first, fallbacks after).
 export const RPC_HTTP = activeChain.rpcUrls.default.http;
 

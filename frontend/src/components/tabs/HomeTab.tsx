@@ -2,6 +2,7 @@
 
 import type { TabId } from "@/components/Tabs";
 import { HomeMetrics } from "@/components/HomeMetrics";
+import { ProofPanel } from "@/components/ProofPanel";
 
 // Featured rare Brokers (fully on-chain 1-bit art; served from /public/gallery).
 const RARES: { src: string; id: string; kind: string }[] = [
@@ -58,6 +59,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
 
       {/* Live on-chain metrics */}
       <HomeMetrics />
+
+      {/* Proof & transparency — verifiable facts + live burn/buy activity */}
+      <ProofPanel />
 
       {/* Rare gallery */}
       <section className="card">
