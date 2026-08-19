@@ -9,6 +9,7 @@ basket.
 
 import argparse
 import json
+import time
 from typing import Callable, Dict, List
 
 from config import (
@@ -183,11 +184,21 @@ def main() -> None:
 
     if "hook.flush" in plan and hook:
         submit("hook.flush", lambda: hook.functions.flush())
+    flushed = False
     if "splitter.flush" in plan and splitter:
-        submit("splitter.flush", lambda: splitter.functions.flush())
+        flushed = submit("splitter.flush", lambda: splitter.functions.flush())
 
-    # Re-read balances after upstream flushes instead of trusting projections.
+    # Re-read balances after upstream flushes instead of trusting projections. RH's proxied RPC can
+    # serve a stale (pre-flush) Booster balance right after splitter.flush moves ETH in, which would
+    # wrongly skip an eligible poke and strand the buffer. When a flush just landed, poll a few times
+    # and keep the max so the lagging read can't hide the freshly-flushed balance.
     booster_balance = int(w3.eth.get_balance(booster_address))
+    if flushed:
+        for _ in range(4):
+            if booster_balance >= threshold:
+                break
+            time.sleep(2)
+            booster_balance = max(booster_balance, int(w3.eth.get_balance(booster_address)))
     if is_poke_eligible(booster_balance, threshold, shares):
         # poke buys the whole basket in one tx; real usage scales with the number of routes
         # (observed 0.24M–1.0M). Floor high so a stale-low estimate can never under-gas it.
