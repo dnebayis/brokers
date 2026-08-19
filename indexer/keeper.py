@@ -150,14 +150,19 @@ def main() -> None:
             call = fn()
             estimate = call.estimate_gas({"from": account.address})
             gas_limit = max(int(estimate * 2), min_gas)
-            # The same proxied-RPC lag can serve a stale get_transaction_count(pending) right after a
-            # preceding stage's tx is mined, so a fresh read collides ("nonce too low"). Retry the send
-            # re-reading the nonce; a nonce-error deferral would otherwise fail the whole run.
+            # The same proxied-RPC lag can serve a stale get_transaction_count right after a preceding
+            # stage's tx is mined — "pending" can even trail the confirmed "latest" count — so a naive
+            # read collides ("nonce too low"). Seed from max(pending, latest) and, on a nonce error,
+            # advance to max(nonce+1, latest) so a lagging read can never pin the send too low.
+            nonce = max(
+                w3.eth.get_transaction_count(account.address, "pending"),
+                w3.eth.get_transaction_count(account.address, "latest"),
+            )
             tx_hash = None
             for send_try in range(4):
                 tx = call.build_transaction({
                     "from": account.address,
-                    "nonce": w3.eth.get_transaction_count(account.address, "pending"),
+                    "nonce": nonce,
                     "chainId": CHAIN_ID,
                     "gas": gas_limit,
                 })
@@ -168,6 +173,7 @@ def main() -> None:
                     break
                 except Exception as exc:
                     if "nonce" in str(exc).lower() and send_try < 3:
+                        nonce = max(nonce + 1, w3.eth.get_transaction_count(account.address, "latest"))
                         continue
                     raise
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)

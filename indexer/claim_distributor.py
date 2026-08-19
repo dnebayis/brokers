@@ -120,11 +120,18 @@ def main() -> None:
     if args.execute and account is None:
         raise RuntimeError("KEEPER_PRIVATE_KEY is required with --execute")
 
-    # Seed the nonce once and track it locally. RH's proxied RPC lags on
-    # get_transaction_count(pending) right after a send, so re-querying it per tx returns a stale
-    # value that collides ("nonce too low") across the many claimBatch txs in one run. Increment
-    # locally after each send; re-sync from the chain only when a send actually reports a nonce error.
-    nonce = w3.eth.get_transaction_count(account.address, "pending") if account else 0
+    # Seed the nonce once and track it locally. RH's proxied RPC lags both ways on
+    # get_transaction_count: "pending" can trail the confirmed "latest" count (it returned 1381 while
+    # state was already 1382 right after the poke step's txs), so re-querying "pending" alone stays
+    # stale and every claimBatch collides ("nonce too low"). Seed from max(pending, latest) and,
+    # on a nonce error, advance to max(nonce+1, latest) so a lagging read can never pin us too low.
+    def _best_nonce() -> int:
+        return max(
+            w3.eth.get_transaction_count(account.address, "pending"),
+            w3.eth.get_transaction_count(account.address, "latest"),
+        )
+
+    nonce = _best_nonce() if account else 0
 
     for _ in range(args.max_batches):
         batch, next_cursor = select_claim_batch(int(state["nextTokenId"]), is_minted, has_claim)
@@ -159,7 +166,7 @@ def main() -> None:
                 break
             except Exception as exc:
                 if "nonce" in str(exc).lower() and send_try < 3:
-                    nonce = w3.eth.get_transaction_count(account.address, "pending")
+                    nonce = max(nonce + 1, _best_nonce())
                     continue
                 raise
         nonce += 1
