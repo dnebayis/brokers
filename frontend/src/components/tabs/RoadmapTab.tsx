@@ -5,18 +5,20 @@ import { OPENSEA_URL } from "@/lib/config";
 // The roadmap mirrors the published roadmap article. Status tags are honest maturity
 // markers, not promises — only LIVE/CONTINUOUS items describe what already runs; the
 // rest are framed as direction ("the goal is", "exploring") to avoid over-committing.
-type Status = "live" | "horizon" | "exploratory" | "hardening" | "continuous";
+type Status = "live" | "works" | "horizon" | "design" | "exploratory" | "hardening" | "continuous";
 
 const STATUS_LABEL: Record<Status, string> = {
   live: "Live now",
+  works: "In the works",
   horizon: "On the horizon",
+  design: "In design",
   exploratory: "Exploratory",
   hardening: "Hardening",
   continuous: "Continuous",
 };
 
 function StatusTag({ status }: { status: Status }) {
-  const accent = status === "horizon" || status === "exploratory";
+  const accent = status === "horizon" || status === "exploratory" || status === "works" || status === "design";
   const good = status === "live" || status === "continuous";
   const cls = good
     ? "border-good text-good"
@@ -48,6 +50,20 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
   },
   {
     no: "02",
+    status: "works",
+    title: "An earlier signal",
+    body: (
+      <>
+        The STOCK Act gives members up to 45 days to file — but many disclosures surface well
+        before that window closes. Today the basket rebuilds on a fixed schedule; the work in
+        progress is a pipeline that ingests a filing <b>the moment it appears</b>, not on the next
+        tick. To be clear: not front-running Congress — just cutting our own lag to zero, so the
+        basket reflects each disclosure as early as it can legally be known.
+      </>
+    ),
+  },
+  {
+    no: "03",
     status: "horizon",
     title: "Beyond Congress",
     body: (
@@ -61,7 +77,23 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
     ),
   },
   {
-    no: "03",
+    no: "04",
+    status: "design",
+    title: "The vault: Congress for everyone",
+    body: (
+      <>
+        A copy-trade vault for the mass market: deposit a dollar-stable token, hold a share of a
+        portfolio that mirrors Congress, withdraw at value any time — no NFT, no brokerage account,
+        from anywhere the product can legally serve. Management fees buy and burn $COAT, and
+        <b> Broker holders share the vault&rsquo;s revenue</b> — the collection becomes the premium
+        tier of a much larger machine. It ships security-first: independently audited,
+        deposit-capped to measured market depth, withdrawals no admin can pause — or it
+        doesn&rsquo;t ship at all.
+      </>
+    ),
+  },
+  {
+    no: "05",
     status: "exploratory",
     title: "The broker as a primitive",
     body: (
@@ -75,7 +107,7 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
     ),
   },
   {
-    no: "04",
+    no: "06",
     status: "hardening",
     title: "A machine no one has to run",
     body: (
@@ -89,7 +121,7 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
     ),
   },
   {
-    no: "05",
+    no: "07",
     status: "continuous",
     title: "Nothing you can’t check",
     body: (
@@ -128,7 +160,7 @@ export function RoadmapTab() {
       <p className="text-ink leading-relaxed mt-3">
         A roadmap here doesn&rsquo;t mean rewriting what exists. The contracts are frozen by design.
         What grows is everything <i>around</i> them: how much the basket can reach, what signals it
-        can follow, how independently it runs, and how completely you can verify it. Five horizons,
+        can follow, how independently it runs, and how completely you can verify it. Seven horizons,
         in the order they arrive.
       </p>
 
@@ -168,8 +200,9 @@ export function RoadmapTab() {
 
       {/* Close */}
       <p className="text-ink-strong text-lg leading-relaxed mt-10">
-        A wider basket. More strategies than one. A broker that becomes an identity. A machine that
-        runs without us. And nothing, anywhere, you have to take on faith.
+        A wider basket on an earlier signal. More strategies than one — and a vault that opens
+        them to everyone. A broker that becomes an identity. A machine that runs without us. And
+        nothing, anywhere, you have to take on faith.
       </p>
       <p className="text-ink leading-relaxed mt-3">
         That&rsquo;s the whole plan. It&rsquo;s already sold out, already burning, already buying. The
