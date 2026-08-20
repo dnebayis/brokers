@@ -174,6 +174,16 @@
             "probeOk": true,
             "probeBlock": 25777207
         },
+        "SPCX": {
+            "token": "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa",
+            "midPool": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
+            "midToken": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+            "stockPool": "0x10fF8720e7B2731399838fF3Fe3B73e1D143Aa74",
+            "poolKind": "Rialto",
+            "feed": "0xB265810950ba6c5C0Ff821c9963014a56fD8Bffb",
+            "probeOk": true,
+            "probeBlock": 41651285
+        },
         "QQQ": {
             "token": "0xD5f3879160bc7c32ebb4dC785F8a4F505888de68",
             "midPool": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
