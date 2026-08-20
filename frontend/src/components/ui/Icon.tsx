@@ -1,7 +1,7 @@
 // Dependency-free line-icon set (24x24, stroke = currentColor). Clean, not sloppy.
 type Name =
   | "stamp" | "swap" | "power" | "book" | "wallet" | "search" | "home"
-  | "download" | "plus" | "minus" | "flip" | "check" | "copy" | "external" | "arrow-right" | "list";
+  | "download" | "plus" | "minus" | "flip" | "check" | "copy" | "external" | "arrow-right" | "list" | "route";
 
 const paths: Record<Name, React.ReactNode> = {
   stamp: <><path d="M9 3h6a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1l1 4H7l1-4H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M4 20h16" /></>,
@@ -20,6 +20,7 @@ const paths: Record<Name, React.ReactNode> = {
   "arrow-right": <><path d="M4 12h16" /><path d="m14 6 6 6-6 6" /></>,
   list: <><path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3.5 6h.01" /><path d="M3.5 12h.01" /><path d="M3.5 18h.01" /></>,
   home: <><path d="m3 11 9-7 9 7" /><path d="M5 10v10h14V10" /><path d="M9 20v-6h6v6" /></>,
+  route: <><path d="M6 4v16" /><path d="M6 5h9l-2 2 2 2H6" /><circle cx="6" cy="20" r="1" /></>,
 };
 
 export function Icon({ name, className = "w-4 h-4" }: { name: Name; className?: string }) {
