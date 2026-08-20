@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useStoredQuery } from "@/lib/useStoredQuery";
 
 type FeedItem = {
   chamber: "House" | "Senate";
@@ -27,10 +27,14 @@ async function fetchFeed(): Promise<FeedResult> {
 }
 
 export function FeedTab() {
-  const { data, isLoading, isError } = useQuery({
+  // Persisted across reloads: a hard refresh renders the last feed straight from localStorage
+  // with no request, and only revalidates (and updates if it changed) once the hour is up —
+  // matching the server cache, so the Unusual Whales quota isn't spent on every page load.
+  const { data, isLoading, isError } = useStoredQuery<FeedResult>({
+    storageKey: "coattail.feed.v1",
     queryKey: ["congress-feed"],
     queryFn: fetchFeed,
-    staleTime: 5 * 60_000,
+    staleTime: 60 * 60_000,
   });
 
   return (
@@ -96,7 +100,7 @@ export function FeedTab() {
         </div>
       )}
       <p className="text-ink-soft text-xs mt-3">
-        Cached 15 min · shared across all visitors
+        Cached in your browser · refreshes hourly and only when the data changes
         {data?.source && data.source !== "none" ? ` · source: ${data.source.replace("_", " ")}` : ""}.
       </p>
     </div>
