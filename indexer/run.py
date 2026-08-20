@@ -13,7 +13,7 @@ import os
 import sys
 from datetime import datetime, timezone
 
-from aggregate import aggregate, to_basket, coverage
+from aggregate import aggregate, buyer_counts, conviction_multiplier, to_basket, coverage
 from route_preflight import preflight_basket, preflight_enabled, resolve_booster_context
 from tokens import address_of
 from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, wei_env
@@ -211,7 +211,8 @@ def main():
         print(f"  health: {error}")
 
     net = aggregate(trades)
-    basket = to_basket(net)
+    buyers = buyer_counts(trades)
+    basket = to_basket(net, buyers)
 
     # A poke buys every leg atomically, so one illiquid route reverts the whole batch and
     # nothing reaches any Broker. Simulate each leg against the live pools before signing
@@ -251,8 +252,10 @@ def main():
         addr = address_of(tkr)
         tickers.append(tkr); weights.append(bps); addrs.append(addr)
         pct = bps / BPS * 100
+        nb = buyers.get(tkr, 1)
+        conv = f"  {nb} members x{conviction_multiplier(nb):.1f}" if nb > 1 else ""
         flag = "" if addr else "  (no on-chain address yet)"
-        print(f"  {tkr:<6} {pct:5.1f}%  ({bps} bps){flag}")
+        print(f"  {tkr:<6} {pct:5.1f}%  ({bps} bps){conv}{flag}")
 
     if not basket:
         print("\nNo eligible tokenizable tickers in window — nothing to post.")

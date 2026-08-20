@@ -1,6 +1,7 @@
 import unittest
 import base64
 import json
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 from aggregate import parse_amount, to_basket
@@ -104,6 +105,49 @@ class UnusualWhalesTests(unittest.TestCase):
         self.assertEqual(rows[0]["symbol"], "MSFT")
         self.assertEqual(rows[0]["who"], "Jane Doe")
         self.assertEqual(rows[0]["chamber"], "house")
+
+
+class ConvictionTests(unittest.TestCase):
+    def _trades(self):
+        recent = datetime.utcnow().date().isoformat()
+        return [
+            {"symbol": "AAA", "type": "Purchase", "amount": "$100,000 - $100,000", "who": "Rep A", "transactionDate": recent},
+            {"symbol": "AAA", "type": "Purchase", "amount": "$100,000 - $100,000", "who": "Rep B", "transactionDate": recent},
+            {"symbol": "AAA", "type": "Purchase", "amount": "$100,000 - $100,000", "who": "Rep A", "transactionDate": recent},  # dup member
+            {"symbol": "BBB", "type": "Purchase", "amount": "$100,000 - $100,000", "who": "Rep C", "transactionDate": recent},
+            {"symbol": "BBB", "type": "Sale",     "amount": "$100,000 - $100,000", "who": "Rep D", "transactionDate": recent},  # sells don't add conviction
+        ]
+
+    def test_buyer_counts_are_distinct_members_on_the_buy_side(self):
+        from aggregate import buyer_counts
+        counts = buyer_counts(self._trades())
+        self.assertEqual(counts["AAA"], 2)  # A and B, dup A collapsed
+        self.assertEqual(counts["BBB"], 1)  # only C bought; D's sale is ignored
+
+    def test_conviction_multiplier_scales_and_caps(self):
+        from aggregate import conviction_multiplier
+        self.assertEqual(conviction_multiplier(1), 1.0)
+        self.assertEqual(conviction_multiplier(2), 1.5)
+        self.assertEqual(conviction_multiplier(3), 2.0)
+        self.assertEqual(conviction_multiplier(100), 3.0)  # CONVICTION_MAX
+
+    def test_breadth_outweighs_a_larger_single_buyer(self):
+        # CCC has the most raw dollars, but AAA is bought by 3 members -> conviction (x2)
+        # lifts it above CCC. Three names keep every weight under the 50% cap so the tilt,
+        # not the ceiling, decides the ordering.
+        from aggregate import to_basket
+        net = {"AAA": 100_000.0, "BBB": 110_000.0, "CCC": 120_000.0}
+        with patch("aggregate.is_tokenized", lambda t: True):
+            plain = dict(to_basket(net))                                    # dollars only
+            tilted = dict(to_basket(net, {"AAA": 3, "BBB": 1, "CCC": 1}))   # with conviction
+        self.assertGreater(plain["CCC"], plain["AAA"])   # dollars: CCC leads
+        self.assertGreater(tilted["AAA"], tilted["CCC"]) # conviction: AAA leads
+
+    def test_no_buyers_map_reproduces_dollar_weighting(self):
+        from aggregate import to_basket
+        net = {"AAA": 100_000.0, "BBB": 50_000.0}
+        with patch("aggregate.is_tokenized", lambda t: True):
+            self.assertEqual(to_basket(net), to_basket(net, None))
 
 
 class WeightCapTests(unittest.TestCase):

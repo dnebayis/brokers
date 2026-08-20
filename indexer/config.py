@@ -67,6 +67,18 @@ MIN_ROUTE_COVERAGE = float(os.environ.get("MIN_ROUTE_COVERAGE", "0.70"))
 if not 0 <= MIN_ROUTE_COVERAGE <= 1:
     raise ValueError("MIN_ROUTE_COVERAGE must be between 0 and 1")
 
+# ── Signal quality (conviction) ─────────────────────────────────────────────
+# Dollar size alone is a noisy signal: a single member's large disclosure can look more
+# important than a name half of Congress is quietly accumulating. We tilt the basket by
+# CONVICTION — how many *distinct* members bought the name — so breadth of support counts,
+# not just the loudest wallet. A name still needs real dollars (MIN_NOTIONAL) to qualify;
+# conviction only re-weights among the qualifiers. multiplier = 1 + COEFF*(buyers-1),
+# capped at MAX. COEFF=0 disables it (pure dollar weighting).
+CONVICTION_COEFF = float(os.environ.get("CONVICTION_COEFF", "0.5"))
+CONVICTION_MAX = float(os.environ.get("CONVICTION_MAX", "3.0"))
+if CONVICTION_COEFF < 0 or CONVICTION_MAX < 1:
+    raise ValueError("CONVICTION_COEFF must be >= 0 and CONVICTION_MAX >= 1")
+
 # ── Strategy / chain ────────────────────────────────────────────────────────
 STRATEGY_ID = 0           # The Politician
 BPS = 10_000

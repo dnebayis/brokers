@@ -1,10 +1,15 @@
 """Aggregate congressional trades into a tokenizable, bps-normalized basket."""
 
+from __future__ import annotations
+
 import re
 from datetime import datetime, timedelta
 from typing import Iterable, List, Dict, Tuple
 
-from config import TRAILING_DAYS, MODE, MIN_NOTIONAL, MAX_BASKET, MAX_WEIGHT_BPS, BPS
+from config import (
+    TRAILING_DAYS, MODE, MIN_NOTIONAL, MAX_BASKET, MAX_WEIGHT_BPS, BPS,
+    CONVICTION_COEFF, CONVICTION_MAX,
+)
 from tokens import is_tokenized
 
 _NUM = re.compile(r"[\d,]+")
@@ -113,10 +118,18 @@ def cap_weights(values: List[float], cap_bps: int) -> List[int]:
     return weights
 
 
-def to_basket(net: Dict[str, float]) -> List[Tuple[str, int]]:
-    """Filter to tokenizable, positive, above-floor; take top-N; -> [(ticker, bps)]."""
+def to_basket(net: Dict[str, float], buyers: Dict[str, int] | None = None) -> List[Tuple[str, int]]:
+    """Filter to tokenizable, positive, above-floor; take top-N; -> [(ticker, bps)].
+
+    A name still needs real dollars (>= MIN_NOTIONAL) to qualify, but among the qualifiers
+    the ranking and weights use the CONVICTION-weighted value (dollars x how many distinct
+    members bought it), so broadly-supported names lead. Pass buyers=None for pure dollar
+    weighting (the pre-conviction behaviour).
+    """
+    buyers = buyers or {}
     eligible = {
-        s: v for s, v in net.items()
+        s: v * conviction_multiplier(buyers.get(s, 1))
+        for s, v in net.items()
         if v >= MIN_NOTIONAL and is_tokenized(s)
     }
     if not eligible:
@@ -124,6 +137,36 @@ def to_basket(net: Dict[str, float]) -> List[Tuple[str, int]]:
     top = sorted(eligible.items(), key=lambda kv: kv[1], reverse=True)[:MAX_BASKET]
     weights = cap_weights([v for _, v in top], MAX_WEIGHT_BPS)
     return [(s, w) for (s, _), w in zip(top, weights)]
+
+
+def buyer_counts(trades: List[Dict]) -> Dict[str, int]:
+    """Distinct members who *bought* each ticker in the trailing window.
+
+    This is the conviction signal: a name five members are accumulating is a stronger
+    read than the same dollars from one wallet. Sells are ignored here — a member exiting
+    doesn't remove another member's conviction; the dollar `aggregate` already nets those.
+    """
+    cutoff = datetime.utcnow() - timedelta(days=TRAILING_DAYS)
+    buyers: Dict[str, set] = {}
+    for tr in trades:
+        if not _within_window(tr.get("transactionDate", ""), cutoff):
+            continue
+        if not _is_buy(tr.get("type", "")):
+            continue
+        if parse_amount(tr.get("amount", "")) <= 0:
+            continue
+        who = str(tr.get("who", "")).strip().lower()
+        if not who:
+            continue
+        buyers.setdefault(tr["symbol"], set()).add(who)
+    return {sym: len(members) for sym, members in buyers.items()}
+
+
+def conviction_multiplier(distinct_buyers: int) -> float:
+    """1 buyer -> 1.0x, each additional distinct member adds COEFF, capped at MAX."""
+    if distinct_buyers <= 1:
+        return 1.0
+    return min(1.0 + CONVICTION_COEFF * (distinct_buyers - 1), CONVICTION_MAX)
 
 
 def coverage(net: Dict[str, float], exclude: Iterable[str] = ()) -> float:
