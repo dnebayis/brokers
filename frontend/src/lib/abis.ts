@@ -9,6 +9,13 @@ export const brokerAbi = [
     { name: "to", type: "address", indexed: true }, { name: "tokenId", type: "uint256", indexed: true },
     { name: "account", type: "address", indexed: false }, { name: "paidWei", type: "uint256", indexed: false },
   ] },
+  { type: "event", name: "Activated", anonymous: false, inputs: [
+    { name: "tokenId", type: "uint256", indexed: true }, { name: "owner", type: "address", indexed: true },
+    { name: "coatBurned", type: "uint256", indexed: false },
+  ] },
+  { type: "event", name: "Deactivated", anonymous: false, inputs: [
+    { name: "tokenId", type: "uint256", indexed: true },
+  ] },
   { type: "function", name: "mint", stateMutability: "payable", inputs: [{ name: "qty", type: "uint256" }], outputs: [{ name: "tokenIds", type: "uint256[]" }] },
   { type: "function", name: "mintPriceWei", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalMinted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
@@ -40,6 +47,8 @@ export const boosterAbi = [
   ] },
   { type: "function", name: "activeShares", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalBought", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "knownTokenCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "knownTokens", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }] },
   { type: "function", name: "stockFeed", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "address" }] },
   { type: "function", name: "ethUsdFeed", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", name: "claim", stateMutability: "nonpayable", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [] },

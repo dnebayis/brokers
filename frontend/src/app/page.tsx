@@ -9,6 +9,7 @@ import { HomeTab } from "@/components/tabs/HomeTab";
 import { SwapTab } from "@/components/tabs/SwapTab";
 import { ActivateTab } from "@/components/tabs/ActivateTab";
 import { FeedTab } from "@/components/tabs/FeedTab";
+import { LeadersTab } from "@/components/tabs/LeadersTab";
 import { RoadmapTab } from "@/components/tabs/RoadmapTab";
 import { DocsTab } from "@/components/tabs/DocsTab";
 
@@ -16,7 +17,7 @@ export default function Page() {
   const [tab, setTab] = useState<TabId>("home");
   useEffect(() => {
     const saved = window.location.hash.slice(1) || window.localStorage.getItem("coattail.activeTab") || "";
-    const allowed = ["home", "activate", "feed", "roadmap", "docs", ...(SWAP_ENABLED ? ["swap"] : [])];
+    const allowed = ["home", "activate", "feed", "leaders", "roadmap", "docs", ...(SWAP_ENABLED ? ["swap"] : [])];
     if (allowed.includes(saved)) setTab(saved as TabId);
   }, []);
 
@@ -40,6 +41,7 @@ export default function Page() {
               {tab === "swap" && SWAP_ENABLED && <SwapTab />}
               {tab === "activate" && <ActivateTab />}
               {tab === "feed" && <FeedTab />}
+              {tab === "leaders" && <LeadersTab />}
               {tab === "roadmap" && <RoadmapTab />}
               {tab === "docs" && <DocsTab />}
             </div>

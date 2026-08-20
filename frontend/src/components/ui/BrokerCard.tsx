@@ -7,11 +7,13 @@ export function BrokerCard({
   active,
   selected,
   onSelect,
+  backingUsd,
 }: {
   id: bigint;
   active: boolean;
   selected?: boolean;
   onSelect?: () => void;
+  backingUsd?: number;
 }) {
   return (
     <button
@@ -33,7 +35,11 @@ export function BrokerCard({
           {active ? "ON" : "OFF"}
         </span>
       </div>
-      <div className="text-[10px] text-ink-soft mt-0.5 truncate">On-chain artwork</div>
+      <div className="text-[10px] text-ink-soft mt-0.5 truncate">
+        {backingUsd !== undefined
+          ? `Backed by ${backingUsd < 0.005 ? "$0" : backingUsd.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: backingUsd < 100 ? 2 : 0 })}`
+          : "On-chain artwork"}
+      </div>
     </button>
   );
 }

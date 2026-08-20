@@ -9,6 +9,8 @@ import { activeChain } from "@/lib/chains";
 import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
+import { useBrokerBacking } from "@/lib/useBrokerBacking";
+import { usd } from "@/lib/brokerValue";
 import { fmt, short } from "@/lib/format";
 import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
 import { Icon } from "@/components/ui/Icon";
@@ -71,6 +73,7 @@ export function ActivateTab() {
   const activeShares = (activeSharesData as bigint | undefined) ?? 0n;
   const burnLabel = burnData !== undefined ? fmt(burnData as bigint, 18, 0) : PARAMS.activationBurn.toLocaleString();
   const activeOwned = brokers.filter((item) => item.active).length;
+  const backing = useBrokerBacking(brokers.map((b) => b.id));
   const inactiveOwned = brokers.length - activeOwned;
   const activateAllCost = burnData !== undefined ? (burnData as bigint) * BigInt(inactiveOwned) : undefined;
   const refetch = () => { refetchShares(); refetchCoat(); };
@@ -388,7 +391,12 @@ export function ActivateTab() {
             </button>
           )}
         </div>
-        <p className="text-ink-soft text-sm mb-4">Pick one to activate. Green = already earning.</p>
+        <p className="text-ink-soft text-sm mb-1">Pick one to activate. Green = already earning.</p>
+        <p className="text-ink-soft text-sm mb-4">
+          {backing.totalUsd !== null && brokers.length > 0
+            ? <>Your Brokers are backed by <b className="text-ink-strong">{usd(backing.totalUsd)}</b> of real tokenized stock — the floor under the art.</>
+            : "Every active Broker holds real stock in its own wallet."}
+        </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
           <Stat k="Owned" v={brokers.length.toString()} />
           <Stat k="Active shares" v={activeOwned.toString()} />
@@ -404,7 +412,7 @@ export function ActivateTab() {
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
             {brokers.map((b) => (
-              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} />
+              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} />
             ))}
           </div>
         )}

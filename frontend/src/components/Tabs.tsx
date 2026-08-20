@@ -3,13 +3,14 @@
 import { Icon } from "./ui/Icon";
 import { SWAP_ENABLED } from "@/lib/config";
 
-export type TabId = "home" | "swap" | "activate" | "feed" | "roadmap" | "docs";
+export type TabId = "home" | "swap" | "activate" | "feed" | "leaders" | "roadmap" | "docs";
 
-const TABS: { id: TabId; label: string; icon: "home" | "swap" | "power" | "book" | "list" | "route" }[] = [
+const TABS: { id: TabId; label: string; icon: "home" | "swap" | "power" | "book" | "list" | "route" | "trophy" }[] = [
   { id: "home", label: "Home", icon: "home" },
   ...(SWAP_ENABLED ? [{ id: "swap" as const, label: "Swap", icon: "swap" as const }] : []),
   { id: "activate", label: "Activate", icon: "power" },
   { id: "feed", label: "Feed", icon: "list" },
+  { id: "leaders", label: "Leaders", icon: "trophy" },
   { id: "roadmap", label: "Roadmap", icon: "route" },
   { id: "docs", label: "Docs", icon: "book" },
 ];
