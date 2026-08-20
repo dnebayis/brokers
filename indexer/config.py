@@ -56,6 +56,13 @@ TRAILING_DAYS = 90        # window over transactionDate (disclosures lag ~45d)
 MODE = "net"              # "net" = buys minus sells; "gross" = buys only
 MIN_NOTIONAL = 15_000     # ignore tickers whose net notional is below this
 MAX_BASKET = 25           # cap basket size (gas + focus)
+# Per-name weight ceiling, in bps. STOCK Act discloses dollar ranges, so one large
+# disclosure (weighted at its range midpoint) can otherwise dominate the whole basket —
+# a single $1M–$5M buy dwarfs hundreds of $1K–$50K ones. This caps any single name and
+# water-fills the excess into the rest by signal. BPS (10000) disables it.
+MAX_WEIGHT_BPS = int(os.environ.get("MAX_WEIGHT_BPS", "5000"))
+if not 0 < MAX_WEIGHT_BPS <= 10_000:
+    raise ValueError("MAX_WEIGHT_BPS must be between 1 and 10000")
 MIN_ROUTE_COVERAGE = float(os.environ.get("MIN_ROUTE_COVERAGE", "0.70"))
 if not 0 <= MIN_ROUTE_COVERAGE <= 1:
     raise ValueError("MIN_ROUTE_COVERAGE must be between 0 and 1")

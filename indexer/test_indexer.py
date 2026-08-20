@@ -106,6 +106,46 @@ class UnusualWhalesTests(unittest.TestCase):
         self.assertEqual(rows[0]["chamber"], "house")
 
 
+class WeightCapTests(unittest.TestCase):
+    def test_sum_is_always_bps_and_cap_is_respected(self):
+        from aggregate import cap_weights
+        cases = [
+            ([9455, 495, 50], 4000),
+            ([9455, 495, 50], 5000),
+            ([1000, 900, 800, 700], 3000),
+            ([100, 1, 1, 1, 1], 2500),
+        ]
+        for values, cap in cases:
+            w = cap_weights(values, cap)
+            self.assertEqual(sum(w), 10_000, (values, cap, w))
+            self.assertTrue(all(x <= cap for x in w), (values, cap, w))
+
+    def test_excess_flows_to_next_by_signal_not_evenly(self):
+        # INTC dwarfs the rest; at a 50% cap it pins at 5000 and the remainder splits by
+        # signal, so the second-largest gets far more than the third.
+        from aggregate import cap_weights
+        w = cap_weights([9455, 495, 50], 5000)
+        self.assertEqual(w[0], 5000)
+        self.assertGreater(w[1], w[2])
+        self.assertLess(w[2], 1000)  # tiny signal stays tiny
+
+    def test_uncapped_matches_plain_proportional(self):
+        from aggregate import cap_weights
+        # cap disabled (BPS) reproduces the old proportional behaviour, drift on the largest
+        self.assertEqual(cap_weights([6000, 3000, 1000], 10_000), [6000, 3000, 1000])
+
+    def test_monotonic_weights(self):
+        from aggregate import cap_weights
+        w = cap_weights([500, 300, 200, 100], 4000)
+        self.assertEqual(w, sorted(w, reverse=True))
+
+    def test_degenerate_inputs(self):
+        from aggregate import cap_weights
+        self.assertEqual(cap_weights([], 4000), [])
+        self.assertEqual(cap_weights([123.0], 4000), [10_000])  # one name can't be capped below 100%
+        self.assertEqual(cap_weights([100, 100], 4000), [5000, 5000])
+
+
 class RoutePreflightTests(unittest.TestCase):
     def test_renormalise_restores_exact_bps_sum(self):
         from route_preflight import renormalise

@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timedelta
 from typing import Iterable, List, Dict, Tuple
 
-from config import TRAILING_DAYS, MODE, MIN_NOTIONAL, MAX_BASKET, BPS
+from config import TRAILING_DAYS, MODE, MIN_NOTIONAL, MAX_BASKET, MAX_WEIGHT_BPS, BPS
 from tokens import is_tokenized
 
 _NUM = re.compile(r"[\d,]+")
@@ -57,6 +57,62 @@ def aggregate(trades: List[Dict]) -> Dict[str, float]:
     return net
 
 
+def cap_weights(values: List[float], cap_bps: int) -> List[int]:
+    """Allocate exactly BPS across `values` (proportional to each), with no single entry
+    above `cap_bps`. Water-fill: pin whatever exceeds the cap at the cap, then re-split the
+    remaining budget across the rest by signal, repeating until nothing else overflows.
+
+    STOCK Act discloses dollar *ranges*, so one large disclosure priced at its midpoint can
+    otherwise swamp the basket; this bounds any one name without discarding the signal —
+    the excess flows to the next names by size, not evenly.
+    """
+    n = len(values)
+    if n == 0:
+        return []
+    # If the cap is too tight to even fit n names, fall back to an even split at the cap.
+    cap = max(cap_bps, -(-BPS // n))  # ceil(BPS/n)
+    capped = [False] * n
+    alloc = [0.0] * n
+    remaining = float(BPS)
+    while True:
+        pool = [i for i in range(n) if not capped[i]]
+        pool_sum = sum(values[i] for i in pool)
+        if not pool:
+            break
+        if pool_sum <= 0:
+            share = remaining / len(pool)
+            for i in pool:
+                alloc[i] = share
+            break
+        overflow = [i for i in pool if values[i] / pool_sum * remaining > cap + 1e-9]
+        if overflow:
+            for i in overflow:
+                alloc[i] = cap
+                capped[i] = True
+            remaining = BPS - sum(alloc[i] for i in range(n) if capped[i])
+            continue
+        for i in pool:
+            alloc[i] = values[i] / pool_sum * remaining
+        break
+
+    # Integer bps via largest-remainder, never lifting an entry above the cap.
+    weights = [int(a) for a in alloc]
+    drift = BPS - sum(weights)
+    order = sorted(range(n), key=lambda i: alloc[i] - weights[i], reverse=True)
+    while drift > 0:
+        progressed = False
+        for i in order:
+            if drift == 0:
+                break
+            if weights[i] < cap:
+                weights[i] += 1
+                drift -= 1
+                progressed = True
+        if not progressed:  # everything at the cap (defensive; cap*n >= BPS guarantees room)
+            break
+    return weights
+
+
 def to_basket(net: Dict[str, float]) -> List[Tuple[str, int]]:
     """Filter to tokenizable, positive, above-floor; take top-N; -> [(ticker, bps)]."""
     eligible = {
@@ -66,15 +122,8 @@ def to_basket(net: Dict[str, float]) -> List[Tuple[str, int]]:
     if not eligible:
         return []
     top = sorted(eligible.items(), key=lambda kv: kv[1], reverse=True)[:MAX_BASKET]
-    total = sum(v for _, v in top)
-
-    # proportional bps, then fix rounding so the sum is exactly BPS
-    basket = [(s, int(v / total * BPS)) for s, v in top]
-    drift = BPS - sum(w for _, w in basket)
-    if basket:
-        s0, w0 = basket[0]
-        basket[0] = (s0, w0 + drift)  # dump rounding remainder on the largest
-    return basket
+    weights = cap_weights([v for _, v in top], MAX_WEIGHT_BPS)
+    return [(s, w) for (s, _), w in zip(top, weights)]
 
 
 def coverage(net: Dict[str, float], exclude: Iterable[str] = ()) -> float:

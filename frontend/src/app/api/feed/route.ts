@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 // Server-only Congress disclosure feed. Prefer Unusual Whales' normalized
 // Congress endpoint; retain FMP as a fallback. Never silently replace an
 // upstream failure with fake rows—the UI must distinguish live from unavailable.
-export const revalidate = 900;
+//
+// Cached for one hour. This response is what every visitor's Feed tab reads, and the
+// upstream Unusual Whales call only fires when this cache is stale — so the TTL, not
+// visitor traffic, sets how often we spend the API quota. Disclosures update slowly
+// (members file with a ~45-day lag), so hourly is fresh enough and keeps the key cheap.
+export const revalidate = 3600;
 
 type FeedItem = {
   chamber: "House" | "Senate";
