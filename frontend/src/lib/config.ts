@@ -33,6 +33,10 @@ export const ADDR: AddrSet = ACTIVE_NETWORK === "mainnet" ? MAINNET : TESTNET;
 // Transfer-log path a small, deterministic request even if an NFT indexing API is unavailable.
 export const BROKER_DEPLOYMENT_BLOCK = ACTIVE_NETWORK === "testnet" ? 0x60cdc73n : 39460869n;
 
+// Primary mint is closed (1,776/1,776). Brokers are only obtainable on the secondary
+// market, so every "get a Broker" call to action points here.
+export const OPENSEA_URL = "https://opensea.io/collection/coattailbrokers";
+
 export const PARAMS = {
   mintPriceEth: "0.001",
   activationBurn: 36_750,

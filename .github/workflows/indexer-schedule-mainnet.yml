@@ -33,6 +33,10 @@ jobs:
       RH_RPC_URL: ${{ secrets.RH_MAINNET_RPC_URL }}
       RH_RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
       STRATEGY_REGISTRY_ADDRESS: ${{ vars.MAINNET_STRATEGY_REGISTRY_ADDRESS }}
+      # Enables the live route pre-flight: run.py reads the StockRouter off this Booster
+      # and eth_call-simulates every basket leg before signing, dropping any route whose
+      # pool cannot fill today. Without it one illiquid pool reverts the whole atomic poke.
+      BOOSTER_ADDRESS: ${{ vars.MAINNET_BOOSTER_ADDRESS || '0x7bAf435847A4b45c2e22a7fd13549C3192C95953' }}
       # Low tokenizable coverage is a normal wait-state, not a failure: run.py keeps the previous
       # epoch and skips the post cleanly (green). Real anomalies (snapshot health, sample data)
       # still hard-fail regardless of strict. The coverage floor reflects RH Chain's tokenized

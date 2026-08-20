@@ -8,6 +8,7 @@ StrategyRegistry.setStrategy(strategyId, tokens, weightsBps).
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -88,16 +89,58 @@ if RPC_ORIGIN:
     RPC_HEADERS["Origin"] = RPC_ORIGIN
 
 
-def make_web3(rpc_url: str = RPC_URL, expect_chain: int | None = CHAIN_ID):
-    """Return a connected Web3 for `rpc_url`, verifying the chain id when given."""
+# The public RH endpoint for this network, used as a last-resort fallback when the
+# configured RH_RPC_URL is a private/allowlisted provider that is momentarily down.
+PUBLIC_RPC_URL = _NET["rpc"]
+
+RPC_CONNECT_ATTEMPTS = int(os.environ.get("RPC_CONNECT_ATTEMPTS", "4"))
+
+
+def _try_connect(rpc_url: str, expect_chain: int | None):
+    """Return a verified Web3 for `rpc_url`, or None if it is unusable right now."""
     from web3 import Web3
 
-    w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"headers": RPC_HEADERS, "timeout": 60}))
-    if not w3.is_connected():
-        raise RuntimeError(f"RPC unavailable: {rpc_url}")
-    if expect_chain is not None and w3.eth.chain_id != expect_chain:
-        raise RuntimeError(f"RPC chain {w3.eth.chain_id} != expected {expect_chain}")
-    return w3
+    try:
+        w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"headers": RPC_HEADERS, "timeout": 60}))
+        if not w3.is_connected():
+            return None
+        if expect_chain is not None and w3.eth.chain_id != expect_chain:
+            # A wrong chain is a configuration error, never a transient one: fail loudly
+            # rather than silently retrying or falling back onto the wrong network.
+            raise RuntimeError(f"RPC chain {w3.eth.chain_id} != expected {expect_chain}")
+        return w3
+    except RuntimeError:
+        raise
+    except Exception:
+        return None
+
+
+def make_web3(rpc_url: str = RPC_URL, expect_chain: int | None = CHAIN_ID):
+    """Return a connected Web3 for `rpc_url`, verifying the chain id when given.
+
+    A single failed connect used to abort the whole run — two scheduled keeper runs died
+    one second in with "RPC unavailable" while the chain itself was healthy, skipping an
+    hour of flushes/pokes for nothing. Retry with backoff, then fall back to this network's
+    public endpoint, so a blip at one provider can no longer strand a run. The chain-id
+    check still guards the fallback, so it can never talk to the wrong network.
+    """
+    import time
+
+    attempts = max(RPC_CONNECT_ATTEMPTS, 1)
+    for attempt in range(attempts):
+        w3 = _try_connect(rpc_url, expect_chain)
+        if w3 is not None:
+            return w3
+        if attempt < attempts - 1:
+            time.sleep(2 ** attempt)
+
+    if rpc_url != PUBLIC_RPC_URL:
+        w3 = _try_connect(PUBLIC_RPC_URL, expect_chain)
+        if w3 is not None:
+            print(json.dumps({"rpc": "fallback", "url": PUBLIC_RPC_URL}))
+            return w3
+
+    raise RuntimeError(f"RPC unavailable after {attempts} attempts: {rpc_url}")
 STRATEGY_REGISTRY = os.environ.get("STRATEGY_REGISTRY_ADDRESS", "")  # 0x...
 BROKER_ADDRESS = os.environ.get("BROKER_ADDRESS", "")
 # Block the Broker was deployed at — bounds Transfer-log scans (mint discovery).

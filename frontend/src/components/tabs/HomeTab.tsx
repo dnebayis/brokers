@@ -3,6 +3,7 @@
 import type { TabId } from "@/components/Tabs";
 import { HomeMetrics } from "@/components/HomeMetrics";
 import { ProofPanel } from "@/components/ProofPanel";
+import { OPENSEA_URL } from "@/lib/config";
 
 // Featured rare Brokers (fully on-chain 1-bit art; served from /public/gallery).
 const RARES: { src: string; id: string; kind: string }[] = [
@@ -16,7 +17,7 @@ const RARES: { src: string; id: string; kind: string }[] = [
 
 const FACTS: { k: string; v: string }[] = [
   { k: "Collection", v: "1,776" },
-  { k: "Mint", v: "0.001 ETH" },
+  { k: "Mint", v: "sold out" },
   { k: "Token", v: "$COAT · fair launch" },
   { k: "Team allocation", v: "0%" },
 ];
@@ -38,9 +39,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
           no charts to watch, no buttons to press.
         </p>
         <div className="flex flex-wrap gap-3">
-          <button className="btn btn-accent" onClick={() => onNavigate("mint")}>
-            Mint a Broker
-          </button>
+          <a className="btn btn-accent" href={OPENSEA_URL} target="_blank" rel="noopener noreferrer">
+            Get a Broker &#8599;
+          </a>
           <button className="btn btn-ghost" onClick={() => onNavigate("docs")}>
             Read the Docs
           </button>
@@ -114,9 +115,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
           </li>
         </ol>
         <div className="flex flex-wrap gap-3 mt-5">
-          <button className="btn btn-accent" onClick={() => onNavigate("mint")}>
-            Mint
-          </button>
+          <a className="btn btn-accent" href={OPENSEA_URL} target="_blank" rel="noopener noreferrer">
+            Get a Broker &#8599;
+          </a>
           <button className="btn btn-ghost" onClick={() => onNavigate("feed")}>
             See the live basket
           </button>

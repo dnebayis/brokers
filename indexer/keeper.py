@@ -62,6 +62,38 @@ def _address(value: str, name: str, Web3):
     return Web3.to_checksum_address(value)
 
 
+def _diagnose_poke(w3, booster, registry_abi, booster_address, buffer_wei) -> None:
+    """Simulate the on-chain basket leg by leg and report which routes cannot fill.
+
+    Read-only and best-effort: this runs only after a poke has already failed, so it must
+    never raise and turn a diagnosis into a second outage.
+    """
+    try:
+        from route_preflight import simulate_leg
+
+        registry = w3.eth.contract(address=booster.functions.registry().call(), abi=registry_abi)
+        tokens, weights, epoch = registry.functions.getBasket(
+            int(booster.functions.strategyId().call())
+        ).call()
+        router_address = booster.functions.router().call()
+        dead = []
+        for token, bps in zip(tokens, weights):
+            slice_wei = (buffer_wei * int(bps)) // 10_000
+            if slice_wei == 0:
+                continue  # _poke skips a zero slice; it cannot be the cause
+            ok, _out, reason = simulate_leg(w3, router_address, booster_address, token, slice_wei)
+            if not ok:
+                dead.append({"token": token, "bps": int(bps), "reason": reason})
+        print(json.dumps({"action": "poke.diagnosis", "epoch": int(epoch),
+                          "bufferWei": buffer_wei, "deadRoutes": dead}, sort_keys=True))
+        if dead:
+            print("::warning::poke blocked by illiquid route(s): " +
+                  ", ".join(d["token"] for d in dead) +
+                  " — rerun the indexer to repost the basket without them")
+    except Exception as exc:
+        print(json.dumps({"action": "poke.diagnosis", "status": "unavailable", "error": str(exc)[:200]}))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Coattail Booster keeper")
     parser.add_argument("--execute", action="store_true", help="send poke when eligible")
@@ -83,6 +115,19 @@ def main() -> None:
         {"type": "function", "name": "poke", "stateMutability": "nonpayable", "inputs": [], "outputs": []},
         {"type": "function", "name": "poke", "stateMutability": "nonpayable",
          "inputs": [{"name": "maxSpend", "type": "uint256"}], "outputs": []},
+        {"type": "function", "name": "registry", "stateMutability": "view", "inputs": [],
+         "outputs": [{"name": "", "type": "address"}]},
+        {"type": "function", "name": "strategyId", "stateMutability": "view", "inputs": [],
+         "outputs": [{"name": "", "type": "uint256"}]},
+        {"type": "function", "name": "router", "stateMutability": "view", "inputs": [],
+         "outputs": [{"name": "", "type": "address"}]},
+    ]
+    registry_abi = [
+        {"type": "function", "name": "getBasket", "stateMutability": "view",
+         "inputs": [{"name": "strategyId", "type": "uint256"}],
+         "outputs": [{"name": "tokens", "type": "address[]"},
+                     {"name": "weightsBps", "type": "uint16[]"},
+                     {"name": "epoch", "type": "uint64"}]},
     ]
     flush_abi = [{"type": "function", "name": "flush", "stateMutability": "nonpayable", "inputs": [], "outputs": []}]
     hook_abi = flush_abi + [
@@ -142,6 +187,13 @@ def main() -> None:
         "planned": plan,
     }
     print(json.dumps(status, sort_keys=True))
+    # Running dry is the keeper's most common real outage. Emit a workflow warning while
+    # there is still gas for several runs, so the watchdog can page before a stage fails
+    # mid-run and strands the buffered fees for an hour.
+    gas_floor = wei_env("KEEPER_GAS_FLOOR_WEI", "10000000000000000")  # 0.01 ETH
+    if KEEPER_PRIVATE_KEY and 0 < keeper_gas_wei < gas_floor:
+        print(f"::warning::keeper relay low on gas: {keeper_gas_wei / 1e18:.5f} ETH "
+              f"(floor {gas_floor / 1e18:.5f} ETH) — top up the relay wallet")
     if not args.execute or not plan:
         return
     if not KEEPER_PRIVATE_KEY:
@@ -220,7 +272,14 @@ def main() -> None:
     if is_poke_eligible(booster_balance, threshold, shares):
         # poke buys the whole basket in one tx; real usage scales with the number of routes
         # (observed 0.24M–1.0M). Floor high so a stale-low estimate can never under-gas it.
-        submit("booster.poke", lambda: booster.functions.poke(poke_max_wei), min_gas=2_000_000)
+        poked = submit("booster.poke", lambda: booster.functions.poke(poke_max_wei), min_gas=2_000_000)
+        if not poked:
+            # The basket is bought atomically, so one illiquid route reverts every leg and the
+            # buffer sits until the next indexer epoch replaces the basket — up to six hours of
+            # silent stalling. The indexer pre-flights routes before posting, but liquidity can
+            # die between epochs, so name the culprit here instead of leaving a bare revert.
+            _diagnose_poke(w3, booster, registry_abi, booster_address,
+                           min(booster_balance, poke_max_wei))
     buyback_eth = int(w3.eth.get_balance(buyback_address)) if buyback_address else 0
     if buyback and buyback_eth >= BUYBACK_THRESHOLD_WEI:
         # buyback is a single v4 swap + burn.

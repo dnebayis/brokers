@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
-import { ADDR } from "@/lib/config";
+import { ADDR, OPENSEA_URL } from "@/lib/config";
 import { brokerAbi, coatAbi, boosterAbi, strategyRegistryAbi, routerAbi, aggregatorAbi, erc20Abi } from "@/lib/abis";
 import { client } from "@/lib/client";
 
-const OPENSEA = "https://opensea.io/collection/coattailbrokers";
 const DEXSCREENER = "https://dexscreener.com/robinhood/0x2d503dda028be83d2e133e5e73a8839f1f202d9f6447e3d863e33ad2c8ebc3d2";
 const INITIAL_COAT_SUPPLY = 1_000_000_000; // 1B, fixed at launch
 const ZERO = "0x0000000000000000000000000000000000000000";
@@ -127,7 +126,7 @@ export function HomeMetrics() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h2 className="pixel-title text-[15px]">Live metrics</h2>
         <div className="flex gap-2">
-          <a href={OPENSEA} target="_blank" rel="noopener noreferrer" className="btn btn-ghost text-[12px] px-3 py-1.5">OpenSea ↗</a>
+          <a href={OPENSEA_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ghost text-[12px] px-3 py-1.5">OpenSea ↗</a>
           <a href={DEXSCREENER} target="_blank" rel="noopener noreferrer" className="btn btn-ghost text-[12px] px-3 py-1.5">DexScreener ↗</a>
         </div>
       </div>

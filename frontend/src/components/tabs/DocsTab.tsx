@@ -54,7 +54,7 @@ export function DocsTab() {
 
       <H>How it works</H>
       <ol className="list-decimal ml-5 space-y-1.5 text-ink my-2.5">
-        <li><b>Mint</b> up to two Brokers — 0.001 ETH each. Every mint draws a unique non-sequential ID from the remaining collection and creates an ERC-6551 wallet.</li>
+        <li><b>Acquire</b> a Broker. Primary mint is closed — all 1,776 were minted at 0.001 ETH, each drawing a unique non-sequential ID and creating its own ERC-6551 wallet; Brokers now change hands on the secondary market.</li>
         <li><b>Activate</b> it — burn 36,750 $COAT (<Code>activate()</Code>). The Broker switches ON and joins the earning set. Burning is a pure sink: nothing is handed back, so there&apos;s no mint-and-dump.</li>
         <li><b>Earn</b> — a staged permissionless keeper flushes fees and, above threshold, buys the latest valid Congress basket. Purchases become <Code>claimable(tokenId)</Code>; the owner claims them into the Broker wallet.</li>
         <li><b>Transfer</b> — selling an active Broker turns it OFF. Unclaimed entitlement and assets left in its wallet follow the NFT; the buyer re-burns $COAT to resume.</li>

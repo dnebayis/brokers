@@ -106,5 +106,66 @@ class UnusualWhalesTests(unittest.TestCase):
         self.assertEqual(rows[0]["chamber"], "house")
 
 
+class RoutePreflightTests(unittest.TestCase):
+    def test_renormalise_restores_exact_bps_sum(self):
+        from route_preflight import renormalise
+        for basket in ([("A", 5000), ("B", 3000)],
+                       [("A", 3333), ("B", 3333), ("C", 3334)],
+                       [("A", 1)]):
+            self.assertEqual(sum(w for _, w in renormalise(basket)), 10_000)
+        self.assertEqual(renormalise([]), [])
+
+    def test_renormalise_keeps_relative_weights(self):
+        from route_preflight import renormalise
+        self.assertEqual(renormalise([("A", 5000), ("B", 3000)]), [("A", 6250), ("B", 3750)])
+
+    def test_preflight_drops_only_the_failing_leg(self):
+        import route_preflight
+        basket = [("AAPL", 6000), ("DEAD", 3000), ("MSFT", 1000)]
+
+        def fake_simulate(w3, router, booster, stock, wei):
+            return (False, 0, "execution reverted") if stock == "0xdead" else (True, 1, "")
+
+        with patch.object(route_preflight, "simulate_leg", fake_simulate), \
+             patch("tokens.address_of", lambda t: "0xdead" if t == "DEAD" else "0x" + t.lower()):
+            live, dropped = route_preflight.preflight_basket(
+                None, basket, "0xb00", 10**16, router_address="0xr")
+        self.assertEqual([t for t, _ in live], ["AAPL", "MSFT"])
+        self.assertEqual(sum(w for _, w in live), 10_000)
+        self.assertEqual([(t, r) for t, _b, r in dropped], [("DEAD", "execution reverted")])
+
+    def test_preflight_keeps_a_leg_whose_slice_rounds_to_zero(self):
+        """`_poke` skips a zero slice, so it can never revert the batch — never drop it."""
+        import route_preflight
+
+        def explode(*_a, **_k):
+            raise AssertionError("a zero slice must not be simulated")
+
+        with patch.object(route_preflight, "simulate_leg", explode), \
+             patch("tokens.address_of", lambda t: "0x" + t.lower()):
+            live, dropped = route_preflight.preflight_basket(
+                None, [("TINY", 1)], "0xb00", 100, router_address="0xr")
+        self.assertEqual(live, [("TINY", 10_000)])
+        self.assertEqual(dropped, [])
+
+    def test_preflight_drops_a_ticker_with_no_onchain_address(self):
+        import route_preflight
+        with patch("tokens.address_of", lambda t: None if t == "NOADDR" else "0x" + t.lower()), \
+             patch.object(route_preflight, "simulate_leg", lambda *a, **k: (True, 1, "")):
+            live, dropped = route_preflight.preflight_basket(
+                None, [("AAPL", 9000), ("NOADDR", 1000)], "0xb00", 10**16, router_address="0xr")
+        self.assertEqual(live, [("AAPL", 10_000)])
+        self.assertEqual([t for t, _b, _r in dropped], ["NOADDR"])
+
+
+class CoverageExclusionTests(unittest.TestCase):
+    def test_excluded_ticker_leaves_the_denominator_intact(self):
+        from aggregate import coverage
+        with patch("aggregate.is_tokenized", lambda t: t in {"AAPL", "DEAD"}):
+            net = {"AAPL": 60.0, "DEAD": 20.0, "XYZ": 20.0}
+            self.assertAlmostEqual(coverage(net), 0.8)
+            self.assertAlmostEqual(coverage(net, exclude=["DEAD"]), 0.6)
+
+
 if __name__ == "__main__":
     unittest.main()

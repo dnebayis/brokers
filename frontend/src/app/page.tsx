@@ -6,7 +6,6 @@ import { Tabs, type TabId } from "@/components/Tabs";
 import { SWAP_ENABLED } from "@/lib/config";
 import { SidePanel } from "@/components/SidePanel";
 import { HomeTab } from "@/components/tabs/HomeTab";
-import { MintTab } from "@/components/tabs/MintTab";
 import { SwapTab } from "@/components/tabs/SwapTab";
 import { ActivateTab } from "@/components/tabs/ActivateTab";
 import { FeedTab } from "@/components/tabs/FeedTab";
@@ -16,7 +15,7 @@ export default function Page() {
   const [tab, setTab] = useState<TabId>("home");
   useEffect(() => {
     const saved = window.location.hash.slice(1) || window.localStorage.getItem("coattail.activeTab") || "";
-    const allowed = ["home", "mint", "activate", "feed", "docs", ...(SWAP_ENABLED ? ["swap"] : [])];
+    const allowed = ["home", "activate", "feed", "docs", ...(SWAP_ENABLED ? ["swap"] : [])];
     if (allowed.includes(saved)) setTab(saved as TabId);
   }, []);
 
@@ -37,7 +36,6 @@ export default function Page() {
         ) : (
           <div className="py-6 lg:py-8 grid gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
             <div className="min-w-0">
-              {tab === "mint" && <MintTab />}
               {tab === "swap" && SWAP_ENABLED && <SwapTab />}
               {tab === "activate" && <ActivateTab />}
               {tab === "feed" && <FeedTab />}

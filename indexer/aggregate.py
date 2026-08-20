@@ -2,7 +2,7 @@
 
 import re
 from datetime import datetime, timedelta
-from typing import List, Dict, Tuple
+from typing import Iterable, List, Dict, Tuple
 
 from config import TRAILING_DAYS, MODE, MIN_NOTIONAL, MAX_BASKET, BPS
 from tokens import is_tokenized
@@ -77,9 +77,15 @@ def to_basket(net: Dict[str, float]) -> List[Tuple[str, int]]:
     return basket
 
 
-def coverage(net: Dict[str, float]) -> float:
-    """Fraction of positive net notional that is tokenizable on RH Chain."""
+def coverage(net: Dict[str, float], exclude: Iterable[str] = ()) -> float:
+    """Fraction of positive net notional that is tokenizable on RH Chain.
+
+    `exclude` drops tickers from the tokenizable side without changing the denominator —
+    used to report honest coverage after the live route pre-flight removes a leg whose
+    pool cannot fill today.
+    """
+    skip = set(exclude)
     pos = {s: v for s, v in net.items() if v > 0}
     total = sum(pos.values()) or 1.0
-    tokenizable = sum(v for s, v in pos.items() if is_tokenized(s))
+    tokenizable = sum(v for s, v in pos.items() if is_tokenized(s) and s not in skip)
     return tokenizable / total

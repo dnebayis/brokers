@@ -14,8 +14,9 @@ import sys
 from datetime import datetime, timezone
 
 from aggregate import aggregate, to_basket, coverage
+from route_preflight import preflight_basket, preflight_enabled, resolve_booster_context
 from tokens import address_of
-from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE
+from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, wei_env
 from health import snapshot_health
 
 
@@ -210,8 +211,38 @@ def main():
         print(f"  health: {error}")
 
     net = aggregate(trades)
-    cov = coverage(net)
     basket = to_basket(net)
+
+    # A poke buys every leg atomically, so one illiquid route reverts the whole batch and
+    # nothing reaches any Broker. Simulate each leg against the live pools before signing
+    # and drop whatever cannot fill today; the manifest's probeOk flag only records
+    # liquidity at probe time and goes stale silently.
+    dropped: list[tuple[str, int, str]] = []
+    preflight_report = None
+    if preflight_enabled() and BOOSTER_ADDRESS and not args.sample:
+        from config import make_web3
+
+        w3 = make_web3()
+        router_address, poke_threshold = resolve_booster_context(w3, BOOSTER_ADDRESS)
+        buffer_wei = wei_env("ROUTE_PREFLIGHT_BUFFER_WEI", str(poke_threshold))
+        basket, dropped = preflight_basket(
+            w3, basket, BOOSTER_ADDRESS, buffer_wei, router_address=router_address
+        )
+        print(f"\nRoute pre-flight at {buffer_wei / 1e18:.4f} ETH buffer via {router_address}: "
+              f"{len(basket)} executable, {len(dropped)} dropped")
+        for ticker, bps, reason in dropped:
+            print(f"  dropped {ticker} ({bps} bps): {reason}")
+        if dropped:
+            print("::warning::route pre-flight dropped " +
+                  ", ".join(f"{t} ({r})" for t, _b, r in dropped))
+        preflight_report = {
+            "bufferWei": buffer_wei,
+            "router": router_address,
+            "block": w3.eth.block_number,
+            "dropped": [{"ticker": t, "bps": b, "reason": r} for t, b, r in dropped],
+        }
+
+    cov = coverage(net, exclude=[t for t, _b, _r in dropped])
 
     print(f"\nTokenizable coverage of net buying: {cov*100:.1f}%")
     print(f"Basket ({len(basket)} tickers, weights in bps, sum={sum(w for _,w in basket)}):")
@@ -236,6 +267,7 @@ def main():
         "tickers": tickers,
         "tokens": addrs,
         "weightsBps": weights,
+        "routePreflight": preflight_report,
     }
     if args.out:
         json.dump(payload, open(args.out, "w"), indent=2)
