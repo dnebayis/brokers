@@ -40,6 +40,9 @@ export function ActivateTab() {
   const [transferAmount, setTransferAmount] = useState("");
   const [steps, setSteps] = useState<StepState[]>(["idle", "idle"]);
   const [claimReadyCount, setClaimReadyCount] = useState(0);
+  // Opt-in only: some holders withdraw every cent, and that's their call — never skip
+  // value silently. Checking this trades sub-$0.50 balances for fewer signatures.
+  const [skipDust, setSkipDust] = useState(false);
   const { brokers, loading: brokersLoading, reload: reloadBrokers } = useOwnedBrokers();
 
   useEffect(() => {
@@ -320,8 +323,8 @@ export function ActivateTab() {
           const total = balances[i] + (claimByToken.get(token.toLowerCase()) ?? 0n);
           if (total <= 0n) return;
           const valueUsd = usdOf(token, total);
-          if (valueUsd !== null && valueUsd < DUST_USD) {
-            dustSkipped += 1; // stays in the Broker wallet — still yours, still travels with the NFT
+          if (skipDust && valueUsd !== null && valueUsd < DUST_USD) {
+            dustSkipped += 1; // user opted in; the balance stays in the Broker wallet, still theirs
             return;
           }
           transfers.push({ token, amount: total, valueUsd });
@@ -606,10 +609,15 @@ export function ActivateTab() {
             <button className="btn btn-ghost w-full mt-2" onClick={withdrawAll} disabled={claimTx.busy}>
               <Icon name="wallet" /> {claimTx.busy ? "WORKING…" : "WITHDRAW EVERYTHING TO MY WALLET"}
             </button>
+            <label className="flex items-center gap-2 mt-2 text-[12px] text-ink-soft cursor-pointer select-none">
+              <input type="checkbox" checked={skipDust} onChange={(e) => setSkipDust(e.target.checked)}
+                className="accent-[var(--c-accent)]" />
+              Skip balances under $0.50 (fewer signatures — they stay in the Broker wallet, still yours)
+            </label>
             <p className="text-[11px] text-ink-soft mt-1.5">
               Claims every Broker in one transaction, then moves all stock into your connected
-              wallet. Wallets that support batching sign everything once; otherwise the transfer
-              transactions run back-to-back with a progress counter.
+              wallet — you&rsquo;ll see the total signature count before the first prompt, biggest
+              values first. Wallets that support batching sign everything once.
             </p>
           </>
         )}
