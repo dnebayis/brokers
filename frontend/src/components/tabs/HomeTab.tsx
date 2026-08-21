@@ -48,6 +48,49 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
         </div>
       </section>
 
+      {/* Start here — the first thing a new visitor needs: what to actually do */}
+      <section className="card">
+        <h2 className="pixel-title text-[15px] mb-4">New here? Three steps.</h2>
+        <ol className="grid sm:grid-cols-3 gap-5">
+          <li className="flex flex-col">
+            <div className="font-pixel text-[12px] text-accent mb-1.5">STEP 1</div>
+            <div className="font-pixel text-[13px] text-ink-strong mb-1.5">Get a Broker</div>
+            <p className="text-ink-soft text-sm mb-3">
+              The mint sold out — Brokers trade on the secondary market. Each one is an NFT with its
+              own real on-chain wallet.
+            </p>
+            <a className="btn btn-accent mt-auto self-start text-[11px] px-3 py-2.5" href={OPENSEA_URL}
+              target="_blank" rel="noopener noreferrer">
+              Browse OpenSea &#8599;
+            </a>
+          </li>
+          <li className="flex flex-col">
+            <div className="font-pixel text-[12px] text-accent mb-1.5">STEP 2</div>
+            <div className="font-pixel text-[13px] text-ink-strong mb-1.5">Switch it on</div>
+            <p className="text-ink-soft text-sm mb-3">
+              Burn 36,750 $COAT to activate it. From that moment your Broker earns a share of every
+              stock purchase the engine makes.
+            </p>
+            <button className="btn btn-ghost mt-auto self-start text-[11px] px-3 py-2.5"
+              onClick={() => onNavigate("activate")}>
+              Activate yours &#8594;
+            </button>
+          </li>
+          <li className="flex flex-col">
+            <div className="font-pixel text-[12px] text-accent mb-1.5">STEP 3</div>
+            <div className="font-pixel text-[13px] text-ink-strong mb-1.5">That&rsquo;s it — it earns</div>
+            <p className="text-ink-soft text-sm mb-3">
+              It buys what Congress discloses, automatically. Real tokenized stock lands in its
+              wallet — claim or withdraw it whenever you like.
+            </p>
+            <button className="btn btn-ghost mt-auto self-start text-[11px] px-3 py-2.5"
+              onClick={() => onNavigate("feed")}>
+              See what it buys &#8594;
+            </button>
+          </li>
+        </ol>
+      </section>
+
       {/* Facts */}
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {FACTS.map((f) => (
@@ -90,39 +133,6 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="card">
-        <h2 className="pixel-title text-[15px] mb-4">How it works</h2>
-        <ol className="grid sm:grid-cols-3 gap-4 text-sm">
-          <li>
-            <div className="font-pixel text-[12px] text-ink-strong mb-1">1 · Mint &amp; activate</div>
-            <p className="text-ink-soft">
-              Mint a Broker for 0.001 ETH, then burn some $COAT to switch it on and start earning.
-            </p>
-          </li>
-          <li>
-            <div className="font-pixel text-[12px] text-ink-strong mb-1">2 · The flywheel</div>
-            <p className="text-ink-soft">
-              Every $COAT trade pays a small fee that&rsquo;s turned into dollars and used to buy the
-              same stocks Congress is buying.
-            </p>
-          </li>
-          <li>
-            <div className="font-pixel text-[12px] text-ink-strong mb-1">3 · Your wallet stacks</div>
-            <p className="text-ink-soft">
-              Those stocks land in your Broker&rsquo;s wallet. Claim them to your own wallet anytime.
-            </p>
-          </li>
-        </ol>
-        <div className="flex flex-wrap gap-3 mt-5">
-          <a className="btn btn-accent" href={OPENSEA_URL} target="_blank" rel="noopener noreferrer">
-            Get a Broker &#8599;
-          </a>
-          <button className="btn btn-ghost" onClick={() => onNavigate("feed")}>
-            See the live basket
-          </button>
-        </div>
-      </section>
     </div>
   );
 }

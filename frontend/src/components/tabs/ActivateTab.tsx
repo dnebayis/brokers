@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { encodeFunctionData, formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { getCapabilities, sendCalls, waitForCallsStatus } from "wagmi/actions";
+import { wagmiConfig } from "@/lib/wagmi";
 import { ADDR, PARAMS } from "@/lib/config";
 import { brokerAbi, brokerAccountAbi, coatAbi, boosterAbi, erc20Abi, strategyRegistryAbi } from "@/lib/abis";
 import { activeChain } from "@/lib/chains";
@@ -253,6 +255,121 @@ export function ActivateTab() {
   // Claim ALL owned Brokers in one flow, using claimBatch (up to MAX_CLAIM_BATCH=5 Brokers per
   // tx). A holder with many Brokers signs one tx per 5, not one per Broker. Each claimBatch call
   // settles every earned token for every Broker in the batch into their wallets.
+  // True when the connected wallet can execute a batch of calls behind ONE confirmation
+  // (EIP-5792 atomic batching). Falls back to sequential signing everywhere else.
+  const atomicSupported = async (): Promise<boolean> => {
+    if (!address) return false;
+    try {
+      const caps = await getCapabilities(wagmiConfig, { account: address, chainId: activeChain.id });
+      const forChain = (caps as Record<string | number, { atomic?: { status?: string } }>)[activeChain.id] ?? caps;
+      const status = (forChain as { atomic?: { status?: string } })?.atomic?.status;
+      return status === "supported" || status === "ready";
+    } catch {
+      return false;
+    }
+  };
+
+  // The one-button answer to "let me claim everything at once": sweeps EVERY owned
+  // Broker — claims what's still pending in the Booster and moves all stock out of each
+  // Broker wallet into the connected wallet. On an EIP-5792 wallet the whole sweep is a
+  // single confirmation; otherwise it runs the txs back-to-back with a progress counter.
+  // claimBatch is capped at 5 ids per call on-chain, hence the chunking.
+  const withdrawAll = () =>
+    claimTx.run(async () => {
+      if (!address) throw new Error("Connect your wallet.");
+      if (brokers.length === 0) throw new Error("No Brokers in this wallet.");
+      claimTx.setStatus("Scanning your Brokers…");
+
+      const knownCount = Number(await client.readContract({
+        address: ADDR.booster, abi: boosterAbi, functionName: "knownTokenCount",
+      }));
+      const knownTokens = (await Promise.all(
+        Array.from({ length: knownCount }, (_, i) => client.readContract({
+          address: ADDR.booster, abi: boosterAbi, functionName: "knownTokens", args: [BigInt(i)],
+        })),
+      )) as Address[];
+
+      type Job = { wallet: Address; transfers: { token: Address; amount: bigint }[]; needsClaim: boolean; id: bigint };
+      const jobs: Job[] = [];
+      for (const b of brokers) {
+        const [claim, wallet] = await Promise.all([
+          client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "claimable", args: [b.id] }),
+          client.readContract({ address: ADDR.broker, abi: brokerAbi, functionName: "accountOf", args: [b.id] }),
+        ]);
+        const claimByToken = new Map<string, bigint>();
+        (claim[0] as readonly Address[]).forEach((token, i) => claimByToken.set(token.toLowerCase(), (claim[1] as readonly bigint[])[i]));
+        const balances = await Promise.all(knownTokens.map((token) =>
+          client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [wallet as Address] })
+            .then((v) => v as bigint).catch(() => 0n),
+        ));
+        const transfers: { token: Address; amount: bigint }[] = [];
+        knownTokens.forEach((token, i) => {
+          // Post-claim balance = current wallet balance + what the claim will move in.
+          // claimable only grows until claimed, so this amount can never overshoot.
+          const total = balances[i] + (claimByToken.get(token.toLowerCase()) ?? 0n);
+          if (total > 0n) transfers.push({ token, amount: total });
+        });
+        const needsClaim = (claim[1] as readonly bigint[]).some((amount) => amount > 0n);
+        if (transfers.length > 0 || needsClaim) jobs.push({ id: b.id, wallet: wallet as Address, transfers, needsClaim });
+      }
+      if (jobs.length === 0) {
+        claimTx.setStatus("Nothing to withdraw — your Brokers haven't accrued stock yet.", "ok");
+        return;
+      }
+
+      const readyIds = jobs.filter((j) => j.needsClaim).map((j) => j.id);
+      const claimChunks: bigint[][] = [];
+      for (let i = 0; i < readyIds.length; i += 5) claimChunks.push(readyIds.slice(i, i + 5));
+
+      const calls = [
+        ...claimChunks.map((ids) => ({
+          to: ADDR.booster,
+          data: encodeFunctionData({ abi: boosterAbi, functionName: "claimBatch", args: [ids] }),
+        })),
+        ...jobs.flatMap((j) => j.transfers.map((t) => ({
+          to: j.wallet,
+          data: encodeFunctionData({
+            abi: brokerAccountAbi, functionName: "execute",
+            args: [t.token, 0n, encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [address, t.amount] }), 0],
+          }),
+        }))),
+      ];
+
+      if (calls.length > 1 && (await atomicSupported())) {
+        claimTx.setStatus(`Bundling ${calls.length} steps into one confirmation…`);
+        const { id } = await sendCalls(wagmiConfig, { calls, chainId: activeChain.id });
+        claimTx.setStatus("Waiting for the bundle to confirm…");
+        const result = await waitForCallsStatus(wagmiConfig, { id });
+        if (result.status !== "success") throw new Error("The batch did not complete — nothing partial was left behind.");
+      } else {
+        const total = claimChunks.length + jobs.reduce((sum, j) => sum + j.transfers.length, 0);
+        let n = 0;
+        for (const ids of claimChunks) {
+          n += 1;
+          claimTx.setStatus(`Tx ${n}/${total} — claiming ${ids.length} Broker${ids.length > 1 ? "s" : ""}…`);
+          const h = await writeContractAsync({
+            address: ADDR.booster, abi: boosterAbi, functionName: "claimBatch", args: [ids], chainId: activeChain.id,
+          });
+          await waitForSuccessfulReceipt(h);
+        }
+        for (const j of jobs) {
+          for (const t of j.transfers) {
+            n += 1;
+            claimTx.setStatus(`Tx ${n}/${total} — withdrawing ${short(t.token)} from Broker #${j.id}…`);
+            const transferCall = encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [address, t.amount] });
+            const h = await writeContractAsync({
+              address: j.wallet, abi: brokerAccountAbi, functionName: "execute",
+              args: [t.token, 0n, transferCall, 0], chainId: activeChain.id,
+            });
+            await waitForSuccessfulReceipt(h);
+          }
+        }
+      }
+      claimTx.setStatus(`Done — all stock from ${jobs.length} Broker${jobs.length > 1 ? "s" : ""} is in your wallet.`, "ok");
+      refetch();
+      reloadBrokers();
+    });
+
   const claimAll = () =>
     claimTx.run(async () => {
       if (!address) throw new Error("Connect your wallet.");
@@ -272,15 +389,30 @@ export function ActivateTab() {
         claimTx.setStatus("Nothing to claim — earned stock is already in your Broker wallets.", "ok");
         return;
       }
-      let done = 0;
-      for (let i = 0; i < ready.length; i += 5) {
-        const batch = ready.slice(i, i + 5);
-        claimTx.setStatus(`Claiming Brokers ${done + 1}–${done + batch.length} of ${ready.length}…`);
-        const h = await writeContractAsync({
-          address: ADDR.booster, abi: boosterAbi, functionName: "claimBatch", args: [batch], chainId: activeChain.id,
+      const batches: bigint[][] = [];
+      for (let i = 0; i < ready.length; i += 5) batches.push(ready.slice(i, i + 5));
+      if (batches.length > 1 && (await atomicSupported())) {
+        claimTx.setStatus(`Bundling ${batches.length} claim batches into one confirmation…`);
+        const { id } = await sendCalls(wagmiConfig, {
+          calls: batches.map((batch) => ({
+            to: ADDR.booster,
+            data: encodeFunctionData({ abi: boosterAbi, functionName: "claimBatch", args: [batch] }),
+          })),
+          chainId: activeChain.id,
         });
-        await waitForSuccessfulReceipt(h);
-        done += batch.length;
+        claimTx.setStatus("Waiting for the bundle to confirm…");
+        const result = await waitForCallsStatus(wagmiConfig, { id });
+        if (result.status !== "success") throw new Error("The batch did not complete.");
+      } else {
+        let done = 0;
+        for (const batch of batches) {
+          claimTx.setStatus(`Claiming Brokers ${done + 1}–${done + batch.length} of ${ready.length}…`);
+          const h = await writeContractAsync({
+            address: ADDR.booster, abi: boosterAbi, functionName: "claimBatch", args: [batch], chainId: activeChain.id,
+          });
+          await waitForSuccessfulReceipt(h);
+          done += batch.length;
+        }
       }
       claimTx.setStatus(`Claimed ${ready.length} Broker${ready.length > 1 ? "s" : ""} into their wallets.`, "ok");
       refetch();
@@ -425,6 +557,18 @@ export function ActivateTab() {
           <button className="btn btn-accent w-full mt-2" onClick={claimAll} disabled={claimTx.busy}>
             <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : `CLAIM ALL (${claimReadyCount})`}
           </button>
+        )}
+        {address && brokers.length > 0 && (
+          <>
+            <button className="btn btn-ghost w-full mt-2" onClick={withdrawAll} disabled={claimTx.busy}>
+              <Icon name="wallet" /> {claimTx.busy ? "WORKING…" : "WITHDRAW EVERYTHING TO MY WALLET"}
+            </button>
+            <p className="text-[11px] text-ink-soft mt-1.5">
+              Claims every Broker and moves all stock into your connected wallet. On wallets that
+              support batching it&rsquo;s a single confirmation; otherwise the transactions run
+              back-to-back with a progress counter.
+            </p>
+          </>
         )}
       </div>
 

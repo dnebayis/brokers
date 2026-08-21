@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Brand palettes. Light is the canonical NFT palette; dark keeps the same warm-slate
+   personality (never pure black) with the accent brightened for contrast. The theme is
+   applied by toggling `dark` on <html> — an inline script in layout.tsx sets it before
+   first paint from localStorage, falling back to the OS preference. */
+:root {
+  --c-cream: #ede8de;
+  --c-cream2: #f5f2eb;
+  --c-cream3: #e4ded2;
+  --c-ink: #4e5666;
+  --c-ink-strong: #343945;
+  --c-ink-soft: #757b8a;
+  --c-line: #cdc7ba;
+  --c-accent: #a6412f;
+  --c-good: #2f6b52;
+  --c-warn: #8a6416;
+  --c-shadow: #4e5666;
+}
+.dark {
+  --c-cream: #1c1e22;
+  --c-cream2: #24272d;
+  --c-cream3: #2a2e35;
+  --c-ink: #c6c1b5;
+  --c-ink-strong: #ece7db;
+  --c-ink-soft: #8c93a0;
+  --c-line: #3a404a;
+  --c-accent: #e0674f;
+  --c-good: #83b694;
+  --c-warn: #d9b45b;
+  --c-shadow: #0e1013;
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;

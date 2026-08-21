@@ -1,25 +1,28 @@
 import type { Config } from "tailwindcss";
 
-// 1-bit pixel brand: slate ink on broken-white cream. Matches the on-chain NFT palette.
+// 1-bit pixel brand: slate ink on broken-white cream, matching the on-chain NFT palette.
+// Every color resolves through a CSS variable so the same utility classes render the dark
+// theme when <html class="dark"> is set (see globals.css for both palettes).
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        cream: { DEFAULT: "#EDE8DE", 2: "#F5F2EB", 3: "#E4DED2" },
-        ink: { DEFAULT: "#4E5666", strong: "#343945", soft: "#757B8A" },
-        line: "#CDC7BA",
-        accent: "#A6412F",
-        good: "#2F6B52",
-        warn: "#8A6416",
+        cream: { DEFAULT: "var(--c-cream)", 2: "var(--c-cream2)", 3: "var(--c-cream3)" },
+        ink: { DEFAULT: "var(--c-ink)", strong: "var(--c-ink-strong)", soft: "var(--c-ink-soft)" },
+        line: "var(--c-line)",
+        accent: "var(--c-accent)",
+        good: "var(--c-good)",
+        warn: "var(--c-warn)",
       },
       fontFamily: {
         pixel: ["var(--font-silkscreen)", "monospace"],
         sans: ["var(--font-grotesk)", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        pixel: "3px 3px 0 #4E5666",
-        "pixel-sm": "2px 2px 0 #4E5666",
+        pixel: "3px 3px 0 var(--c-shadow)",
+        "pixel-sm": "2px 2px 0 var(--c-shadow)",
       },
       borderRadius: { none: "0" },
     },

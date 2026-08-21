@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { BrokerMark } from "./ui/BrokerMark";
+import { ThemeToggle } from "./ui/ThemeToggle";
 import { short } from "@/lib/format";
 import { wagmiConfig } from "@/lib/wagmi";
 
@@ -74,13 +75,16 @@ export function Header() {
             </span>
           </div>
         </div>
-        <button className="btn btn-ghost shadow-pixel-sm" disabled={busy}
-          onClick={() => isConnected ? disconnect() : setOpen(true)}>
-          {busy ? "RESTORING…" : isConnected && address ? short(address) : "CONNECT WALLET"}
-        </button>
+        <div className="flex items-center gap-2.5">
+          <ThemeToggle />
+          <button className="btn btn-ghost shadow-pixel-sm" disabled={busy}
+            onClick={() => isConnected ? disconnect() : setOpen(true)}>
+            {busy ? "RESTORING…" : isConnected && address ? short(address) : "CONNECT WALLET"}
+          </button>
+        </div>
       </div>
       {open && (
-        <div className="fixed inset-0 z-50 bg-ink/40 grid place-items-center p-4" onMouseDown={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4" onMouseDown={() => setOpen(false)}>
           <div className="card w-full max-w-sm" onMouseDown={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="pixel-title text-sm">Connect wallet</h2>
