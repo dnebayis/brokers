@@ -53,14 +53,14 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
   },
   {
     no: "02",
-    status: "works",
+    status: "live",
     title: "An earlier signal",
     body: (
       <>
         The STOCK Act gives members up to 45 days to file — but many disclosures surface well
-        before that window closes. First delivery is live: the basket now rebuilds <b>every
-        hour</b> instead of every six, so a new filing lands within the hour it surfaces. The
-        work in progress is cutting that to <b>the moment it appears</b>. To be clear: not
+        before that window closes. Delivered: the basket now rebuilds <b>every hour</b> instead
+        of every six, so a new filing lands within the hour it surfaces. Next on this horizon is
+        cutting that to <b>the moment it appears</b>. To be clear: not
         front-running Congress — just driving our own added lag to zero, so the basket reflects
         each disclosure as early as it can legally be known.
       </>
