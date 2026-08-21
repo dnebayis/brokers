@@ -6,7 +6,7 @@ import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { getCapabilities, sendCalls, waitForCallsStatus } from "wagmi/actions";
 import { wagmiConfig } from "@/lib/wagmi";
 import { ADDR, PARAMS } from "@/lib/config";
-import { brokerAbi, brokerAccountAbi, coatAbi, boosterAbi, erc20Abi, strategyRegistryAbi } from "@/lib/abis";
+import { brokerAbi, brokerAccountAbi, claimSweeperAbi, coatAbi, boosterAbi, erc20Abi, strategyRegistryAbi } from "@/lib/abis";
 import { activeChain } from "@/lib/chains";
 import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
@@ -318,14 +318,21 @@ export function ActivateTab() {
       }
 
       const readyIds = jobs.filter((j) => j.needsClaim).map((j) => j.id);
+      // With the sweeper, ALL pending claims collapse into one call; without it, the
+      // Booster's claimBatch cap forces chunks of 5.
       const claimChunks: bigint[][] = [];
-      for (let i = 0; i < readyIds.length; i += 5) claimChunks.push(readyIds.slice(i, i + 5));
+      if (ADDR.claimSweeper) {
+        for (let i = 0; i < readyIds.length; i += 40) claimChunks.push(readyIds.slice(i, i + 40));
+      } else {
+        for (let i = 0; i < readyIds.length; i += 5) claimChunks.push(readyIds.slice(i, i + 5));
+      }
+      const claimCall = (ids: bigint[]) =>
+        ADDR.claimSweeper
+          ? { to: ADDR.claimSweeper, data: encodeFunctionData({ abi: claimSweeperAbi, functionName: "claimMany", args: [ids] }) }
+          : { to: ADDR.booster, data: encodeFunctionData({ abi: boosterAbi, functionName: "claimBatch", args: [ids] }) };
 
       const calls = [
-        ...claimChunks.map((ids) => ({
-          to: ADDR.booster,
-          data: encodeFunctionData({ abi: boosterAbi, functionName: "claimBatch", args: [ids] }),
-        })),
+        ...claimChunks.map(claimCall),
         ...jobs.flatMap((j) => j.transfers.map((t) => ({
           to: j.wallet,
           data: encodeFunctionData({
@@ -347,9 +354,14 @@ export function ActivateTab() {
         for (const ids of claimChunks) {
           n += 1;
           claimTx.setStatus(`Tx ${n}/${total} — claiming ${ids.length} Broker${ids.length > 1 ? "s" : ""}…`);
-          const h = await writeContractAsync({
-            address: ADDR.booster, abi: boosterAbi, functionName: "claimBatch", args: [ids], chainId: activeChain.id,
-          });
+          const h = ADDR.claimSweeper
+            ? await writeContractAsync({
+                address: ADDR.claimSweeper, abi: claimSweeperAbi, functionName: "claimMany",
+                args: [ids], chainId: activeChain.id,
+              })
+            : await writeContractAsync({
+                address: ADDR.booster, abi: boosterAbi, functionName: "claimBatch", args: [ids], chainId: activeChain.id,
+              });
           await waitForSuccessfulReceipt(h);
         }
         for (const j of jobs) {
@@ -389,21 +401,28 @@ export function ActivateTab() {
         claimTx.setStatus("Nothing to claim — earned stock is already in your Broker wallets.", "ok");
         return;
       }
-      const batches: bigint[][] = [];
-      for (let i = 0; i < ready.length; i += 5) batches.push(ready.slice(i, i + 5));
-      if (batches.length > 1 && (await atomicSupported())) {
-        claimTx.setStatus(`Bundling ${batches.length} claim batches into one confirmation…`);
-        const { id } = await sendCalls(wagmiConfig, {
-          calls: batches.map((batch) => ({
-            to: ADDR.booster,
-            data: encodeFunctionData({ abi: boosterAbi, functionName: "claimBatch", args: [batch] }),
-          })),
-          chainId: activeChain.id,
-        });
-        claimTx.setStatus("Waiting for the bundle to confirm…");
-        const result = await waitForCallsStatus(wagmiConfig, { id });
-        if (result.status !== "success") throw new Error("The batch did not complete.");
+      // One REAL transaction for any number of Brokers: the ClaimSweeper periphery loops
+      // the Booster's permissionless claimFor, sidestepping claimBatch's 5-id cap. Chunked
+      // at 40 ids purely as a block-gas safety margin (~200k gas per claimed Broker).
+      if (ADDR.claimSweeper) {
+        const chunks: bigint[][] = [];
+        for (let i = 0; i < ready.length; i += 40) chunks.push(ready.slice(i, i + 40));
+        let done = 0;
+        for (const chunk of chunks) {
+          claimTx.setStatus(chunks.length === 1
+            ? `Claiming all ${ready.length} Broker${ready.length > 1 ? "s" : ""} in one transaction…`
+            : `Claiming Brokers ${done + 1}–${done + chunk.length} of ${ready.length}…`);
+          const h = await writeContractAsync({
+            address: ADDR.claimSweeper, abi: claimSweeperAbi, functionName: "claimMany",
+            args: [chunk], chainId: activeChain.id,
+          });
+          await waitForSuccessfulReceipt(h);
+          done += chunk.length;
+        }
       } else {
+        // No sweeper on this network — fall back to the Booster's capped claimBatch.
+        const batches: bigint[][] = [];
+        for (let i = 0; i < ready.length; i += 5) batches.push(ready.slice(i, i + 5));
         let done = 0;
         for (const batch of batches) {
           claimTx.setStatus(`Claiming Brokers ${done + 1}–${done + batch.length} of ${ready.length}…`);
@@ -564,9 +583,9 @@ export function ActivateTab() {
               <Icon name="wallet" /> {claimTx.busy ? "WORKING…" : "WITHDRAW EVERYTHING TO MY WALLET"}
             </button>
             <p className="text-[11px] text-ink-soft mt-1.5">
-              Claims every Broker and moves all stock into your connected wallet. On wallets that
-              support batching it&rsquo;s a single confirmation; otherwise the transactions run
-              back-to-back with a progress counter.
+              Claims every Broker in one transaction, then moves all stock into your connected
+              wallet. Wallets that support batching sign everything once; otherwise the transfer
+              transactions run back-to-back with a progress counter.
             </p>
           </>
         )}

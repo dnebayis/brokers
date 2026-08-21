@@ -21,6 +21,9 @@ type AddrSet = {
   router: Address | ""; // permanent swap router — deploy + paste to enable the Swap tab
   buybackBurner: Address;
   poolId: `0x${string}`;
+  // Ownerless periphery that claims any number of Brokers in one tx (claimBatch caps at 5).
+  // Optional: absent (testnet) the UI falls back to chunked claimBatch calls.
+  claimSweeper?: Address;
 };
 
 const TESTNET = deployments.testnet as AddrSet;

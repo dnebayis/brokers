@@ -29,6 +29,7 @@
     "feeHook": "0x51149a925E9193EA13Ae406Da6Cc154EccD0A044",
     "router": "0x740baEEF895444a659fD0fc5Dc213BEDe7d1EaaF",
     "buybackBurner": "0xa8547410E681dd43aE43bB828b648e3f303ebe3b",
-    "poolId": "0x2d503dda028be83d2e133e5e73a8839f1f202d9f6447e3d863e33ad2c8ebc3d2"
+    "poolId": "0x2d503dda028be83d2e133e5e73a8839f1f202d9f6447e3d863e33ad2c8ebc3d2",
+    "claimSweeper": "0x202a5aF710306834b30B195263842B5b132Bb020"
   }
 }

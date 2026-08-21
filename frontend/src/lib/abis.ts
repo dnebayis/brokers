@@ -107,3 +107,9 @@ export const routerAbi = [
   { type: "function", name: "quoteBuy", stateMutability: "view", inputs: [{ name: "ethIn", type: "uint256" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "quoteSell", stateMutability: "view", inputs: [{ name: "coatIn", type: "uint256" }], outputs: [{ type: "uint256" }] },
 ] as const;
+
+export const claimSweeperAbi = [
+  { type: "function", name: "claimMany", stateMutability: "nonpayable", inputs: [
+    { name: "tokenIds", type: "uint256[]" },
+  ], outputs: [] },
+] as const;
