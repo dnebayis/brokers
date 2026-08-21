@@ -41,9 +41,11 @@ jobs:
           done
       - name: Deploy ClaimSweeper
         run: |
-          # forge requires the 0x prefix; the stored secret may omit it (web3.py accepts both).
-          KEY="$DEPLOYER_PRIVATE_KEY"
+          # forge requires exactly 0x + 64 hex chars; the stored secret may omit the 0x
+          # (web3.py accepts both) or carry stray whitespace/quotes from how it was pasted.
+          KEY=$(printf %s "$DEPLOYER_PRIVATE_KEY" | tr -d '[:space:]"'"'")
           case "$KEY" in 0x*) ;; *) KEY="0x$KEY" ;; esac
+          echo "normalized key length: ${#KEY} (expected 66)"
           forge script script/DeployClaimSweeper.s.sol \
             --rpc-url http://127.0.0.1:18545 \
             --private-key "$KEY" \
