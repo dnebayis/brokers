@@ -24,7 +24,8 @@ jobs:
       RH_RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
       RH_PROXY_PORT: "18545"
       BOOSTER_ADDRESS: "0x7bAf435847A4b45c2e22a7fd13549C3192C95953"
-      DEPLOYER_PRIVATE_KEY: ${{ secrets.KEEPER_PRIVATE_KEY }}
+      # The keeper key lives under its launch-era name (shared-key decision, see keeper-schedule-mainnet.yml).
+      DEPLOYER_PRIVATE_KEY: ${{ secrets.TESTNET_KEEPER_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: foundry-rs/foundry-toolchain@v1
