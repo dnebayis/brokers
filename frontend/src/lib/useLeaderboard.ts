@@ -8,7 +8,7 @@
 import { useEffect, useState } from "react";
 import { parseAbiItem } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
-import { client } from "./client";
+import { publicClient as client } from "./client";
 
 export type LeaderEntry = { rank: number; id: bigint; sinceBlock: bigint; sinceMs: number | null };
 

@@ -10,7 +10,7 @@
 import { formatUnits, type Address } from "viem";
 import { ADDR } from "./config";
 import { boosterAbi, brokerAbi, aggregatorAbi, erc20Abi } from "./abis";
-import { client } from "./client";
+import { publicClient as client } from "./client";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 

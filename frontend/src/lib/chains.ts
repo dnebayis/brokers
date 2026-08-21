@@ -47,6 +47,11 @@ export const explorerAddress = (addr: string) => `${EXPLORER_BASE}/address/${add
 // Ordered RPC list for the active chain (primary first, fallbacks after).
 export const RPC_HTTP = activeChain.rpcUrls.default.http;
 
+// Same endpoints, public-first: ambient reads (metrics, panels, leaderboards) default to
+// the free official endpoint and only spill onto the metered provider when it fails. The
+// official endpoint serves browsers directly (CORS *) and full-range getLogs — verified.
+export const RPC_PUBLIC_FIRST = [...RPC_HTTP].reverse();
+
 // Alchemy NFT API base (v3) for the active chain — used to enumerate a wallet's Brokers
 // cheaply (one request) instead of scanning Transfer logs.
 export const ALCHEMY_NFT_BASE =

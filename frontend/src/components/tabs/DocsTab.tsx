@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ADDR, CONTRACTS_FOR_DOCS } from "@/lib/config";
 import { activeChain } from "@/lib/chains";
-import { client } from "@/lib/client";
+import { publicClient as client } from "@/lib/client";
 import { coatAbi } from "@/lib/abis";
 import { Icon } from "@/components/ui/Icon";
 

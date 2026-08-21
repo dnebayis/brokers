@@ -18,7 +18,7 @@ export function SidePanel() {
       { address: ADDR.broker, abi: brokerAbi, functionName: "MAX_SUPPLY" },
       { address: ADDR.booster, abi: boosterAbi, functionName: "activeShares" },
     ],
-    query: { refetchInterval: 15_000 },
+    query: { refetchInterval: 60_000 },
   });
   const minted = (data?.[0]?.result as bigint) ?? 0n;
   const max = (data?.[1]?.result as bigint) ?? BigInt(PARAMS.maxSupply);
@@ -30,7 +30,7 @@ export function SidePanel() {
     abi: routerAbi,
     functionName: "quoteBuy",
     args: [parseEther("1")],
-    query: { enabled: routerReady, refetchInterval: 20_000 },
+    query: { enabled: routerReady, refetchInterval: 60_000 },
   });
 
   const { data: eth } = useBalance({ address, chainId: activeChain.id, query: { enabled: !!address } });

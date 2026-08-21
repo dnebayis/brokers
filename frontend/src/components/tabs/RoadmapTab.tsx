@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ADDR, OPENSEA_URL } from "@/lib/config";
 import { boosterAbi } from "@/lib/abis";
-import { client } from "@/lib/client";
+import { publicClient as client } from "@/lib/client";
 
 // The roadmap mirrors the published roadmap article. Status tags are honest maturity
 // markers, not promises — only LIVE/CONTINUOUS items describe what already runs; the

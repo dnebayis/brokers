@@ -119,7 +119,7 @@ export function useOwnedBrokers() {
     if (!address) return;
     // Poll on-chain ownership/active state so the UI reflects mints, activations
     // and keeper distributions without a manual page refresh.
-    const timer = setInterval(() => void load({ silent: true }), 20_000);
+    const timer = setInterval(() => void load({ silent: true }), 60_000);
     return () => clearInterval(timer);
   }, [load, address]);
 

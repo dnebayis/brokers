@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { ADDR, OPENSEA_URL } from "@/lib/config";
 import { brokerAbi, coatAbi, boosterAbi, routerAbi, aggregatorAbi, erc20Abi } from "@/lib/abis";
-import { client } from "@/lib/client";
+import { publicClient as client } from "@/lib/client";
 
 const DEXSCREENER = "https://dexscreener.com/robinhood/0x2d503dda028be83d2e133e5e73a8839f1f202d9f6447e3d863e33ad2c8ebc3d2";
 const INITIAL_COAT_SUPPLY = 1_000_000_000; // 1B, fixed at launch
@@ -115,7 +115,8 @@ export function HomeMetrics() {
     }
 
     load();
-    const timer = setInterval(load, 30_000);
+    // Metrics move on the keeper's hourly cadence; 2 min keeps the UI feeling live at ~1/4 the load.
+    const timer = setInterval(load, 120_000);
     return () => { cancelled = true; clearInterval(timer); };
   }, []);
 

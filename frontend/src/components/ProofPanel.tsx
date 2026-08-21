@@ -5,7 +5,7 @@ import { formatUnits } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "@/lib/config";
 import { EXPLORER_BASE, explorerTx, explorerAddress } from "@/lib/chains";
 import { boosterAbi, buybackBurnerAbi, erc20Abi } from "@/lib/abis";
-import { client } from "@/lib/client";
+import { publicClient as client } from "@/lib/client";
 
 // Static, always-true facts anyone can verify on the explorer. These are structural properties
 // of the deployed contracts (immutable), not live numbers — so they never go stale.
@@ -166,7 +166,8 @@ export function ProofPanel() {
     }
 
     load();
-    const timer = setInterval(load, 60_000);
+    // Burn/buy events land at most once an hour (keeper cadence); 3 min is plenty fresh.
+    const timer = setInterval(load, 180_000);
     return () => {
       cancelled = true;
       clearInterval(timer);
