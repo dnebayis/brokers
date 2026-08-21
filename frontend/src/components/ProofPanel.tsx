@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "@/lib/config";
 import { EXPLORER_BASE, explorerTx, explorerAddress } from "@/lib/chains";
 import { boosterAbi, buybackBurnerAbi, erc20Abi } from "@/lib/abis";
 import { publicClient as client } from "@/lib/client";
+import { useStoredQuery } from "@/lib/useStoredQuery";
 
 // Static, always-true facts anyone can verify on the explorer. These are structural properties
 // of the deployed contracts (immutable), not live numbers — so they never go stale.
@@ -38,7 +38,7 @@ const FACTS: { k: string; v: string; sub: string; href: string }[] = [
 
 type Row = {
   kind: "burn" | "buy";
-  block: bigint;
+  block: number; // JSON-safe for localStorage persistence (well below 2^53)
   logIndex: number;
   tx: string;
   primary: string; // headline amount, e.g. "1,776 $COAT" or "0.02 NVDA"
@@ -61,118 +61,102 @@ function num(n: number, max = 4): string {
 }
 
 export function ProofPanel() {
-  const [rows, setRows] = useState<Row[] | null>(null);
-  const [failed, setFailed] = useState(false);
+  // Persisted across reloads, feed-style: a refresh renders the last feed instantly from
+  // localStorage with no RPC calls, then revalidates in the background. Events land at
+  // most hourly (keeper cadence), so 3-minute staleness is invisible; on a fetch error
+  // react-query keeps showing the last good data instead of blanking the panel.
+  const { data, isError: failed } = useStoredQuery<Row[]>({
+    storageKey: "coattail.proof.v1",
+    queryKey: ["proof-feed"],
+    ssrSafe: true, // ProofPanel is server-rendered on the Home tab
+    staleTime: 180_000,
+    refetchInterval: 180_000,
+    queryFn: async () => {
+      // Both event streams are sparse (hourly keeper pokes; rare in-band buybacks), so a single
+      // full-range query per event is cheap and returns the complete history.
+      const [burns, buys] = await Promise.all([
+        client.getContractEvents({
+          address: ADDR.buybackBurner,
+          abi: buybackBurnerAbi,
+          eventName: "BuybackExecuted",
+          fromBlock: BROKER_DEPLOYMENT_BLOCK,
+          toBlock: "latest",
+        }),
+        client.getContractEvents({
+          address: ADDR.booster,
+          abi: boosterAbi,
+          eventName: "Bought",
+          fromBlock: BROKER_DEPLOYMENT_BLOCK,
+          toBlock: "latest",
+        }),
+      ]);
 
-  useEffect(() => {
-    let cancelled = false;
+      // Resolve symbol + decimals once per distinct stock token (multicall-batched).
+      const tokens = Array.from(
+        new Set(buys.map((b) => (b.args.token as string).toLowerCase())),
+      ) as `0x${string}`[];
+      const meta = new Map<string, { symbol: string; decimals: number }>();
+      await Promise.all(
+        tokens.map(async (t) => {
+          try {
+            const [symbol, decimals] = await Promise.all([
+              client.readContract({ address: t, abi: erc20Abi, functionName: "symbol" }),
+              client.readContract({ address: t, abi: erc20Abi, functionName: "decimals" }),
+            ]);
+            meta.set(t, { symbol: symbol as string, decimals: Number(decimals) });
+          } catch {
+            meta.set(t, { symbol: "stock", decimals: 18 });
+          }
+        }),
+      );
 
-    async function load() {
-      try {
-        // Both event streams are sparse (hourly keeper pokes; rare in-band buybacks), so a single
-        // full-range query per event is cheap and returns the complete history.
-        const [burns, buys] = await Promise.all([
-          client.getContractEvents({
-            address: ADDR.buybackBurner,
-            abi: buybackBurnerAbi,
-            eventName: "BuybackExecuted",
-            fromBlock: BROKER_DEPLOYMENT_BLOCK,
-            toBlock: "latest",
-          }),
-          client.getContractEvents({
-            address: ADDR.booster,
-            abi: boosterAbi,
-            eventName: "Bought",
-            fromBlock: BROKER_DEPLOYMENT_BLOCK,
-            toBlock: "latest",
-          }),
-        ]);
-
-        // Resolve symbol + decimals once per distinct stock token (multicall-batched).
-        const tokens = Array.from(
-          new Set(buys.map((b) => (b.args.token as string).toLowerCase())),
-        ) as `0x${string}`[];
-        const meta = new Map<string, { symbol: string; decimals: number }>();
-        await Promise.all(
-          tokens.map(async (t) => {
-            try {
-              const [symbol, decimals] = await Promise.all([
-                client.readContract({ address: t, abi: erc20Abi, functionName: "symbol" }),
-                client.readContract({ address: t, abi: erc20Abi, functionName: "decimals" }),
-              ]);
-              meta.set(t, { symbol: symbol as string, decimals: Number(decimals) });
-            } catch {
-              meta.set(t, { symbol: "stock", decimals: 18 });
-            }
-          }),
-        );
-
-        const all: Row[] = [];
-        for (const e of burns) {
-          const coat = Number(formatUnits(e.args.coatBurned as bigint, 18));
-          all.push({
-            kind: "burn",
-            block: e.blockNumber,
-            logIndex: e.logIndex ?? 0,
-            tx: e.transactionHash,
-            primary: `${num(coat, 0)} $COAT burned`,
-            eth: Number(formatUnits(e.args.ethIn as bigint, 18)),
-          });
-        }
-        for (const e of buys) {
-          const t = (e.args.token as string).toLowerCase();
-          const m = meta.get(t) ?? { symbol: "stock", decimals: 18 };
-          const out = Number(formatUnits(e.args.tokenOut as bigint, m.decimals));
-          all.push({
-            kind: "buy",
-            block: e.blockNumber,
-            logIndex: e.logIndex ?? 0,
-            tx: e.transactionHash,
-            primary: `${num(out)} ${m.symbol}`,
-            eth: Number(formatUnits(e.args.ethIn as bigint, 18)),
-          });
-        }
-
-        all.sort((a, b) =>
-          a.block === b.block ? b.logIndex - a.logIndex : Number(b.block - a.block),
-        );
-        const top = all.slice(0, 12);
-
-        // Best-effort timestamps for just the displayed rows (dedup by block).
-        const uniqueBlocks = Array.from(new Set(top.map((r) => r.block)));
-        const tsByBlock = new Map<bigint, number>();
-        await Promise.all(
-          uniqueBlocks.map(async (bn) => {
-            try {
-              const blk = await client.getBlock({ blockNumber: bn });
-              tsByBlock.set(bn, Number(blk.timestamp));
-            } catch {
-              /* leave time blank */
-            }
-          }),
-        );
-        for (const r of top) r.ts = tsByBlock.get(r.block);
-
-        if (!cancelled) {
-          setRows(top);
-          setFailed(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setRows([]);
-          setFailed(true);
-        }
+      const all: Row[] = [];
+      for (const e of burns) {
+        const coat = Number(formatUnits(e.args.coatBurned as bigint, 18));
+        all.push({
+          kind: "burn",
+          block: Number(e.blockNumber),
+          logIndex: e.logIndex ?? 0,
+          tx: e.transactionHash,
+          primary: `${num(coat, 0)} $COAT burned`,
+          eth: Number(formatUnits(e.args.ethIn as bigint, 18)),
+        });
       }
-    }
+      for (const e of buys) {
+        const t = (e.args.token as string).toLowerCase();
+        const m = meta.get(t) ?? { symbol: "stock", decimals: 18 };
+        const out = Number(formatUnits(e.args.tokenOut as bigint, m.decimals));
+        all.push({
+          kind: "buy",
+          block: Number(e.blockNumber),
+          logIndex: e.logIndex ?? 0,
+          tx: e.transactionHash,
+          primary: `${num(out)} ${m.symbol}`,
+          eth: Number(formatUnits(e.args.ethIn as bigint, 18)),
+        });
+      }
 
-    load();
-    // Burn/buy events land at most once an hour (keeper cadence); 3 min is plenty fresh.
-    const timer = setInterval(load, 180_000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, []);
+      all.sort((a, b) => (a.block === b.block ? b.logIndex - a.logIndex : b.block - a.block));
+      const top = all.slice(0, 12);
+
+      // Best-effort timestamps for just the displayed rows (dedup by block).
+      const uniqueBlocks = Array.from(new Set(top.map((r) => r.block)));
+      const tsByBlock = new Map<number, number>();
+      await Promise.all(
+        uniqueBlocks.map(async (bn) => {
+          try {
+            const blk = await client.getBlock({ blockNumber: BigInt(bn) });
+            tsByBlock.set(bn, Number(blk.timestamp));
+          } catch {
+            /* leave time blank */
+          }
+        }),
+      );
+      for (const r of top) r.ts = tsByBlock.get(r.block);
+      return top;
+    },
+  });
+  const rows = data ?? null;
 
   return (
     <section className="card">

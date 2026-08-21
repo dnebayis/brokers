@@ -9,6 +9,7 @@
 // Safe to read storage during render: the callers are tab components that only ever mount on
 // the client (SSR renders the Home tab), so there is no server/client hydration mismatch.
 
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 type Stored<T> = { data: T; ts: number };
@@ -41,9 +42,18 @@ export function useStoredQuery<T>(opts: {
   queryFn: () => Promise<T>;
   /** How long a stored result is treated as fresh (no refetch on reload). Default 1h. */
   staleTime?: number;
+  /** Optional periodic background refresh while the component stays mounted. */
+  refetchInterval?: number;
+  /** Set when the consumer is server-rendered: hides cached data for the very first
+   *  client render so hydration matches the server's loading state, then reveals the
+   *  cache right after mount — still with zero network. Client-only consumers (non-default
+   *  tabs) skip this and get the cache on their first render. */
+  ssrSafe?: boolean;
 }) {
+  const [mounted, setMounted] = useState(!opts.ssrSafe);
+  useEffect(() => setMounted(true), []);
   const cached = readCache<T>(opts.storageKey);
-  return useQuery<T>({
+  const query = useQuery<T>({
     queryKey: opts.queryKey,
     queryFn: async () => {
       const data = await opts.queryFn();
@@ -51,10 +61,12 @@ export function useStoredQuery<T>(opts: {
       return data;
     },
     staleTime: opts.staleTime ?? 60 * 60_000,
+    refetchInterval: opts.refetchInterval,
     // Seed from storage so a reload renders immediately; the stored timestamp lets
     // react-query decide staleness, and structural sharing means an unchanged refetch
     // never triggers a re-render.
     initialData: cached?.data,
     initialDataUpdatedAt: cached?.ts,
   });
+  return mounted ? query : { ...query, data: undefined as T | undefined };
 }

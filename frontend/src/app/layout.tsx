@@ -28,16 +28,8 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const initialState = cookieToInitialState(wagmiConfig, (await headers()).get("cookie"));
   return (
-    <html lang="en" className={`${silkscreen.variable} ${grotesk.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${silkscreen.variable} ${grotesk.variable}`}>
       <body>
-        {/* Applies the saved (or OS-preferred) theme before first paint, so a dark-mode
-            visitor never sees a cream flash. Runs synchronously by design. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              '(function(){try{var t=localStorage.getItem("coattail.theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})()',
-          }}
-        />
         <Providers initialState={initialState}>{children}</Providers>
       </body>
     </html>
