@@ -12,7 +12,7 @@ import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
 import { useBrokerBacking } from "@/lib/useBrokerBacking";
-import { usd } from "@/lib/brokerValue";
+import { loadKnownTokens, usd } from "@/lib/brokerValue";
 import { fmt, short } from "@/lib/format";
 import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
 import { Icon } from "@/components/ui/Icon";
@@ -288,6 +288,17 @@ export function ActivateTab() {
           address: ADDR.booster, abi: boosterAbi, functionName: "knownTokens", args: [BigInt(i)],
         })),
       )) as Address[];
+      // Feed prices, to skip dust: TBAs accumulate cent-sized fractions across up to 128
+      // tokens, and each withdrawal is its own owner-signed transaction — pure signature
+      // waste. A token the feeds can't price is never skipped (we can't judge its value).
+      const metas = await loadKnownTokens().catch(() => []);
+      const usdOf = (token: Address, amount: bigint): number | null => {
+        const m = metas.find((x) => x.token.toLowerCase() === token.toLowerCase());
+        if (!m) return null;
+        return Number(amount) / 10 ** m.decimals * m.priceUsd;
+      };
+      const DUST_USD = 0.5;
+      let dustSkipped = 0;
 
       type Job = { wallet: Address; transfers: { token: Address; amount: bigint }[]; needsClaim: boolean; id: bigint };
       const jobs: Job[] = [];
@@ -302,18 +313,27 @@ export function ActivateTab() {
           client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [wallet as Address] })
             .then((v) => v as bigint).catch(() => 0n),
         ));
-        const transfers: { token: Address; amount: bigint }[] = [];
+        const transfers: { token: Address; amount: bigint; valueUsd: number | null }[] = [];
         knownTokens.forEach((token, i) => {
           // Post-claim balance = current wallet balance + what the claim will move in.
           // claimable only grows until claimed, so this amount can never overshoot.
           const total = balances[i] + (claimByToken.get(token.toLowerCase()) ?? 0n);
-          if (total > 0n) transfers.push({ token, amount: total });
+          if (total <= 0n) return;
+          const valueUsd = usdOf(token, total);
+          if (valueUsd !== null && valueUsd < DUST_USD) {
+            dustSkipped += 1; // stays in the Broker wallet — still yours, still travels with the NFT
+            return;
+          }
+          transfers.push({ token, amount: total, valueUsd });
         });
+        transfers.sort((a, b) => (b.valueUsd ?? Infinity) - (a.valueUsd ?? Infinity));
         const needsClaim = (claim[1] as readonly bigint[]).some((amount) => amount > 0n);
         if (transfers.length > 0 || needsClaim) jobs.push({ id: b.id, wallet: wallet as Address, transfers, needsClaim });
       }
       if (jobs.length === 0) {
-        claimTx.setStatus("Nothing to withdraw — your Brokers haven't accrued stock yet.", "ok");
+        claimTx.setStatus(dustSkipped > 0
+          ? `Nothing worth withdrawing — ${dustSkipped} dust balance${dustSkipped > 1 ? "s" : ""} under $${DUST_USD} left in the Broker wallets.`
+          : "Nothing to withdraw — your Brokers haven't accrued stock yet.", "ok");
         return;
       }
 
@@ -350,6 +370,9 @@ export function ActivateTab() {
         if (result.status !== "success") throw new Error("The batch did not complete — nothing partial was left behind.");
       } else {
         const total = claimChunks.length + jobs.reduce((sum, j) => sum + j.transfers.length, 0);
+        claimTx.setStatus(`This will take ${total} signature${total > 1 ? "s" : ""}`
+          + (dustSkipped > 0 ? ` (${dustSkipped} dust balance${dustSkipped > 1 ? "s" : ""} under $${DUST_USD} skipped)` : "")
+          + " — biggest values first, you can stop anytime…");
         let n = 0;
         for (const ids of claimChunks) {
           n += 1;
@@ -377,7 +400,8 @@ export function ActivateTab() {
           }
         }
       }
-      claimTx.setStatus(`Done — all stock from ${jobs.length} Broker${jobs.length > 1 ? "s" : ""} is in your wallet.`, "ok");
+      claimTx.setStatus(`Done — stock from ${jobs.length} Broker${jobs.length > 1 ? "s" : ""} is in your wallet`
+        + (dustSkipped > 0 ? ` (${dustSkipped} sub-$${DUST_USD} dust balance${dustSkipped > 1 ? "s" : ""} left behind on purpose).` : "."), "ok");
       refetch();
       reloadBrokers();
     });
