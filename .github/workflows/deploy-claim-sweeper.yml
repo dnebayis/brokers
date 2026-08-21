@@ -1,0 +1,47 @@
+name: deploy-claim-sweeper
+
+# One-shot mainnet deploy of the ownerless ClaimSweeper periphery (claims any number of
+# Brokers in one transaction; the Booster's claimBatch is capped at 5). Uses the keeper
+# relay key purely as a funded deployer — the contract has no owner, holds no funds and
+# takes no approvals, so the key gains no ongoing authority. Run manually, take the
+# printed address, then wire it into frontend/deployments.json.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: contracts
+    env:
+      RH_UPSTREAM_RPC: ${{ secrets.RH_MAINNET_RPC_URL }}
+      RH_RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
+      RH_PROXY_PORT: "18545"
+      BOOSTER_ADDRESS: "0x7bAf435847A4b45c2e22a7fd13549C3192C95953"
+      DEPLOYER_PRIVATE_KEY: ${{ secrets.KEEPER_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+      # contracts/lib is not versioned; pin the exact libraries like ci.yml does.
+      - run: forge install foundry-rs/forge-std@467ffd422ca01fed5797a4c766a1e4e3a5327902
+      - run: forge install OpenZeppelin/openzeppelin-contracts@v5.1.0
+      - name: Start the Origin proxy to the RPC
+        run: |
+          nohup python3 scripts/rpc_origin_proxy.py > /tmp/rpc_proxy.log 2>&1 &
+          for i in $(seq 1 20); do
+            curl -sf -X POST http://127.0.0.1:18545 -H 'Content-Type: application/json' \
+              -d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' && break
+            sleep 1
+          done
+      - name: Deploy ClaimSweeper
+        run: |
+          forge script script/DeployClaimSweeper.s.sol \
+            --rpc-url http://127.0.0.1:18545 \
+            --private-key "$DEPLOYER_PRIVATE_KEY" \
+            --broadcast -vv
