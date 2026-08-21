@@ -107,6 +107,44 @@ class UnusualWhalesTests(unittest.TestCase):
         self.assertEqual(rows[0]["chamber"], "house")
 
 
+class UnusualWhalesRetryTests(unittest.TestCase):
+    def _resp(self, status):
+        r = Mock()
+        r.status_code = status
+        r.reason = "x"
+        r.url = "u"
+        r.raise_for_status.return_value = None
+        return r
+
+    @patch("unusual_whales.time.sleep", lambda *_: None)
+    @patch("unusual_whales.requests.get")
+    def test_transient_503_is_retried_then_succeeds(self, get):
+        from unusual_whales import _get_with_retry
+        ok = self._resp(200)
+        get.side_effect = [self._resp(503), self._resp(503), ok]
+        self.assertIs(_get_with_retry("u", {}, {}), ok)
+        self.assertEqual(get.call_count, 3)
+
+    @patch("unusual_whales.requests.get")
+    def test_a_real_4xx_is_never_retried(self, get):
+        import requests as req
+        from unusual_whales import _get_with_retry
+        bad = self._resp(401)
+        bad.raise_for_status.side_effect = req.exceptions.HTTPError("401", response=bad)
+        get.return_value = bad
+        with self.assertRaises(req.exceptions.HTTPError):
+            _get_with_retry("u", {}, {})
+        self.assertEqual(get.call_count, 1)
+
+    @patch("unusual_whales.time.sleep", lambda *_: None)
+    @patch("unusual_whales.requests.get")
+    def test_exhausted_retries_raise_a_clear_error(self, get):
+        from unusual_whales import _get_with_retry
+        get.side_effect = [self._resp(503)] * 4
+        with self.assertRaises(RuntimeError):
+            _get_with_retry("u", {}, {})
+
+
 class ConvictionTests(unittest.TestCase):
     def _trades(self):
         recent = datetime.utcnow().date().isoformat()

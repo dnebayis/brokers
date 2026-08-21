@@ -294,7 +294,7 @@ export function ActivateTab() {
       // Feed prices, to skip dust: TBAs accumulate cent-sized fractions across up to 128
       // tokens, and each withdrawal is its own owner-signed transaction — pure signature
       // waste. A token the feeds can't price is never skipped (we can't judge its value).
-      const metas = await loadKnownTokens().catch(() => []);
+      const metas = await loadKnownTokens(knownTokens).catch(() => []);
       const usdOf = (token: Address, amount: bigint): number | null => {
         const m = metas.find((x) => x.token.toLowerCase() === token.toLowerCase());
         if (!m) return null;

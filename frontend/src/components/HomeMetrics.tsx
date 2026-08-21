@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { ADDR, OPENSEA_URL } from "@/lib/config";
-import { brokerAbi, coatAbi, boosterAbi, strategyRegistryAbi, routerAbi, aggregatorAbi, erc20Abi } from "@/lib/abis";
+import { brokerAbi, coatAbi, boosterAbi, routerAbi, aggregatorAbi, erc20Abi } from "@/lib/abis";
 import { client } from "@/lib/client";
 
 const DEXSCREENER = "https://dexscreener.com/robinhood/0x2d503dda028be83d2e133e5e73a8839f1f202d9f6447e3d863e33ad2c8ebc3d2";
@@ -80,9 +80,16 @@ export function HomeMetrics() {
       } catch { /* price stays undefined */ }
 
       // Total stock distributed, valued in USD (feeds already bake in the uiMultiplier).
+      // Enumerate the Booster's knownTokens — every token it has EVER bought — not the
+      // current basket: when the basket rotates a name out, its historical buys must
+      // keep counting or this figure silently shrinks.
       try {
-        const basket = await client.readContract({ address: ADDR.strategyRegistry, abi: strategyRegistryAbi, functionName: "getBasket", args: [0n] });
-        const tokens = basket[0] as readonly `0x${string}`[];
+        const count = Number(await client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokenCount" }));
+        const tokens = (await Promise.all(
+          Array.from({ length: count }, (_, i) =>
+            client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokens", args: [BigInt(i)] }),
+          ),
+        )) as readonly `0x${string}`[];
         let total = 0;
         for (const token of tokens) {
           try {

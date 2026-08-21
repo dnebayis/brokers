@@ -1,10 +1,9 @@
 // Dependency-free line-icon set (24x24, stroke = currentColor). Clean, not sloppy.
 type Name =
-  | "stamp" | "swap" | "power" | "book" | "wallet" | "search" | "home"
+  | "swap" | "power" | "book" | "wallet" | "search" | "home"
   | "download" | "plus" | "minus" | "flip" | "check" | "copy" | "external" | "arrow-right" | "list" | "route" | "trophy" | "sun" | "moon";
 
 const paths: Record<Name, React.ReactNode> = {
-  stamp: <><path d="M9 3h6a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1l1 4H7l1-4H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M4 20h16" /></>,
   swap: <><path d="M7 7h13l-3-3" /><path d="M17 17H4l3 3" /></>,
   power: <><path d="M12 3v9" /><path d="M6.6 6.6a8 8 0 1 0 10.8 0" /></>,
   book: <><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2Z" /><path d="M4 5v14" /></>,

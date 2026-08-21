@@ -74,4 +74,8 @@
   .badge {
     @apply font-pixel text-[10px] px-2 py-1 border-[1.5px] border-ink bg-cream-2 text-ink-strong;
   }
+  /* Small accent eyebrow used above hero headings (was referenced but never defined). */
+  .chip {
+    @apply font-pixel text-[10px] tracking-widest uppercase px-2.5 py-1.5 border-[1.5px] border-accent text-accent;
+  }
 }

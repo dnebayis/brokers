@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ADDR, CONTRACTS_FOR_DOCS } from "@/lib/config";
 import { activeChain } from "@/lib/chains";
+import { client } from "@/lib/client";
+import { coatAbi } from "@/lib/abis";
 import { Icon } from "@/components/ui/Icon";
 
 function H({ children }: { children: React.ReactNode }) {
@@ -135,7 +137,7 @@ export function DocsTab() {
           </tr>
         </thead>
         <tbody>
-          {CONTRACTS_FOR_DOCS.map(({ name, key }) => {
+          {CONTRACTS_FOR_DOCS.filter(({ key }) => !!ADDR[key]).map(({ name, key }) => {
             const a = ADDR[key] as string;
             return (
               <tr key={name}>
@@ -176,19 +178,33 @@ export function DocsTab() {
 }
 
 function TokenomicsCharts() {
+  // Live burn line: total supply only ever shrinks (activations + fee burns + buybacks),
+  // so read it once per mount. A static figure here went stale within days of launch.
+  const [supply, setSupply] = useState<number | null>(null);
+  useEffect(() => {
+    let live = true;
+    client.readContract({ address: ADDR.coat, abi: coatAbi, functionName: "totalSupply" })
+      .then((v) => { if (live) setSupply(Number(v / 10n ** 18n)); })
+      .catch(() => { /* chart falls back to the label-only state */ });
+    return () => { live = false; };
+  }, []);
+  const INITIAL = 1_000_000_000;
+  const burned = supply !== null ? INITIAL - supply : null;
+  const fmtInt = (n: number) => n.toLocaleString("en-US");
   return (
     <div className="grid sm:grid-cols-2 gap-3 my-5" aria-label="Tokenomics charts">
       <Chart title="Initial COAT allocation" rows={[["Permanent LP", 100, "1B"], ["Team / reserve", 0, "0"]]} />
       <Chart title="Sell-side fee flow" rows={[["Stock rewards", 80, "80%"], ["Treasury", 10, "10%"], ["Buyback burn", 10, "10%"]]} />
       <div className="border border-line bg-cream-2 p-3 sm:col-span-2">
-        <div className="font-pixel text-[11px] mb-3">Supply after all first activations</div>
-        <svg viewBox="0 0 600 150" className="w-full" role="img" aria-label="COAT supply falls from one billion to 934.732 million after 1,776 activations">
-          <path d="M30 25 L570 125" fill="none" stroke="#4E5666" strokeWidth="5" />
-          <circle cx="30" cy="25" r="7" fill="#343945" />
-          <circle cx="570" cy="125" r="7" fill="#343945" />
-          <text x="30" y="17" fontSize="15" fill="#343945">1,000,000,000</text>
-          <text x="430" y="147" fontSize="15" fill="#343945">934,732,000</text>
-          <text x="230" y="78" fontSize="13" fill="#4E5666">65,268,000 COAT burned</text>
+        <div className="font-pixel text-[11px] mb-3">Supply so far — burns only ever remove</div>
+        <svg viewBox="0 0 600 150" className="w-full" role="img"
+          aria-label={supply !== null ? `COAT supply has fallen from one billion to ${fmtInt(supply)}` : "COAT supply chart"}>
+          <path d="M30 25 L570 125" fill="none" stroke="var(--c-ink)" strokeWidth="5" />
+          <circle cx="30" cy="25" r="7" fill="var(--c-ink-strong)" />
+          <circle cx="570" cy="125" r="7" fill="var(--c-accent)" />
+          <text x="30" y="17" fontSize="15" fill="var(--c-ink-strong)">1,000,000,000</text>
+          <text x="430" y="147" fontSize="15" fill="var(--c-ink-strong)">{supply !== null ? fmtInt(supply) : "live from chain…"}</text>
+          <text x="230" y="78" fontSize="13" fill="var(--c-accent)">{burned !== null ? `${fmtInt(burned)} COAT burned — live` : ""}</text>
         </svg>
       </div>
       <Chart title="Launch price / FDV band" rows={[["Start FDV", 1, "10 ETH"], ["Graduation", 42, "4.2 ETH principal"], ["Band end FDV", 100, "1,000 ETH"]]} />

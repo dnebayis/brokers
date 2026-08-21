@@ -5,8 +5,9 @@ permissions:
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "11 * * * *"
+  # Testnet schedule retired after mainnet launch — dispatch-only now.
+  # schedule:
+  #   - cron: (retired)
 
 concurrency:
   group: testnet-booster-keeper

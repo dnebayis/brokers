@@ -18,15 +18,20 @@ export type TokenMeta = { token: Address; decimals: number; priceUsd: number };
 
 /** Load the Booster's tracked stock tokens once, each with its decimals and USD feed price.
  *  The set is tiny (single digits) and shared across every broker valuation. */
-export async function loadKnownTokens(): Promise<TokenMeta[]> {
-  const count = Number(
-    await client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokenCount" }),
-  );
-  const tokens = (await Promise.all(
-    Array.from({ length: count }, (_, i) =>
-      client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokens", args: [BigInt(i)] }),
-    ),
-  )) as Address[];
+export async function loadKnownTokens(known?: Address[]): Promise<TokenMeta[]> {
+  // Callers that already enumerated the Booster's token list pass it in to avoid a
+  // second round of the same reads.
+  let tokens = known;
+  if (!tokens) {
+    const count = Number(
+      await client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokenCount" }),
+    );
+    tokens = (await Promise.all(
+      Array.from({ length: count }, (_, i) =>
+        client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokens", args: [BigInt(i)] }),
+      ),
+    )) as Address[];
+  }
 
   const metas = await Promise.all(
     tokens.map(async (token): Promise<TokenMeta | null> => {

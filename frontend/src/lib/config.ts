@@ -41,10 +41,8 @@ export const BROKER_DEPLOYMENT_BLOCK = ACTIVE_NETWORK === "testnet" ? 0x60cdc73n
 export const OPENSEA_URL = "https://opensea.io/collection/coattailbrokers";
 
 export const PARAMS = {
-  mintPriceEth: "0.001",
   activationBurn: 36_750,
   maxSupply: 1776,
-  walletCap: 2,
   split: { booster: 80, project: 10, buyback: 10 },
   hookFeeBps: 100,
 };
@@ -60,6 +58,7 @@ export const CONTRACTS_FOR_DOCS: { name: string; key: keyof AddrSet }[] = [
   { name: "BrokerRenderer", key: "renderer" },
   { name: "BrokerAccount (6551)", key: "accountImpl" },
   { name: "StockRouter", key: "stockRouter" },
+  { name: "ClaimSweeper", key: "claimSweeper" },
   { name: "Permanent LP Locker", key: "lpLocker" },
   { name: "Buyback Burner", key: "buybackBurner" },
 ];

@@ -1,6 +1,9 @@
 "use client";
 
-import { OPENSEA_URL } from "@/lib/config";
+import { useEffect, useState } from "react";
+import { ADDR, OPENSEA_URL } from "@/lib/config";
+import { boosterAbi } from "@/lib/abis";
+import { client } from "@/lib/client";
 
 // The roadmap mirrors the published roadmap article. Status tags are honest maturity
 // markers, not promises — only LIVE/CONTINUOUS items describe what already runs; the
@@ -145,6 +148,15 @@ const CHARTER: { m: string; text: React.ReactNode }[] = [
 ];
 
 export function RoadmapTab() {
+  // Live active-Broker count — a hardcoded figure here drifted stale within days.
+  const [active, setActive] = useState<number | null>(null);
+  useEffect(() => {
+    let live = true;
+    client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "activeShares" })
+      .then((v) => { if (live) setActive(Number(v)); })
+      .catch(() => { /* copy falls back to the undated phrasing */ });
+    return () => { live = false; };
+  }, []);
   return (
     <div className="max-w-3xl">
       {/* Thesis */}
@@ -153,8 +165,8 @@ export function RoadmapTab() {
         A brokerage that outlives us.
       </h1>
       <p className="text-lg text-ink-strong leading-relaxed mt-4">
-        Coattail already works — 1,776 brokers, sold out; 916 of them switched on and buying real
-        tokenized stock on their own, right now. This is where it goes next, and the guarantees that
+        Coattail already works — 1,776 brokers, sold out; {active !== null ? active.toLocaleString("en-US") : "hundreds"} of
+        them switched on and buying real tokenized stock on their own, right now. This is where it goes next, and the guarantees that
         never move while it gets there.
       </p>
       <p className="text-ink leading-relaxed mt-3">
