@@ -41,3 +41,4 @@ indexer/testnet-load-state.json
 reports/deployments/*.json
 .vercel
 .env*
+contracts/lib
