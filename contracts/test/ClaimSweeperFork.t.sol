@@ -20,7 +20,9 @@ contract ClaimSweeperForkTest is Test {
         // Broker with nothing pending is a documented no-op rather than a revert.
         uint256 n = 20; // 4x the claimBatch cap, in a single transaction
         uint256[] memory ids = new uint256[](n);
-        for (uint256 i; i < n; ++i) ids[i] = i + 1;
+        for (uint256 i; i < n; ++i) {
+            ids[i] = i + 1;
+        }
         vm.prank(makeAddr("anyone"));
         sweeper.claimMany(ids);
     }

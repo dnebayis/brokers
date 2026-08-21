@@ -38,7 +38,9 @@ contract ClaimSweeperTest is Test {
     function test_sweeps_far_beyond_the_claimBatch_cap_in_one_call() public {
         uint256 n = 60; // 12x the Booster's 5-id claimBatch cap
         uint256[] memory ids = new uint256[](n);
-        for (uint256 i; i < n; ++i) ids[i] = i + 1;
+        for (uint256 i; i < n; ++i) {
+            ids[i] = i + 1;
+        }
         sweeper.claimMany(ids);
         assertEq(booster.claimedCount(), n);
         assertEq(booster.claimed(0), 1);
