@@ -41,7 +41,10 @@ jobs:
           done
       - name: Deploy ClaimSweeper
         run: |
+          # forge requires the 0x prefix; the stored secret may omit it (web3.py accepts both).
+          KEY="$DEPLOYER_PRIVATE_KEY"
+          case "$KEY" in 0x*) ;; *) KEY="0x$KEY" ;; esac
           forge script script/DeployClaimSweeper.s.sol \
             --rpc-url http://127.0.0.1:18545 \
-            --private-key "$DEPLOYER_PRIVATE_KEY" \
+            --private-key "$KEY" \
             --broadcast -vv
