@@ -711,9 +711,16 @@ export function ActivateTab() {
         <button className="btn btn-accent w-full mt-4" onClick={claimOnly} disabled={!isOwner || !hasClaimable || claimTx.busy}>
           <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM → BROKER WALLET"}
         </button>
-        {info && isOwner && holdings.length > 0 && (
-          <button className="btn btn-ghost w-full mt-2" onClick={withdraw} disabled={claimTx.busy}>
-            {claimTx.busy ? "WITHDRAWING…" : "Withdraw to my wallet (optional)"}
+        {info && isOwner && (
+          // Always visible so the feature never seems to vanish; disabled with an inline
+          // reason when the Broker wallet is empty and nothing is pending.
+          <button className="btn btn-ghost w-full mt-2" onClick={withdraw}
+            disabled={claimTx.busy || (holdings.length === 0 && !hasClaimable)}>
+            {claimTx.busy
+              ? "WITHDRAWING…"
+              : holdings.length === 0 && !hasClaimable
+                ? "Withdraw — wallet is empty, nothing to move"
+                : "Withdraw to my wallet (optional)"}
           </button>
         )}
         {info && isOwner && (
