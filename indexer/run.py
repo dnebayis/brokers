@@ -209,6 +209,16 @@ def main():
     )
     for error in health["errors"]:
         print(f"  health: {error}")
+    # Roadmap phase 02 ("an earlier signal") is a measurable claim: report how far the
+    # newest filing is behind us. Disclosure dates are day-granular, so the honest unit
+    # is days — the hourly cadence bounds OUR added lag to <1h on top of that.
+    if health.get("latestDisclosure"):
+        try:
+            newest = datetime.strptime(str(health["latestDisclosure"])[:10], "%Y-%m-%d")
+            lag_days = (datetime.now(timezone.utc).date() - newest.date()).days
+            print(f"Ingest lag vs newest disclosure: {lag_days} day(s) (date-granular; our own delay <1h)")
+        except ValueError:
+            pass
 
     net = aggregate(trades)
     buyers = buyer_counts(trades)

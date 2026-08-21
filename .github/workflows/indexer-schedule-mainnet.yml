@@ -1,6 +1,6 @@
 name: indexer-schedule-mainnet
 
-# Mainnet Congress indexer. Pre-staged and inert: guarded on the mainnet registry variable, so
+# Mainnet Congress indexer — hourly. Pre-staged and inert: guarded on the mainnet registry variable, so
 # scheduled runs cleanly skip until the owner sets it post-deploy. To activate after launch, set
 # the repository VARIABLE MAINNET_STRATEGY_REGISTRY_ADDRESS. The oracle key reuses the existing
 # TESTNET_ORACLE_PRIVATE_KEY secret (shared-key launch, accepted-risk decision) and must equal the
@@ -14,7 +14,11 @@ permissions:
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 */6 * * *"
+    # Hourly, offset from the keeper (minute 11) so the two never hit the RPC together.
+    # Posting is a no-op when the basket is unchanged, so hourly runs cost no extra oracle
+    # gas — they only catch a new disclosure within the hour instead of within six
+    # (roadmap phase 02, "an earlier signal").
+    - cron: "37 * * * *"
 
 concurrency:
   group: mainnet-indexer
