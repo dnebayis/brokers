@@ -87,28 +87,33 @@ def fetch(out_path: Path) -> None:
 
 
 def _closes_yahoo(symbol: str, d1: str, d2: str) -> dict[str, float]:
+    """Single-attempt fetch: for price data a source either answers immediately or the
+    symbol is dead (delisted/unmappable — common in congress filings), and burning
+    retry backoff on thousands of dead symbols dominates the whole backtest runtime."""
     p1 = int(datetime.fromisoformat(d1).timestamp())
     p2 = int(datetime.fromisoformat(d2).timestamp()) + 86400
     url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol.upper().replace('.', '-')}"
            f"?period1={p1}&period2={p2}&interval=1d")
-    payload = json.loads(_get(url, {"User-Agent": "Mozilla/5.0"}))
+    payload = json.loads(_get(url, {"User-Agent": "Mozilla/5.0"}, tries=1))
     result = (payload.get("chart", {}).get("result") or [{}])[0]
     stamps = result.get("timestamp") or []
     closes = ((result.get("indicators", {}).get("quote") or [{}])[0].get("close")) or []
     table = {}
     for ts, c in zip(stamps, closes):
-        if c is not None:
+        if c is not None and float(c) > 0:
             table[datetime.utcfromtimestamp(ts).date().isoformat()] = float(c)
     return table
 
 
 def _closes_stooq(symbol: str, d1: str, d2: str) -> dict[str, float]:
     sym = symbol.lower().replace(".", "-") + ".us"
-    raw = _get(STOOQ.format(sym=sym, d1=d1.replace("-", ""), d2=d2.replace("-", "")))
+    raw = _get(STOOQ.format(sym=sym, d1=d1.replace("-", ""), d2=d2.replace("-", "")), tries=1)
     table = {}
     for row in csv.DictReader(io.StringIO(raw.decode())):
         try:
-            table[row["Date"]] = float(row["Close"])
+            close = float(row["Close"])
+            if close > 0:
+                table[row["Date"]] = close
         except (KeyError, ValueError):
             continue
     return table
@@ -144,6 +149,8 @@ def _window_return(closes: dict[str, float], start: str) -> float | None:
     d1 = max((d for d in days if d <= target), default=None)
     if d1 is None or (datetime.fromisoformat(d1) - datetime.fromisoformat(d0)).days < HORIZON_DAYS - 10:
         return None  # window not yet complete (too recent) or data gap
+    if closes[d0] <= 0 or closes[d1] <= 0:
+        return None  # corrupt source row
     return closes[d1] / closes[d0] - 1.0
 
 
@@ -156,14 +163,25 @@ def score(raw_path: Path, out_path: Path) -> None:
 
     d1 = min(r["disclosureDate"] for r in buys)
     d2 = datetime.utcnow().date().isoformat()
+    cache_path = raw_path.with_name("price-cache.json")
     cache: dict = {}
+    if cache_path.exists():
+        try:
+            cache = json.loads(cache_path.read_text())
+            print(f"price cache loaded: {len(cache)} tickers")
+        except ValueError:
+            cache = {}
     spy = _closes("SPY", d1, d2, cache)
     if not spy:
         raise RuntimeError("no SPY benchmark data — refusing to score against nothing")
 
     per_member: dict[str, list[float]] = {}
     used = skipped = 0
-    for r in buys:
+    try:
+      for i, r in enumerate(buys):
+        if i % 2000 == 0:
+            print(f"  progress: {i}/{len(buys)} buys, {len(cache)} tickers cached", flush=True)
+            cache_path.write_text(json.dumps(cache))
         closes = _closes(r["symbol"], d1, d2, cache)
         ret = _window_return(closes, r["disclosureDate"])
         bench = _window_return(spy, r["disclosureDate"])
@@ -173,6 +191,8 @@ def score(raw_path: Path, out_path: Path) -> None:
         excess = max(-WINSOR, min(WINSOR, ret - bench))
         per_member.setdefault(r["who"].strip().lower(), []).append(excess)
         used += 1
+    finally:
+      cache_path.write_text(json.dumps(cache))
     print(f"scored {used} buys, skipped {skipped} (missing/short price windows)")
 
     scores = {}
