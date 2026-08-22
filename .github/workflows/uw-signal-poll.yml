@@ -1,0 +1,59 @@
+# Earlier signal, v2 (roadmap horizon 02): every 15 minutes, one cheap API call asks
+# whether the "coattail-signal" politician_trades alert fired recently; if it did, the
+# existing mainnet indexer is dispatched immediately instead of waiting for its hourly
+# cron. Cuts our added disclosure lag from <=60min to <=15min at zero infra cost.
+#
+# Deliberately STATELESS: each run looks back a fixed window (poll interval + margin)
+# instead of persisting a cursor. A trigger near a window edge can dispatch the indexer
+# twice — harmless, since posting an unchanged basket is already a no-op on chain — and
+# in exchange there is no cursor state to corrupt or race. The hourly indexer cron stays
+# untouched as the backstop if alerts ever silently stop.
+#
+# Armed by the repo variable UW_SIGNAL_ENABLED=1 (unset = clean skip, like the other
+# mainnet guards). Manual dispatch accepts a wider lookback for end-to-end testing.
+name: uw-signal-poll
+
+on:
+  workflow_dispatch:
+    inputs:
+      lookback_minutes:
+        description: "How far back to look for triggers (default 20)"
+        required: false
+        default: "20"
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: uw-signal-poll
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    if: ${{ vars.MAINNET_STRATEGY_REGISTRY_ADDRESS != '' && vars.UW_SIGNAL_ENABLED == '1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      UW_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check for fresh politician-trade triggers
+        run: |
+          set -euo pipefail
+          minutes="${{ github.event.inputs.lookback_minutes || '20' }}"
+          since=$(date -u -d "${minutes} minutes ago" +%Y-%m-%dT%H:%M:%SZ)
+          body=$(curl -sS -H "Authorization: Bearer ${UW_KEY}" -H "Accept: application/json" \
+            "https://api.unusualwhales.com/api/alerts?noti_types[]=politician_trades&newer_than=${since}&limit=500")
+          count=$(echo "$body" | jq 'if type=="array" then length
+                                     elif (.data|type?)=="array" then (.data|length)
+                                     else 0 end')
+          echo "triggers since ${since}: ${count}"
+          if [ "$count" -gt 0 ]; then
+            echo "new disclosure detected — dispatching the indexer now"
+            gh workflow run indexer-schedule-mainnet.yml -R "${GITHUB_REPOSITORY}"
+          else
+            echo "quiet — hourly backstop remains in charge"
+          fi

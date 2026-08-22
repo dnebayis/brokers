@@ -1,0 +1,55 @@
+# One-shot, idempotent: create the "coattail-signal" politician_trades alert on the
+# Unusual Whales account. Once it exists, UW marks it triggered on every new politician
+# disclosure, and uw-signal-poll turns those triggers into immediate basket rebuilds
+# (roadmap horizon 02 — cutting our added lag from <=1h to <=15min).
+#
+# Prints filter metadata and API response bodies (no secrets in either); never the key.
+name: uw-signal-setup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      UW_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
+    steps:
+      - name: Show politician_trades filter surface
+        run: |
+          set -euo pipefail
+          curl -sS -H "Authorization: Bearer ${UW_KEY}" -H "Accept: application/json" \
+            https://api.unusualwhales.com/api/alerts/filters \
+          | jq '{access: (.access.politician_trades // .data.access.politician_trades),
+                 filters: (.data.politician_trades // .politician_trades // "none listed")}'
+
+      - name: Create alert if absent
+        run: |
+          set -euo pipefail
+          existing=$(curl -sS -H "Authorization: Bearer ${UW_KEY}" -H "Accept: application/json" \
+            https://api.unusualwhales.com/api/alerts/configuration)
+          found=$(echo "$existing" | jq '[if type=="array" then .[] else (.data // [])[] end
+                                          | select(.name=="coattail-signal")] | length')
+          if [ "$found" != "0" ]; then
+            echo "coattail-signal already exists:"
+            echo "$existing" | jq '[if type=="array" then .[] else (.data // [])[] end
+                                    | select(.name=="coattail-signal")]'
+            exit 0
+          fi
+          # Minimal config first; if the type needs explicit filters the 422 body says which.
+          for cfg in '{"symbols":"all"}' '{}'; do
+            resp=$(curl -sS -w '\n%{http_code}' -X POST \
+              -H "Authorization: Bearer ${UW_KEY}" -H "Content-Type: application/json" \
+              -d "{\"name\":\"coattail-signal\",\"noti_type\":\"politician_trades\",\"config\":${cfg}}" \
+              https://api.unusualwhales.com/api/alerts/configuration)
+            code=$(echo "$resp" | tail -1); body=$(echo "$resp" | sed '$d')
+            echo "config=${cfg} -> HTTP ${code}"
+            echo "$body" | jq . || echo "$body"
+            if [ "$code" = "200" ] || [ "$code" = "201" ]; then exit 0; fi
+          done
+          echo "alert creation failed with every candidate config" >&2
+          exit 1
