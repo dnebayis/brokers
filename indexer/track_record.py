@@ -86,23 +86,50 @@ def fetch(out_path: Path) -> None:
     print(f"wrote {len(rows)} rows -> {out_path}")
 
 
+def _closes_yahoo(symbol: str, d1: str, d2: str) -> dict[str, float]:
+    p1 = int(datetime.fromisoformat(d1).timestamp())
+    p2 = int(datetime.fromisoformat(d2).timestamp()) + 86400
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol.upper().replace('.', '-')}"
+           f"?period1={p1}&period2={p2}&interval=1d")
+    payload = json.loads(_get(url, {"User-Agent": "Mozilla/5.0"}))
+    result = (payload.get("chart", {}).get("result") or [{}])[0]
+    stamps = result.get("timestamp") or []
+    closes = ((result.get("indicators", {}).get("quote") or [{}])[0].get("close")) or []
+    table = {}
+    for ts, c in zip(stamps, closes):
+        if c is not None:
+            table[datetime.utcfromtimestamp(ts).date().isoformat()] = float(c)
+    return table
+
+
+def _closes_stooq(symbol: str, d1: str, d2: str) -> dict[str, float]:
+    sym = symbol.lower().replace(".", "-") + ".us"
+    raw = _get(STOOQ.format(sym=sym, d1=d1.replace("-", ""), d2=d2.replace("-", "")))
+    table = {}
+    for row in csv.DictReader(io.StringIO(raw.decode())):
+        try:
+            table[row["Date"]] = float(row["Close"])
+        except (KeyError, ValueError):
+            continue
+    return table
+
+
 def _closes(symbol: str, d1: str, d2: str, cache: dict) -> dict[str, float]:
+    """Daily closes, Yahoo chart API first (reachable from CI runners), Stooq fallback
+    (Stooq day-limits datacenter IPs — it returned empty even for SPY from Actions)."""
     if symbol in cache:
         return cache[symbol]
-    sym = symbol.lower().replace(".", "-") + ".us"
-    try:
-        raw = _get(STOOQ.format(sym=sym, d1=d1.replace("-", ""), d2=d2.replace("-", "")))
-        table = {}
-        for row in csv.DictReader(io.StringIO(raw.decode())):
-            try:
-                table[row["Date"]] = float(row["Close"])
-            except (KeyError, ValueError):
-                continue
-        cache[symbol] = table
-    except Exception:
-        cache[symbol] = {}
-    time.sleep(0.35)  # stay polite with the free source
-    return cache[symbol]
+    table: dict[str, float] = {}
+    for source in (_closes_yahoo, _closes_stooq):
+        try:
+            table = source(symbol, d1, d2)
+        except Exception:
+            table = {}
+        if table:
+            break
+    cache[symbol] = table
+    time.sleep(0.25)  # stay polite with the free sources
+    return table
 
 
 def _window_return(closes: dict[str, float], start: str) -> float | None:
