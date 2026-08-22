@@ -56,10 +56,6 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Check threshold and poke the last valid basket
         run: python keeper.py --execute
-      - name: Claim resumable five-NFT batches to TBAs
-        run: python claim_distributor.py --execute --max-batches 50
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: mainnet-claim-state
-          path: indexer/claim-state.mainnet.json
+      # Claim distribution moved to claim-distribution-mainnet.yml (daily, via
+      # ClaimSweeper 40-NFT sweeps). Hourly 5-NFT pushes were ~90% of the keeper
+      # wallet's gas; rewards accrue safely in the Booster until claimed either way.

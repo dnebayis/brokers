@@ -18,13 +18,17 @@ from config import (
     BROKER_ADDRESS,
     BROKER_DEPLOYMENT_BLOCK,
     CHAIN_ID,
+    CLAIM_SWEEPER_ADDRESS,
     KEEPER_PRIVATE_KEY,
     NETWORK,
     make_web3,
 )
 
 MAX_SUPPLY = 1776
+# claimBatch enforces MAX_CLAIM_BATCH=5 on chain; ClaimSweeper.claimMany just loops the
+# uncapped claimFor, so 40 NFTs fit one tx (fork-measured: 20 brokers ~913k gas).
 MAX_BATCH = 5
+SWEEPER_BATCH = 40
 
 
 def circular_ids(cursor: int):
@@ -34,14 +38,15 @@ def circular_ids(cursor: int):
         yield ((start - 1 + offset) % MAX_SUPPLY) + 1
 
 
-def select_claim_batch(cursor: int, is_minted: Callable[[int], bool], has_claim: Callable[[int], bool]):
+def select_claim_batch(cursor: int, is_minted: Callable[[int], bool], has_claim: Callable[[int], bool],
+                       max_batch: int = MAX_BATCH):
     selected = []
     last_scanned = cursor
     for token_id in circular_ids(cursor):
         last_scanned = token_id
         if is_minted(token_id) and has_claim(token_id):
             selected.append(token_id)
-            if len(selected) == MAX_BATCH:
+            if len(selected) == max_batch:
                 break
     next_cursor = (last_scanned % MAX_SUPPLY) + 1
     return selected, next_cursor
@@ -107,6 +112,17 @@ def main() -> None:
         {"type": "function", "name": "claimBatch", "stateMutability": "nonpayable",
          "inputs": [{"name": "tokenIds", "type": "uint256[]"}], "outputs": []},
     ])
+    # Prefer the ownerless ClaimSweeper: 40 NFTs per tx instead of claimBatch's on-chain
+    # MAX of 5 — same permissionless claimFor underneath, ~8x fewer transactions.
+    sweeper = None
+    if CLAIM_SWEEPER_ADDRESS:
+        sweeper = w3.eth.contract(address=Web3.to_checksum_address(CLAIM_SWEEPER_ADDRESS), abi=[
+            {"type": "function", "name": "claimMany", "stateMutability": "nonpayable",
+             "inputs": [{"name": "tokenIds", "type": "uint256[]"}], "outputs": []},
+        ])
+    batch_size = SWEEPER_BATCH if sweeper is not None else MAX_BATCH
+    print(json.dumps({"claimPath": "sweeper.claimMany" if sweeper else "booster.claimBatch",
+                      "batchSize": batch_size}))
     state = _read_state(args.state)
 
     def is_minted(token_id: int) -> bool:
@@ -134,7 +150,8 @@ def main() -> None:
     nonce = _best_nonce() if account else 0
 
     for _ in range(args.max_batches):
-        batch, next_cursor = select_claim_batch(int(state["nextTokenId"]), is_minted, has_claim)
+        batch, next_cursor = select_claim_batch(int(state["nextTokenId"]), is_minted, has_claim,
+                                                max_batch=batch_size)
         print(json.dumps({"cursor": state["nextTokenId"], "batch": batch, "nextCursor": next_cursor}))
         if not batch:
             state["nextTokenId"] = next_cursor
@@ -143,14 +160,15 @@ def main() -> None:
         if not args.execute:
             break
 
-        # A full 5-NFT batch pushes up to ~15 stock transfers (~1.0M gas observed). RH's proxied
-        # RPC can serve a stale state to eth_estimateGas right after a preceding tx, undersizing
-        # the limit and reverting out-of-gas (which hard-stops the cursor here). Floor + 2x buffer
-        # removes that: RH gas is ~0.02 gwei so an oversized limit costs nothing (only used gas is
-        # billed). See the matching guard in keeper.py.
-        call = booster.functions.claimBatch(batch)
+        # RH's proxied RPC can serve a stale state to eth_estimateGas right after a preceding tx,
+        # undersizing the limit and reverting out-of-gas (which hard-stops the cursor here).
+        # Floor + 2x buffer removes that: RH gas is ~0.02 gwei so an oversized limit costs
+        # nothing (only used gas is billed). Floors: 5-NFT claimBatch ~1.0M gas observed;
+        # 40-NFT sweeper sweep extrapolates from the fork-measured 20-NFT/913k run.
+        call = (sweeper.functions.claimMany(batch) if sweeper is not None
+                else booster.functions.claimBatch(batch))
         estimate = call.estimate_gas({"from": account.address})
-        gas_limit = max(int(estimate * 2), 2_500_000)
+        gas_limit = max(int(estimate * 2), 6_000_000 if sweeper is not None else 2_500_000)
         tx_hash = None
         for send_try in range(4):
             tx = call.build_transaction({

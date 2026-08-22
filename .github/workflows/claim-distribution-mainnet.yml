@@ -1,0 +1,54 @@
+name: claim-distribution-mainnet
+
+# Daily push of accrued stock into Broker TBAs via ClaimSweeper.claimMany (40 NFTs/tx —
+# the on-chain claimBatch caps at 5). Split out of the hourly keeper on 2026-08-22: the
+# hourly 5-NFT pushes were ~90% of the keeper wallet's gas (~1,100 tx/day). Rewards
+# accrue safely in the Booster's accounting until claimed, and holders always have the
+# permissionless one-click claim in the app — this job is a daily courtesy sweep, not a
+# requirement. A full pass is <=45 sweeps; --max-batches 60 leaves slack.
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Once a day, offset from the keeper (:11) and indexer (:37).
+    - cron: "23 6 * * *"
+
+concurrency:
+  group: mainnet-claim-distribution
+  cancel-in-progress: false
+
+jobs:
+  distribute:
+    if: ${{ vars.MAINNET_BROKER_ADDRESS != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: indexer
+    env:
+      NETWORK: mainnet
+      RH_RPC_URL: ${{ secrets.RH_MAINNET_RPC_URL }}
+      RH_RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
+      BROKER_ADDRESS: ${{ vars.MAINNET_BROKER_ADDRESS }}
+      BOOSTER_ADDRESS: ${{ vars.MAINNET_BOOSTER_ADDRESS }}
+      BROKER_DEPLOYMENT_BLOCK: ${{ vars.MAINNET_BROKER_DEPLOYMENT_BLOCK }}
+      CLAIM_SWEEPER_ADDRESS: ${{ vars.MAINNET_CLAIM_SWEEPER_ADDRESS || '0x202a5aF710306834b30B195263842B5b132Bb020' }}
+      KEEPER_PRIVATE_KEY: ${{ secrets.TESTNET_KEEPER_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: indexer/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Sweep accrued stock to TBAs (40-NFT batches)
+        run: python claim_distributor.py --execute --max-batches 60
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mainnet-claim-state
+          path: indexer/claim-state.mainnet.json

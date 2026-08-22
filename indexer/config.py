@@ -187,6 +187,9 @@ BROKER_ADDRESS = os.environ.get("BROKER_ADDRESS", "")
 BROKER_DEPLOYMENT_BLOCK = int(os.environ.get(
     "BROKER_DEPLOYMENT_BLOCK", "101454451" if NETWORK == "testnet" else "0"))
 BOOSTER_ADDRESS = os.environ.get("BOOSTER_ADDRESS", "")
+# Ownerless periphery that loops Booster.claimFor — lets distribution push 40 NFTs per tx
+# instead of claimBatch's hard MAX of 5. Unset -> distributor falls back to claimBatch(5).
+CLAIM_SWEEPER_ADDRESS = os.environ.get("CLAIM_SWEEPER_ADDRESS", "")
 UPDATER_PRIVATE_KEY = os.environ.get("UPDATER_PRIVATE_KEY", "")      # oracle bot key = oracleSigner
 KEEPER_PRIVATE_KEY = os.environ.get("KEEPER_PRIVATE_KEY", "")        # gas-funded poke relayer; no on-chain role
 HOOK_ADDRESS = os.environ.get("HOOK_ADDRESS", "")
