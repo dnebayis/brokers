@@ -1,0 +1,31 @@
+# One-shot probe: which Unusual Whales alert types can THIS account create, and does the
+# key carry the websocket scope? Needed to decide how far the earlier-signal work
+# (roadmap horizon 02) can go: a politician_trades custom alert streamed over the
+# custom_alerts websocket channel is the push path; without access, we stay on polling.
+#
+# Prints ONLY access/scope booleans — never the key, never response bodies that could
+# echo it. Manual dispatch only; costs one API call.
+name: uw-access-probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query alert-type access
+        env:
+          UW_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
+        run: |
+          set -euo pipefail
+          resp=$(curl -sS -w '\n%{http_code}' \
+            -H "Authorization: Bearer ${UW_KEY}" \
+            -H "Accept: application/json" \
+            https://api.unusualwhales.com/api/alerts/filters)
+          code=$(echo "$resp" | tail -1)
+          body=$(echo "$resp" | sed '$d')
+          echo "HTTP $code"
+          # Only the per-type access booleans; drop the filter definitions entirely.
+          echo "$body" | jq '.access // .data.access // "no access field in response"' || echo "response was not JSON"
