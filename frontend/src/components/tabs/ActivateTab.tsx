@@ -572,7 +572,12 @@ export function ActivateTab() {
         <p className="text-ink-soft text-sm mb-1">Pick one to activate. Green = already earning.</p>
         <p className="text-ink-soft text-sm mb-4">
           {backing.totalUsd !== null && brokers.length > 0
-            ? <>Your Brokers are backed by <b className="text-ink-strong">{usd(backing.totalUsd)}</b> of real tokenized stock — the floor under the art.</>
+            ? <>
+                Your Brokers are backed by <b className="text-ink-strong">{usd(backing.totalUsd)}</b> of real tokenized stock
+                {backing.totalEarnedUsd !== null && backing.totalEarnedUsd > 0 && (
+                  <> — and have earned <b className="text-good">{usd(backing.totalEarnedUsd)}</b> since day one</>
+                )}.
+              </>
             : "Every active Broker holds real stock in its own wallet."}
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
@@ -590,7 +595,7 @@ export function ActivateTab() {
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
             {brokers.map((b) => (
-              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} />
+              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} />
             ))}
           </div>
         )}

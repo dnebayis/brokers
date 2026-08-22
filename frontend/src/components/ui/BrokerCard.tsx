@@ -8,13 +8,19 @@ export function BrokerCard({
   selected,
   onSelect,
   backingUsd,
+  earnedUsd,
 }: {
   id: bigint;
   active: boolean;
   selected?: boolean;
   onSelect?: () => void;
   backingUsd?: number;
+  earnedUsd?: number;
 }) {
+  const money = (n: number) =>
+    n < 0.005
+      ? "$0"
+      : n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: n < 100 ? 2 : 0 });
   return (
     <button
       onClick={onSelect}
@@ -36,10 +42,14 @@ export function BrokerCard({
         </span>
       </div>
       <div className="text-[10px] text-ink-soft mt-0.5 truncate">
-        {backingUsd !== undefined
-          ? `Backed by ${backingUsd < 0.005 ? "$0" : backingUsd.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: backingUsd < 100 ? 2 : 0 })}`
-          : "On-chain artwork"}
+        {backingUsd !== undefined ? `Backed by ${money(backingUsd)}` : "On-chain artwork"}
       </div>
+      {earnedUsd !== undefined && (
+        <div className="text-[10px] mt-0.5 truncate">
+          <span className="text-good">earned {money(earnedUsd)}</span>
+          <span className="text-ink-soft"> so far</span>
+        </div>
+      )}
     </button>
   );
 }

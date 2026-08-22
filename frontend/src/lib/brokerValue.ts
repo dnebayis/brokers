@@ -7,8 +7,8 @@
 // so total = pending + inWallet is the hard floor under the NFT: what you'd hold even if
 // the collectible were worth nothing. All reads; nothing here sends a transaction.
 
-import { formatUnits, type Address } from "viem";
-import { ADDR } from "./config";
+import { formatUnits, parseAbiItem, type Address } from "viem";
+import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { boosterAbi, brokerAbi, aggregatorAbi, erc20Abi } from "./abis";
 import { publicClient as client } from "./client";
 
@@ -91,6 +91,53 @@ export async function brokerBacking(tokenId: bigint, metas: TokenMeta[]): Promis
   });
 
   return { pendingUsd, inWalletUsd, totalUsd: pendingUsd + inWalletUsd };
+}
+
+const CLAIMED = parseAbiItem(
+  "event Claimed(uint256 indexed tokenId, address indexed to, address token, uint256 amount)",
+);
+
+/** Lifetime USD earned per Broker: everything ever claimed (from the Booster's own
+ *  Claimed events, valued at today's feed prices) plus what is claimable right now.
+ *  Withdrawing to an EOA or selling stock later doesn't shrink this — it is a record
+ *  of what the Broker produced, not what it still holds. One log query for all ids. */
+export async function lifetimeEarned(
+  ids: bigint[],
+  metas: TokenMeta[],
+): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  if (ids.length === 0) return out;
+  for (const id of ids) out[id.toString()] = 0;
+
+  const [logs, pendings] = await Promise.all([
+    client.getLogs({
+      address: ADDR.booster,
+      event: CLAIMED,
+      args: { tokenId: ids },
+      fromBlock: BROKER_DEPLOYMENT_BLOCK,
+    }),
+    Promise.all(
+      ids.map((id) =>
+        client
+          .readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "claimable", args: [id] })
+          .catch(() => [[], []] as const),
+      ),
+    ),
+  ]);
+
+  for (const l of logs) {
+    const meta = priceOf(metas, l.args.token as Address);
+    if (!meta || l.args.tokenId === undefined) continue;
+    out[l.args.tokenId.toString()] += Number(formatUnits(l.args.amount as bigint, meta.decimals)) * meta.priceUsd;
+  }
+  ids.forEach((id, i) => {
+    const [tokens, amounts] = pendings[i] as readonly [readonly Address[], readonly bigint[]];
+    tokens.forEach((token, j) => {
+      const meta = priceOf(metas, token);
+      if (meta) out[id.toString()] += Number(formatUnits(amounts[j], meta.decimals)) * meta.priceUsd;
+    });
+  });
+  return out;
 }
 
 export function usd(n: number): string {

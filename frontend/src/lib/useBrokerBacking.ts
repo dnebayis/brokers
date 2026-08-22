@@ -1,38 +1,48 @@
 "use client";
 
-// Values the real stock backing a set of owned Brokers: a per-token map and the total,
-// so the Activate tab can show "your NFT is worth at least the stock inside it."
+// Values the real stock behind a set of owned Brokers, two ways:
+//   backing — what each Broker holds RIGHT NOW (claimable + stock in its wallet);
+//   earned  — what each Broker has produced SO FAR (every Claimed event + claimable),
+//             which never shrinks when the owner withdraws or sells the stock.
+// The Activate tab shows both: "worth at least X" and "has earned Y since day one".
 
 import { useEffect, useState } from "react";
-import { loadKnownTokens, brokerBacking } from "./brokerValue";
+import { loadKnownTokens, brokerBacking, lifetimeEarned } from "./brokerValue";
 
 export function useBrokerBacking(ids: bigint[]) {
   const key = ids.map((i) => i.toString()).join(",");
   const [byId, setById] = useState<Record<string, number>>({});
+  const [earnedById, setEarnedById] = useState<Record<string, number>>({});
   const [totalUsd, setTotalUsd] = useState<number | null>(null);
+  const [totalEarnedUsd, setTotalEarnedUsd] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let live = true;
     if (ids.length === 0) {
       setById({});
+      setEarnedById({});
       setTotalUsd(null);
+      setTotalEarnedUsd(null);
       return;
     }
     (async () => {
       setLoading(true);
       try {
         const metas = await loadKnownTokens();
-        const results = await Promise.all(
-          ids.map(async (id) => {
-            try {
-              const b = await brokerBacking(id, metas);
-              return [id.toString(), b.totalUsd] as const;
-            } catch {
-              return [id.toString(), 0] as const;
-            }
-          }),
-        );
+        const [results, earned] = await Promise.all([
+          Promise.all(
+            ids.map(async (id) => {
+              try {
+                const b = await brokerBacking(id, metas);
+                return [id.toString(), b.totalUsd] as const;
+              } catch {
+                return [id.toString(), 0] as const;
+              }
+            }),
+          ),
+          lifetimeEarned(ids, metas).catch(() => ({}) as Record<string, number>),
+        ]);
         if (!live) return;
         const map: Record<string, number> = {};
         let total = 0;
@@ -42,6 +52,9 @@ export function useBrokerBacking(ids: bigint[]) {
         }
         setById(map);
         setTotalUsd(total);
+        setEarnedById(earned);
+        const earnedVals = Object.values(earned);
+        setTotalEarnedUsd(earnedVals.length ? earnedVals.reduce((a, b) => a + b, 0) : null);
       } finally {
         if (live) setLoading(false);
       }
@@ -52,5 +65,5 @@ export function useBrokerBacking(ids: bigint[]) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return { byId, totalUsd, loading };
+  return { byId, earnedById, totalUsd, totalEarnedUsd, loading };
 }
