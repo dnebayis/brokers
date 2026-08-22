@@ -593,7 +593,7 @@ export function ActivateTab() {
         ) : brokers.length === 0 ? (
           <p className="text-ink-soft text-sm">No Brokers yet — mint one first.</p>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
             {brokers.map((b) => (
               <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} />
             ))}
