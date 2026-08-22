@@ -1,4 +1,4 @@
-# Sales bot heartbeat: every 15 minutes, asks the site's sales sweep to scan new
+# Sales bot heartbeat: every 5 minutes, asks the site's sales sweep to scan new
 # Broker transfers, detect marketplace sales from the Seaport receipts, and post them
 # to the Discord sales channel webhook. Cursor lives in KV, so a missed or late cron
 # just catches up — nothing is skipped or double-posted. Armed by the repo variable
@@ -8,7 +8,7 @@ name: discord-sales
 on:
   workflow_dispatch:
   schedule:
-    - cron: "5,20,35,50 * * * *"
+    - cron: "*/5 * * * *"
 
 permissions:
   contents: read

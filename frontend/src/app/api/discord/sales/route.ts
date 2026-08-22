@@ -23,9 +23,46 @@ const CURSOR_KEY = "sales:lastBlock";
 const MAX_RANGE = 400_000n;   // bounds one sweep; the cron catches up across runs
 const MAX_POSTS = 10;         // per sweep — beyond this, one summary line
 const ZERO = "0x0000000000000000000000000000000000000000";
+const OS_CHAIN = "robinhood"; // OpenSea's chain identifier (matches their asset URLs)
 
 function short(a: string): string {
   return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
+
+// ── OpenSea enrichment (optional — key in env, silently skipped without it) ──
+function osKey(): string {
+  return process.env.OPENSEA_API_KEY ?? "";
+}
+
+async function osFetch(path: string): Promise<Record<string, unknown> | null> {
+  if (!osKey()) return null;
+  try {
+    const res = await fetch(`https://api.opensea.io/api/v2${path}`, {
+      headers: { "x-api-key": osKey(), Accept: "application/json" },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/** Broker artwork URL for the embed thumbnail, cached forever in KV (art is frozen). */
+async function brokerImage(id: string): Promise<string | null> {
+  const cacheKey = `os:image:${id}`;
+  const cached = await kvGet(cacheKey);
+  if (cached) return cached === "none" ? null : cached;
+  const data = await osFetch(`/chain/${OS_CHAIN}/contract/${ADDR.broker}/nfts/${id}`);
+  const url = ((data?.nft as Record<string, unknown> | undefined)?.image_url as string | undefined) ?? null;
+  await kvSet(cacheKey, url ?? "none");
+  return url;
+}
+
+async function collectionFloorEth(): Promise<number | null> {
+  const data = await osFetch(`/collections/coattailbrokers/stats`);
+  const total = (data?.total as Record<string, unknown> | undefined)?.floor_price;
+  return typeof total === "number" && total > 0 ? total : null;
 }
 
 async function ethUsd(): Promise<number> {
@@ -109,6 +146,7 @@ export async function GET(request: Request) {
   }
 
   const usd = await ethUsd();
+  const floor = await collectionFloorEth();
   const embeds: object[] = [];
   let sales = 0;
   for (const [txHash, txTransfers] of byTx) {
@@ -131,6 +169,7 @@ export async function GET(request: Request) {
       const priceLine = eth
         ? `**${eth.toFixed(4)} ETH**${usd ? ` ($${(eth * usd).toFixed(2)})` : ""}`
         : "accepted offer";
+      const image = await brokerImage(id);
       embeds.push({
         title: `Broker #${id} sold`,
         description: [
@@ -138,6 +177,8 @@ export async function GET(request: Request) {
           `${short(t.args.from as string)} → ${short(t.args.to as string)}`,
           `[tx](https://robinhoodchain.blockscout.com/tx/${txHash}) · [opensea](https://opensea.io/assets/robinhood/${ADDR.broker}/${id})`,
         ].join("\n"),
+        ...(image ? { thumbnail: { url: image } } : {}),
+        ...(floor ? { footer: { text: `floor ${floor.toFixed(4)} ETH` } } : {}),
         color: 0xa6412f,
       });
     }
