@@ -31,8 +31,9 @@ export const env = {
 };
 
 // Server-side chain client: same public-first tiering as the app, plus the Origin
-// header the public RPC's allowlist expects.
-const serverClient = createPublicClient({
+// header the public RPC's allowlist expects. Exported for the other Discord routes
+// (sales sweep) so there is exactly one server-side client configuration.
+export const serverClient = createPublicClient({
   chain: activeChain,
   transport: fallback(
     RPC_PUBLIC_FIRST.map((url) =>
@@ -99,6 +100,17 @@ async function kv(cmd: (string | number)[]): Promise<{ result?: unknown } | null
   });
   if (!res.ok) return null;
   return res.json();
+}
+
+/** Plain string get/set for other Discord features (e.g. the sales sweep cursor). */
+export async function kvGet(k: string): Promise<string | null> {
+  const res = await kv(["GET", k]);
+  const v = res?.result;
+  return typeof v === "string" && v ? v : null;
+}
+
+export async function kvSet(k: string, v: string): Promise<void> {
+  await kv(["SET", k, v]);
 }
 
 const key = (guildId: string, userId: string) => `verify:${guildId}:${userId}`;

@@ -1,0 +1,34 @@
+# Sales bot heartbeat: every 15 minutes, asks the site's sales sweep to scan new
+# Broker transfers, detect marketplace sales from the Seaport receipts, and post them
+# to the Discord sales channel webhook. Cursor lives in KV, so a missed or late cron
+# just catches up — nothing is skipped or double-posted. Armed by the repo variable
+# DISCORD_SALES_ENABLED=1; reuses the RECHECK_SECRET bearer.
+name: discord-sales
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "5,20,35,50 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discord-sales
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    if: ${{ vars.DISCORD_SALES_ENABLED == '1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sweep and post sales
+        env:
+          SECRET: ${{ secrets.RECHECK_SECRET }}
+        run: |
+          set -euo pipefail
+          resp=$(curl -sS -H "Authorization: Bearer ${SECRET}" \
+            "https://www.coattail.cash/api/discord/sales")
+          echo "$resp"
+          [ "$(echo "$resp" | jq -r '.ok')" = "true" ]

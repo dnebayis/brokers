@@ -30,8 +30,11 @@ export async function POST(request: Request) {
   // PING — Discord's endpoint health check.
   if (interaction.type === 1) return NextResponse.json({ type: 1 });
 
-  // Slash command.
-  if (interaction.type === 2 && interaction.data?.name === "verify") {
+  // /verify slash command, or a press of the persistent Verify button (type 3
+  // component interaction) — both hand out the same one-time link.
+  const isVerifyCommand = interaction.type === 2 && interaction.data?.name === "verify";
+  const isVerifyButton = interaction.type === 3 && interaction.data?.custom_id === "coattail_verify";
+  if (isVerifyCommand || isVerifyButton) {
     const userId = interaction.member?.user?.id ?? interaction.user?.id;
     const guildId = interaction.guild_id;
     if (!userId || !guildId) {
