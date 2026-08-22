@@ -1,11 +1,13 @@
 name: claim-distribution-mainnet
 
-# Daily push of accrued stock into Broker TBAs via ClaimSweeper.claimMany (40 NFTs/tx —
-# the on-chain claimBatch caps at 5). Split out of the hourly keeper on 2026-08-22: the
-# hourly 5-NFT pushes were ~90% of the keeper wallet's gas (~1,100 tx/day). Rewards
-# accrue safely in the Booster's accounting until claimed, and holders always have the
-# permissionless one-click claim in the app — this job is a daily courtesy sweep, not a
-# requirement. A full pass is <=45 sweeps; --max-batches 60 leaves slack.
+# Weekly push of accrued stock into Broker TBAs via ClaimSweeper.claimMany (40 NFTs/tx —
+# the on-chain claimBatch caps at 5). Split out of the hourly keeper on 2026-08-22, then
+# moved daily->weekly the same day: sweep cost scales with CLAIM COUNT, not with the
+# accrued amounts (~72k gas per broker either way, ~0.0018 ETH per full pass), so weekly
+# is ~7x cheaper than daily for identical holder value. Rewards accrue safely in the
+# Booster's accounting until claimed, and holders always have the permissionless
+# one-click claim in the app — this job is a courtesy sweep, not a requirement.
+# A full pass is <=45 sweeps; --max-batches 60 leaves slack.
 
 permissions:
   contents: read
@@ -13,8 +15,8 @@ permissions:
 on:
   workflow_dispatch:
   schedule:
-    # Once a day, offset from the keeper (:11) and indexer (:37).
-    - cron: "23 6 * * *"
+    # Monday mornings, offset from the keeper (:11) and indexer (:37).
+    - cron: "23 6 * * 1"
 
 concurrency:
   group: mainnet-claim-distribution

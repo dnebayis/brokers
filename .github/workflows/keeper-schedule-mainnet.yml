@@ -56,6 +56,6 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Check threshold and poke the last valid basket
         run: python keeper.py --execute
-      # Claim distribution moved to claim-distribution-mainnet.yml (daily, via
+      # Claim distribution moved to claim-distribution-mainnet.yml (weekly, via
       # ClaimSweeper 40-NFT sweeps). Hourly 5-NFT pushes were ~90% of the keeper
       # wallet's gas; rewards accrue safely in the Booster until claimed either way.
