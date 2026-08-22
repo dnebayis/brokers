@@ -47,7 +47,7 @@ export function BrokerCard({
       {earnedUsd !== undefined && (
         <div className="text-[10px] mt-0.5 truncate">
           <span className="text-good">earned {money(earnedUsd)}</span>
-          <span className="text-ink-soft"> so far</span>
+          <span className="text-ink-soft"> since switch-on</span>
         </div>
       )}
     </button>

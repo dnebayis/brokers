@@ -575,7 +575,7 @@ export function ActivateTab() {
             ? <>
                 Your Brokers are backed by <b className="text-ink-strong">{usd(backing.totalUsd)}</b> of real tokenized stock
                 {backing.totalEarnedUsd !== null && backing.totalEarnedUsd > 0 && (
-                  <> — and have earned <b className="text-good">{usd(backing.totalEarnedUsd)}</b> since day one</>
+                  <> — and have earned <b className="text-good">{usd(backing.totalEarnedUsd)}</b> since you switched them on</>
                 )}.
               </>
             : "Every active Broker holds real stock in its own wallet."}

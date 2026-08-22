@@ -2,12 +2,13 @@
 
 // Values the real stock behind a set of owned Brokers, two ways:
 //   backing — what each Broker holds RIGHT NOW (claimable + stock in its wallet);
-//   earned  — what each Broker has produced SO FAR (every Claimed event + claimable),
-//             which never shrinks when the owner withdraws or sells the stock.
-// The Activate tab shows both: "worth at least X" and "has earned Y since day one".
+//   earned  — what each Broker produced since its CURRENT activation (claims logged
+//             after the latest switch-on + claimable), which never shrinks when the
+//             owner withdraws or sells the stock.
+// The Activate tab shows both: "worth at least X" and "earned Y since you switched it on".
 
 import { useEffect, useState } from "react";
-import { loadKnownTokens, brokerBacking, lifetimeEarned } from "./brokerValue";
+import { loadKnownTokens, brokerBacking, earnedSinceActivation } from "./brokerValue";
 
 export function useBrokerBacking(ids: bigint[]) {
   const key = ids.map((i) => i.toString()).join(",");
@@ -41,7 +42,7 @@ export function useBrokerBacking(ids: bigint[]) {
               }
             }),
           ),
-          lifetimeEarned(ids, metas).catch(() => ({}) as Record<string, number>),
+          earnedSinceActivation(ids, metas).catch(() => ({}) as Record<string, number>),
         ]);
         if (!live) return;
         const map: Record<string, number> = {};

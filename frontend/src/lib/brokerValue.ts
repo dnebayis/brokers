@@ -96,23 +96,33 @@ export async function brokerBacking(tokenId: bigint, metas: TokenMeta[]): Promis
 const CLAIMED = parseAbiItem(
   "event Claimed(uint256 indexed tokenId, address indexed to, address token, uint256 amount)",
 );
+const ACTIVATED = parseAbiItem(
+  "event Activated(uint256 indexed tokenId, address indexed owner, uint256 coatBurned)",
+);
 
-/** Lifetime USD earned per Broker: everything ever claimed (from the Booster's own
- *  Claimed events, valued at today's feed prices) plus what is claimable right now.
- *  Withdrawing to an EOA or selling stock later doesn't shrink this — it is a record
- *  of what the Broker produced, not what it still holds. One log query for all ids. */
-export async function lifetimeEarned(
+/** USD earned per Broker since its CURRENT activation: claims logged at or after the
+ *  latest Activated event (a transfer force-deactivates, so the latest activation is
+ *  the current owner's own switch-on), plus what is claimable right now — all valued
+ *  at today's feed prices. Withdrawing or selling the stock later doesn't shrink it.
+ *  Brokers never activated get no entry (the card hides the line). Two tokenId-filtered
+ *  log queries for the whole set. */
+export async function earnedSinceActivation(
   ids: bigint[],
   metas: TokenMeta[],
 ): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
   if (ids.length === 0) return out;
-  for (const id of ids) out[id.toString()] = 0;
 
-  const [logs, pendings] = await Promise.all([
+  const [claims, activations, pendings] = await Promise.all([
     client.getLogs({
       address: ADDR.booster,
       event: CLAIMED,
+      args: { tokenId: ids },
+      fromBlock: BROKER_DEPLOYMENT_BLOCK,
+    }),
+    client.getLogs({
+      address: ADDR.broker,
+      event: ACTIVATED,
       args: { tokenId: ids },
       fromBlock: BROKER_DEPLOYMENT_BLOCK,
     }),
@@ -125,16 +135,32 @@ export async function lifetimeEarned(
     ),
   ]);
 
-  for (const l of logs) {
+  // The current streak starts at the LATEST activation per token.
+  const since = new Map<string, bigint>();
+  for (const l of activations) {
+    if (l.args.tokenId === undefined) continue;
+    const key = l.args.tokenId.toString();
+    const prev = since.get(key);
+    if (prev === undefined || l.blockNumber! > prev) since.set(key, l.blockNumber!);
+  }
+  for (const key of since.keys()) out[key] = 0;
+
+  for (const l of claims) {
+    if (l.args.tokenId === undefined) continue;
+    const key = l.args.tokenId.toString();
+    const start = since.get(key);
+    if (start === undefined || l.blockNumber! < start) continue;
     const meta = priceOf(metas, l.args.token as Address);
-    if (!meta || l.args.tokenId === undefined) continue;
-    out[l.args.tokenId.toString()] += Number(formatUnits(l.args.amount as bigint, meta.decimals)) * meta.priceUsd;
+    if (!meta) continue;
+    out[key] += Number(formatUnits(l.args.amount as bigint, meta.decimals)) * meta.priceUsd;
   }
   ids.forEach((id, i) => {
+    const key = id.toString();
+    if (!(key in out)) return; // never activated
     const [tokens, amounts] = pendings[i] as readonly [readonly Address[], readonly bigint[]];
     tokens.forEach((token, j) => {
       const meta = priceOf(metas, token);
-      if (meta) out[id.toString()] += Number(formatUnits(amounts[j], meta.decimals)) * meta.priceUsd;
+      if (meta) out[key] += Number(formatUnits(amounts[j], meta.decimals)) * meta.priceUsd;
     });
   });
   return out;
