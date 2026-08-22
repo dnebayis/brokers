@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import os
 import re
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Iterable, List, Dict, Tuple
 
 from config import (
@@ -70,6 +73,26 @@ def _parse_date(date_str: str) -> datetime | None:
         return None
 
 
+_TRACK_CACHE: Dict[str, float] | None = None
+
+
+def member_multipliers() -> Dict[str, float]:
+    """Per-member track-record multipliers from member-scores.json (track_record.py).
+
+    Missing or unreadable file -> empty map -> every member weighs 1.0, which keeps the
+    layer a no-op until a reviewed scores file is committed. Loaded once per process.
+    """
+    global _TRACK_CACHE
+    if _TRACK_CACHE is None:
+        path = Path(os.environ.get("TRACK_RECORD_FILE", str(Path(__file__).parent / "member-scores.json")))
+        try:
+            data = json.loads(path.read_text())
+            _TRACK_CACHE = {who: float(s["multiplier"]) for who, s in data.get("members", {}).items()}
+        except (OSError, ValueError, KeyError, TypeError):
+            _TRACK_CACHE = {}
+    return _TRACK_CACHE
+
+
 def smart_row_multiplier(tr: Dict, now: datetime) -> float:
     """Freshness weight for one disclosure row: decay x fast-filer bonus.
 
@@ -120,6 +143,11 @@ def smart_aggregate(trades: List[Dict], now: datetime | None = None) -> Tuple[Di
         weighted = amt * smart_row_multiplier(tr, now)
         sym = tr["symbol"]
         if _is_buy(tr["type"]):
+            # Track-record layer: buys from members whose past disclosures measurably
+            # beat SPY count for more (and proven laggards for less). Buys only — the
+            # skill signal is in what they pick, sells stay a pure risk signal.
+            who = str(tr.get("who", "")).strip().lower()
+            weighted *= member_multipliers().get(who, 1.0)
             net[sym] = net.get(sym, 0.0) + weighted
             gross_buy[sym] = gross_buy.get(sym, 0.0) + weighted
         elif _is_sell(tr["type"]):

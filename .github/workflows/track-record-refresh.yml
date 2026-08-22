@@ -1,0 +1,36 @@
+# Member track-record backtest (smart-basket layer 2). Manual dispatch: pulls the full
+# disclosed-trade history from Unusual Whales (the key lives here), scores every past buy
+# against SPY over the 30 days after disclosure via free Stooq dailies, and uploads
+# member-scores.json + the raw history as artifacts. The scores file is then REVIEWED and
+# committed to indexer/ by hand — the shadow basket only ever reads the committed file,
+# so a bad backtest run can never silently steer weights.
+name: track-record-refresh
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: indexer
+    env:
+      UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch history and score members
+        run: python track_record.py --fetch --score
+      - uses: actions/upload-artifact@v4
+        with:
+          name: member-scores
+          path: |
+            indexer/member-scores.json
+            indexer/track-history.json

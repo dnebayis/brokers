@@ -351,9 +351,67 @@ class SmartLayerTests(unittest.TestCase):
             self._row(sym="AMZN", ttype="Buy", amount="$50,000 - $100,000"),
         ]
         with patch("aggregate.DECAY_HALF_LIFE_DAYS", 0.0), \
-             patch("aggregate.FAST_FILER_BONUS", 0.0), patch("aggregate.SELL_VETO_RATIO", 0.0):
+             patch("aggregate.FAST_FILER_BONUS", 0.0), patch("aggregate.SELL_VETO_RATIO", 0.0), \
+             patch("aggregate._TRACK_CACHE", {}):
             smart_net, vetoed = smart_aggregate(trades, now=self.NOW)
         legacy = aggregate(trades)
         self.assertEqual(vetoed, set())
         for sym, value in legacy.items():
             self.assertAlmostEqual(smart_net[sym], value)
+
+
+class TrackRecordTests(unittest.TestCase):
+    """Member track-record multipliers (smart-basket layer 2)."""
+
+    NOW = datetime(2026, 8, 22)
+
+    def _row(self, sym="TSLA", ttype="Buy", who="A Member"):
+        return {"symbol": sym, "type": ttype, "amount": "$10,000 - $10,000",
+                "transactionDate": "2026-08-22", "disclosureDate": "2026-08-22", "who": who}
+
+    def _smart(self, trades, cache):
+        from aggregate import smart_aggregate
+        with patch("aggregate.DECAY_HALF_LIFE_DAYS", 0.0), \
+             patch("aggregate.FAST_FILER_BONUS", 0.0), patch("aggregate.SELL_VETO_RATIO", 0.0), \
+             patch("aggregate._TRACK_CACHE", cache):
+            return smart_aggregate(trades, now=self.NOW)
+
+    def test_scored_member_buys_are_scaled(self):
+        net, _ = self._smart([self._row(who="Good Trader")], {"good trader": 1.4})
+        self.assertAlmostEqual(net["TSLA"], 10_000 * 1.4)
+
+    def test_unknown_member_defaults_to_one(self):
+        net, _ = self._smart([self._row(who="Nobody Scored")], {"good trader": 1.4})
+        self.assertAlmostEqual(net["TSLA"], 10_000)
+
+    def test_sells_are_never_scaled(self):
+        net, _ = self._smart(
+            [self._row(who="Good Trader"), self._row(ttype="Sale", who="Good Trader")],
+            {"good trader": 1.4})
+        # buy scaled x1.4, sell subtracted unscaled: 14,000 - 10,000
+        self.assertAlmostEqual(net["TSLA"], 4_000)
+
+    def test_score_math_shrinks_and_clamps(self):
+        import track_record
+        # 5 trades at +20% excess, shrink k=10 -> 20 * 5/15 = 6.67% -> mult 1 + 0.05*6.67
+        shrunk = 0.20 * 5 / (5 + track_record.SHRINK_K) * 100
+        mult = max(track_record.TRACK_MIN,
+                   min(track_record.TRACK_MAX, 1.0 + track_record.TRACK_COEFF * shrunk))
+        self.assertAlmostEqual(shrunk, 6.6667, places=3)
+        self.assertAlmostEqual(mult, 1.3333, places=3)
+        # a catastrophic member clamps at the floor, a stellar one at the ceiling
+        self.assertEqual(max(track_record.TRACK_MIN,
+                             min(track_record.TRACK_MAX, 1.0 + track_record.TRACK_COEFF * -50)),
+                         track_record.TRACK_MIN)
+        self.assertEqual(max(track_record.TRACK_MIN,
+                             min(track_record.TRACK_MAX, 1.0 + track_record.TRACK_COEFF * 50)),
+                         track_record.TRACK_MAX)
+
+    def test_window_return_needs_complete_window(self):
+        from track_record import _window_return
+        closes = {"2026-07-01": 100.0, "2026-07-31": 110.0}
+        self.assertAlmostEqual(_window_return(closes, "2026-07-01"), 0.10)
+        # disclosure too recent: no close >= horizon end -> refuse to score
+        self.assertIsNone(_window_return({"2026-08-20": 100.0, "2026-08-21": 101.0}, "2026-08-20"))
+        # no close within 7 days after disclosure -> refuse
+        self.assertIsNone(_window_return(closes, "2026-06-01"))
