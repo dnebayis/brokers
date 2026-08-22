@@ -2,6 +2,7 @@
 
 import type { TabId } from "@/components/Tabs";
 import { HomeMetrics } from "@/components/HomeMetrics";
+import { ActivationMath } from "@/components/ActivationMath";
 import { ProofPanel } from "@/components/ProofPanel";
 import { OPENSEA_URL } from "@/lib/config";
 
@@ -103,6 +104,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
 
       {/* Live on-chain metrics */}
       <HomeMetrics />
+
+      {/* Shell vs working Broker — the live activation math */}
+      <ActivationMath onNavigate={onNavigate} />
 
       {/* Proof & transparency — verifiable facts + live burn/buy activity */}
       <ProofPanel />
