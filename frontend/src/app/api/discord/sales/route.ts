@@ -147,14 +147,17 @@ export async function GET(request: Request) {
     if (sales > MAX_POSTS) {
       embeds.push({ description: `…and ${sales - MAX_POSTS} more sales in this window.`, color: 0x4e5666 });
     }
-    const res = await fetch(webhook, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "Coattail Sales", embeds }),
-    });
-    if (!res.ok) {
-      // Don't advance the cursor on a failed post — the next sweep retries this window.
-      return NextResponse.json({ ok: false, error: `webhook ${res.status}`, sales }, { status: 502 });
+    // Discord caps a message at 10 embeds — send in chunks.
+    for (let i = 0; i < embeds.length; i += 10) {
+      const res = await fetch(webhook, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "Coattail Sales", embeds: embeds.slice(i, i + 10) }),
+      });
+      if (!res.ok) {
+        // Don't advance the cursor on a failed post — the next sweep retries this window.
+        return NextResponse.json({ ok: false, error: `webhook ${res.status}`, sales }, { status: 502 });
+      }
     }
   }
   await kvSet(CURSOR_KEY, latest.toString());
