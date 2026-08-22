@@ -28,6 +28,7 @@ import math
 import os
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -119,6 +120,17 @@ def _closes_stooq(symbol: str, d1: str, d2: str) -> dict[str, float]:
     return table
 
 
+def _fetch_closes(symbol: str, d1: str, d2: str) -> dict[str, float]:
+    for source in (_closes_yahoo, _closes_stooq):
+        try:
+            table = source(symbol, d1, d2)
+        except Exception:
+            table = {}
+        if table:
+            return table
+    return {}
+
+
 def _closes(symbol: str, d1: str, d2: str, cache: dict) -> dict[str, float]:
     """Daily closes, Yahoo chart API first (reachable from CI runners), Stooq fallback
     (Stooq day-limits datacenter IPs — it returned empty even for SPY from Actions)."""
@@ -174,6 +186,28 @@ def score(raw_path: Path, out_path: Path) -> None:
     spy = _closes("SPY", d1, d2, cache)
     if not spy:
         raise RuntimeError("no SPY benchmark data — refusing to score against nothing")
+
+    # Prefetch every ticker with 8 workers: Yahoo shapes a sustained single-connection
+    # stream to ~6 requests/minute, which would take hours serially. Parallel fresh
+    # connections sidestep the shaping; the cache checkpoints every 100 tickers so any
+    # interruption resumes where it left off.
+    tickers = sorted({r["symbol"] for r in buys})
+    todo = [t for t in tickers if t not in cache]
+    print(f"prefetching {len(todo)} of {len(tickers)} tickers (8 workers)", flush=True)
+    done = 0
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futures = {ex.submit(_fetch_closes, t, d1, d2): t for t in todo}
+        for fut in as_completed(futures):
+            try:
+                cache[futures[fut]] = fut.result()
+            except Exception:
+                cache[futures[fut]] = {}
+            done += 1
+            if done % 100 == 0:
+                cache_path.write_text(json.dumps(cache))
+                print(f"  prefetch: {done}/{len(todo)}", flush=True)
+    cache_path.write_text(json.dumps(cache))
+    print(f"prefetch complete: {len(cache)} tickers cached", flush=True)
 
     per_member: dict[str, list[float]] = {}
     used = skipped = 0
