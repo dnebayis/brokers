@@ -291,3 +291,69 @@ class CoverageExclusionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SmartLayerTests(unittest.TestCase):
+    """Decay + fast-filer + sell-veto (shadow-first smart layer)."""
+
+    NOW = datetime(2026, 8, 22)
+
+    def _row(self, sym="TSLA", ttype="Buy", amount="$10,000 - $10,000",
+             transacted="2026-08-20", disclosed="2026-08-21", who="A Member"):
+        return {"symbol": sym, "type": ttype, "amount": amount,
+                "transactionDate": transacted, "disclosureDate": disclosed, "who": who}
+
+    def test_decay_halves_at_half_life(self):
+        from aggregate import smart_row_multiplier
+        with patch("aggregate.DECAY_HALF_LIFE_DAYS", 14.0), patch("aggregate.FAST_FILER_BONUS", 0.0):
+            fresh = smart_row_multiplier(self._row(disclosed="2026-08-22", transacted="2026-08-22"), self.NOW)
+            aged = smart_row_multiplier(self._row(disclosed="2026-08-08", transacted="2026-08-08"), self.NOW)
+        self.assertAlmostEqual(fresh, 1.0)
+        self.assertAlmostEqual(aged, 0.5)
+
+    def test_fast_filer_bonus_fades_to_zero(self):
+        from aggregate import smart_row_multiplier
+        with patch("aggregate.DECAY_HALF_LIFE_DAYS", 0.0), \
+             patch("aggregate.FAST_FILER_BONUS", 0.25), patch("aggregate.FAST_FILER_DAYS", 14.0):
+            same_day = smart_row_multiplier(
+                self._row(transacted="2026-08-22", disclosed="2026-08-22"), self.NOW)
+            slow = smart_row_multiplier(
+                self._row(transacted="2026-07-01", disclosed="2026-08-14"), self.NOW)
+        self.assertAlmostEqual(same_day, 1.25)
+        self.assertAlmostEqual(slow, 1.0)
+
+    def test_undated_rows_keep_unit_weight(self):
+        from aggregate import smart_row_multiplier
+        with patch("aggregate.DECAY_HALF_LIFE_DAYS", 14.0), patch("aggregate.FAST_FILER_BONUS", 0.25):
+            w = smart_row_multiplier(
+                self._row(transacted="not-a-date", disclosed=""), self.NOW)
+        self.assertAlmostEqual(w, 1.0)
+
+    def test_sell_veto_triggers_at_ratio(self):
+        from aggregate import smart_aggregate
+        trades = [
+            self._row(sym="INTC", ttype="Buy", amount="$10,000 - $10,000"),
+            self._row(sym="INTC", ttype="Sale", amount="$10,000 - $10,000", who="B Member"),
+            self._row(sym="NVDA", ttype="Buy", amount="$10,000 - $10,000"),
+            self._row(sym="NVDA", ttype="Sale", amount="$4,000 - $4,000", who="B Member"),
+        ]
+        with patch("aggregate.DECAY_HALF_LIFE_DAYS", 0.0), \
+             patch("aggregate.FAST_FILER_BONUS", 0.0), patch("aggregate.SELL_VETO_RATIO", 1.0):
+            _net, vetoed = smart_aggregate(trades, now=self.NOW)
+        self.assertIn("INTC", vetoed)
+        self.assertNotIn("NVDA", vetoed)
+
+    def test_knobs_off_matches_legacy_aggregate(self):
+        from aggregate import aggregate, smart_aggregate
+        trades = [
+            self._row(sym="TSLA", ttype="Buy", amount="$1,001 - $15,000"),
+            self._row(sym="TSLA", ttype="Sale", amount="$1,001 - $15,000", who="B Member"),
+            self._row(sym="AMZN", ttype="Buy", amount="$50,000 - $100,000"),
+        ]
+        with patch("aggregate.DECAY_HALF_LIFE_DAYS", 0.0), \
+             patch("aggregate.FAST_FILER_BONUS", 0.0), patch("aggregate.SELL_VETO_RATIO", 0.0):
+            smart_net, vetoed = smart_aggregate(trades, now=self.NOW)
+        legacy = aggregate(trades)
+        self.assertEqual(vetoed, set())
+        for sym, value in legacy.items():
+            self.assertAlmostEqual(smart_net[sym], value)

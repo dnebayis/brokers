@@ -13,7 +13,9 @@ import os
 import sys
 from datetime import datetime, timezone
 
-from aggregate import aggregate, buyer_counts, conviction_multiplier, to_basket, coverage
+from aggregate import (
+    aggregate, buyer_counts, conviction_multiplier, to_basket, coverage, smart_aggregate,
+)
 from route_preflight import preflight_basket, preflight_enabled, resolve_booster_context
 from tokens import address_of
 from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, wei_env
@@ -224,6 +226,34 @@ def main():
     buyers = buyer_counts(trades)
     basket = to_basket(net, buyers)
 
+    # Smart layer (decay + fast-filer + sell veto), shadow-first: computed and logged on
+    # every run so the divergence from the live basket is measurable for weeks before any
+    # flip. Only SMART_BASKET=live posts it; shadow changes nothing on chain.
+    from config import SMART_BASKET
+    shadow_report = None
+    if SMART_BASKET != "off":
+        smart_net, vetoed = smart_aggregate(trades)
+        smart_basket = to_basket({s: v for s, v in smart_net.items() if s not in vetoed}, buyers)
+        live_w = dict(basket)
+        smart_w = dict(smart_basket)
+        divergence = sum(abs(live_w.get(s, 0) - smart_w.get(s, 0)) for s in set(live_w) | set(smart_w)) // 2
+        shadow_report = {
+            "mode": SMART_BASKET,
+            "basket": [{"ticker": s, "bps": w} for s, w in smart_basket],
+            "vetoed": sorted(vetoed),
+            "divergenceBps": divergence,
+        }
+        label = "LIVE (smart)" if SMART_BASKET == "live" else "SHADOW (not posted)"
+        print(f"\nSmart basket [{label}] — divergence from conviction basket: {divergence} bps")
+        for s, w in smart_basket:
+            delta = w - live_w.get(s, 0)
+            print(f"  {s:<6} {w/BPS*100:5.1f}%  ({w} bps, {'+' if delta >= 0 else ''}{delta} vs live)")
+        for s in sorted(vetoed):
+            if s in live_w:
+                print(f"  {s:<6} VETOED — disclosed selling rivals buying; no new money")
+        if SMART_BASKET == "live":
+            basket = smart_basket
+
     # A poke buys every leg atomically, so one illiquid route reverts the whole batch and
     # nothing reaches any Broker. Simulate each leg against the live pools before signing
     # and drop whatever cannot fill today; the manifest's probeOk flag only records
@@ -281,6 +311,7 @@ def main():
         "tokens": addrs,
         "weightsBps": weights,
         "routePreflight": preflight_report,
+        "smartShadow": shadow_report,
     }
     if args.out:
         json.dump(payload, open(args.out, "w"), indent=2)

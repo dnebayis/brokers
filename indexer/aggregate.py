@@ -9,6 +9,7 @@ from typing import Iterable, List, Dict, Tuple
 from config import (
     TRAILING_DAYS, MODE, MIN_NOTIONAL, MAX_BASKET, MAX_WEIGHT_BPS, BPS,
     CONVICTION_COEFF, CONVICTION_MAX,
+    DECAY_HALF_LIFE_DAYS, FAST_FILER_BONUS, FAST_FILER_DAYS, SELL_VETO_RATIO,
 )
 from tokens import is_tokenized
 
@@ -60,6 +61,79 @@ def aggregate(trades: List[Dict]) -> Dict[str, float]:
         elif _is_sell(tr["type"]) and MODE == "net":
             net[sym] = net.get(sym, 0.0) - amt
     return net
+
+
+def _parse_date(date_str: str) -> datetime | None:
+    try:
+        return datetime.strptime(str(date_str)[:10], "%Y-%m-%d")
+    except (ValueError, TypeError):
+        return None
+
+
+def smart_row_multiplier(tr: Dict, now: datetime) -> float:
+    """Freshness weight for one disclosure row: decay x fast-filer bonus.
+
+    Decay anchors on the DISCLOSURE date — the moment the information became public and
+    started getting priced in — falling back to the transaction date when the filing
+    date is missing. The fast-filer bonus rewards short transaction->filing lag (fresh
+    information), fading linearly to nothing at FAST_FILER_DAYS. Rows with no parseable
+    dates keep weight 1.0 rather than being silently dropped, matching _within_window.
+    """
+    disclosed = _parse_date(tr.get("disclosureDate", ""))
+    transacted = _parse_date(tr.get("transactionDate", ""))
+    anchor = disclosed or transacted
+
+    decay = 1.0
+    if DECAY_HALF_LIFE_DAYS > 0 and anchor is not None:
+        age_days = max((now - anchor).total_seconds() / 86400.0, 0.0)
+        decay = 0.5 ** (age_days / DECAY_HALF_LIFE_DAYS)
+
+    filer = 1.0
+    if FAST_FILER_BONUS > 0 and disclosed is not None and transacted is not None:
+        lag_days = max((disclosed - transacted).total_seconds() / 86400.0, 0.0)
+        filer = 1.0 + FAST_FILER_BONUS * max(0.0, 1.0 - lag_days / FAST_FILER_DAYS)
+
+    return decay * filer
+
+
+def smart_aggregate(trades: List[Dict], now: datetime | None = None) -> Tuple[Dict[str, float], set]:
+    """Freshness-weighted net notional per ticker, plus the sell-vetoed set.
+
+    Same shape as `aggregate` but every row's midpoint is scaled by
+    `smart_row_multiplier` (both sides — a fresh, fast-filed sell is information too).
+    A ticker whose weighted gross selling reaches SELL_VETO_RATIO x its weighted gross
+    buying lands in the veto set: the caller must exclude it from the basket even if its
+    net is still positive, because the only lever this system has is to stop routing
+    NEW money at a name Congress is exiting.
+    """
+    now = now or datetime.utcnow()
+    cutoff = now - timedelta(days=TRAILING_DAYS)
+    net: Dict[str, float] = {}
+    gross_buy: Dict[str, float] = {}
+    gross_sell: Dict[str, float] = {}
+    for tr in trades:
+        if not _within_window(tr.get("transactionDate", ""), cutoff):
+            continue
+        amt = parse_amount(tr.get("amount", ""))
+        if amt <= 0:
+            continue
+        weighted = amt * smart_row_multiplier(tr, now)
+        sym = tr["symbol"]
+        if _is_buy(tr["type"]):
+            net[sym] = net.get(sym, 0.0) + weighted
+            gross_buy[sym] = gross_buy.get(sym, 0.0) + weighted
+        elif _is_sell(tr["type"]):
+            gross_sell[sym] = gross_sell.get(sym, 0.0) + weighted
+            if MODE == "net":
+                net[sym] = net.get(sym, 0.0) - weighted
+
+    vetoed = set()
+    if SELL_VETO_RATIO > 0:
+        for sym, sells in gross_sell.items():
+            buys = gross_buy.get(sym, 0.0)
+            if sells >= SELL_VETO_RATIO * buys:
+                vetoed.add(sym)
+    return net, vetoed
 
 
 def cap_weights(values: List[float], cap_bps: int) -> List[int]:

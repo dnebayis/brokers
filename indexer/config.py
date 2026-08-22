@@ -79,6 +79,27 @@ CONVICTION_MAX = float(os.environ.get("CONVICTION_MAX", "3.0"))
 if CONVICTION_COEFF < 0 or CONVICTION_MAX < 1:
     raise ValueError("CONVICTION_COEFF must be >= 0 and CONVICTION_MAX >= 1")
 
+# ── Signal quality (smart layer, shadow-first) ──────────────────────────────
+# Three deterministic refinements on top of the conviction basket, run in SHADOW by
+# default: every run computes and logs the smart basket next to the live one WITHOUT
+# posting it, so we can measure the divergence for weeks before flipping. Set
+# SMART_BASKET=live to post the smart weights, off to skip the computation entirely.
+#   decay      — a disclosure loses weight as it ages (half-life; markets price news in);
+#   fast filer — a member who files within days carries fresher information than one who
+#                waits out the 45-day limit: bonus fades linearly to zero at FILER_DAYS;
+#   sell veto  — when disclosed selling rivals the buying in a name, stop routing NEW
+#                money to it even while net dollars are still positive (we can only ever
+#                stop buying — the Booster has no sell path by design).
+SMART_BASKET = os.environ.get("SMART_BASKET", "shadow")
+if SMART_BASKET not in {"shadow", "live", "off"}:
+    raise ValueError("SMART_BASKET must be shadow, live, or off")
+DECAY_HALF_LIFE_DAYS = float(os.environ.get("DECAY_HALF_LIFE_DAYS", "14"))  # 0 disables
+FAST_FILER_BONUS = float(os.environ.get("FAST_FILER_BONUS", "0.25"))        # 0 disables
+FAST_FILER_DAYS = float(os.environ.get("FAST_FILER_DAYS", "14"))
+SELL_VETO_RATIO = float(os.environ.get("SELL_VETO_RATIO", "1.0"))           # 0 disables
+if DECAY_HALF_LIFE_DAYS < 0 or FAST_FILER_BONUS < 0 or FAST_FILER_DAYS <= 0 or SELL_VETO_RATIO < 0:
+    raise ValueError("smart-basket knobs: half-life/bonus/veto >= 0 and FAST_FILER_DAYS > 0")
+
 # ── Strategy / chain ────────────────────────────────────────────────────────
 STRATEGY_ID = 0           # The Politician
 BPS = 10_000
