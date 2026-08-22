@@ -1,45 +1,45 @@
-# Discord holder-verification bot — owner setup
+# Discord holder doğrulama botu — kurulum rehberi
 
-The bot is serverless: Discord's Interactions webhook points at the live site, so there
-is no bot process to host. The code ships with the frontend; everything below is the
-one-time owner-side setup (~10 minutes). Never paste the bot token anywhere except the
-places named below.
+Bot sunucusuzdur: Discord'un Interactions webhook'u doğrudan canlı siteye bağlanır,
+yani ayrıca barındırılacak bir bot süreci yoktur. Kod frontend ile birlikte deploy
+edilir; aşağıdakiler tek seferlik sahip tarafı kurulumudur (~10 dakika). Bot token'ını
+aşağıda adı geçen yerler dışında HİÇBİR yere yapıştırma.
 
-## 1. Create the Discord application
-1. https://discord.com/developers/applications → **New Application** → name it (e.g. "Coattail Verify").
-2. Note the **Application ID** and **Public Key** (General Information page).
-3. **Bot** tab → **Reset Token** → copy the token (shown once).
-4. Bot tab: leave all privileged intents OFF (none are needed).
+## 1. Discord uygulamasını oluştur
+1. https://discord.com/developers/applications → **New Application** → bir isim ver (ör. "Coattail Verify").
+2. **Application ID** ve **Public Key** değerlerini not al (General Information sayfası).
+3. **Bot** sekmesi → **Reset Token** → token'ı kopyala (yalnızca bir kez gösterilir).
+4. Bot sekmesinde tüm privileged intent'ler KAPALI kalsın (hiçbiri gerekmiyor).
 
-## 2. Invite the bot & create the role
-1. In your server: create a role named **Brokerage** (or reuse the existing one) and note its
-   role ID (Server Settings → Roles → right-click → Copy Role ID; enable Developer Mode
-   in Discord settings if you don't see it). Also copy the **server (guild) ID**.
-2. Invite URL — replace APP_ID:
+## 2. Botu davet et ve rolü oluştur
+1. Sunucunda **Brokerage** adında bir rol oluştur (veya mevcodu kullan) ve rol ID'sini
+   not al (Server Settings → Roles → sağ tık → Copy Role ID; görünmüyorsa Discord
+   ayarlarından Developer Mode'u aç). **Sunucu (guild) ID**'sini de kopyala.
+2. Davet linki — APP_ID'yi değiştir:
    `https://discord.com/oauth2/authorize?client_id=APP_ID&scope=bot%20applications.commands&permissions=268435456`
-   (268435456 = Manage Roles, the only permission it needs.)
-3. IMPORTANT: in Server Settings → Roles, drag the bot's own role ABOVE the Brokerage role —
-   Discord only lets a bot grant roles below its own.
+   (268435456 = Manage Roles — botun ihtiyaç duyduğu tek yetki.)
+3. ÖNEMLİ: Server Settings → Roles'ta botun kendi rolünü Brokerage rolünün ÜSTÜNE
+   sürükle — Discord bir bota yalnızca kendi rolünün altındaki rolleri verdirtir.
 
-## 3. Vercel environment variables (Project → Settings → Environment Variables)
-| name | value |
+## 3. Vercel ortam değişkenleri (Project → Settings → Environment Variables)
+| isim | değer |
 |---|---|
-| `DISCORD_BOT_TOKEN` | the bot token from step 1.3 |
-| `DISCORD_PUBLIC_KEY` | the Public Key from step 1.2 |
-| `DISCORD_GUILD_ID` | your server ID |
-| `DISCORD_ROLE_BROKERAGE` | the Brokerage role ID |
-| `VERIFY_STATE_SECRET` | any long random string (e.g. `openssl rand -hex 32`) |
-| `RECHECK_SECRET` | another long random string |
-| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | from an Upstash Redis (free tier). STRONGLY recommended: verification is address-only (no signature), and KV powers the two safeguards — the one-address-one-account claim lock and the daily sold-wallet re-check. Without KV, anyone can reuse a holder's public address. |
+| `DISCORD_BOT_TOKEN` | 1.3'teki bot token'ı |
+| `DISCORD_PUBLIC_KEY` | 1.2'deki Public Key |
+| `DISCORD_GUILD_ID` | sunucu ID'n |
+| `DISCORD_ROLE_BROKERAGE` | Brokerage rol ID'si |
+| `VERIFY_STATE_SECRET` | uzun rastgele bir dizi (ör. `openssl rand -hex 32`) |
+| `RECHECK_SECRET` | başka bir uzun rastgele dizi |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Upstash Redis'ten (ücretsiz plan). ŞİDDETLE önerilir: doğrulama adres-tabanlı (imzasız) olduğu için iki güvenlik önlemi de KV'ye dayanır — "bir adres yalnızca bir hesaba bağlanır" kilidi ve satan cüzdanlardan rolü geri alan günlük tarama. KV olmadan herkes bir holder'ın herkese açık adresini kullanabilir. |
 
-Redeploy after saving (envs apply on the next build).
+Kaydettikten sonra redeploy et (env'ler bir sonraki build'de geçerli olur).
 
-## 4. Point Discord at the site
-Developer Portal → your app → General Information → **Interactions Endpoint URL**:
+## 4. Discord'u siteye yönlendir
+Developer Portal → uygulaman → General Information → **Interactions Endpoint URL**:
 `https://www.coattail.cash/api/discord/interactions`
-Discord sends a test ping on save — it only accepts if the deployment with the envs is live.
+Discord kaydederken bir test ping'i atar — yalnızca env'li deployment canlıysa kabul eder.
 
-## 5. Register the slash command + arm the re-check (GitHub)
+## 5. Slash komutunu kaydet + günlük taramayı aç (GitHub)
 ```bash
 gh secret set DISCORD_APPLICATION_ID
 gh secret set DISCORD_BOT_TOKEN
@@ -47,15 +47,15 @@ gh secret set RECHECK_SECRET
 gh variable set DISCORD_RECHECK_ENABLED --body "1"
 gh workflow run discord-register-commands
 ```
-(each `gh secret set` prompts for the value — paste it there, not on the command line)
+(her `gh secret set` değeri sorar — değeri oraya yapıştır, komut satırına yazma)
 
-## Done — how it works for members
-`/verify` in the server → ephemeral one-time link → coattail.cash/verify → **paste wallet
-address** (no connection, no signature) → on-chain balance check → Brokerage role.
-Each address can only ever verify ONE Discord account (first come, first claim), and a
-daily sweep removes the role from wallets that no longer hold a Broker.
+## Bitti — üyeler için akış
+Sunucuda `/verify` → kişiye özel tek kullanımlık link → coattail.cash/verify →
+**cüzdan adresini yapıştır** (bağlantı yok, imza yok) → zincirde bakiye kontrolü →
+Brokerage rolü. Her adres ömür boyu YALNIZCA BİR Discord hesabını doğrulayabilir
+(ilk gelen alır) ve günlük tarama, artık Broker tutmayan cüzdanlardan rolü geri alır.
 
-Known tradeoff of address-only verification: an address is public information, so in
-principle a non-holder could claim a holder's address BEFORE the real holder does. The
-claim lock limits each address to one account, and the role should stay cosmetic
-(channel access, flair) — never a permission that moves value.
+Adres-tabanlı doğrulamanın bilinen tavizi: adresler kamuya açık bilgidir; teoride bir
+holder olmayan kişi, gerçek holder'dan ÖNCE onun adresini sahiplenebilir. Kilit her
+adresi tek hesapla sınırlar; Brokerage rolü kozmetik kalmalı (kanal erişimi, rozet) —
+asla değer taşıyan bir yetkiye bağlanmamalı.
