@@ -1,0 +1,40 @@
+# One-shot diagnostic: with the bot token, list the guild's roles and the bot's own
+# member entry, to pinpoint why role assignment fails (bad token / bot not in guild /
+# wrong role id / hierarchy). Prints role names+ids and membership only — never the token.
+name: discord-probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      guild_id:
+        description: "Guild (server) id"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      APP_ID: ${{ secrets.DISCORD_APPLICATION_ID }}
+      GUILD: ${{ github.event.inputs.guild_id }}
+    steps:
+      - name: Roles in guild
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /tmp/roles.json -w '%{http_code}' \
+            -H "Authorization: Bot ${BOT_TOKEN}" \
+            "https://discord.com/api/v10/guilds/${GUILD}/roles")
+          echo "roles HTTP ${code}"
+          jq -r '.[] | "\(.position)\t\(.id)\t\(.name)"' /tmp/roles.json 2>/dev/null | sort -rn || cat /tmp/roles.json
+      - name: Bot's own membership
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /tmp/me.json -w '%{http_code}' \
+            -H "Authorization: Bot ${BOT_TOKEN}" \
+            "https://discord.com/api/v10/guilds/${GUILD}/members/${APP_ID}")
+          echo "member HTTP ${code}"
+          jq '{roles: .roles, nick: .nick}' /tmp/me.json 2>/dev/null || cat /tmp/me.json
