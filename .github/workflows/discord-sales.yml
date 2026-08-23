@@ -12,6 +12,10 @@ on:
         description: "Post a test embed for this token id (enrichment check; no cursor movement)"
         required: false
         default: ""
+      bio_addr:
+        description: "Read this wallet's OpenSea bio via the verify flow's exact call (debug; nothing posted)"
+        required: false
+        default: ""
   schedule:
     - cron: "*/5 * * * *"
 
@@ -35,7 +39,9 @@ jobs:
           set -euo pipefail
           url="https://www.coattail.cash/api/discord/sales"
           test_id="${{ github.event.inputs.test_id || '' }}"
+          bio_addr="${{ github.event.inputs.bio_addr || '' }}"
           [ -n "$test_id" ] && url="${url}?testId=${test_id}"
+          [ -n "$bio_addr" ] && url="${url}?bioTest=${bio_addr}"
           resp=$(curl -sS -H "Authorization: Bearer ${SECRET}" "$url")
           echo "$resp"
           [ "$(echo "$resp" | jq -r '.ok')" = "true" ]

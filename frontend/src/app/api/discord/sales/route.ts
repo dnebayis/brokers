@@ -159,6 +159,16 @@ export async function GET(request: Request) {
   // Enrichment test hook: ?testId=540 posts one fake-price embed for that token through
   // the exact image/floor path, so OpenSea wiring is verifiable without waiting for a
   // real sale. Cursor untouched.
+  // Verify-bot debug hook: ?bioTest=0x… reads that wallet's OpenSea bio through the
+  // exact same call the verify flow uses, so a "can't verify" report is diagnosable
+  // without a real Discord state. Bearer-protected like everything else here.
+  const bioTest = new URL(request.url).searchParams.get("bioTest");
+  if (bioTest) {
+    const { openseaBio } = await import("@/lib/discordVerify");
+    const bio = await openseaBio(bioTest);
+    return NextResponse.json({ ok: true, bioTest, hasKey: !!osKey(), bio: bio === null ? "NULL (fetch failed)" : bio });
+  }
+
   const testId = new URL(request.url).searchParams.get("testId");
   if (testId) {
     const [image, floor, usdNow] = await Promise.all([brokerImage(testId), collectionFloorEth(), ethUsd()]);
