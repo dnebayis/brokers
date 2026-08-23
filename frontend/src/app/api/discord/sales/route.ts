@@ -21,7 +21,7 @@ const ORDER_FULFILLED = parseAbiItem(
 
 const CURSOR_KEY = "sales:lastBlock";
 const MAX_RANGE = 400_000n;   // bounds one sweep; the cron catches up across runs
-const MAX_POSTS = 10;         // per sweep — beyond this, one summary line
+const MAX_POSTS = 40;         // hard flood guard (a first-run replay); chunked by 10 per message
 const ZERO = "0x0000000000000000000000000000000000000000";
 const OS_CHAIN = "robinhood"; // OpenSea's chain identifier (matches their asset URLs)
 
@@ -54,12 +54,18 @@ async function osFetch(path: string): Promise<Record<string, unknown> | null> {
  *  is versioned. */
 async function brokerImage(id: string): Promise<string | null> {
   if (!osKey()) return null;
-  const cacheKey = `os:image:v2:${id}`;
+  const cacheKey = `os:image:v3:${id}`;
   const cached = await kvGet(cacheKey);
   if (cached) return cached === "none" ? null : cached;
   const data = await osFetch(`/chain/${OS_CHAIN}/contract/${ADDR.broker}/nfts/${id}`);
   if (data === null) return null; // request failed — retry on a later sweep
-  const url = ((data.nft as Record<string, unknown> | undefined)?.image_url as string | undefined) ?? null;
+  const nft = data.nft as Record<string, unknown> | undefined;
+  // display_image_url is OpenSea's CDN-converted raster; image_url is the raw asset,
+  // which for this collection is on-chain SVG — Discord refuses SVG thumbnails.
+  const candidates = [nft?.display_image_url, nft?.image_url].filter(
+    (u): u is string => typeof u === "string" && u.length > 0,
+  );
+  const url = candidates.find((u) => !u.toLowerCase().endsWith(".svg")) ?? null;
   await kvSet(cacheKey, url ?? "none");
   return url;
 }
