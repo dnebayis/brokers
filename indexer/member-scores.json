@@ -1,0 +1,1246 @@
+{
+  "buysScored": 38450,
+  "buysSkipped": 9751,
+  "clamp": [
+    0.75,
+    1.5
+  ],
+  "coeff": 0.05,
+  "generatedAt": "2026-08-23T08:13:34.787301",
+  "historyDays": 730,
+  "horizonDays": 30,
+  "members": {
+    "adam kinzinger": {
+      "avgExcess30d": -0.0129,
+      "multiplier": 0.949,
+      "shrunkPct": -1.01,
+      "trades": 36
+    },
+    "alan armstrong": {
+      "avgExcess30d": 0.0154,
+      "multiplier": 1.075,
+      "shrunkPct": 1.49,
+      "trades": 319
+    },
+    "alan lowenthal": {
+      "avgExcess30d": 0.0005,
+      "multiplier": 1.003,
+      "shrunkPct": 0.05,
+      "trades": 883
+    },
+    "andrew garbarino": {
+      "avgExcess30d": 0.0329,
+      "multiplier": 1.062,
+      "shrunkPct": 1.23,
+      "trades": 6
+    },
+    "angus king": {
+      "avgExcess30d": -0.0074,
+      "multiplier": 0.973,
+      "shrunkPct": -0.53,
+      "trades": 26
+    },
+    "anthony e. gonzalez": {
+      "avgExcess30d": -0.0707,
+      "multiplier": 0.843,
+      "shrunkPct": -3.14,
+      "trades": 8
+    },
+    "april delaney": {
+      "avgExcess30d": -0.0257,
+      "multiplier": 0.879,
+      "shrunkPct": -2.43,
+      "trades": 168
+    },
+    "arjun mody": {
+      "avgExcess30d": 0.001,
+      "multiplier": 1.003,
+      "shrunkPct": 0.07,
+      "trades": 20
+    },
+    "ashley hinson arenholz": {
+      "avgExcess30d": -0.0309,
+      "multiplier": 0.942,
+      "shrunkPct": -1.16,
+      "trades": 6
+    },
+    "ashley moody": {
+      "avgExcess30d": 0.0479,
+      "multiplier": 1.14,
+      "shrunkPct": 2.79,
+      "trades": 14
+    },
+    "aston donald mceachin": {
+      "avgExcess30d": -0.0202,
+      "multiplier": 0.955,
+      "shrunkPct": -0.9,
+      "trades": 8
+    },
+    "august lee pfluger": {
+      "avgExcess30d": -0.0375,
+      "multiplier": 0.877,
+      "shrunkPct": -2.46,
+      "trades": 19
+    },
+    "austin scott": {
+      "avgExcess30d": 0.0107,
+      "multiplier": 1.049,
+      "shrunkPct": 0.98,
+      "trades": 117
+    },
+    "barbara j honorable comstock": {
+      "avgExcess30d": 0.0183,
+      "multiplier": 1.077,
+      "shrunkPct": 1.53,
+      "trades": 52
+    },
+    "bill flores": {
+      "avgExcess30d": -0.0028,
+      "multiplier": 0.987,
+      "shrunkPct": -0.26,
+      "trades": 150
+    },
+    "bill keating": {
+      "avgExcess30d": -0.0075,
+      "multiplier": 0.965,
+      "shrunkPct": -0.71,
+      "trades": 176
+    },
+    "blake moore": {
+      "avgExcess30d": 0.0016,
+      "multiplier": 1.007,
+      "shrunkPct": 0.15,
+      "trades": 105
+    },
+    "bob gibbs": {
+      "avgExcess30d": -0.009,
+      "multiplier": 0.959,
+      "shrunkPct": -0.82,
+      "trades": 114
+    },
+    "bradley s. schneider": {
+      "avgExcess30d": 0.0075,
+      "multiplier": 1.033,
+      "shrunkPct": 0.65,
+      "trades": 64
+    },
+    "brandon gill": {
+      "avgExcess30d": -0.034,
+      "multiplier": 0.919,
+      "shrunkPct": -1.61,
+      "trades": 9
+    },
+    "brenda lulenar lawrence": {
+      "avgExcess30d": -0.0532,
+      "multiplier": 0.812,
+      "shrunkPct": -3.76,
+      "trades": 24
+    },
+    "brian babin": {
+      "avgExcess30d": 0.0395,
+      "multiplier": 1.094,
+      "shrunkPct": 1.87,
+      "trades": 9
+    },
+    "brian mast": {
+      "avgExcess30d": 0.0324,
+      "multiplier": 1.141,
+      "shrunkPct": 2.82,
+      "trades": 67
+    },
+    "bruce westerman": {
+      "avgExcess30d": -0.0086,
+      "multiplier": 0.961,
+      "shrunkPct": -0.79,
+      "trades": 104
+    },
+    "bryan bedford": {
+      "avgExcess30d": -0.0039,
+      "multiplier": 0.991,
+      "shrunkPct": -0.17,
+      "trades": 8
+    },
+    "byron donalds": {
+      "avgExcess30d": 0.0263,
+      "multiplier": 1.116,
+      "shrunkPct": 2.31,
+      "trades": 72
+    },
+    "carlos curbelo": {
+      "avgExcess30d": -0.0031,
+      "multiplier": 0.985,
+      "shrunkPct": -0.29,
+      "trades": 155
+    },
+    "carol devine miller": {
+      "avgExcess30d": -0.0207,
+      "multiplier": 0.906,
+      "shrunkPct": -1.87,
+      "trades": 96
+    },
+    "charles j fleishmann": {
+      "avgExcess30d": 0.0027,
+      "multiplier": 1.005,
+      "shrunkPct": 0.09,
+      "trades": 5
+    },
+    "charles roberts": {
+      "avgExcess30d": -0.0016,
+      "multiplier": 0.993,
+      "shrunkPct": -0.14,
+      "trades": 70
+    },
+    "cheri bustos": {
+      "avgExcess30d": 0.02,
+      "multiplier": 1.06,
+      "shrunkPct": 1.2,
+      "trades": 15
+    },
+    "christine smith": {
+      "avgExcess30d": 0.1451,
+      "multiplier": 1.323,
+      "shrunkPct": 6.45,
+      "trades": 8
+    },
+    "christopher a wright": {
+      "avgExcess30d": -0.0592,
+      "multiplier": 0.75,
+      "shrunkPct": -5.14,
+      "trades": 66
+    },
+    "christopher jacobs": {
+      "avgExcess30d": 0.0759,
+      "multiplier": 1.336,
+      "shrunkPct": 6.71,
+      "trades": 77
+    },
+    "chuck fleischmann": {
+      "avgExcess30d": -0.0047,
+      "multiplier": 0.979,
+      "shrunkPct": -0.43,
+      "trades": 106
+    },
+    "cindy axne": {
+      "avgExcess30d": -0.013,
+      "multiplier": 0.939,
+      "shrunkPct": -1.21,
+      "trades": 135
+    },
+    "cleo fields": {
+      "avgExcess30d": 0.0085,
+      "multiplier": 1.041,
+      "shrunkPct": 0.81,
+      "trades": 210
+    },
+    "clifford franklin": {
+      "avgExcess30d": -0.0087,
+      "multiplier": 0.96,
+      "shrunkPct": -0.8,
+      "trades": 114
+    },
+    "dan goldman": {
+      "avgExcess30d": -0.0132,
+      "multiplier": 0.936,
+      "shrunkPct": -1.28,
+      "trades": 357
+    },
+    "dan meuser": {
+      "avgExcess30d": -0.0342,
+      "multiplier": 0.874,
+      "shrunkPct": -2.52,
+      "trades": 28
+    },
+    "dan newhouse": {
+      "avgExcess30d": 0.0007,
+      "multiplier": 1.003,
+      "shrunkPct": 0.06,
+      "trades": 124
+    },
+    "daniel crenshaw": {
+      "avgExcess30d": -0.0693,
+      "multiplier": 0.75,
+      "shrunkPct": -5.83,
+      "trades": 53
+    },
+    "daniel s sullivan": {
+      "avgExcess30d": 0.0191,
+      "multiplier": 1.057,
+      "shrunkPct": 1.14,
+      "trades": 15
+    },
+    "dave mccormick": {
+      "avgExcess30d": 0.0602,
+      "multiplier": 1.227,
+      "shrunkPct": 4.55,
+      "trades": 31
+    },
+    "david a. trott": {
+      "avgExcess30d": -0.0038,
+      "multiplier": 0.986,
+      "shrunkPct": -0.28,
+      "trades": 31
+    },
+    "david b. mckinley": {
+      "avgExcess30d": 0.0134,
+      "multiplier": 1.064,
+      "shrunkPct": 1.27,
+      "trades": 186
+    },
+    "david cheston rouzer": {
+      "avgExcess30d": 0.0135,
+      "multiplier": 1.041,
+      "shrunkPct": 0.83,
+      "trades": 16
+    },
+    "david e. price": {
+      "avgExcess30d": 0.0211,
+      "multiplier": 1.088,
+      "shrunkPct": 1.76,
+      "trades": 50
+    },
+    "david joyce": {
+      "avgExcess30d": -0.0059,
+      "multiplier": 0.973,
+      "shrunkPct": -0.53,
+      "trades": 95
+    },
+    "david kustoff": {
+      "avgExcess30d": -0.0946,
+      "multiplier": 0.75,
+      "shrunkPct": -5.95,
+      "trades": 17
+    },
+    "david perdue": {
+      "avgExcess30d": -0.0127,
+      "multiplier": 0.947,
+      "shrunkPct": -1.05,
+      "trades": 48
+    },
+    "david roe": {
+      "avgExcess30d": 0.011,
+      "multiplier": 1.052,
+      "shrunkPct": 1.05,
+      "trades": 206
+    },
+    "david taylor": {
+      "avgExcess30d": 0.0073,
+      "multiplier": 1.033,
+      "shrunkPct": 0.67,
+      "trades": 110
+    },
+    "dean phillips": {
+      "avgExcess30d": 0.011,
+      "multiplier": 1.054,
+      "shrunkPct": 1.08,
+      "trades": 519
+    },
+    "debbie dingell": {
+      "avgExcess30d": -0.0039,
+      "multiplier": 0.982,
+      "shrunkPct": -0.36,
+      "trades": 116
+    },
+    "debbie wasserman schultz": {
+      "avgExcess30d": 0.0923,
+      "multiplier": 1.365,
+      "shrunkPct": 7.31,
+      "trades": 38
+    },
+    "deborah  k. ross": {
+      "avgExcess30d": -0.0228,
+      "multiplier": 0.906,
+      "shrunkPct": -1.88,
+      "trades": 48
+    },
+    "diana harshbarger": {
+      "avgExcess30d": 0.0037,
+      "multiplier": 1.018,
+      "shrunkPct": 0.37,
+      "trades": 742
+    },
+    "don beyer": {
+      "avgExcess30d": 0.0201,
+      "multiplier": 1.099,
+      "shrunkPct": 1.98,
+      "trades": 590
+    },
+    "donald j trump": {
+      "avgExcess30d": 0.0362,
+      "multiplier": 1.178,
+      "shrunkPct": 3.57,
+      "trades": 620
+    },
+    "donna shalala": {
+      "avgExcess30d": -0.0117,
+      "multiplier": 0.946,
+      "shrunkPct": -1.08,
+      "trades": 124
+    },
+    "doug lamborn": {
+      "avgExcess30d": 0.0108,
+      "multiplier": 1.05,
+      "shrunkPct": 0.99,
+      "trades": 113
+    },
+    "douglas j burgum": {
+      "avgExcess30d": 0.0002,
+      "multiplier": 1.001,
+      "shrunkPct": 0.01,
+      "trades": 22
+    },
+    "dwight evans": {
+      "avgExcess30d": 0.0013,
+      "multiplier": 1.006,
+      "shrunkPct": 0.12,
+      "trades": 101
+    },
+    "earl blumenauer": {
+      "avgExcess30d": -0.0066,
+      "multiplier": 0.968,
+      "shrunkPct": -0.64,
+      "trades": 348
+    },
+    "ed case": {
+      "avgExcess30d": -0.006,
+      "multiplier": 0.983,
+      "shrunkPct": -0.35,
+      "trades": 14
+    },
+    "ed perlmutter": {
+      "avgExcess30d": 0.003,
+      "multiplier": 1.013,
+      "shrunkPct": 0.26,
+      "trades": 69
+    },
+    "ed whitfield": {
+      "avgExcess30d": -0.0469,
+      "multiplier": 0.824,
+      "shrunkPct": -3.51,
+      "trades": 30
+    },
+    "elaine luria": {
+      "avgExcess30d": -0.1424,
+      "multiplier": 0.75,
+      "shrunkPct": -7.46,
+      "trades": 11
+    },
+    "frank a. lobiondo": {
+      "avgExcess30d": -0.0126,
+      "multiplier": 0.972,
+      "shrunkPct": -0.56,
+      "trades": 8
+    },
+    "frank j bisignano": {
+      "avgExcess30d": -0.0101,
+      "multiplier": 0.973,
+      "shrunkPct": -0.53,
+      "trades": 11
+    },
+    "fred upton": {
+      "avgExcess30d": -0.0103,
+      "multiplier": 0.966,
+      "shrunkPct": -0.68,
+      "trades": 19
+    },
+    "garret graves": {
+      "avgExcess30d": -0.0799,
+      "multiplier": 0.75,
+      "shrunkPct": -5.03,
+      "trades": 17
+    },
+    "gary c peters": {
+      "avgExcess30d": -0.0,
+      "multiplier": 1.0,
+      "shrunkPct": -0.0,
+      "trades": 39
+    },
+    "gary palmer": {
+      "avgExcess30d": -0.0096,
+      "multiplier": 0.955,
+      "shrunkPct": -0.91,
+      "trades": 182
+    },
+    "gerry connolly": {
+      "avgExcess30d": -0.0023,
+      "multiplier": 0.993,
+      "shrunkPct": -0.14,
+      "trades": 17
+    },
+    "gilbert cisneros": {
+      "avgExcess30d": 0.0025,
+      "multiplier": 1.012,
+      "shrunkPct": 0.25,
+      "trades": 1534
+    },
+    "greg gianforte": {
+      "avgExcess30d": -0.0132,
+      "multiplier": 0.935,
+      "shrunkPct": -1.3,
+      "trades": 583
+    },
+    "greg landsman": {
+      "avgExcess30d": 0.0122,
+      "multiplier": 1.051,
+      "shrunkPct": 1.03,
+      "trades": 54
+    },
+    "greg stanton": {
+      "avgExcess30d": 0.0023,
+      "multiplier": 1.011,
+      "shrunkPct": 0.22,
+      "trades": 181
+    },
+    "hakeem jeffries": {
+      "avgExcess30d": -0.0005,
+      "multiplier": 0.998,
+      "shrunkPct": -0.03,
+      "trades": 15
+    },
+    "hal rogers": {
+      "avgExcess30d": -0.0013,
+      "multiplier": 0.996,
+      "shrunkPct": -0.08,
+      "trades": 16
+    },
+    "jackie speier": {
+      "avgExcess30d": 0.032,
+      "multiplier": 1.053,
+      "shrunkPct": 1.07,
+      "trades": 5
+    },
+    "jacky rosen": {
+      "avgExcess30d": 0.0153,
+      "multiplier": 1.045,
+      "shrunkPct": 0.89,
+      "trades": 14
+    },
+    "james comer": {
+      "avgExcess30d": -0.0226,
+      "multiplier": 0.912,
+      "shrunkPct": -1.76,
+      "trades": 35
+    },
+    "james french hill": {
+      "avgExcess30d": -0.0094,
+      "multiplier": 0.961,
+      "shrunkPct": -0.77,
+      "trades": 46
+    },
+    "james langevin": {
+      "avgExcess30d": -0.0074,
+      "multiplier": 0.964,
+      "shrunkPct": -0.72,
+      "trades": 376
+    },
+    "jared isaacman": {
+      "avgExcess30d": -0.1471,
+      "multiplier": 0.75,
+      "shrunkPct": -9.81,
+      "trades": 20
+    },
+    "jared moskowitz": {
+      "avgExcess30d": -0.0025,
+      "multiplier": 0.988,
+      "shrunkPct": -0.25,
+      "trades": 275
+    },
+    "jefferson shreve": {
+      "avgExcess30d": -0.0051,
+      "multiplier": 0.976,
+      "shrunkPct": -0.48,
+      "trades": 168
+    },
+    "jerry moran": {
+      "avgExcess30d": 0.0005,
+      "multiplier": 1.002,
+      "shrunkPct": 0.04,
+      "trades": 30
+    },
+    "jim banks": {
+      "avgExcess30d": -0.0381,
+      "multiplier": 0.836,
+      "shrunkPct": -3.28,
+      "trades": 61
+    },
+    "joe courtney": {
+      "avgExcess30d": 0.0002,
+      "multiplier": 1.001,
+      "shrunkPct": 0.02,
+      "trades": 89
+    },
+    "john a. yarmuth": {
+      "avgExcess30d": -0.0089,
+      "multiplier": 0.959,
+      "shrunkPct": -0.83,
+      "trades": 143
+    },
+    "john boozman": {
+      "avgExcess30d": 0.0013,
+      "multiplier": 1.006,
+      "shrunkPct": 0.12,
+      "trades": 338
+    },
+    "john curtis": {
+      "avgExcess30d": -0.0012,
+      "multiplier": 0.995,
+      "shrunkPct": -0.11,
+      "trades": 135
+    },
+    "john delaney": {
+      "avgExcess30d": 0.0019,
+      "multiplier": 1.007,
+      "shrunkPct": 0.13,
+      "trades": 22
+    },
+    "john fetterman": {
+      "avgExcess30d": 0.0035,
+      "multiplier": 1.014,
+      "shrunkPct": 0.28,
+      "trades": 37
+    },
+    "john hickenlooper": {
+      "avgExcess30d": 0.0228,
+      "multiplier": 1.099,
+      "shrunkPct": 1.97,
+      "trades": 65
+    },
+    "john james": {
+      "avgExcess30d": 0.006,
+      "multiplier": 1.028,
+      "shrunkPct": 0.56,
+      "trades": 122
+    },
+    "john mcguire": {
+      "avgExcess30d": -0.0167,
+      "multiplier": 0.956,
+      "shrunkPct": -0.88,
+      "trades": 11
+    },
+    "john rutherford": {
+      "avgExcess30d": 0.0054,
+      "multiplier": 1.026,
+      "shrunkPct": 0.52,
+      "trades": 193
+    },
+    "jonathan jackson": {
+      "avgExcess30d": 0.0182,
+      "multiplier": 1.085,
+      "shrunkPct": 1.69,
+      "trades": 133
+    },
+    "joseph hollingsworth": {
+      "avgExcess30d": -0.0093,
+      "multiplier": 0.967,
+      "shrunkPct": -0.66,
+      "trades": 25
+    },
+    "josh gottheimer": {
+      "avgExcess30d": 0.0059,
+      "multiplier": 1.029,
+      "shrunkPct": 0.59,
+      "trades": 2065
+    },
+    "judy chu": {
+      "avgExcess30d": 0.0058,
+      "multiplier": 1.027,
+      "shrunkPct": 0.54,
+      "trades": 137
+    },
+    "julia letlow": {
+      "avgExcess30d": -0.0103,
+      "multiplier": 0.952,
+      "shrunkPct": -0.96,
+      "trades": 135
+    },
+    "julie johnson": {
+      "avgExcess30d": 0.014,
+      "multiplier": 1.061,
+      "shrunkPct": 1.23,
+      "trades": 69
+    },
+    "justin amash": {
+      "avgExcess30d": -0.0005,
+      "multiplier": 0.998,
+      "shrunkPct": -0.04,
+      "trades": 27
+    },
+    "katherine clark": {
+      "avgExcess30d": 0.0011,
+      "multiplier": 1.005,
+      "shrunkPct": 0.11,
+      "trades": 146
+    },
+    "kathy castor": {
+      "avgExcess30d": 0.0167,
+      "multiplier": 1.072,
+      "shrunkPct": 1.45,
+      "trades": 67
+    },
+    "kathy manning": {
+      "avgExcess30d": -0.0173,
+      "multiplier": 0.915,
+      "shrunkPct": -1.7,
+      "trades": 450
+    },
+    "katie britt": {
+      "avgExcess30d": -0.0068,
+      "multiplier": 0.979,
+      "shrunkPct": -0.42,
+      "trades": 16
+    },
+    "kelly loeffler": {
+      "avgExcess30d": -0.0015,
+      "multiplier": 0.993,
+      "shrunkPct": -0.14,
+      "trades": 79
+    },
+    "kelly morrison": {
+      "avgExcess30d": 0.0389,
+      "multiplier": 1.08,
+      "shrunkPct": 1.6,
+      "trades": 7
+    },
+    "kenneth conaway": {
+      "avgExcess30d": -0.0032,
+      "multiplier": 0.984,
+      "shrunkPct": -0.32,
+      "trades": 439
+    },
+    "kenny marchant": {
+      "avgExcess30d": 0.0359,
+      "multiplier": 1.12,
+      "shrunkPct": 2.4,
+      "trades": 20
+    },
+    "kevin hern": {
+      "avgExcess30d": 0.0011,
+      "multiplier": 1.005,
+      "shrunkPct": 0.11,
+      "trades": 816
+    },
+    "kurt schrader": {
+      "avgExcess30d": 0.0004,
+      "multiplier": 1.002,
+      "shrunkPct": 0.04,
+      "trades": 132
+    },
+    "lamar smith": {
+      "avgExcess30d": -0.0054,
+      "multiplier": 0.976,
+      "shrunkPct": -0.48,
+      "trades": 82
+    },
+    "laurel lee": {
+      "avgExcess30d": 0.0359,
+      "multiplier": 1.08,
+      "shrunkPct": 1.6,
+      "trades": 8
+    },
+    "laurence rooney": {
+      "avgExcess30d": -0.0063,
+      "multiplier": 0.976,
+      "shrunkPct": -0.48,
+      "trades": 33
+    },
+    "linda t. sanchez": {
+      "avgExcess30d": -0.0817,
+      "multiplier": 0.847,
+      "shrunkPct": -3.06,
+      "trades": 6
+    },
+    "lindsey graham": {
+      "avgExcess30d": -0.0337,
+      "multiplier": 0.944,
+      "shrunkPct": -1.12,
+      "trades": 5
+    },
+    "lisa mcclain": {
+      "avgExcess30d": -0.0073,
+      "multiplier": 0.964,
+      "shrunkPct": -0.72,
+      "trades": 663
+    },
+    "lizzie fletcher": {
+      "avgExcess30d": 0.0239,
+      "multiplier": 1.078,
+      "shrunkPct": 1.57,
+      "trades": 19
+    },
+    "lloyd doggett": {
+      "avgExcess30d": -0.0055,
+      "multiplier": 0.973,
+      "shrunkPct": -0.54,
+      "trades": 317
+    },
+    "lois frankel": {
+      "avgExcess30d": -0.0103,
+      "multiplier": 0.949,
+      "shrunkPct": -1.02,
+      "trades": 886
+    },
+    "lou barletta": {
+      "avgExcess30d": -0.0021,
+      "multiplier": 0.992,
+      "shrunkPct": -0.16,
+      "trades": 37
+    },
+    "maria elvira": {
+      "avgExcess30d": 0.0166,
+      "multiplier": 1.073,
+      "shrunkPct": 1.45,
+      "trades": 69
+    },
+    "marie newman": {
+      "avgExcess30d": -0.0415,
+      "multiplier": 0.799,
+      "shrunkPct": -4.02,
+      "trades": 309
+    },
+    "marjorie taylor greene": {
+      "avgExcess30d": -0.0072,
+      "multiplier": 0.965,
+      "shrunkPct": -0.71,
+      "trades": 473
+    },
+    "mark dr green": {
+      "avgExcess30d": -0.0071,
+      "multiplier": 0.965,
+      "shrunkPct": -0.69,
+      "trades": 457
+    },
+    "mark r meadows": {
+      "avgExcess30d": -0.0843,
+      "multiplier": 0.813,
+      "shrunkPct": -3.75,
+      "trades": 8
+    },
+    "mark r warner": {
+      "avgExcess30d": -0.0432,
+      "multiplier": 0.842,
+      "shrunkPct": -3.15,
+      "trades": 27
+    },
+    "markwayne mullin": {
+      "avgExcess30d": 0.0052,
+      "multiplier": 1.025,
+      "shrunkPct": 0.5,
+      "trades": 310
+    },
+    "max miller": {
+      "avgExcess30d": -0.0655,
+      "multiplier": 0.891,
+      "shrunkPct": -2.18,
+      "trades": 5
+    },
+    "michael burgess": {
+      "avgExcess30d": -0.0084,
+      "multiplier": 0.963,
+      "shrunkPct": -0.74,
+      "trades": 76
+    },
+    "michael guest": {
+      "avgExcess30d": -0.0027,
+      "multiplier": 0.988,
+      "shrunkPct": -0.24,
+      "trades": 87
+    },
+    "michael kratsios": {
+      "avgExcess30d": -0.0053,
+      "multiplier": 0.98,
+      "shrunkPct": -0.4,
+      "trades": 32
+    },
+    "michael mccaul": {
+      "avgExcess30d": 0.0044,
+      "multiplier": 1.022,
+      "shrunkPct": 0.44,
+      "trades": 2827
+    },
+    "michael simpson": {
+      "avgExcess30d": -0.0043,
+      "multiplier": 0.984,
+      "shrunkPct": -0.32,
+      "trades": 29
+    },
+    "mike collins": {
+      "avgExcess30d": 0.0143,
+      "multiplier": 1.024,
+      "shrunkPct": 0.48,
+      "trades": 5
+    },
+    "mike garcia": {
+      "avgExcess30d": 0.0699,
+      "multiplier": 1.289,
+      "shrunkPct": 5.78,
+      "trades": 48
+    },
+    "mike kelly": {
+      "avgExcess30d": -0.0401,
+      "multiplier": 0.933,
+      "shrunkPct": -1.34,
+      "trades": 5
+    },
+    "mikie sherrill": {
+      "avgExcess30d": -0.0116,
+      "multiplier": 0.954,
+      "shrunkPct": -0.93,
+      "trades": 40
+    },
+    "mitch mcconnell": {
+      "avgExcess30d": 0.0172,
+      "multiplier": 1.071,
+      "shrunkPct": 1.41,
+      "trades": 46
+    },
+    "mo brooks": {
+      "avgExcess30d": 0.0055,
+      "multiplier": 1.025,
+      "shrunkPct": 0.5,
+      "trades": 101
+    },
+    "morgan mcgarvey": {
+      "avgExcess30d": 0.0615,
+      "multiplier": 1.168,
+      "shrunkPct": 3.36,
+      "trades": 12
+    },
+    "nancy pelosi": {
+      "avgExcess30d": 0.0079,
+      "multiplier": 1.038,
+      "shrunkPct": 0.75,
+      "trades": 215
+    },
+    "neal dunn": {
+      "avgExcess30d": 0.0017,
+      "multiplier": 1.006,
+      "shrunkPct": 0.13,
+      "trades": 33
+    },
+    "nicholas taylor": {
+      "avgExcess30d": -0.0063,
+      "multiplier": 0.974,
+      "shrunkPct": -0.52,
+      "trades": 50
+    },
+    "nicole malliotakis": {
+      "avgExcess30d": -0.0154,
+      "multiplier": 0.971,
+      "shrunkPct": -0.58,
+      "trades": 6
+    },
+    "pat roberts": {
+      "avgExcess30d": 0.0081,
+      "multiplier": 1.032,
+      "shrunkPct": 0.63,
+      "trades": 35
+    },
+    "patrick fallon": {
+      "avgExcess30d": -0.0115,
+      "multiplier": 0.946,
+      "shrunkPct": -1.07,
+      "trades": 132
+    },
+    "patrick toomey": {
+      "avgExcess30d": 0.0584,
+      "multiplier": 1.201,
+      "shrunkPct": 4.02,
+      "trades": 22
+    },
+    "pete sessions": {
+      "avgExcess30d": 0.0066,
+      "multiplier": 1.032,
+      "shrunkPct": 0.63,
+      "trades": 265
+    },
+    "peter welch": {
+      "avgExcess30d": -0.0047,
+      "multiplier": 0.98,
+      "shrunkPct": -0.4,
+      "trades": 54
+    },
+    "randy neugebauer": {
+      "avgExcess30d": 0.0198,
+      "multiplier": 1.05,
+      "shrunkPct": 0.99,
+      "trades": 10
+    },
+    "rich mccormick": {
+      "avgExcess30d": 0.0038,
+      "multiplier": 1.017,
+      "shrunkPct": 0.34,
+      "trades": 74
+    },
+    "richard blumenthal": {
+      "avgExcess30d": -0.0473,
+      "multiplier": 0.851,
+      "shrunkPct": -2.98,
+      "trades": 17
+    },
+    "richard l. hanna": {
+      "avgExcess30d": -0.0123,
+      "multiplier": 0.954,
+      "shrunkPct": -0.93,
+      "trades": 31
+    },
+    "richard w. allen": {
+      "avgExcess30d": -0.0012,
+      "multiplier": 0.994,
+      "shrunkPct": -0.12,
+      "trades": 162
+    },
+    "rick larsen": {
+      "avgExcess30d": -0.0017,
+      "multiplier": 0.993,
+      "shrunkPct": -0.14,
+      "trades": 45
+    },
+    "ritchie torres": {
+      "avgExcess30d": -0.0235,
+      "multiplier": 0.904,
+      "shrunkPct": -1.92,
+      "trades": 45
+    },
+    "ro khanna": {
+      "avgExcess30d": 0.0005,
+      "multiplier": 1.002,
+      "shrunkPct": 0.05,
+      "trades": 6462
+    },
+    "rob bresnahan": {
+      "avgExcess30d": -0.008,
+      "multiplier": 0.962,
+      "shrunkPct": -0.77,
+      "trades": 234
+    },
+    "robert gibbs": {
+      "avgExcess30d": -0.0041,
+      "multiplier": 0.986,
+      "shrunkPct": -0.29,
+      "trades": 24
+    },
+    "robert latta": {
+      "avgExcess30d": -0.029,
+      "multiplier": 0.891,
+      "shrunkPct": -2.17,
+      "trades": 30
+    },
+    "robert wittman": {
+      "avgExcess30d": -0.0087,
+      "multiplier": 0.958,
+      "shrunkPct": -0.83,
+      "trades": 195
+    },
+    "rodney blum": {
+      "avgExcess30d": -0.036,
+      "multiplier": 0.92,
+      "shrunkPct": -1.6,
+      "trades": 8
+    },
+    "roger marshall": {
+      "avgExcess30d": -0.0185,
+      "multiplier": 0.917,
+      "shrunkPct": -1.65,
+      "trades": 84
+    },
+    "ron estes": {
+      "avgExcess30d": -0.0183,
+      "multiplier": 0.952,
+      "shrunkPct": -0.96,
+      "trades": 11
+    },
+    "ron wyden": {
+      "avgExcess30d": 0.0155,
+      "multiplier": 1.073,
+      "shrunkPct": 1.45,
+      "trades": 149
+    },
+    "roy blunt": {
+      "avgExcess30d": -0.0784,
+      "multiplier": 0.826,
+      "shrunkPct": -3.48,
+      "trades": 8
+    },
+    "rub\u00e9n hinojosa": {
+      "avgExcess30d": 0.0765,
+      "multiplier": 1.209,
+      "shrunkPct": 4.17,
+      "trades": 12
+    },
+    "scott rigell": {
+      "avgExcess30d": 0.0179,
+      "multiplier": 1.065,
+      "shrunkPct": 1.3,
+      "trades": 27
+    },
+    "sean mcmaster": {
+      "avgExcess30d": -0.117,
+      "multiplier": 0.75,
+      "shrunkPct": -7.2,
+      "trades": 16
+    },
+    "sheldon whitehouse": {
+      "avgExcess30d": -0.0072,
+      "multiplier": 0.971,
+      "shrunkPct": -0.58,
+      "trades": 40
+    },
+    "shelley capito": {
+      "avgExcess30d": 0.009,
+      "multiplier": 1.041,
+      "shrunkPct": 0.83,
+      "trades": 106
+    },
+    "stacey dixon": {
+      "avgExcess30d": 0.0246,
+      "multiplier": 1.099,
+      "shrunkPct": 1.98,
+      "trades": 41
+    },
+    "steve cohen": {
+      "avgExcess30d": 0.018,
+      "multiplier": 1.072,
+      "shrunkPct": 1.44,
+      "trades": 40
+    },
+    "susan a. davis": {
+      "avgExcess30d": 0.0239,
+      "multiplier": 1.094,
+      "shrunkPct": 1.87,
+      "trades": 36
+    },
+    "susan brooks": {
+      "avgExcess30d": -0.0153,
+      "multiplier": 0.958,
+      "shrunkPct": -0.84,
+      "trades": 12
+    },
+    "susan collins": {
+      "avgExcess30d": 0.0413,
+      "multiplier": 1.117,
+      "shrunkPct": 2.34,
+      "trades": 13
+    },
+    "susie lee": {
+      "avgExcess30d": -0.0042,
+      "multiplier": 0.979,
+      "shrunkPct": -0.42,
+      "trades": 810
+    },
+    "suzan delbene": {
+      "avgExcess30d": 0.0175,
+      "multiplier": 1.077,
+      "shrunkPct": 1.55,
+      "trades": 75
+    },
+    "thomas kean": {
+      "avgExcess30d": -0.0029,
+      "multiplier": 0.987,
+      "shrunkPct": -0.25,
+      "trades": 83
+    },
+    "thomas macarthur": {
+      "avgExcess30d": -0.0104,
+      "multiplier": 0.95,
+      "shrunkPct": -1.0,
+      "trades": 244
+    },
+    "thomas rooney": {
+      "avgExcess30d": -0.0095,
+      "multiplier": 0.957,
+      "shrunkPct": -0.85,
+      "trades": 92
+    },
+    "tim moore": {
+      "avgExcess30d": 0.049,
+      "multiplier": 1.227,
+      "shrunkPct": 4.53,
+      "trades": 123
+    },
+    "tim walberg": {
+      "avgExcess30d": 0.0319,
+      "multiplier": 1.09,
+      "shrunkPct": 1.8,
+      "trades": 13
+    },
+    "tina smith": {
+      "avgExcess30d": 0.0855,
+      "multiplier": 1.143,
+      "shrunkPct": 2.85,
+      "trades": 5
+    },
+    "tom carper": {
+      "avgExcess30d": 0.0012,
+      "multiplier": 1.006,
+      "shrunkPct": 0.12,
+      "trades": 505
+    },
+    "tom malinowski": {
+      "avgExcess30d": 0.0002,
+      "multiplier": 1.001,
+      "shrunkPct": 0.02,
+      "trades": 273
+    },
+    "tom rice": {
+      "avgExcess30d": -0.0029,
+      "multiplier": 0.992,
+      "shrunkPct": -0.16,
+      "trades": 12
+    },
+    "tom suozzi": {
+      "avgExcess30d": 0.0044,
+      "multiplier": 1.021,
+      "shrunkPct": 0.43,
+      "trades": 287
+    },
+    "tommy tuberville": {
+      "avgExcess30d": 0.0133,
+      "multiplier": 1.065,
+      "shrunkPct": 1.3,
+      "trades": 402
+    },
+    "tony wied": {
+      "avgExcess30d": -0.0258,
+      "multiplier": 0.911,
+      "shrunkPct": -1.77,
+      "trades": 22
+    },
+    "valerie hoyle": {
+      "avgExcess30d": 0.0004,
+      "multiplier": 1.002,
+      "shrunkPct": 0.04,
+      "trades": 191
+    },
+    "victoria spartz": {
+      "avgExcess30d": -0.0057,
+      "multiplier": 0.977,
+      "shrunkPct": -0.46,
+      "trades": 44
+    },
+    "virginia foxx": {
+      "avgExcess30d": 0.0011,
+      "multiplier": 1.005,
+      "shrunkPct": 0.11,
+      "trades": 1094
+    },
+    "warren davidson": {
+      "avgExcess30d": -0.0828,
+      "multiplier": 0.83,
+      "shrunkPct": -3.41,
+      "trades": 7
+    },
+    "william timmons": {
+      "avgExcess30d": 0.0617,
+      "multiplier": 1.103,
+      "shrunkPct": 2.06,
+      "trades": 5
+    },
+    "zoe lofgren": {
+      "avgExcess30d": 0.01,
+      "multiplier": 1.046,
+      "shrunkPct": 0.92,
+      "trades": 122
+    }
+  },
+  "minTrades": 5,
+  "shrinkK": 10.0
+}
