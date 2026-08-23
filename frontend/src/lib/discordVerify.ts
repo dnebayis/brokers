@@ -17,7 +17,11 @@ import { activeChain, RPC_PUBLIC_FIRST } from "./chains";
 import { brokerAbi } from "./abis";
 
 const DISCORD_API = "https://discord.com/api/v10";
-const STATE_TTL_MS = 15 * 60_000;
+// A first-time OpenSea user needs to create an account, pick a username, and edit
+// the bio before coming back — 15 minutes proved too tight in practice. The state
+// only names {userId, guildId}; a longer window costs nothing security-wise (the
+// ownership proof is the bio code, which is state-independent).
+const STATE_TTL_MS = 60 * 60_000;
 
 export const env = {
   botToken: () => process.env.DISCORD_BOT_TOKEN ?? "",
