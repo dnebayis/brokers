@@ -14,12 +14,28 @@
 //
 // Free-plan budget: 1,440 invocations/day of the 100,000 allowed.
 
+async function sweep(env) {
+  if (!env.RECHECK_SECRET) {
+    return { status: 0, body: "RECHECK_SECRET is NOT set on this worker (Settings -> Variables and Secrets)" };
+  }
+  const res = await fetch("https://www.coattail.cash/api/discord/sales", {
+    headers: { Authorization: `Bearer ${env.RECHECK_SECRET}` },
+  });
+  return { status: res.status, body: await res.text() };
+}
+
 export default {
   async scheduled(event, env, ctx) {
-    const res = await fetch("https://www.coattail.cash/api/discord/sales", {
-      headers: { Authorization: `Bearer ${env.RECHECK_SECRET}` },
+    const r = await sweep(env);
+    console.log(r.status, r.body);
+  },
+  // Debug door: opening the worker URL in a browser runs one sweep and shows the
+  // result — no log-hunting needed. The sweep is cursor-idempotent, so extra hits
+  // are harmless, and the secret itself is never revealed.
+  async fetch(request, env) {
+    const r = await sweep(env);
+    return new Response(`sweep -> upstream ${r.status}\n${r.body}`, {
+      headers: { "Content-Type": "text/plain" },
     });
-    // Visible in the worker's live logs; the endpoint reports sales count and cursor.
-    console.log(res.status, await res.text());
   },
 };
