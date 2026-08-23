@@ -72,6 +72,36 @@ export function parseState(state: string): { userId: string; guildId: string } |
   return { userId, guildId };
 }
 
+// ── OpenSea bio ownership proof ─────────────────────────────────────────────
+// Editing an OpenSea profile requires signing in to OpenSea WITH that wallet, so a
+// one-time code placed in the bio proves wallet ownership without our site ever asking
+// for a connection or a signature — the signature happens on OpenSea's side.
+
+/** Deterministic per-(user, address) code — nothing to store, nothing to expire
+ *  separately (the surrounding state token carries the 15-min expiry). */
+export function bioCode(userId: string, address: string): string {
+  const mac = createHmac("sha256", env.stateSecret())
+    .update(`bio:${userId}:${address.toLowerCase()}`).digest("hex");
+  return `coattail-${mac.slice(0, 8)}`;
+}
+
+export async function openseaBio(address: string): Promise<string | null> {
+  const key = process.env.OPENSEA_API_KEY ?? "";
+  if (!key) return null;
+  try {
+    const res = await fetch(`https://api.opensea.io/api/v2/accounts/${address}`, {
+      headers: { "x-api-key": key, Accept: "application/json" },
+      signal: AbortSignal.timeout(8_000),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.bio === "string" ? data.bio : "";
+  } catch {
+    return null;
+  }
+}
+
 // ── Discord REST ────────────────────────────────────────────────────────────
 async function discord(path: string, init: RequestInit = {}): Promise<Response> {
   return fetch(`${DISCORD_API}${path}`, {
