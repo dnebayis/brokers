@@ -7,6 +7,11 @@ name: discord-sales
 
 on:
   workflow_dispatch:
+    inputs:
+      test_id:
+        description: "Post a test embed for this token id (enrichment check; no cursor movement)"
+        required: false
+        default: ""
   schedule:
     - cron: "*/5 * * * *"
 
@@ -28,7 +33,9 @@ jobs:
           SECRET: ${{ secrets.RECHECK_SECRET }}
         run: |
           set -euo pipefail
-          resp=$(curl -sS -H "Authorization: Bearer ${SECRET}" \
-            "https://www.coattail.cash/api/discord/sales")
+          url="https://www.coattail.cash/api/discord/sales"
+          test_id="${{ github.event.inputs.test_id || '' }}"
+          [ -n "$test_id" ] && url="${url}?testId=${test_id}"
+          resp=$(curl -sS -H "Authorization: Bearer ${SECRET}" "$url")
           echo "$resp"
           [ "$(echo "$resp" | jq -r '.ok')" = "true" ]
