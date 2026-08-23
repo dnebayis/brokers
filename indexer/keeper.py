@@ -301,9 +301,12 @@ def main() -> None:
         # feeds stop updating after Friday's close, the staleness guard trips, and the
         # poke rightly refuses to buy on stale prices. Funds simply accrue until Monday.
         # Only on weekdays does a BadFeed deferral signal a real feed problem.
+        # Judge only the actions still considered fatal: buyback.execute is already
+        # non-fatal above (its TWAP guard, e.g. SpotTooFarFromTwap 0x81e45c32, defers
+        # by design and must not veto the weekend exemption for the poke).
         weekend = datetime.now(timezone.utc).weekday() >= 5
-        if weekend and all("0xb0171a5d" in str(a_err) for a_err in failed_errors.values()) \
-                and set(failed_actions) <= {"booster.poke", "buyback.execute"}:
+        if weekend and set(fatal) <= {"booster.poke"} \
+                and all("0xb0171a5d" in str(failed_errors.get(a, "")) for a in fatal):
             print(f"::warning::{message} — weekend feed staleness (market closed); "
                   "funds accrue until Monday's first fresh feed")
             fatal = []
