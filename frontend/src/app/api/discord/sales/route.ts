@@ -48,13 +48,18 @@ async function osFetch(path: string): Promise<Record<string, unknown> | null> {
   }
 }
 
-/** Broker artwork URL for the embed thumbnail, cached forever in KV (art is frozen). */
+/** Broker artwork URL for the embed thumbnail, cached in KV (art is frozen).
+ *  Only a DEFINITIVE answer is cached: a missing key or a failed request must never
+ *  poison the cache — v1 of this cached "none" on pre-key sweeps, which is why the key
+ *  is versioned. */
 async function brokerImage(id: string): Promise<string | null> {
-  const cacheKey = `os:image:${id}`;
+  if (!osKey()) return null;
+  const cacheKey = `os:image:v2:${id}`;
   const cached = await kvGet(cacheKey);
   if (cached) return cached === "none" ? null : cached;
   const data = await osFetch(`/chain/${OS_CHAIN}/contract/${ADDR.broker}/nfts/${id}`);
-  const url = ((data?.nft as Record<string, unknown> | undefined)?.image_url as string | undefined) ?? null;
+  if (data === null) return null; // request failed — retry on a later sweep
+  const url = ((data.nft as Record<string, unknown> | undefined)?.image_url as string | undefined) ?? null;
   await kvSet(cacheKey, url ?? "none");
   return url;
 }
@@ -123,6 +128,31 @@ export async function GET(request: Request) {
   const webhook = process.env.SALES_WEBHOOK_URL ?? "";
   if (!webhook) {
     return NextResponse.json({ ok: false, error: "SALES_WEBHOOK_URL not configured" }, { status: 501 });
+  }
+
+  // Enrichment test hook: ?testId=540 posts one fake-price embed for that token through
+  // the exact image/floor path, so OpenSea wiring is verifiable without waiting for a
+  // real sale. Cursor untouched.
+  const testId = new URL(request.url).searchParams.get("testId");
+  if (testId) {
+    const [image, floor, usdNow] = await Promise.all([brokerImage(testId), collectionFloorEth(), ethUsd()]);
+    const res = await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: "Coattail Sales",
+        embeds: [{
+          title: `TEST — Broker #${testId}`,
+          description: "enrichment test post — not a real sale",
+          ...(image ? { thumbnail: { url: image } } : {}),
+          ...(floor ? { footer: { text: `floor ${floor.toFixed(4)} ETH${usdNow ? ` ($${(floor * usdNow).toFixed(2)})` : ""}` } } : {}),
+          color: 0x757b8a,
+        }],
+      }),
+    });
+    return NextResponse.json({
+      ok: res.ok, test: true, hasKey: !!osKey(), image: image ?? "none", floor: floor ?? "none",
+    });
   }
 
   const latest = await serverClient.getBlockNumber();
