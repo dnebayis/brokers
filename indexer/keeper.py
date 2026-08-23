@@ -9,7 +9,9 @@ basket.
 
 import argparse
 import json
+import os
 import time
+from datetime import datetime, timezone
 from typing import Callable, Dict, List
 
 from config import (
@@ -202,6 +204,7 @@ def main() -> None:
     account = w3.eth.account.from_key(KEEPER_PRIVATE_KEY)
     poke_max_wei = wei_env("KEEPER_POKE_MAX_WEI", "1000000000000000000")
     failed_actions = []
+    failed_errors: Dict[str, str] = {}
 
     # RH Chain's proxied RPC can briefly serve a stale balance right after a dependent tx is
     # mined — e.g. splitter.flush's gas estimate landing before hook.flush's ETH is visible —
@@ -250,6 +253,7 @@ def main() -> None:
             # TWAP must not prevent fee flushing or stock purchases, and vice versa.
             print(json.dumps({"action": label, "status": "deferred", "error": str(exc)}))
             failed_actions.append(label)
+            failed_errors[label] = str(exc)
             return False
 
     if "hook.flush" in plan and hook:
@@ -293,6 +297,16 @@ def main() -> None:
         # deferrals (which do strand value / block distribution) are fatal under strict.
         message = "keeper stages deferred: " + ", ".join(failed_actions)
         fatal = [a for a in failed_actions if a != "buyback.execute"]
+        # Weekend BadFeed (0xb0171a5d) is the market being closed, not a fault: stock
+        # feeds stop updating after Friday's close, the staleness guard trips, and the
+        # poke rightly refuses to buy on stale prices. Funds simply accrue until Monday.
+        # Only on weekdays does a BadFeed deferral signal a real feed problem.
+        weekend = datetime.now(timezone.utc).weekday() >= 5
+        if weekend and all("0xb0171a5d" in str(a_err) for a_err in failed_errors.values()) \
+                and set(failed_actions) <= {"booster.poke", "buyback.execute"}:
+            print(f"::warning::{message} — weekend feed staleness (market closed); "
+                  "funds accrue until Monday's first fresh feed")
+            fatal = []
         if fatal and os.environ.get("KEEPER_STRICT") == "1":
             raise RuntimeError(message)
         print(f"::warning::{message}")

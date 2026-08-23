@@ -599,8 +599,22 @@ export function ActivateTab() {
             ))}
           </div>
         )}
+        {/* One-by-one path, made obvious: picking an inactive Broker above surfaces its
+            own activate button right here — "Activate all" is a convenience, not the
+            only way. */}
+        {info && isOwner && !info.active && (
+          <button className="btn btn-accent w-full mt-4" onClick={activate} disabled={act.busy || !canActivate}>
+            <Icon name="power" /> {act.busy ? "WORKING…" : `ACTIVATE #${info.id.toString()} (${burnLabel})`}
+          </button>
+        )}
+        {address && brokers.length > 0 && (
+          <p className="text-ink-soft text-[12px] mt-3">
+            Tap any Broker to select it — inactive ones get their own activate button. You never
+            have to activate all at once.
+          </p>
+        )}
         {address && inactiveOwned > 1 && (
-          <button className="btn btn-ghost w-full mt-4" onClick={activateAll} disabled={act.busy}>
+          <button className="btn btn-ghost w-full mt-2" onClick={activateAll} disabled={act.busy}>
             <Icon name="power" /> ACTIVATE ALL INACTIVE ({inactiveOwned})
           </button>
         )}
