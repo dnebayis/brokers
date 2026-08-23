@@ -99,9 +99,14 @@ async function ethUsd(): Promise<number> {
 
 /** Per-tokenId sale price in ETH-terms, from every OrderFulfilled in the receipt.
  *  Listing fill: our NFT sits in `offer`, payment is the consideration sum.
- *  Bid accept:   our NFT sits in `consideration`, payment is the offer sum. */
+ *  Bid accept:   our NFT sits in `consideration`, payment is the offer sum.
+ *  Matched pair: Seaport's matchOrders flow emits BOTH logs for one sale (buyer order
+ *  + seller mirror). Summing them doubled the posted price, so per-side subtotals are
+ *  kept apart and a token seen on both sides counts once — the larger side, which is
+ *  the full amount the buyer paid including fees. */
 function priceByToken(logs: { topics: string[]; data: `0x${string}` }[]): Map<string, number> {
-  const prices = new Map<string, number>();
+  // token -> per-side accumulated payment (multiple same-side fills are distinct sales)
+  const bySide = new Map<string, { offerSide: number; considerationSide: number }>();
   for (const log of logs) {
     let args;
     try {
@@ -116,17 +121,27 @@ function priceByToken(logs: { topics: string[]; data: `0x${string}` }[]): Map<st
     const offer = args.offer as readonly { itemType: number; token: string; identifier: bigint; amount: bigint }[];
     const consideration = args.consideration as readonly { itemType: number; token: string; identifier: bigint; amount: bigint }[];
     const isPayment = (i: { itemType: number }) => i.itemType <= 1; // native ETH or ERC-20
+    let side: "offerSide" | "considerationSide" = "offerSide";
     let nfts = offer.filter((i) => i.token.toLowerCase() === broker);
     let payment = consideration.filter(isPayment).reduce((s, i) => s + i.amount, 0n);
     if (nfts.length === 0) {
+      side = "considerationSide";
       nfts = consideration.filter((i) => i.token.toLowerCase() === broker);
       payment = offer.filter(isPayment).reduce((s, i) => s + i.amount, 0n);
     }
     if (nfts.length === 0 || payment === 0n) continue;
     const per = Number(formatEther(payment)) / nfts.length;
     for (const n of nfts) {
-      prices.set(n.identifier.toString(), (prices.get(n.identifier.toString()) ?? 0) + per);
+      const key = n.identifier.toString();
+      const acc = bySide.get(key) ?? { offerSide: 0, considerationSide: 0 };
+      acc[side] += per;
+      bySide.set(key, acc);
     }
+  }
+  const prices = new Map<string, number>();
+  for (const [key, acc] of bySide) {
+    const matchedPair = acc.offerSide > 0 && acc.considerationSide > 0;
+    prices.set(key, matchedPair ? Math.max(acc.offerSide, acc.considerationSide) : acc.offerSide + acc.considerationSide);
   }
   return prices;
 }
