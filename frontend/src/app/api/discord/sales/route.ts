@@ -54,18 +54,23 @@ async function osFetch(path: string): Promise<Record<string, unknown> | null> {
  *  is versioned. */
 async function brokerImage(id: string): Promise<string | null> {
   if (!osKey()) return null;
-  const cacheKey = `os:image:v3:${id}`;
+  const cacheKey = `os:image:v4:${id}`;
   const cached = await kvGet(cacheKey);
   if (cached) return cached === "none" ? null : cached;
   const data = await osFetch(`/chain/${OS_CHAIN}/contract/${ADDR.broker}/nfts/${id}`);
   if (data === null) return null; // request failed — retry on a later sweep
   const nft = data.nft as Record<string, unknown> | undefined;
-  // display_image_url is OpenSea's CDN-converted raster; image_url is the raw asset,
-  // which for this collection is on-chain SVG — Discord refuses SVG thumbnails.
+  // Discord refuses SVG thumbnails and OpenSea never rasterized this on-chain-SVG
+  // collection (display_image_url is empty), so an SVG asset is routed through the
+  // wsrv.nl image proxy, which converts it to PNG on the fly.
   const candidates = [nft?.display_image_url, nft?.image_url].filter(
     (u): u is string => typeof u === "string" && u.length > 0,
   );
-  const url = candidates.find((u) => !u.toLowerCase().endsWith(".svg")) ?? null;
+  let url = candidates.find((u) => !u.toLowerCase().endsWith(".svg")) ?? null;
+  if (!url) {
+    const svg = candidates.find((u) => u.toLowerCase().endsWith(".svg"));
+    if (svg) url = `https://wsrv.nl/?url=${encodeURIComponent(svg)}&output=png&w=512`;
+  }
   await kvSet(cacheKey, url ?? "none");
   return url;
 }
