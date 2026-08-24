@@ -75,7 +75,9 @@ export function ActivateTab() {
   const { data: burnData } = useReadContract({
     address: ADDR.broker, abi: brokerAbi, functionName: "ACTIVATION_BURN",
   });
-  const activeShares = (activeSharesData as bigint | undefined) ?? 0n;
+  // activeSharesData stays subscribed for refetchShares(); the figure itself now
+  // lives on Home — this tab shows only the visitor's own numbers.
+  void activeSharesData;
   const burnLabel = burnData !== undefined ? fmt(burnData as bigint, 18, 0) : PARAMS.activationBurn.toLocaleString();
   const activeOwned = brokers.filter((item) => item.active).length;
   const backing = useBrokerBacking(brokers.map((b) => b.id));
@@ -587,6 +589,7 @@ export function ActivateTab() {
 
   return (
     <div className="grid gap-5">
+      {/* ── The portfolio: one card that answers "what do I own and what should I do" ── */}
       <div className="card">
         <div className="flex items-center justify-between mb-1">
           <h2 className="pixel-title text-[15px]">Your Brokers</h2>
@@ -596,29 +599,29 @@ export function ActivateTab() {
             </button>
           )}
         </div>
-        <p className="text-ink-soft text-sm mb-1">Pick one to activate. Green = already earning.</p>
         <p className="text-ink-soft text-sm mb-4">
           {backing.totalUsd !== null && brokers.length > 0
             ? <>
-                Your Brokers are backed by <b className="text-ink-strong">{usd(backing.totalUsd)}</b> of real tokenized stock
+                Backed by <b className="text-ink-strong">{usd(backing.totalUsd)}</b> of real tokenized stock
                 {backing.totalEarnedUsd !== null && backing.totalEarnedUsd > 0 && (
-                  <> — and have earned <b className="text-good">{usd(backing.totalEarnedUsd)}</b> since you switched them on</>
+                  <> · earned <b className="text-good">{usd(backing.totalEarnedUsd)}</b> since switch-on</>
                 )}.
+                {" "}Tap a Broker to open it.
               </>
             : "Every active Broker holds real stock in its own wallet."}
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
           <Stat k="Owned" v={brokers.length.toString()} />
-          <Stat k="Active shares" v={activeOwned.toString()} />
+          <Stat k="Active" v={activeOwned.toString()} />
           <Stat k="Claim-ready" v={claimReadyCount.toString()} />
-          <Stat k="Activate all" v={activateAllCost !== undefined ? `${fmt(activateAllCost, 18, 0)} COAT` : "—"} />
+          <Stat k="Your $COAT" v={fmt(coatBal as bigint | undefined, 18, 0)} />
         </div>
         {!address ? (
           <p className="text-ink-soft text-sm">Connect your wallet to see your Brokers.</p>
         ) : brokersLoading ? (
           <p className="text-ink-soft text-sm">Loading…</p>
         ) : brokers.length === 0 ? (
-          <p className="text-ink-soft text-sm">No Brokers yet — mint one first.</p>
+          <p className="text-ink-soft text-sm">No Brokers in this wallet — get one on OpenSea first.</p>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
             {brokers.map((b) => (
@@ -626,230 +629,206 @@ export function ActivateTab() {
             ))}
           </div>
         )}
-        {/* One-by-one path, made obvious: picking an inactive Broker above surfaces its
-            own activate button right here — "Activate all" is a convenience, not the
-            only way. */}
+
+        {/* Selecting an inactive Broker surfaces its activate button right here. */}
         {info && isOwner && !info.active && (
-          <button className="btn btn-accent w-full mt-4" onClick={activate} disabled={act.busy || !canActivate}>
-            <Icon name="power" /> {act.busy ? "WORKING…" : `ACTIVATE #${info.id.toString()} (${burnLabel})`}
-          </button>
-        )}
-        {address && brokers.length > 0 && (
-          <p className="text-ink-soft text-[12px] mt-3">
-            Tap any Broker to select it — inactive ones get their own activate button. You never
-            have to activate all at once.
-          </p>
-        )}
-        {address && inactiveOwned > 1 && (
-          <button className="btn btn-ghost w-full mt-2" onClick={activateAll} disabled={act.busy}>
-            <Icon name="power" /> ACTIVATE ALL INACTIVE ({inactiveOwned})
-          </button>
-        )}
-        {address && claimReadyCount > 0 && (
-          <button className="btn btn-accent w-full mt-2" onClick={claimAll} disabled={claimTx.busy}>
-            <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : `CLAIM ALL (${claimReadyCount})`}
-          </button>
-        )}
-        {address && brokers.length > 0 && (
           <>
-            <button className="btn btn-ghost w-full mt-2" onClick={withdrawAll} disabled={claimTx.busy}>
-              <Icon name="wallet" /> {claimTx.busy ? "WORKING…" : "WITHDRAW EVERYTHING TO MY WALLET"}
+            <button className="btn btn-accent w-full mt-4" onClick={activate} disabled={act.busy || !canActivate}>
+              <Icon name="power" /> {act.busy ? "WORKING…" : `ACTIVATE #${info.id.toString()} — burn ${burnLabel} $COAT`}
             </button>
-            <label className="flex items-center gap-2 mt-2 text-[12px] text-ink-soft cursor-pointer select-none">
-              <input type="checkbox" checked={skipDust} onChange={(e) => setSkipDust(e.target.checked)}
-                className="accent-[var(--c-accent)]" />
-              Skip balances under $0.50 (fewer signatures — they stay in the Broker wallet, still yours)
-            </label>
-            <p className="text-[11px] text-ink-soft mt-1.5">
-              Claims every Broker in one transaction, then moves all stock into your connected
-              wallet — you&rsquo;ll see the total signature count before the first prompt, biggest
-              values first. Wallets that support batching sign everything once.
-            </p>
+            {activateReason && <p className="text-accent text-sm mt-2">{activateReason}</p>}
+            <StepFlow steps={[{ label: "approve COAT", state: steps[0] }, { label: "activate", state: steps[1] }]} />
           </>
         )}
-      </div>
+        <StatusLine msg={act.msg} kind={act.kind} />
 
-      <div className="card">
-        <h2 className="pixel-title text-[15px] mb-1">Activate &amp; earn</h2>
-        <p className="text-ink-soft text-sm mb-5">
-          Burn {burnLabel} $COAT to switch a Broker ON. It starts accruing claimable tokenized-stock
-          rewards; claim moves them into its wallet. Approve + activate in one click.
-        </p>
-        <div className="grid grid-cols-3 gap-2.5 mb-4">
-          <Stat k="Your $COAT" v={fmt(coatBal as bigint | undefined, 18, 0)} />
-          <Stat k="Burn to activate" v={burnLabel} />
-          <Stat k="Active Brokers" v={activeShares.toString()} />
-        </div>
-
-        <span className="label">Broker token id</span>
-        <div className="flex gap-2">
-          <input
-            className="fld"
-            inputMode="numeric"
-            placeholder="e.g. 1"
-            value={tokenId}
-            onChange={(e) => setTokenId(e.target.value.replace(/\D/g, ""))}
-          />
-          <button className="btn btn-ghost shadow-pixel-sm" onClick={() => check()}>
-            <Icon name="search" /> CHECK
-          </button>
-        </div>
-
-        {info && (
-          <div className="flex items-center gap-3 mt-3">
-            <span className="text-ink-soft text-sm">Status:</span>
-            <span className={`badge ${info.active ? "border-good text-good" : "border-ink-soft text-ink-soft"}`}>
-              {info.active ? "ACTIVE" : "INACTIVE"}
-            </span>
+        {/* Bulk actions, tucked under one divider — conveniences, never the only path. */}
+        {address && brokers.length > 0 && (inactiveOwned > 1 || claimReadyCount > 0) && (
+          <div className="mt-4 border-t border-line pt-3 grid gap-2">
+            <span className="label mb-0">Everything at once</span>
+            {inactiveOwned > 1 && (
+              <button className="btn btn-ghost w-full" onClick={activateAll} disabled={act.busy}>
+                <Icon name="power" /> ACTIVATE ALL INACTIVE ({inactiveOwned}
+                {activateAllCost !== undefined ? ` · ${fmt(activateAllCost, 18, 0)} COAT` : ""})
+              </button>
+            )}
+            {claimReadyCount > 0 && (
+              <button className="btn btn-accent w-full" onClick={claimAll} disabled={claimTx.busy}>
+                <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : `CLAIM ALL (${claimReadyCount})`}
+              </button>
+            )}
           </div>
         )}
+        {address && brokers.length > 0 && (
+          <details className="mt-3">
+            <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
+              Withdraw everything to my wallet…
+            </summary>
+            <div className="mt-2 grid gap-2">
+              <button className="btn btn-ghost w-full" onClick={withdrawAll} disabled={claimTx.busy}>
+                <Icon name="wallet" /> {claimTx.busy ? "WORKING…" : "WITHDRAW EVERYTHING TO MY WALLET"}
+              </button>
+              <label className="flex items-center gap-2 text-[12px] text-ink-soft cursor-pointer select-none">
+                <input type="checkbox" checked={skipDust} onChange={(e) => setSkipDust(e.target.checked)}
+                  className="accent-[var(--c-accent)]" />
+                Skip balances under $0.50 (fewer signatures — they stay in the Broker wallet, still yours)
+              </label>
+              <p className="text-[11px] text-ink-soft">
+                Claims every Broker, then moves all stock into your connected wallet — you see the
+                total signature count before the first prompt. Batching wallets sign once.
+              </p>
+            </div>
+          </details>
+        )}
+        {!info && <StatusLine msg={claimTx.msg} kind={claimTx.kind} />}
 
-        <button className="btn btn-accent w-full mt-4" onClick={activate} disabled={act.busy || !canActivate}>
-          <Icon name="power" /> {act.busy ? "WORKING…" : "APPROVE + ACTIVATE"}
-        </button>
-        {activateReason && <p className="text-accent text-sm mt-2">{activateReason}</p>}
-        <StepFlow steps={[{ label: "approve COAT", state: steps[0] }, { label: "activate", state: steps[1] }]} />
-        <StatusLine msg={act.msg} kind={act.kind} />
+        {/* Power users: inspect any Broker in the collection, owned or not. */}
+        <details className="mt-3">
+          <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
+            Look up any Broker by id…
+          </summary>
+          <div className="flex gap-2 mt-2">
+            <input
+              className="fld"
+              inputMode="numeric"
+              placeholder="e.g. 1"
+              value={tokenId}
+              onChange={(e) => setTokenId(e.target.value.replace(/\D/g, ""))}
+            />
+            <button className="btn btn-ghost shadow-pixel-sm" onClick={() => check()}>
+              <Icon name="search" /> CHECK
+            </button>
+          </div>
+        </details>
       </div>
 
-      <div className="card">
-        <h2 className="pixel-title text-[15px] mb-1">Your Broker&apos;s wallet</h2>
-        <p className="text-ink-soft text-sm mb-4">
-          Unclaimed rewards are shown separately below. Claimed stocks live in the self-custodial ERC-6551
-          wallet and move with the NFT only while you leave them there.
-        </p>
-        {!info ? (
-          <p className="text-ink-soft text-sm">Enter a token id and press CHECK.</p>
-        ) : (
-          <>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="border border-line bg-cream shrink-0">
-                <BrokerArtwork tokenId={info.id} size={72} />
-              </div>
-              <div>
-                <div className="font-pixel text-sm text-ink-strong">Broker #{info.id.toString()}</div>
-                <div className="flex items-center gap-2 text-sm mt-1">
-                  <span className="text-ink-soft">wallet:</span>
-                  <code className="font-pixel text-[11px]">{short(info.wallet)}</code>
-                  <button
-                    className="font-mono text-[10px] border border-line px-1.5 py-0.5 text-ink-soft hover:text-ink-strong hover:border-ink transition-colors"
-                    title="Copy this Broker's wallet address"
-                    onClick={() => {
-                      navigator.clipboard.writeText(info.wallet);
-                      act.setStatus(`Broker #${info.id} wallet copied: ${info.wallet}`, "ok");
-                    }}
-                  >
-                    copy ⧉
-                  </button>
-                </div>
-              </div>
+      {/* ── The selected Broker: everything about ONE Broker, only when one is open ── */}
+      {info && (
+        <div className="card">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="border border-line bg-cream shrink-0">
+              <BrokerArtwork tokenId={info.id} size={72} />
             </div>
-            {holdings.length ? (
-              <div className="grid gap-1.5 mt-3">
-                {holdings.map((h) => (
-                  <div key={h.token} className="flex items-center gap-3">
-                    <span className="badge">{h.sym}</span>
-                    <span className="font-pixel text-sm">{fmt(h.bal, h.decimals, 7)}</span>
-                  </div>
-                ))}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-pixel text-sm text-ink-strong">Broker #{info.id.toString()}</span>
+                <span className={`badge ${info.active ? "border-good text-good" : "border-ink-soft text-ink-soft"}`}>
+                  {info.active ? "ACTIVE" : "INACTIVE"}
+                </span>
               </div>
-            ) : (
-              <p className="text-ink-soft text-sm mt-3">No claimed stock in this wallet yet.</p>
-            )}
-            {pending.length > 0 && (
-              <div className="mt-4 border-t border-line pt-3">
-                <div className="label">Accruing — auto-claimed to this wallet hourly</div>
-                {pending.map((h) => <div key={h.sym} className="text-sm">{h.sym}: {fmt(h.bal, 18, 4)}</div>)}
-              </div>
-            )}
-          </>
-        )}
-        <button className="btn btn-accent w-full mt-4" onClick={claimOnly} disabled={!isOwner || !hasClaimable || claimTx.busy}>
-          <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM → BROKER WALLET"}
-        </button>
-        {info && isOwner && (
-          // Always visible so the feature never seems to vanish; disabled with an inline
-          // reason when the Broker wallet is empty and nothing is pending.
-          <button className="btn btn-ghost w-full mt-2" onClick={withdraw}
-            disabled={claimTx.busy || (holdings.length === 0 && !hasClaimable)}>
-            {claimTx.busy
-              ? "WITHDRAWING…"
-              : holdings.length === 0 && !hasClaimable
-                ? "Withdraw — wallet is empty, nothing to move"
-                : "Withdraw to my wallet (optional)"}
-          </button>
-        )}
-        {info && isOwner && (
-          <p className="text-ink-soft text-sm mt-2">
-            Earned stock is claimed into your Broker&apos;s wallet automatically about once an hour, and one Claim
-            settles anything still pending in a single transaction. It lives in your Broker&apos;s self-custodial
-            wallet and moves with the NFT — no further step needed. Optionally, &quot;Withdraw&quot; moves it out to your
-            connected wallet (one transfer per token).
-            {!hasClaimable && !holdings.length && " Nothing to claim yet."}
-          </p>
-        )}
-        <StatusLine msg={claimTx.msg} kind={claimTx.kind} />
-
-        {info && isOwner && (
-          <div className="mt-5 border-t border-line pt-4">
-            <span className="label">Transfer accumulated stocks</span>
-            <p className="text-ink-soft text-sm mb-2">
-              Sends stock out of this Broker&apos;s wallet. The Broker NFT stays with you and remains active.
-            </p>
-            <div className="grid sm:grid-cols-2 gap-2 mb-2">
-              <select
-                className="fld font-pixel text-[12px]"
-                value={selectedStock}
-                onChange={(event) => {
-                  setSelectedStock(event.target.value as Address);
-                  setTransferAmount("");
-                }}
-                disabled={!holdings.length}
-              >
-                {holdings.map((holding) => (
-                  <option key={holding.token} value={holding.token}>
-                    {holding.sym} · {fmt(holding.bal, holding.decimals, 7)}
-                  </option>
-                ))}
-              </select>
-              <div className="flex gap-2">
-                <input
-                  className="fld font-pixel text-[12px]"
-                  inputMode="decimal"
-                  placeholder="Amount"
-                  value={transferAmount}
-                  onChange={(event) => setTransferAmount(event.target.value.replace(/[^0-9.]/g, ""))}
-                />
+              <div className="flex items-center gap-2 text-sm mt-1">
+                <span className="text-ink-soft">wallet:</span>
+                <code className="font-pixel text-[11px]">{short(info.wallet)}</code>
                 <button
-                  className="btn btn-ghost px-3"
-                  type="button"
-                  disabled={!selectedHolding}
-                  onClick={() => selectedHolding && setTransferAmount(
-                    formatUnits(selectedHolding.bal, selectedHolding.decimals),
-                  )}
+                  className="font-mono text-[10px] border border-line px-1.5 py-0.5 text-ink-soft hover:text-ink-strong hover:border-ink transition-colors"
+                  title="Copy this Broker's wallet address"
+                  onClick={() => {
+                    navigator.clipboard.writeText(info.wallet);
+                    act.setStatus(`Broker #${info.id} wallet copied: ${info.wallet}`, "ok");
+                  }}
                 >
-                  MAX
+                  copy ⧉
                 </button>
               </div>
             </div>
-            <div className="flex gap-2">
-              <input
-                className="fld font-pixel text-[12px]"
-                placeholder="0xrecipient…"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value.trim())}
-              />
-              <button className="btn btn-ghost shadow-pixel-sm" onClick={transferStock} disabled={xfer.busy || !isAddress(recipient) || !selectedHolding || !transferAmount}>
-                <Icon name="arrow-right" /> SEND
-              </button>
-            </div>
-            <StatusLine msg={xfer.msg} kind={xfer.kind} />
           </div>
-        )}
-      </div>
+          <p className="text-ink-soft text-[12px] mb-3">
+            Earned stock auto-claims into this wallet about once an hour and moves with the NFT.
+          </p>
+          {holdings.length ? (
+            <div className="grid gap-1.5">
+              {holdings.map((h) => (
+                <div key={h.token} className="flex items-center gap-3">
+                  <span className="badge">{h.sym}</span>
+                  <span className="font-pixel text-sm">{fmt(h.bal, h.decimals, 7)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-ink-soft text-sm">No claimed stock in this wallet yet.</p>
+          )}
+          {pending.length > 0 && (
+            <div className="mt-4 border-t border-line pt-3">
+              <div className="label">Accruing — auto-claimed to this wallet hourly</div>
+              {pending.map((h) => <div key={h.sym} className="text-sm">{h.sym}: {fmt(h.bal, 18, 4)}</div>)}
+            </div>
+          )}
+          {isOwner && hasClaimable && (
+            <button className="btn btn-accent w-full mt-4" onClick={claimOnly} disabled={claimTx.busy}>
+              <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM NOW → BROKER WALLET"}
+            </button>
+          )}
+          {isOwner && (holdings.length > 0 || hasClaimable) && (
+            <button className="btn btn-ghost w-full mt-2" onClick={withdraw} disabled={claimTx.busy}>
+              {claimTx.busy ? "WITHDRAWING…" : "Withdraw to my wallet (optional)"}
+            </button>
+          )}
+          <StatusLine msg={claimTx.msg} kind={claimTx.kind} />
+
+          {isOwner && holdings.length > 0 && (
+            <details className="mt-4 border-t border-line pt-3">
+              <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
+                Send stock from this Broker to another address…
+              </summary>
+              <p className="text-ink-soft text-sm mt-2 mb-2">
+                The Broker NFT stays with you and remains active.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-2 mb-2">
+                <select
+                  className="fld font-pixel text-[12px]"
+                  value={selectedStock}
+                  onChange={(event) => {
+                    setSelectedStock(event.target.value as Address);
+                    setTransferAmount("");
+                  }}
+                  disabled={!holdings.length}
+                >
+                  {holdings.map((holding) => (
+                    <option key={holding.token} value={holding.token}>
+                      {holding.sym} · {fmt(holding.bal, holding.decimals, 7)}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <input
+                    className="fld font-pixel text-[12px]"
+                    inputMode="decimal"
+                    placeholder="Amount"
+                    value={transferAmount}
+                    onChange={(event) => setTransferAmount(event.target.value.replace(/[^0-9.]/g, ""))}
+                  />
+                  <button
+                    className="btn btn-ghost px-3"
+                    type="button"
+                    disabled={!selectedHolding}
+                    onClick={() => selectedHolding && setTransferAmount(
+                      formatUnits(selectedHolding.bal, selectedHolding.decimals),
+                    )}
+                  >
+                    MAX
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="fld font-pixel text-[12px]"
+                  placeholder="0xrecipient…"
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value.trim())}
+                />
+                <button className="btn btn-ghost shadow-pixel-sm" onClick={transferStock} disabled={xfer.busy || !isAddress(recipient) || !selectedHolding || !transferAmount}>
+                  <Icon name="arrow-right" /> SEND
+                </button>
+              </div>
+              <StatusLine msg={xfer.msg} kind={xfer.kind} />
+            </details>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
 
 function Stat({ k, v }: { k: string; v: string }) {
   return (
