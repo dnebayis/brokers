@@ -79,6 +79,33 @@ export function ActivateTab() {
   const burnLabel = burnData !== undefined ? fmt(burnData as bigint, 18, 0) : PARAMS.activationBurn.toLocaleString();
   const activeOwned = brokers.filter((item) => item.active).length;
   const backing = useBrokerBacking(brokers.map((b) => b.id));
+  // Each Broker's own 6551 wallet address, so the card can offer one-tap copy
+  // (people send stock/tips straight to a Broker). accountOf is a pure view and
+  // the address never changes, so one fetch per owned id is enough.
+  const [walletsById, setWalletsById] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let stale = false;
+    const missing = brokers.filter((b) => !walletsById[b.id.toString()]);
+    if (missing.length === 0) return;
+    Promise.all(
+      missing.map(async (b) => {
+        try {
+          const w = await client.readContract({
+            address: ADDR.broker, abi: brokerAbi, functionName: "accountOf", args: [b.id],
+          });
+          return [b.id.toString(), w as string] as const;
+        } catch {
+          return null;
+        }
+      }),
+    ).then((pairs) => {
+      if (stale) return;
+      const found = pairs.filter((p): p is readonly [string, string] => p !== null);
+      if (found.length > 0) setWalletsById((prev) => ({ ...prev, ...Object.fromEntries(found) }));
+    });
+    return () => { stale = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brokers]);
   const inactiveOwned = brokers.length - activeOwned;
   const activateAllCost = burnData !== undefined ? (burnData as bigint) * BigInt(inactiveOwned) : undefined;
   const refetch = () => { refetchShares(); refetchCoat(); };
@@ -595,7 +622,7 @@ export function ActivateTab() {
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
             {brokers.map((b) => (
-              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} />
+              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} wallet={walletsById[b.id.toString()]} />
             ))}
           </div>
         )}
@@ -704,6 +731,16 @@ export function ActivateTab() {
                 <div className="flex items-center gap-2 text-sm mt-1">
                   <span className="text-ink-soft">wallet:</span>
                   <code className="font-pixel text-[11px]">{short(info.wallet)}</code>
+                  <button
+                    className="font-mono text-[10px] border border-line px-1.5 py-0.5 text-ink-soft hover:text-ink-strong hover:border-ink transition-colors"
+                    title="Copy this Broker's wallet address"
+                    onClick={() => {
+                      navigator.clipboard.writeText(info.wallet);
+                      act.setStatus(`Broker #${info.id} wallet copied: ${info.wallet}`, "ok");
+                    }}
+                  >
+                    copy ⧉
+                  </button>
                 </div>
               </div>
             </div>

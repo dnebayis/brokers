@@ -74,7 +74,7 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
             </p>
             <button className="btn btn-ghost mt-auto self-start text-[11px] px-3 py-2.5"
               onClick={() => onNavigate("activate")}>
-              Activate yours &#8594;
+              Open My Brokers &#8594;
             </button>
           </li>
           <li className="flex flex-col">
@@ -108,9 +108,6 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
       {/* Shell vs working Broker — the live activation math */}
       <ActivationMath onNavigate={onNavigate} />
 
-      {/* Proof & transparency — verifiable facts + live burn/buy activity */}
-      <ProofPanel />
-
       {/* Rare gallery */}
       <section className="card">
         <h2 className="pixel-title text-[15px] mb-1">A few of the rares</h2>
@@ -137,6 +134,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
         </div>
       </section>
 
+      {/* Proof & transparency — verifiable facts + live burn/buy activity.
+          Deliberately last: it is the densest section, for auditors, not newcomers. */}
+      <ProofPanel />
     </div>
   );
 }

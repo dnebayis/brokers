@@ -98,3 +98,44 @@
     @apply font-pixel text-[10px] tracking-widest uppercase px-2.5 py-1.5 border-[1.5px] border-accent text-accent;
   }
 }
+
+/* Soft cross-tab transition: the panel fades in and settles upward on every tab
+   switch (keyed remount). Sections inside stagger slightly so long pages feel
+   composed rather than dumped. Both effects collapse to nothing for visitors
+   who prefer reduced motion. */
+@keyframes tab-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tab-panel {
+  animation: tab-panel-in 220ms ease-out both;
+}
+.tab-panel > * > section,
+.tab-panel > section {
+  animation: tab-panel-in 260ms ease-out both;
+}
+.tab-panel > * > section:nth-child(2),
+.tab-panel > section:nth-child(2) {
+  animation-delay: 40ms;
+}
+.tab-panel > * > section:nth-child(3),
+.tab-panel > section:nth-child(3) {
+  animation-delay: 80ms;
+}
+.tab-panel > * > section:nth-child(n + 4),
+.tab-panel > section:nth-child(n + 4) {
+  animation-delay: 120ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-panel,
+  .tab-panel > * > section,
+  .tab-panel > section {
+    animation: none;
+  }
+}

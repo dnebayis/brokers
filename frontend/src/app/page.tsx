@@ -25,18 +25,22 @@ export default function Page() {
     setTab(next);
     window.localStorage.setItem("coattail.activeTab", next);
     window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${next}`);
+    // A tab is a page: start it at the top instead of wherever the last one was
+    // scrolled. Instant, not smooth — the panel's own fade covers the change.
+    window.scrollTo({ top: 0 });
   }
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1">
         <Tabs active={tab} onChange={selectTab} />
+        {/* key remounts the panel per tab so the entrance animation replays */}
         {tab === "home" ? (
-          <div className="py-6 lg:py-8">
+          <div key={tab} className="tab-panel py-6 lg:py-8">
             <HomeTab onNavigate={selectTab} />
           </div>
         ) : (
-          <div className="py-6 lg:py-8 grid gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <div key={tab} className="tab-panel py-6 lg:py-8 grid gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
             <div className="min-w-0">
               {tab === "swap" && SWAP_ENABLED && <SwapTab />}
               {tab === "activate" && <ActivateTab />}
