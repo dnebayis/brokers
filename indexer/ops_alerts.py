@@ -25,7 +25,9 @@ def alert(message: str) -> bool:
                 "username": "Coattail Ops",
                 "content": message[:1900],  # Discord hard limit 2000
             }).encode(),
-            headers={"Content-Type": "application/json"},
+            # Discord sits behind Cloudflare, which rejects the default Python-urllib
+            # User-Agent — the same 1010 class the RPC config already works around.
+            headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"},
         )
         urllib.request.urlopen(req, timeout=10)
         return True
