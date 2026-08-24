@@ -88,7 +88,9 @@ export function DocsTab() {
         Uniswap v4 <Code>afterSwap</Code> hook — skims 1% of every swap: <b>sells</b> (COAT→ETH) take the fee
         in ETH → <Code>FeeSplitter</Code> → the flywheel; <b>buys</b> (ETH→COAT) take it in COAT and burn it, reducing <Code>totalSupply</Code>. The
         FeeSplitter routes ETH <b>80 / 10 / 10</b>: 80% to the Booster (buys stock for holders), 10% to the
-        project treasury (infra/audit/dev — not the creator), 10% to $COAT buyback &amp; burn.
+        project treasury (infra/audit/dev — not the creator), 10% to a settable buyback sink. By holder vote
+        (executed on-chain, Aug 2026) that buyback slice currently points at the Booster too — an effective{" "}
+        <b>90% stock / 10% treasury</b> flow, reversible by the same setter.
       </P>
       <P>
         Contracts do not run themselves. An independent hourly keeper advances hook flush, splitter flush,
@@ -107,7 +109,7 @@ export function DocsTab() {
             ["Primary mint cap", "2 per address; secondary ownership unrestricted"],
             ["Mint price", "0.001 ETH → creator"],
             ["Secondary royalty", "2.5% → current creator (ERC-2981)"],
-            ["Fee split", "80% stock / 10% project / 10% buyback-burn"],
+            ["Fee split", "80/10/10 constants; buyback slice voted to the Booster — effective 90% stock / 10% project"],
           ].map(([k, v]) => (
             <tr key={k}>
               <td className="border border-line px-2.5 py-2 font-medium w-40">{k}</td>
@@ -157,6 +159,37 @@ export function DocsTab() {
         v4 pool id: <Code>{ADDR.poolId.slice(0, 10)}…{ADDR.poolId.slice(-6)}</Code> · fee 1% · single-sided 1B $COAT.
       </p>
 
+      <H>Open Broker API</H>
+      <P>
+        A free, keyless read API for integrators — campaign tooling, dashboards, partner collections.
+        Everything it returns is derived live from the verified contracts; the API just saves you the ABI
+        work. Responses are CDN-cached for up to an hour, so treat the chain as the source of truth for
+        anything real-time. No authentication, no rate keys, JSON only.
+      </P>
+      <div className="space-y-4 my-3">
+        <div className="border border-line bg-cream-2 p-3">
+          <div className="font-pixel text-[12px] text-ink-strong">GET /api/broker/{"{id}"}</div>
+          <p className="text-sm text-ink mt-1.5">
+            One Broker&apos;s full state: current <Code>owner</Code>, its ERC-6551 <Code>wallet</Code>,{" "}
+            <Code>active</Code> flag, <Code>claimable</Code> salary still sitting in the Booster, and{" "}
+            <Code>holdings</Code> already claimed into the wallet. Amounts come as raw units
+            (string) plus a <Code>formatted</Code> decimal. <Code>404</Code> if the token doesn&apos;t exist.
+          </p>
+        </div>
+        <div className="border border-line bg-cream-2 p-3">
+          <div className="font-pixel text-[12px] text-ink-strong">GET /api/wallet/{"{address}"}/brokers</div>
+          <p className="text-sm text-ink mt-1.5">
+            Every Broker a wallet currently holds: <Code>id</Code>, <Code>active</Code> status and each
+            Broker&apos;s 6551 <Code>wallet</Code>, plus a <Code>count</Code>. Ownership is confirmed
+            on-chain per token, so a stale marketplace index can&apos;t leak into results.
+          </p>
+        </div>
+      </div>
+      <p className="text-ink-soft text-sm">
+        Example: <Code>curl https://www.coattail.cash/api/broker/311</Code> — both endpoints also return the
+        chain id and core contract addresses so integrations never hardcode them.
+      </p>
+
       <H>Security &amp; trust</H>
       <ul className="list-disc ml-5 space-y-1.5 text-ink my-2.5">
         <li><b>Your funds, your keys.</b> Before claim, entitlement is recorded in Booster; after claim, stock is in the Broker&apos;s ERC-6551 wallet controlled by the current NFT holder.</li>
@@ -194,7 +227,7 @@ function TokenomicsCharts() {
   return (
     <div className="grid sm:grid-cols-2 gap-3 my-5" aria-label="Tokenomics charts">
       <Chart title="Initial COAT allocation" rows={[["Permanent LP", 100, "1B"], ["Team / reserve", 0, "0"]]} />
-      <Chart title="Sell-side fee flow" rows={[["Stock rewards", 80, "80%"], ["Treasury", 10, "10%"], ["Buyback burn", 10, "10%"]]} />
+      <Chart title="Sell-side fee flow (post-vote)" rows={[["Stock rewards", 90, "90%"], ["Treasury", 10, "10%"]]} />
       <div className="border border-line bg-cream-2 p-3 sm:col-span-2">
         <div className="font-pixel text-[11px] mb-3">Supply so far — burns only ever remove</div>
         <svg viewBox="0 0 600 150" className="w-full" role="img"
