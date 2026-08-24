@@ -31,3 +31,14 @@ jobs:
             -d '{"username":"Coattail Ops","content":"✅ ops-alert test — the wire works"}')
           echo "HTTP $status"
           cat /tmp/resp; echo
+      - uses: actions/checkout@v4
+      - name: Same delivery via the keeper's exact python path
+        env:
+          OPS_WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL }}
+        working-directory: indexer
+        run: |
+          python3 - <<'EOF'
+          from ops_alerts import alert
+          ok = alert("🐍 ops-alert test via python urllib — the keeper's own path")
+          print("python alert() returned:", ok)
+          EOF
