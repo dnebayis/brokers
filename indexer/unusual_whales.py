@@ -85,6 +85,7 @@ def fetch_congress_trades() -> List[Dict]:
     duplicates = 0
     prev_page_sig = None
     repeat_detected = False
+    old_filed_pages = 0
     for page in range(1, UW_MAX_PAGES + 1):
         response = _get_with_retry(url, headers, {
             "limit": 500,
@@ -103,17 +104,23 @@ def fetch_congress_trades() -> List[Dict]:
             repeat_detected = True
             break
         prev_page_sig = page_sig
-        # The feed arrives newest-first and the server does not reliably honor
-        # transaction_newer_than: pages deep in the walk are simply history from before
-        # the window. Once a whole page's transactions predate the cutoff there is
-        # nothing newer further down — stop, instead of paying 40 calls/hour to fetch
-        # rows the aggregation window discards anyway.
-        page_dates = [_date(x.get("transaction_date")) for x in batch]
-        page_dates = [d for d in page_dates if d]
-        if page_dates and max(page_dates) < newer_than:
-            print(f"UW window exhausted at page {page} (newest row {max(page_dates)} "
-                  f"< cutoff {newer_than}); stopping early")
-            break
+        # Early stop, keyed on FILED date, never transaction date: the feed is ordered
+        # by filing, and late filers scatter old transaction dates through early pages
+        # (a transaction-date stop once cut the walk at page 3 and dropped 95% of the
+        # window). A transaction inside the window must be FILED inside the window
+        # (nobody files before trading), so pages whose filings all predate the cutoff
+        # cannot contain in-window rows. Two consecutive such pages end the walk —
+        # the second page guards against any local ordering wobble.
+        page_filed = [_date(x.get("filed_at_date")) for x in batch]
+        page_filed = [d for d in page_filed if d]
+        if page_filed and max(page_filed) < newer_than:
+            old_filed_pages += 1
+            if old_filed_pages >= 2:
+                print(f"UW window exhausted at page {page} (newest filing {max(page_filed)} "
+                      f"< cutoff {newer_than}, second consecutive pre-window page); stopping early")
+                break
+        else:
+            old_filed_pages = 0
         for item in batch:
             symbol = str(item.get("ticker") or "").strip().upper()
             if not symbol:
