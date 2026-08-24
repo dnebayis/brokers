@@ -1,0 +1,33 @@
+# One-shot diagnostic: posts a test message to the OPS_WEBHOOK_URL secret and prints
+# the HTTP status + response body (never the URL itself). Dispatch manually; delete
+# once the ops channel is verified.
+name: ops-alert-test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Post test alert and show response
+        env:
+          OPS_WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "$OPS_WEBHOOK_URL" ]; then echo "secret is EMPTY"; exit 1; fi
+          case "$OPS_WEBHOOK_URL" in
+            https://discord.com/api/webhooks/*|https://discordapp.com/api/webhooks/*)
+              echo "url shape: looks like a Discord webhook" ;;
+            *)
+              echo "url shape: does NOT look like a Discord webhook (https://discord.com/api/webhooks/...)" ;;
+          esac
+          status=$(curl -sS -o /tmp/resp -w "%{http_code}" -X POST "$OPS_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d '{"username":"Coattail Ops","content":"✅ ops-alert test — the wire works"}')
+          echo "HTTP $status"
+          cat /tmp/resp; echo
