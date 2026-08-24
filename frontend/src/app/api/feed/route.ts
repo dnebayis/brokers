@@ -87,18 +87,26 @@ export async function GET() {
 
   try {
     if (unusualWhalesKey) {
-      const payload = (await fetchJson(
-        "https://api.unusualwhales.com/api/politician-portfolios/recent_trades?limit=100&page=1",
-        { headers: { Authorization: `Bearer ${unusualWhalesKey}`, Accept: "application/json" } },
-      )) as { data?: any[] };
-      return NextResponse.json(finish("unusual_whales", mapUw(payload.data ?? [])));
+      // A dead UW key (rotation, quota) must not black out the tab while a working
+      // FMP fallback sits right below — fall through instead of throwing out.
+      try {
+        const payload = (await fetchJson(
+          "https://api.unusualwhales.com/api/politician-portfolios/recent_trades?limit=100&page=1",
+          { headers: { Authorization: `Bearer ${unusualWhalesKey}`, Accept: "application/json" } },
+        )) as { data?: any[] };
+        return NextResponse.json(finish("unusual_whales", mapUw(payload.data ?? [])));
+      } catch (err) {
+        if (!fmpKey) throw err;
+        console.warn("feed: unusual_whales failed, falling back to fmp:", String(err));
+      }
     }
 
     if (fmpKey) {
       const base = "https://financialmodelingprep.com/stable";
+      // FMP's free tier rejects limit > 25 with a 402 — 25 per chamber is the ceiling.
       const [house, senate] = await Promise.all([
-        fetchJson(`${base}/house-latest?page=0&limit=100&apikey=${encodeURIComponent(fmpKey)}`),
-        fetchJson(`${base}/senate-latest?page=0&limit=100&apikey=${encodeURIComponent(fmpKey)}`),
+        fetchJson(`${base}/house-latest?page=0&limit=25&apikey=${encodeURIComponent(fmpKey)}`),
+        fetchJson(`${base}/senate-latest?page=0&limit=25&apikey=${encodeURIComponent(fmpKey)}`),
       ]);
       return NextResponse.json(
         finish("fmp", [
@@ -114,7 +122,8 @@ export async function GET() {
       status: "unconfigured",
       items: [],
     });
-  } catch {
+  } catch (err) {
+    console.warn("feed: upstream failed:", String(err));
     return NextResponse.json<FeedResponse>(
       { live: false, source: unusualWhalesKey ? "unusual_whales" : "fmp", status: "upstream_error", items: [] },
       { status: 502 },
