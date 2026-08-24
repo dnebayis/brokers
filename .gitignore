@@ -42,3 +42,6 @@ reports/deployments/*.json
 .vercel
 .env*
 contracts/lib
+
+# G's on Ape campaign — internal, repo is public
+gs-campaign/
