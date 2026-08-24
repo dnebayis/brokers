@@ -103,6 +103,17 @@ def fetch_congress_trades() -> List[Dict]:
             repeat_detected = True
             break
         prev_page_sig = page_sig
+        # The feed arrives newest-first and the server does not reliably honor
+        # transaction_newer_than: pages deep in the walk are simply history from before
+        # the window. Once a whole page's transactions predate the cutoff there is
+        # nothing newer further down — stop, instead of paying 40 calls/hour to fetch
+        # rows the aggregation window discards anyway.
+        page_dates = [_date(x.get("transaction_date")) for x in batch]
+        page_dates = [d for d in page_dates if d]
+        if page_dates and max(page_dates) < newer_than:
+            print(f"UW window exhausted at page {page} (newest row {max(page_dates)} "
+                  f"< cutoff {newer_than}); stopping early")
+            break
         for item in batch:
             symbol = str(item.get("ticker") or "").strip().upper()
             if not symbol:
