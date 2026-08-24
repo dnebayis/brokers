@@ -74,6 +74,7 @@ def fetch_congress_trades() -> List[Dict]:
     # timestamp (a timestamp returns 422 Unprocessable Entity).
     newer_than = (datetime.now(timezone.utc) - timedelta(days=TRAILING_DAYS)).date().isoformat()
     rows: List[Dict] = []
+    batch: List = []
     for page in range(1, UW_MAX_PAGES + 1):
         response = _get_with_retry(url, headers, {
             "limit": 500,
@@ -99,4 +100,14 @@ def fetch_congress_trades() -> List[Dict]:
             })
         if len(batch) < 500:
             break
+    else:
+        # The loop exhausted UW_MAX_PAGES with the last page still full: the trailing
+        # window holds more rows than the cap and the OLDEST disclosures were silently
+        # dropped. That skews the basket without any error, so make it loud.
+        if len(batch) == 500:
+            from ops_alerts import alert
+            message = (f"Unusual Whales page cap hit: {UW_MAX_PAGES} pages x 500 rows all full — "
+                       f"oldest disclosures in the window are being dropped; raise UW_MAX_PAGES")
+            print(f"::warning::{message}")
+            alert(f"⚠️ indexer: {message}")
     return rows

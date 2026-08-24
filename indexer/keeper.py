@@ -194,8 +194,11 @@ def main() -> None:
     # mid-run and strands the buffered fees for an hour.
     gas_floor = wei_env("KEEPER_GAS_FLOOR_WEI", "10000000000000000")  # 0.01 ETH
     if KEEPER_PRIVATE_KEY and 0 < keeper_gas_wei < gas_floor:
-        print(f"::warning::keeper relay low on gas: {keeper_gas_wei / 1e18:.5f} ETH "
-              f"(floor {gas_floor / 1e18:.5f} ETH) — top up the relay wallet")
+        from ops_alerts import alert
+        gas_message = (f"keeper relay low on gas: {keeper_gas_wei / 1e18:.5f} ETH "
+                       f"(floor {gas_floor / 1e18:.5f} ETH) — top up the relay wallet")
+        print(f"::warning::{gas_message}")
+        alert(f"⛽ {gas_message}")
     if not args.execute or not plan:
         return
     if not KEEPER_PRIVATE_KEY:
@@ -311,6 +314,9 @@ def main() -> None:
                   "funds accrue until Monday's first fresh feed")
             fatal = []
         if fatal and os.environ.get("KEEPER_STRICT") == "1":
+            from ops_alerts import alert
+            alert("🔴 keeper FAILED — " + message + " | " +
+                  "; ".join(f"{a}: {str(failed_errors.get(a, ''))[:120]}" for a in fatal))
             raise RuntimeError(message)
         print(f"::warning::{message}")
 

@@ -46,6 +46,9 @@ jobs:
       KEEPER_STRICT: "1"
       # Reuses the existing keeper key (shared-key launch, accepted-risk decision).
       KEEPER_PRIVATE_KEY: ${{ secrets.TESTNET_KEEPER_PRIVATE_KEY }}
+      # Optional Discord channel webhook for operator alerts (low relay gas, fatal
+      # stage deferrals). Unset -> alerts are silent no-ops.
+      OPS_WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

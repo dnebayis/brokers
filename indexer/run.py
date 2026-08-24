@@ -211,6 +211,9 @@ def main():
     )
     for error in health["errors"]:
         print(f"  health: {error}")
+    if not health["ok"] and not args.sample:
+        from ops_alerts import alert
+        alert("🔴 indexer snapshot health FAILED: " + "; ".join(health["errors"]))
     # Roadmap phase 02 ("an earlier signal") is a measurable claim: report how far the
     # newest filing is behind us. Disclosure dates are day-granular, so the honest unit
     # is days — the hourly cadence bounds OUR added lag to <1h on top of that.
@@ -232,6 +235,19 @@ def main():
     from config import SMART_BASKET
     shadow_report = None
     if SMART_BASKET != "off":
+        # Track-record layer visibility: the member multipliers key on UW's name string,
+        # so an upstream name-format change would silently drop the whole layer to 1.0x.
+        # One line per run makes that class of breakage observable.
+        from aggregate import member_multipliers, _is_buy
+        scores = member_multipliers()
+        buy_rows = [t for t in trades if _is_buy(t.get("type", ""))]
+        matched = sum(1 for t in buy_rows if str(t.get("who", "")).strip().lower() in scores)
+        print(f"Track-record match: {matched}/{len(buy_rows)} buy rows carry a member score "
+              f"({len(scores)} members in file)")
+        if scores and buy_rows and matched == 0:
+            from ops_alerts import alert
+            alert("⚠️ indexer: track-record layer matched 0 buy rows — "
+                  "member name format may have changed upstream; layer is running inert")
         smart_net, vetoed = smart_aggregate(trades)
         smart_basket = to_basket({s: v for s, v in smart_net.items() if s not in vetoed}, buyers)
         live_w = dict(basket)
@@ -254,6 +270,24 @@ def main():
         if SMART_BASKET == "live":
             basket = smart_basket
 
+        # Append this run's shadow snapshot to a JSONL history so the shadow-vs-live
+        # decision ("weeks of receipts") reads from a series, not from grepping old CI
+        # logs. The workflow persists the file across runs via the actions cache.
+        history_path = os.environ.get("SHADOW_HISTORY_FILE", "")
+        if history_path:
+            try:
+                with open(history_path, "a") as fh:
+                    fh.write(json.dumps({
+                        "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                        "divergenceBps": divergence,
+                        "shadow": [{"ticker": s, "bps": w} for s, w in smart_basket],
+                        "live": [{"ticker": s, "bps": w} for s, w in basket],
+                        "vetoed": sorted(vetoed),
+                    }, sort_keys=True) + "\n")
+                print(f"  shadow history appended -> {history_path}")
+            except OSError as e:
+                print(f"::warning::could not append shadow history: {e}")
+
     # A poke buys every leg atomically, so one illiquid route reverts the whole batch and
     # nothing reaches any Broker. Simulate each leg against the live pools before signing
     # and drop whatever cannot fill today; the manifest's probeOk flag only records
@@ -274,8 +308,11 @@ def main():
         for ticker, bps, reason in dropped:
             print(f"  dropped {ticker} ({bps} bps): {reason}")
         if dropped:
-            print("::warning::route pre-flight dropped " +
-                  ", ".join(f"{t} ({r})" for t, _b, r in dropped))
+            drop_message = ("route pre-flight dropped " +
+                            ", ".join(f"{t} ({r})" for t, _b, r in dropped))
+            print(f"::warning::{drop_message}")
+            from ops_alerts import alert
+            alert(f"⚠️ indexer: {drop_message}")
         preflight_report = {
             "bufferWei": buffer_wei,
             "router": router_address,
