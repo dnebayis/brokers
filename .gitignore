@@ -47,3 +47,5 @@ contracts/lib
 gs-campaign/
 # Zia partnership — internal, repo is public
 zia-pool/
+# UnVault/DIVIT partnership — internal
+unvault-divit/
