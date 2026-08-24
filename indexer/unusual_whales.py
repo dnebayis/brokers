@@ -75,6 +75,16 @@ def fetch_congress_trades() -> List[Dict]:
     newer_than = (datetime.now(timezone.utc) - timedelta(days=TRAILING_DAYS)).date().isoformat()
     rows: List[Dict] = []
     batch: List = []
+    # Every raw row is deduplicated on its full identity, and a page whose content
+    # repeats the previous page stops the walk: raising the page cap 8->16->40 kept
+    # every page full (kept-per-page constant ~330-390), which is the signature of
+    # deep-pagination wraparound/duplication rather than organic data. Exact duplicate
+    # rows are artifacts either way — counting one disclosure N times multiplies its
+    # dollars N times and silently distorts the basket.
+    seen: set = set()
+    duplicates = 0
+    prev_page_sig = None
+    repeat_detected = False
     for page in range(1, UW_MAX_PAGES + 1):
         response = _get_with_retry(url, headers, {
             "limit": 500,
@@ -85,11 +95,19 @@ def fetch_congress_trades() -> List[Dict]:
         batch = payload.get("data", []) if isinstance(payload, dict) else []
         if not isinstance(batch, list):
             raise RuntimeError("Unusual Whales returned an unexpected response shape")
+        page_sig = tuple(
+            (str(x.get("name")), str(x.get("ticker")), str(x.get("transaction_date")))
+            for x in batch[:5]
+        )
+        if batch and page_sig == prev_page_sig:
+            repeat_detected = True
+            break
+        prev_page_sig = page_sig
         for item in batch:
             symbol = str(item.get("ticker") or "").strip().upper()
             if not symbol:
                 continue
-            rows.append({
+            row = {
                 "symbol": symbol,
                 "transactionDate": _date(item.get("transaction_date")),
                 "disclosureDate": _date(item.get("filed_at_date")),
@@ -97,17 +115,29 @@ def fetch_congress_trades() -> List[Dict]:
                 "amount": str(item.get("amounts") or ""),
                 "who": str(item.get("name") or item.get("reporter") or "").strip(),
                 "chamber": str(item.get("member_type") or "").strip().lower(),
-            })
+            }
+            key = tuple(sorted(row.items()))
+            if key in seen:
+                duplicates += 1
+                continue
+            seen.add(key)
+            rows.append(row)
         if len(batch) < 500:
             break
     else:
-        # The loop exhausted UW_MAX_PAGES with the last page still full: the trailing
-        # window holds more rows than the cap and the OLDEST disclosures were silently
-        # dropped. That skews the basket without any error, so make it loud.
+        # The loop exhausted UW_MAX_PAGES with the last page still full AND unique:
+        # the window genuinely holds more rows than the cap and the OLDEST disclosures
+        # were dropped. That skews the basket without any error, so make it loud.
         if len(batch) == 500:
             from ops_alerts import alert
-            message = (f"Unusual Whales page cap hit: {UW_MAX_PAGES} pages x 500 rows all full — "
-                       f"oldest disclosures in the window are being dropped; raise UW_MAX_PAGES")
+            message = (f"Unusual Whales page cap hit: {UW_MAX_PAGES} pages x 500 rows all full "
+                       f"({duplicates} duplicates already removed) — oldest disclosures in the "
+                       f"window are being dropped; raise UW_MAX_PAGES")
             print(f"::warning::{message}")
             alert(f"⚠️ indexer: {message}")
+    if repeat_detected:
+        print(f"UW pagination repeat detected — stopped early; this is an upstream quirk, "
+              f"data below the repeat point is intact")
+    if duplicates:
+        print(f"UW dedupe: dropped {duplicates} exact-duplicate rows, kept {len(rows)} unique")
     return rows
