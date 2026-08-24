@@ -49,15 +49,23 @@ export function useStoredQuery<T>(opts: {
    *  cache right after mount — still with zero network. Client-only consumers (non-default
    *  tabs) skip this and get the cache on their first render. */
   ssrSafe?: boolean;
+  /** Gate on what deserves an hour in storage. A payload failing this is neither
+   *  persisted nor hydrated — a cached ERROR once pinned the Feed tab to "provider
+   *  failed" for a full hour after the server was already healthy again. */
+  persistIf?: (data: T) => boolean;
 }) {
   const [mounted, setMounted] = useState(!opts.ssrSafe);
   useEffect(() => setMounted(true), []);
-  const cached = readCache<T>(opts.storageKey);
+  let cached = readCache<T>(opts.storageKey);
+  if (cached && opts.persistIf && !opts.persistIf(cached.data)) {
+    try { window.localStorage.removeItem(opts.storageKey); } catch { /* best-effort */ }
+    cached = null; // stale failure — refetch right now instead of replaying it
+  }
   const query = useQuery<T>({
     queryKey: opts.queryKey,
     queryFn: async () => {
       const data = await opts.queryFn();
-      writeCache(opts.storageKey, data);
+      if (!opts.persistIf || opts.persistIf(data)) writeCache(opts.storageKey, data);
       return data;
     },
     staleTime: opts.staleTime ?? 60 * 60_000,

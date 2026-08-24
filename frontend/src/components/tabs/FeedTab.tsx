@@ -35,6 +35,8 @@ export function FeedTab() {
     queryKey: ["congress-feed"],
     queryFn: fetchFeed,
     staleTime: 60 * 60_000,
+    // Only a healthy feed earns the hour in storage — failures retry on next visit.
+    persistIf: (d) => d.status === "ok",
   });
 
   return (
