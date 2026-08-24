@@ -43,10 +43,11 @@ MAX_PAGES = 20            # cap pages/chamber (free tier: 250 req/day)
 DATA_SOURCE = os.environ.get("INDEXER_DATA_SOURCE", "auto").lower()
 UNUSUAL_WHALES_API_KEY = os.environ.get("UNUSUAL_WHALES_API_KEY", "")
 UNUSUAL_WHALES_BASE = "https://api.unusualwhales.com"
-# 16 pages x 500 = 8,000 rows of headroom. The 90-day window measured 2,660 rows on
-# 2026-08-24; the old 8-page cap (4,000) could silently drop the OLDEST rows in a heavy
-# filing season. fetch_congress_trades warns loudly when the cap is actually hit.
-UW_MAX_PAGES = int(os.environ.get("UW_MAX_PAGES", "16"))
+# 40 pages x 500 = 20,000 RAW rows of headroom. The first loud-cap run (2026-08-24)
+# revealed the window genuinely holds >8,000 raw rows (~64% carry a ticker and are
+# kept), which means the original 8-page cap had been silently truncating the oldest
+# disclosures the whole time. fetch_congress_trades still warns if even 40 fills up.
+UW_MAX_PAGES = int(os.environ.get("UW_MAX_PAGES", "40"))
 
 # Refuse on-chain writes from implausibly thin/stale upstream snapshots. These
 # gates are configurable, but production should not disable them.
