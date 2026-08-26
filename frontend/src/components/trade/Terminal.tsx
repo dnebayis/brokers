@@ -78,106 +78,184 @@ export function Terminal() {
   });
 
   const [sellQuote, setSellQuote] = useState<string>("");
+  const [buyQuote, setBuyQuote] = useState<string>("");
   const [holdings, setHoldings] = useState<{ symbol: string; text: string }[]>([]);
+  const [slipBps, setSlipBps] = useState(100); // 1% default, applied on top of quoted mins
+  const applySlip = (x: bigint) => (x * (10000n - BigInt(slipBps))) / 10000n;
 
-  // Sell-side quote: per-leg Chainlink floors summed (re-inflated from the 5% guard), fee
-  // off once, then converted into the chosen exit currency. Estimate, not a promise — the
-  // wallet still enforces the on-chain floors.
-  useEffect(() => {
-    if (dir !== "sell" || offline || !address || !livePreset) {
-      setSellQuote("");
-      setHoldings([]);
-      return;
+  const USDG_ONE = 10n ** BigInt(FLOOR.usdgDecimals);
+  const usdgToEthWei = (u: bigint, p8: bigint) =>
+    (u * 10n ** BigInt(26 - FLOOR.usdgDecimals)) / p8;
+  const ethWeiToUsdg = (e: bigint, p8: bigint) => (e * p8 * USDG_ONE) / 10n ** 26n;
+
+  // ETH/USD from the Booster's own source (feed, else manual fallback) — the same source
+  // the contract's guards read, so quote and guard can never disagree on the price.
+  async function readEthUsd8(): Promise<bigint> {
+    const feed = (await client.readContract({
+      address: FLOOR.booster as `0x${string}`,
+      abi: boosterEthUsdAbi,
+      functionName: "ethUsdFeed",
+    })) as `0x${string}`;
+    if (BigInt(feed) !== 0n) {
+      const rd = (await client.readContract({
+        address: feed,
+        abi: aggregatorMiniAbi,
+        functionName: "latestRoundData",
+      })) as readonly [bigint, bigint, bigint, bigint, bigint];
+      return rd[1];
     }
+    return (await client.readContract({
+      address: FLOOR.booster as `0x${string}`,
+      abi: boosterEthUsdAbi,
+      functionName: "ethUsdManualE8",
+    })) as bigint;
+  }
+
+  // Chainlink floor (fee off) for the selected slice of the position, plus what's held.
+  async function readSellFloor(): Promise<{
+    held: { symbol: string; text: string }[];
+    floorNet: bigint;
+  }> {
+    let floor = 0n;
+    const held: { symbol: string; text: string }[] = [];
+    for (const tk of [...livePreset![0]]) {
+      const bal = (await client.readContract({
+        address: tk,
+        abi: erc20MiniAbi,
+        functionName: "balanceOf",
+        args: [address!],
+      })) as bigint;
+      if (bal === 0n) continue;
+      held.push({
+        symbol: symbolOf(tk),
+        text: (Number(bal) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 4 }),
+      });
+      const amt = sellPortion(bal);
+      if (amt === 0n) continue;
+      floor += (await client.readContract({
+        address: router,
+        abi: basketRouterAbi,
+        functionName: "minUsdgOut",
+        args: [tk, amt],
+      })) as bigint;
+    }
+    return { held, floorNet: (floor * (10000n - (feeBps ?? 30n))) / 10000n };
+  }
+
+  // Floor-based minimum in the chosen exit currency: 5% under Chainlink by construction, a
+  // 1% conversion buffer on the ETH leg, then the user's slippage on top. Tight enough to
+  // kill a sandwich, loose enough never to revert an honest fill.
+  async function sellMinOut(floorNet: bigint): Promise<bigint> {
+    if (cur === "usdg") return applySlip(floorNet);
+    const p8 = await readEthUsd8();
+    if (p8 === 0n) return 0n;
+    const ethFloor = (usdgToEthWei(floorNet, p8) * 9900n) / 10000n;
+    if (cur === "eth") return applySlip(ethFloor);
+    const coatFloor = (await client.readContract({
+      address: FLOOR.coatRouter as `0x${string}`,
+      abi: coatRouterQuoteAbi,
+      functionName: "quoteBuy",
+      args: [ethFloor],
+    })) as bigint;
+    return applySlip(coatFloor);
+  }
+
+  // Live quotes, both directions: instant on input (150ms debounce), refreshed from chain
+  // every 10s so the number on screen never drifts from the pools.
+  useEffect(() => {
+    if (offline || !livePreset) return;
     let stale = false;
-    const t = setTimeout(async () => {
+
+    const refresh = async () => {
       try {
-        const tokens = [...livePreset[0]];
-        let usdgFloor = 0n;
-        const held: { symbol: string; text: string }[] = [];
-        for (const tk of tokens) {
-          const bal = (await client.readContract({
-            address: tk,
-            abi: erc20MiniAbi,
-            functionName: "balanceOf",
-            args: [address],
+        if (dir === "sell") {
+          if (!address) return;
+          const { held, floorNet } = await readSellFloor();
+          if (stale) return;
+          setHoldings(held);
+          if (floorNet === 0n) {
+            setSellQuote("nothing to sell yet");
+            return;
+          }
+          const est = (floorNet * 10000n) / 9500n; // re-inflate the guard haircut for display
+          const usd = Number(est) / 10 ** FLOOR.usdgDecimals;
+          if (cur === "usdg") {
+            setSellQuote(`≈ ${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDG`);
+            return;
+          }
+          const p8 = await readEthUsd8();
+          if (p8 === 0n) {
+            setSellQuote(`≈ $${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}`);
+            return;
+          }
+          const ethWei = usdgToEthWei((est * (10000n - (feeBps ?? 30n))) / 10000n, p8);
+          if (cur === "eth") {
+            if (!stale)
+              setSellQuote(
+                `≈ ${(Number(ethWei) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 5 })} ETH`,
+              );
+            return;
+          }
+          const coatOut = (await client.readContract({
+            address: FLOOR.coatRouter as `0x${string}`,
+            abi: coatRouterQuoteAbi,
+            functionName: "quoteBuy",
+            args: [ethWei],
           })) as bigint;
-          if (bal === 0n) continue;
-          held.push({
-            symbol: symbolOf(tk),
-            text: (Number(bal) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 4 }),
-          });
-          const amt = sellPortion(bal);
-          if (amt === 0n) continue;
-          usdgFloor += (await client.readContract({
-            address: router,
-            abi: basketRouterAbi,
-            functionName: "minUsdgOut",
-            args: [tk, amt],
-          })) as bigint;
-        }
-        if (stale) return;
-        setHoldings(held);
-        if (usdgFloor === 0n) {
-          setSellQuote("nothing to sell yet");
-          return;
-        }
-        const est = (usdgFloor * 10000n) / 9500n; // undo the guard haircut
-        const net = (est * (10000n - (feeBps ?? 30n))) / 10000n;
-        const usd = Number(net) / 10 ** FLOOR.usdgDecimals;
-        if (cur === "usdg") {
-          setSellQuote(`≈ ${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDG`);
-          return;
-        }
-        // ETH/USD from the Booster's own source (feed, else manual fallback)
-        let ethUsd8 = 0n;
-        const feed = (await client.readContract({
-          address: FLOOR.booster as `0x${string}`,
-          abi: boosterEthUsdAbi,
-          functionName: "ethUsdFeed",
-        })) as `0x${string}`;
-        if (BigInt(feed) !== 0n) {
-          const rd = (await client.readContract({
-            address: feed,
-            abi: aggregatorMiniAbi,
-            functionName: "latestRoundData",
-          })) as readonly [bigint, bigint, bigint, bigint, bigint];
-          ethUsd8 = rd[1];
-        } else {
-          ethUsd8 = (await client.readContract({
-            address: FLOOR.booster as `0x${string}`,
-            abi: boosterEthUsdAbi,
-            functionName: "ethUsdManualE8",
-          })) as bigint;
-        }
-        if (ethUsd8 === 0n) {
-          setSellQuote(`≈ $${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}`);
-          return;
-        }
-        const ethWei = BigInt(Math.round((usd / (Number(ethUsd8) / 1e8)) * 1e18));
-        if (cur === "eth") {
           if (!stale)
-            setSellQuote(`≈ ${(Number(ethWei) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 5 })} ETH`);
-          return;
+            setSellQuote(
+              `≈ ${(Number(coatOut) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 0 })} $COAT`,
+            );
+        } else {
+          // buy side: what the payment is worth in basket terms, fee off
+          if (amountWei === undefined) {
+            setBuyQuote("");
+            return;
+          }
+          let usdgVal: bigint;
+          if (cur === "usdg") {
+            usdgVal = amountWei;
+          } else {
+            const p8 = await readEthUsd8();
+            if (p8 === 0n) {
+              setBuyQuote("");
+              return;
+            }
+            const ethWei =
+              cur === "eth"
+                ? amountWei
+                : ((await client.readContract({
+                    address: FLOOR.coatRouter as `0x${string}`,
+                    abi: coatRouterQuoteAbi,
+                    functionName: "quoteSell",
+                    args: [amountWei],
+                  })) as bigint);
+            usdgVal = ethWeiToUsdg(ethWei, p8);
+          }
+          const net = (usdgVal * (10000n - (feeBps ?? 30n))) / 10000n;
+          const usd = Number(net) / 10 ** FLOOR.usdgDecimals;
+          if (!stale)
+            setBuyQuote(
+              `≈ $${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })} of stocks`,
+            );
         }
-        const coatOut = (await client.readContract({
-          address: FLOOR.coatRouter as `0x${string}`,
-          abi: coatRouterQuoteAbi,
-          functionName: "quoteBuy",
-          args: [ethWei],
-        })) as bigint;
-        if (!stale)
-          setSellQuote(`≈ ${(Number(coatOut) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 0 })} $COAT`);
       } catch {
-        if (!stale) setSellQuote("quote unavailable");
+        if (!stale) {
+          if (dir === "sell") setSellQuote("quote unavailable");
+          else setBuyQuote("");
+        }
       }
-    }, 400);
+    };
+
+    const t = setTimeout(refresh, 150);
+    const iv = setInterval(refresh, 10_000);
     return () => {
       stale = true;
       clearTimeout(t);
+      clearInterval(iv);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dir, cur, address, offline, livePreset, feeBps, sellPct]);
+  }, [dir, cur, amount, address, offline, livePreset, feeBps, sellPct]);
 
   const feePct = feeBps !== undefined ? Number(feeBps) / 100 : 0.3;
   const presetName = livePreset ? livePreset[2] : FLOOR.presets[0].name;
@@ -213,12 +291,14 @@ export function Terminal() {
       args: [address!, router],
     })) as bigint;
     if (cur_ >= needed) return;
-    tx.setStatus(`Approve ${label} first…`);
+    tx.setStatus(`Approve ${label} once — later trades skip this step…`);
+    // max approval: one signature per token, ever. The router can only pull what a trade
+    // you sign passes it, so the standing allowance adds no extra exposure.
     const a = await writeContractAsync({
       address: token,
       abi: erc20MiniAbi,
       functionName: "approve",
-      args: [router, needed],
+      args: [router, 2n ** 256n - 1n],
     });
     await waitForSuccessfulReceipt(a);
   }
@@ -238,12 +318,20 @@ export function Terminal() {
       await waitForSuccessfulReceipt(hash);
     } else if (cur === "coat") {
       await ensureAllowance(FLOOR.coat as `0x${string}`, amountWei, "$COAT");
+      // the COAT->ETH leg runs through the hooked pool, which has no Chainlink floor of its
+      // own — quote it live and pin the minimum so a sandwich can't eat the entry
+      const ethQuote = (await client.readContract({
+        address: FLOOR.coatRouter as `0x${string}`,
+        abi: coatRouterQuoteAbi,
+        functionName: "quoteSell",
+        args: [amountWei],
+      })) as bigint;
       tx.setStatus("Confirm in your wallet…");
       const hash = await writeContractAsync({
         address: router,
         abi: basketRouterAbi,
         functionName: "buyBasketCoat",
-        args: [0n, amountWei, 0n, address!, deadline()],
+        args: [0n, amountWei, applySlip(ethQuote), address!, deadline()],
       });
       tx.setStatus("Selling $COAT through the hooked pool, buying the basket…");
       await waitForSuccessfulReceipt(hash);
@@ -284,6 +372,9 @@ export function Terminal() {
       tx.setStatus("Nothing to sell at this size.", "err");
       return;
     }
+    // fresh floor at send time — the on-screen quote may be seconds old
+    const { floorNet } = await readSellFloor();
+    const minOut = await sellMinOut(floorNet);
     tx.setStatus("Confirm the basket exit…");
     const hash = await writeContractAsync({
       address: router,
@@ -293,7 +384,7 @@ export function Terminal() {
         legsToSell.map((l) => l.t),
         legsToSell.map((l) => l.a),
         OUT_ENUM[cur],
-        0n,
+        minOut,
         address!,
         deadline(),
       ],
@@ -429,6 +520,9 @@ export function Terminal() {
             <>
               <span className="label">You receive — one transaction</span>
               <div className="mt-1.5">{basketPanel}</div>
+              {buyQuote && (
+                <div className="font-sans text-xl text-ink-strong mt-2">{buyQuote}</div>
+              )}
               {cur === "coat" && (
                 <p className="label mt-2">
                   $COAT is sold through the hooked pool first — that trade feeds the flywheel too.
@@ -453,7 +547,24 @@ export function Terminal() {
           )}
         </div>
 
-        <p className="label mt-3">
+        <div className="flex items-center justify-between mt-3">
+          <span className="label">Max slippage</span>
+          <span className="flex gap-1.5">
+            {[50, 100, 200].map((b) => (
+              <button
+                key={b}
+                className={`font-pixel text-xs border-2 border-ink px-2 py-0.5 ${
+                  slipBps === b ? "bg-accent text-cream" : "bg-cream hover:shadow-pixel-sm"
+                }`}
+                onClick={() => setSlipBps(b)}
+                disabled={offline}
+              >
+                {b / 100}%
+              </button>
+            ))}
+          </span>
+        </div>
+        <p className="label mt-2">
           Fee {feePct}% — funds Broker payroll · priced against Chainlink with an on-chain floor
         </p>
         <button

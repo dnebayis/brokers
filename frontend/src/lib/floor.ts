@@ -249,4 +249,11 @@ export const coatRouterQuoteAbi = [
     inputs: [{ name: "ethIn", type: "uint256" }],
     outputs: [{ name: "", type: "uint256" }],
   },
+  {
+    type: "function",
+    name: "quoteSell",
+    stateMutability: "view",
+    inputs: [{ name: "coatIn", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
 ] as const;
