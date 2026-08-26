@@ -38,6 +38,11 @@ export function Terminal() {
   const [dir, setDir] = useState<"buy" | "sell">("buy");
   const [cur, setCur] = useState<Cur>(FLOOR.coat !== "" ? "coat" : "eth");
   const [amount, setAmount] = useState("");
+  const [sellPct, setSellPct] = useState(100);
+
+  // 100% keeps the contract's 0-sentinel (sweep the exact live balance); anything less
+  // scales each leg down here.
+  const sellPortion = (bal: bigint) => (sellPct === 100 ? bal : (bal * BigInt(sellPct)) / 100n);
 
   const router = FLOOR.router as `0x${string}`;
   const offline = !floorReady;
@@ -102,11 +107,13 @@ export function Terminal() {
             symbol: symbolOf(tk),
             text: (Number(bal) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 4 }),
           });
+          const amt = sellPortion(bal);
+          if (amt === 0n) continue;
           usdgFloor += (await client.readContract({
             address: router,
             abi: basketRouterAbi,
             functionName: "minUsdgOut",
-            args: [tk, bal],
+            args: [tk, amt],
           })) as bigint;
         }
         if (stale) return;
@@ -170,7 +177,7 @@ export function Terminal() {
       clearTimeout(t);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dir, cur, address, offline, livePreset, feeBps]);
+  }, [dir, cur, address, offline, livePreset, feeBps, sellPct]);
 
   const feePct = feeBps !== undefined ? Number(feeBps) / 100 : 0.3;
   const presetName = livePreset ? livePreset[2] : FLOOR.presets[0].name;
@@ -258,25 +265,44 @@ export function Terminal() {
 
   async function doSell() {
     if (!livePreset) return;
-    const tokens = [...livePreset[0]];
-    for (const t of tokens) {
+    const legsToSell: { t: `0x${string}`; a: bigint }[] = [];
+    for (const t of [...livePreset[0]]) {
       const bal = (await client.readContract({
         address: t,
         abi: erc20MiniAbi,
         functionName: "balanceOf",
         args: [address!],
       })) as bigint;
-      if (bal === 0n) continue;
+      const amt = sellPortion(bal);
+      if (amt === 0n) continue;
       await ensureAllowance(t, bal, symbolOf(t));
+      // 0 is the contract's "full live balance" sentinel — used at 100% so dust arriving
+      // between this read and the trade still gets swept; partial sells pass the exact cut.
+      legsToSell.push({ t, a: sellPct === 100 ? 0n : amt });
+    }
+    if (legsToSell.length === 0) {
+      tx.setStatus("Nothing to sell at this size.", "err");
+      return;
     }
     tx.setStatus("Confirm the basket exit…");
     const hash = await writeContractAsync({
       address: router,
       abi: basketRouterAbi,
       functionName: "sellBasket",
-      args: [tokens, tokens.map(() => 0n), OUT_ENUM[cur], 0n, address!, deadline()],
+      args: [
+        legsToSell.map((l) => l.t),
+        legsToSell.map((l) => l.a),
+        OUT_ENUM[cur],
+        0n,
+        address!,
+        deadline(),
+      ],
     });
-    tx.setStatus("Selling everything in one transaction…");
+    tx.setStatus(
+      sellPct === 100
+        ? "Selling everything in one transaction…"
+        : `Selling ${sellPct}% of your position in one transaction…`,
+    );
     await waitForSuccessfulReceipt(hash);
     tx.setStatus(`Basket sold — ${CUR_LABEL[cur]} is in your wallet.`, "ok");
   }
@@ -359,8 +385,24 @@ export function Terminal() {
                   You hold: {holdings.map((h) => `${h.text} ${h.symbol}`).join(" · ")}
                 </p>
               )}
-              <p className="text-sm text-ink-soft mt-1">
-                Your entire position: every basket stock you hold, swept in a single trade.
+              <div className="flex items-center gap-1.5 mt-2">
+                {[25, 50, 75, 100].map((p) => (
+                  <button
+                    key={p}
+                    className={`font-pixel text-xs border-2 border-ink px-2 py-1 ${
+                      sellPct === p ? "bg-accent text-cream" : "bg-cream hover:shadow-pixel-sm"
+                    }`}
+                    onClick={() => setSellPct(p)}
+                    disabled={offline}
+                  >
+                    {p}%
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-ink-soft mt-1.5">
+                {sellPct === 100
+                  ? "Your entire position: every basket stock you hold, swept in a single trade."
+                  : `${sellPct}% of every basket stock you hold, sold in a single trade.`}
               </p>
             </>
           )}
@@ -419,7 +461,7 @@ export function Terminal() {
           onClick={go}
           disabled={offline || tx.busy || (dir === "buy" ? amountWei === undefined : !address)}
         >
-          {dir === "buy" ? "Buy basket" : "Sell entire basket"}
+          {dir === "buy" ? "Buy basket" : sellPct === 100 ? "Sell entire basket" : `Sell ${sellPct}% of basket`}
         </button>
         <StatusLine msg={tx.msg} kind={tx.kind} />
       </section>
