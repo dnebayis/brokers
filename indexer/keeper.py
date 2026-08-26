@@ -308,6 +308,55 @@ def main() -> None:
     if buyback and buyback_eth >= BUYBACK_THRESHOLD_WEI:
         # buyback is a single v4 swap + burn.
         submit("buyback.execute", lambda: buyback.functions.executeBuyback(), min_gas=800_000)
+    # The Floor: flush accrued terminal fees to the Booster as native ETH. Entirely
+    # env-gated — without FLOOR_ROUTER set this block is inert, so shipping it ahead of the
+    # venue's mainnet launch changes nothing in production.
+    floor_addr = os.environ.get("FLOOR_ROUTER", "").strip()
+    if floor_addr:
+        try:
+            floor = w3.eth.contract(address=Web3.to_checksum_address(floor_addr), abi=[
+                {"type": "function", "name": "feesAccrued", "stateMutability": "view",
+                 "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+                {"type": "function", "name": "usdg", "stateMutability": "view",
+                 "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+                {"type": "function", "name": "flushFees", "stateMutability": "nonpayable",
+                 "inputs": [{"name": "minEthOut", "type": "uint256"}], "outputs": []},
+            ])
+            fees_raw = int(floor.functions.feesAccrued().call())
+            usdg_addr = floor.functions.usdg().call()
+            usdg_dec = int(w3.eth.contract(address=usdg_addr, abi=[
+                {"type": "function", "name": "decimals", "stateMutability": "view",
+                 "inputs": [], "outputs": [{"name": "", "type": "uint8"}]},
+            ]).functions.decimals().call())
+            flush_min = int(os.environ.get("FLOOR_FLUSH_MIN_USDG", "20")) * 10 ** usdg_dec
+            if fees_raw >= flush_min:
+                # sandwich floor from the Booster's own ETH/USD source (feed, else fresh manual)
+                bfeed = w3.eth.contract(address=booster_address, abi=[
+                    {"type": "function", "name": "ethUsdFeed", "stateMutability": "view",
+                     "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+                    {"type": "function", "name": "ethUsdManualE8", "stateMutability": "view",
+                     "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+                ])
+                feed_addr = bfeed.functions.ethUsdFeed().call()
+                if int(feed_addr, 16) != 0:
+                    eth_usd8 = int(w3.eth.contract(address=feed_addr, abi=[
+                        {"type": "function", "name": "latestRoundData", "stateMutability": "view",
+                         "inputs": [], "outputs": [
+                             {"name": "a", "type": "uint80"}, {"name": "answer", "type": "int256"},
+                             {"name": "c", "type": "uint256"}, {"name": "d", "type": "uint256"},
+                             {"name": "e", "type": "uint80"}]},
+                    ]).functions.latestRoundData().call()[1])
+                else:
+                    eth_usd8 = int(bfeed.functions.ethUsdManualE8().call())
+                # expected ETH = fees_usd / ethUsd, floored at 97% against sandwiches
+                min_eth = fees_raw * 10 ** 8 * 10 ** 18 * 97 // (10 ** usdg_dec * eth_usd8 * 100)
+                submit("floor.flush", lambda: floor.functions.flushFees(min_eth), min_gas=700_000)
+            else:
+                print(json.dumps({"action": "floor.flush", "status": "skipped",
+                                  "feesRaw": fees_raw, "minRaw": flush_min}))
+        except Exception as exc:  # never let the venue stage break payroll stages
+            print(json.dumps({"action": "floor.flush", "status": "deferred", "error": str(exc)[:200]}))
+
     if failed_actions:
         # Stages are isolated by design: a deferred stage retries next run and never
         # strands funds. `buyback.execute` legitimately defers early (SpotTooFarFromTwap
@@ -316,7 +365,7 @@ def main() -> None:
         # stock the poke just bought would never reach the broker TBAs. Only flush/poke
         # deferrals (which do strand value / block distribution) are fatal under strict.
         message = "keeper stages deferred: " + ", ".join(failed_actions)
-        fatal = [a for a in failed_actions if a != "buyback.execute"]
+        fatal = [a for a in failed_actions if a not in ("buyback.execute", "floor.flush")]
         # Weekend BadFeed (0xb0171a5d) is the market being closed, not a fault: stock
         # feeds stop updating after Friday's close, the staleness guard trips, and the
         # poke rightly refuses to buy on stale prices. Funds simply accrue until Monday.
