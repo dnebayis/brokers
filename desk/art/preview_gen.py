@@ -14,6 +14,7 @@ W = H = 40
 class Canvas:
     def __init__(self, bg):
         self.px = [[bg] * W for _ in range(H)]
+        self.anims = []  # (x, y, color, [(attr, values, dur_s, begin_s, keyTimes|None), ...])
 
     def put(self, x, y, c):
         if 0 <= x < W and 0 <= y < H:
@@ -23,6 +24,10 @@ class Canvas:
         for y in range(y0, y1 + 1):
             for x in range(x0, x1 + 1):
                 self.put(x, y, c)
+
+    def apx(self, x, y, color, anims):
+        """Animated pixel: drawn on top of the static grid with SMIL <animate> children."""
+        self.anims.append((x, y, color, anims))
 
     def svg(self):
         # row RLE, same shape the Solidity renderer emits
@@ -41,6 +46,15 @@ class Canvas:
                 if c != base:
                     parts.append(f'<rect x="{x}" y="{y}" width="{run}" height="1" fill="{c}"/>')
                 x += run
+        for ax, ay, color, anims in self.anims:
+            parts.append(f'<rect x="{ax}" y="{ay}" width="1" height="1" fill="{color}">')
+            for attr, values, dur, begin, kt in anims:
+                ktattr = f' keyTimes="{kt}"' if kt else ""
+                parts.append(
+                    f'<animate attributeName="{attr}" values="{values}"{ktattr} '
+                    f'dur="{dur}s" begin="{begin}s" repeatCount="indefinite"/>'
+                )
+            parts.append("</rect>")
         parts.append("</svg>")
         return "".join(parts)
 
@@ -80,7 +94,11 @@ def monitor(c, x, top, w, screen_h, up=True, screen="#0d1b2e", frame="#2b2f36"):
         frac = i / max(n - 1, 1)
         rise = int(frac * (screen_h - 3))
         y = (top + screen_h - 1 - rise) if up else (top + 2 + rise)
-        c.put(x + 2 + i, y, ch)
+        if i == n - 1:
+            # live tick: the chart's leading pixel pulses like a fresh candle
+            c.apx(x + 2 + i, y, ch, [("opacity", "1;0.2;1", 1.2, 0, None)])
+        else:
+            c.put(x + 2 + i, y, ch)
         if i and abs(1) and i % 3 == 0:  # thicken occasional steps
             c.put(x + 2 + i, y + (1 if up else -1), ch)
     cx = x + w // 2
@@ -144,8 +162,11 @@ def coffee(c, x, mug="#d9dee5"):
     c.rect(x, 18, x + 2, 21, mug)
     c.put(x + 3, 19, mug)
     c.put(x + 1, 18, "#5d4634")            # brew line
-    c.put(x + 1, 16, "#c9cfd8")            # steam
-    c.put(x + 2, 15, "#c9cfd8")
+    # rising steam: two pixels drift up and fade, out of phase
+    c.apx(x + 1, 17, "#c9cfd8",
+          [("y", "17;15;13", 2.8, 0, None), ("opacity", "0;0.9;0", 2.8, 0, None)])
+    c.apx(x + 2, 17, "#c9cfd8",
+          [("y", "17;15;13", 2.8, 1.4, None), ("opacity", "0;0.7;0", 2.8, 1.4, None)])
 
 
 def plant(c, x, leaf="#3f9d5a", pot="#b0603c"):
@@ -164,8 +185,9 @@ def lamp(c, x, shade="#caa84a", on=True):
     c.rect(x + 1, 13, x + 4, 13, shade)            # arm/shade
     c.rect(x + 2, 14, x + 4, 14, shade)
     if on:
-        c.put(x + 3, 15, "#f5e6a8")
-        c.put(x + 4, 15, "#f5e6a8")
+        # warm glow, slow breathing flicker
+        c.apx(x + 3, 15, "#f5e6a8", [("opacity", "1;0.45;1", 2.4, 0, None)])
+        c.apx(x + 4, 15, "#f5e6a8", [("opacity", "1;0.45;1", 2.4, 0.3, None)])
 
 
 def papers(c, x, pen="#e0564f"):
@@ -183,7 +205,9 @@ def cat(c, x, fur="#e8933a", dark="#b56b21"):
     c.put(x + 4, 16, "#1d232b")                     # eye
     c.put(x + 5, 17, "#e9ecef")                     # muzzle
     c.rect(x - 1, 17, x - 1, 21, dark)              # tail up
-    c.put(x - 2, 16, dark)                          # tail tip
+    # tail tip wags between two pixels
+    c.apx(x - 2, 16, dark, [("opacity", "1;1;0;0;1", 1.8, 0, "0;0.45;0.5;0.95;1")])
+    c.apx(x - 2, 15, dark, [("opacity", "0;0;1;1;0", 1.8, 0, "0;0.45;0.5;0.95;1")])
     c.rect(x, 21, x + 4, 21, dark)                  # paws shadow
 
 
@@ -219,7 +243,6 @@ def v2(c):
     monitor(c, 6, 8, 14, 10)
     calculator(c, 24)
     papers(c, 31, pen="#43d17c")
-    wall_frame(c, 24, 4, "stonks")
 
 
 @variant("Night Shift", "#23262d", "#191c22", "dark", "kırmızı grafik + yanan lamba; tek koyu tema")
@@ -243,7 +266,6 @@ def v5(c):
     calculator(c, 20)
     papers(c, 29)
     coffee(c, 34, mug="#8a4a3a")
-    wall_frame(c, 22, 2, "stonks")
 
 
 @variant("Cat Desk", "#6b5a7d", "#524561", "walnut", "masa kedisi; topluluk favorisi adayı")
@@ -251,15 +273,13 @@ def v6(c):
     monitor(c, 5, 9, 12, 9)
     cat(c, 24)
     coffee(c, 33)
-    wall_frame(c, 21, 4, "bayc")
 
 
 @variant("Gold Rush", "#a3814a", "#7f6438", "oak", "altın hesap makinesi; nadir trait adayı")
 def v7(c):
     monitor(c, 6, 9, 12, 9)
     calculator(c, 23, gold=True)
-    coffee(c, 33)
-    wall_frame(c, 24, 3, "briefcase")
+    papers(c, 31, pen="#caa84a")
 
 
 @variant("Minimal", "#7d838c", "#5f646c", "birch", "tek ekran + kahve; en sade kompozisyon")
