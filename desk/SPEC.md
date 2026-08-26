@@ -16,13 +16,13 @@ Desk NFT whole with the portfolio inside.
 | Decision | Value | Source |
 |---|---|---|
 | Supply | **500 Desks, hard cap** (constant) | user |
-| Mint price | **100,000 COAT**, settable | user + R&D "proposed, adjustable" |
+| Mint price | **120,000 COAT**, settable | user 2026-08-26 (was 100k proposal) |
 | Mint COAT destination | **No burn.** 100% to CoatBonusPool, distributed to ACTIVE Brokers | user |
 | Service fee | **0.5%** per engine-executed trade, settable | community vote 6/7 |
-| Fee split | 50% Booster / 30% buyback / 20% treasury, settable | R&D post |
+| Fee split | **80% Booster / 20% treasury**, settable (no buyback slice) | user 2026-08-26 |
 | Booster share | converted to **native ETH** before sending (Booster ignores ERC-20) | Zia lesson |
 | Pilot cap | **$1,000 deposit per Desk**, settable | community vote 6/7 |
-| Pilot access | **Broker holders first** | community vote 5/7 |
+| Pilot access | **Open to everyone from day one** | user 2026-08-26 (overrides the 5/7 holders-first vote; communicate in next community update — holders still gain via mint-COAT bonus) |
 | Holder fee discount | **None** (fee stream stays whole) | community vote 4/7 |
 | Deposit minimum | **None** ($20 desks welcome) | thread promise |
 | Deposit currency | **USDG** (stock pools are USDG-paired; single-hop buys) | design |
@@ -67,8 +67,13 @@ Booster stock feeds pattern for price guards.
 
 ## Build order
 
-1. CoatBonusPool (independent, testable now) ← **started**
-2. DeskAccount + DeskNFT (mint flow end-to-end on fork)
-3. DeskEngine (fork tests against real USDG pools)
-4. DeskRenderer (SVG last; art direction with user)
-5. Lawyer one-pager BEFORE any mainnet deploy (open item)
+1. CoatBonusPool (independent, testable now) ← **done, 7 tests green**
+2. **Art preview FIRST** (user gate): DeskRenderer SVG drafts shown to the user before
+   anything ships; art direction locked before mint flow is finalized
+3. DeskAccount + DeskNFT (mint flow end-to-end on fork)
+4. DeskEngine (fork tests against real USDG pools)
+5. **Full testnet deployment (chain 46630)**: every contract deployed and every flow
+   (mint, deposit, buy, rebalance, fee split, bonus round, withdraw, desk sale) exercised
+   on testnet BEFORE any mainnet transaction (user gate, 2026-08-26)
+6. Lawyer one-pager BEFORE any mainnet deploy (open item)
+7. Mainnet only after 5 + 6 are signed off
