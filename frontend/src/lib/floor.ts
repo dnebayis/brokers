@@ -9,13 +9,15 @@ export const FLOOR: {
   live: boolean;
   router: Address | "";
   usdg: Address | "";
+  coat: Address | "";
   stocks: { symbol: string; address: Address }[];
   presets: { id: number; name: string; blurb: string }[];
 } = {
   live: false,
   router:
-    ACTIVE_NETWORK === "testnet" ? "0xEA3461eF45d71e664d939F4e2FF5Ed04a4037eD3" : "",
+    ACTIVE_NETWORK === "testnet" ? "0x5cEDF6954aD8EC29cc4c50A4f0a387D433D01490" : "",
   usdg: ACTIVE_NETWORK === "testnet" ? "0xca71484e6FA828dc261C7b4e902d3DF47542aDa4" : "",
+  coat: ACTIVE_NETWORK === "testnet" ? "0xD3f44c7DD32D12C7a6776C23c839DEcA8196cf07" : "",
   stocks:
     ACTIVE_NETWORK === "testnet"
       ? [{ symbol: "tAAPL", address: "0x44B8DA4948e3Eacb0f2E20a42c694Af49942e5C9" }]
@@ -51,6 +53,19 @@ export const basketRouterAbi = [
     stateMutability: "payable",
     inputs: [
       { name: "presetId", type: "uint256" },
+      { name: "recipient", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "buyBasketCoat",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "presetId", type: "uint256" },
+      { name: "coatIn", type: "uint256" },
+      { name: "minEthFromCoat", type: "uint256" },
       { name: "recipient", type: "address" },
       { name: "deadline", type: "uint256" },
     ],
