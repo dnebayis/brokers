@@ -120,14 +120,24 @@ def wall_frame(c, x, y, kind):
             c.put(x + dx, y + dy, "#43d17c")
         c.put(x + 6, y + 1, "#43d17c")     # arrowhead
         c.put(x + 5, y + 2, "#43d17c")
-    elif kind == "ape":
-        fur, face = "#6b4a33", "#c9a17c"
-        c.rect(x + 2, y + 2, x + 6, y + 6, fur)       # head
-        c.rect(x + 3, y + 4, x + 5, y + 6, face)      # muzzle
-        c.put(x + 3, y + 3, face); c.put(x + 5, y + 3, face)  # brow shading
-        c.put(x + 3, y + 3, "#1d232b"); c.put(x + 5, y + 3, "#1d232b")  # eyes
-        c.rect(x + 3, y + 6, x + 5, y + 6, "#8a6a4d")  # mouth line
-    c.rect(x + 1, y + 7, x + 7, y + 7, "#0e131b")      # inner shadow
+    elif kind == "bayc":
+        # ape-skull mark, pixel homage: red skull on black
+        red = "#c22525"
+        c.rect(x + 2, y + 1, x + 5, y + 1, red)            # crown
+        c.rect(x + 1, y + 2, x + 6, y + 4, red)            # skull mass
+        c.put(x + 2, y + 2, "#141a24"); c.put(x + 4, y + 2, "#141a24")  # eye sockets
+        c.put(x + 3, y + 4, "#141a24")                     # nostril
+        c.rect(x + 1, y + 5, x + 5, y + 5, red)            # jaw
+        for tx in (x + 1, x + 3, x + 5):                   # teeth
+            c.put(tx, y + 6, "#e9ecef")
+        c.put(x + 6, y + 5, red)                           # jaw hinge
+    elif kind == "briefcase":
+        # StonkBrokers mark, pixel homage: dark briefcase on orange
+        c.rect(x + 1, y + 1, x + 7, y + 7, "#f97316")      # orange field
+        c.rect(x + 3, y + 2, x + 5, y + 2, "#16191f")      # handle top
+        c.put(x + 3, y + 3, "#16191f"); c.put(x + 5, y + 3, "#16191f")  # handle sides
+        c.rect(x + 2, y + 4, x + 6, y + 6, "#232833")      # case body (gap under handle)
+    c.rect(x + 1, y + 7, x + 7, y + 7, "#0e131b")          # inner shadow
 
 
 def coffee(c, x, mug="#d9dee5"):
@@ -241,7 +251,7 @@ def v6(c):
     monitor(c, 5, 9, 12, 9)
     cat(c, 24)
     coffee(c, 33)
-    wall_frame(c, 21, 4, "ape")
+    wall_frame(c, 21, 4, "bayc")
 
 
 @variant("Gold Rush", "#a3814a", "#7f6438", "oak", "altın hesap makinesi; nadir trait adayı")
@@ -249,7 +259,7 @@ def v7(c):
     monitor(c, 6, 9, 12, 9)
     calculator(c, 23, gold=True)
     coffee(c, 33)
-    wall_frame(c, 24, 3, "ape")
+    wall_frame(c, 24, 3, "briefcase")
 
 
 @variant("Minimal", "#7d838c", "#5f646c", "birch", "tek ekran + kahve; en sade kompozisyon")
