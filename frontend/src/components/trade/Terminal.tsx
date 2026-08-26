@@ -30,13 +30,13 @@ export function Terminal() {
   const buyTx = useTx();
   const sellTx = useTx();
 
-  const [payWith, setPayWith] = useState<"eth" | "coat">("eth");
+  const coatAvailable = FLOOR.coat !== "";
+  const [payWith, setPayWith] = useState<"eth" | "coat">(coatAvailable ? "coat" : "eth");
   const [amount, setAmount] = useState("");
   const [sellOutEth, setSellOutEth] = useState(true);
 
   const router = FLOOR.router as `0x${string}`;
   const offline = !floorReady;
-  const coatAvailable = FLOOR.coat !== "";
 
   const { data: ethBal } = useBalance({ address, chainId: activeChain.id });
   const { data: coatBal } = useReadContract({
@@ -198,8 +198,8 @@ export function Terminal() {
                 onChange={(e) => setPayWith(e.target.value as "eth" | "coat")}
                 disabled={offline}
               >
-                <option value="eth">ETH</option>
                 <option value="coat">$COAT</option>
+                <option value="eth">ETH</option>
               </select>
             ) : (
               <span className="font-pixel text-xs border-2 border-ink px-3 py-2 shrink-0">ETH</span>

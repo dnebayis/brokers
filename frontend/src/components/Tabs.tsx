@@ -9,7 +9,7 @@ export type TabId = "home" | "trade" | "activate" | "feed" | "leaders" | "roadma
 // action: "Activate" hid the fact that the tab is your whole portfolio.
 const TABS: { id: TabId; label: string; icon: "home" | "swap" | "power" | "book" | "list" | "route" | "trophy" }[] = [
   { id: "home", label: "Home", icon: "home" },
-  ...(TRADE_TAB_ENABLED ? [{ id: "trade" as const, label: "Trade", icon: "swap" as const }] : []),
+  ...(TRADE_TAB_ENABLED ? [{ id: "trade" as const, label: "Floor", icon: "swap" as const }] : []),
   { id: "activate", label: "My Brokers", icon: "power" },
   { id: "feed", label: "Feed", icon: "list" },
   { id: "leaders", label: "Leaders", icon: "trophy" },
