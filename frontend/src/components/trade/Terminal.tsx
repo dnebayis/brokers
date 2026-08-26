@@ -82,6 +82,10 @@ export function Terminal() {
   const [holdings, setHoldings] = useState<{ symbol: string; text: string }[]>([]);
   const [slipBps, setSlipBps] = useState(100); // 1% default, applied on top of quoted mins
   const applySlip = (x: bigint) => (x * (10000n - BigInt(slipBps))) / 10000n;
+  // CoatRouter's quoteBuy/quoteSell are SPOT-price views: they exclude the hooked pool's
+  // fee take (~2% measured on-chain). Every quote from it gets this cut before use, both
+  // for display honesty and so mins computed from it don't sit above what a fill can pay.
+  const coatPoolCut = (x: bigint) => (x * 9800n) / 10000n;
 
   const USDG_ONE = 10n ** BigInt(FLOOR.usdgDecimals);
   const usdgToEthWei = (u: bigint, p8: bigint) =>
@@ -157,7 +161,7 @@ export function Terminal() {
       functionName: "quoteBuy",
       args: [ethFloor],
     })) as bigint;
-    return applySlip(coatFloor);
+    return applySlip(coatPoolCut(coatFloor));
   }
 
   // Live quotes, both directions: instant on input (150ms debounce), refreshed from chain
@@ -204,7 +208,7 @@ export function Terminal() {
           })) as bigint;
           if (!stale)
             setSellQuote(
-              `≈ ${(Number(coatOut) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 0 })} $COAT`,
+              `≈ ${(Number(coatPoolCut(coatOut)) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 0 })} $COAT`,
             );
         } else {
           // buy side: what the payment is worth in basket terms, fee off
@@ -224,12 +228,14 @@ export function Terminal() {
             const ethWei =
               cur === "eth"
                 ? amountWei
-                : ((await client.readContract({
-                    address: FLOOR.coatRouter as `0x${string}`,
-                    abi: coatRouterQuoteAbi,
-                    functionName: "quoteSell",
-                    args: [amountWei],
-                  })) as bigint);
+                : coatPoolCut(
+                    (await client.readContract({
+                      address: FLOOR.coatRouter as `0x${string}`,
+                      abi: coatRouterQuoteAbi,
+                      functionName: "quoteSell",
+                      args: [amountWei],
+                    })) as bigint,
+                  );
             usdgVal = ethWeiToUsdg(ethWei, p8);
           }
           const net = (usdgVal * (10000n - (feeBps ?? 30n))) / 10000n;
@@ -331,7 +337,7 @@ export function Terminal() {
         address: router,
         abi: basketRouterAbi,
         functionName: "buyBasketCoat",
-        args: [0n, amountWei, applySlip(ethQuote), address!, deadline()],
+        args: [0n, amountWei, applySlip(coatPoolCut(ethQuote)), address!, deadline()],
       });
       tx.setStatus("Selling $COAT through the hooked pool, buying the basket…");
       await waitForSuccessfulReceipt(hash);
