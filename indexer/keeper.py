@@ -277,10 +277,27 @@ def main() -> None:
             time.sleep(2)
             booster_balance = max(booster_balance, int(w3.eth.get_balance(booster_address)))
     if is_poke_eligible(booster_balance, threshold, shares):
+        # Pre-flight the poke as a free eth_call before spending relay gas. During a venue-wide
+        # halt (all Rialto pools reverting "ACF" for 13+ hours on 2026-08-25/26) every on-chain
+        # attempt burns real relay gas and changes nothing; hourly retries drained the relay
+        # below its floor. A revert here defers the stage with zero cost; the first run after
+        # the venue recovers passes the call and the poke goes on-chain as before.
+        try:
+            booster.functions.poke(poke_max_wei).call({"from": account.address})
+            poke_sendable = True
+        except Exception as exc:
+            print(json.dumps({"action": "booster.poke", "status": "deferred",
+                              "error": f"pre-flight revert: {str(exc)[:200]}"}))
+            failed_actions.append("booster.poke")
+            failed_errors["booster.poke"] = f"pre-flight revert: {str(exc)[:300]}"
+            _diagnose_poke(w3, booster, registry_abi, booster_address,
+                           min(booster_balance, poke_max_wei))
+            poke_sendable = False
         # poke buys the whole basket in one tx; real usage scales with the number of routes
         # (observed 0.24M–1.0M). Floor high so a stale-low estimate can never under-gas it.
-        poked = submit("booster.poke", lambda: booster.functions.poke(poke_max_wei), min_gas=2_000_000)
-        if not poked:
+        poked = poke_sendable and submit(
+            "booster.poke", lambda: booster.functions.poke(poke_max_wei), min_gas=2_000_000)
+        if poke_sendable and not poked:
             # The basket is bought atomically, so one illiquid route reverts every leg and the
             # buffer sits until the next indexer epoch replaces the basket — up to six hours of
             # silent stalling. The indexer pre-flights routes before posting, but liquidity can
