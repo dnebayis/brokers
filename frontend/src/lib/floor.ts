@@ -14,7 +14,7 @@ export const FLOOR: {
 } = {
   live: false,
   router:
-    ACTIVE_NETWORK === "testnet" ? "0x5921A7DB9F441E22b3298390707C794cC6C31E75" : "",
+    ACTIVE_NETWORK === "testnet" ? "0xEA3461eF45d71e664d939F4e2FF5Ed04a4037eD3" : "",
   usdg: ACTIVE_NETWORK === "testnet" ? "0xca71484e6FA828dc261C7b4e902d3DF47542aDa4" : "",
   stocks:
     ACTIVE_NETWORK === "testnet"
@@ -55,6 +55,20 @@ export const basketRouterAbi = [
       { name: "deadline", type: "uint256" },
     ],
     outputs: [],
+  },
+  {
+    type: "function",
+    name: "sellBasket",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "tokens", type: "address[]" },
+      { name: "amounts", type: "uint256[]" },
+      { name: "wantEth", type: "bool" },
+      { name: "minOut", type: "uint256" },
+      { name: "recipient", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [{ name: "out", type: "uint256" }],
   },
   {
     type: "function",
