@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Tabs, type TabId } from "@/components/Tabs";
-import { SWAP_ENABLED } from "@/lib/config";
+import { TRADE_TAB_ENABLED } from "@/lib/floor";
 import { SidePanel } from "@/components/SidePanel";
 import { HomeTab } from "@/components/tabs/HomeTab";
-import { SwapTab } from "@/components/tabs/SwapTab";
+import { TradeTab } from "@/components/tabs/TradeTab";
 import { ActivateTab } from "@/components/tabs/ActivateTab";
 import { FeedTab } from "@/components/tabs/FeedTab";
 import { LeadersTab } from "@/components/tabs/LeadersTab";
@@ -17,7 +17,7 @@ export default function Page() {
   const [tab, setTab] = useState<TabId>("home");
   useEffect(() => {
     const saved = window.location.hash.slice(1) || window.localStorage.getItem("coattail.activeTab") || "";
-    const allowed = ["home", "activate", "feed", "leaders", "roadmap", "docs", ...(SWAP_ENABLED ? ["swap"] : [])];
+    const allowed = ["home", "activate", "feed", "leaders", "roadmap", "docs", ...(TRADE_TAB_ENABLED ? ["trade"] : [])];
     if (allowed.includes(saved)) setTab(saved as TabId);
   }, []);
 
@@ -42,7 +42,7 @@ export default function Page() {
         ) : (
           <div key={tab} className="tab-panel py-6 lg:py-8 grid gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
             <div className="min-w-0">
-              {tab === "swap" && SWAP_ENABLED && <SwapTab />}
+              {tab === "trade" && TRADE_TAB_ENABLED && <TradeTab />}
               {tab === "activate" && <ActivateTab />}
               {tab === "feed" && <FeedTab />}
               {tab === "leaders" && <LeadersTab />}

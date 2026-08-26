@@ -1,15 +1,15 @@
 "use client";
 
 import { Icon } from "./ui/Icon";
-import { SWAP_ENABLED } from "@/lib/config";
+import { TRADE_TAB_ENABLED } from "@/lib/floor";
 
-export type TabId = "home" | "swap" | "activate" | "feed" | "leaders" | "roadmap" | "docs";
+export type TabId = "home" | "trade" | "activate" | "feed" | "leaders" | "roadmap" | "docs";
 
 // Labels say what the page IS for the visitor, not what the protocol calls the
 // action: "Activate" hid the fact that the tab is your whole portfolio.
 const TABS: { id: TabId; label: string; icon: "home" | "swap" | "power" | "book" | "list" | "route" | "trophy" }[] = [
   { id: "home", label: "Home", icon: "home" },
-  ...(SWAP_ENABLED ? [{ id: "swap" as const, label: "Swap", icon: "swap" as const }] : []),
+  ...(TRADE_TAB_ENABLED ? [{ id: "trade" as const, label: "Trade", icon: "swap" as const }] : []),
   { id: "activate", label: "My Brokers", icon: "power" },
   { id: "feed", label: "Feed", icon: "list" },
   { id: "leaders", label: "Leaders", icon: "trophy" },
