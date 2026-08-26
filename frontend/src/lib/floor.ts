@@ -9,14 +9,16 @@ export const FLOOR: {
   live: boolean;
   router: Address | "";
   usdg: Address | "";
+  usdgDecimals: number;
   coat: Address | "";
   stocks: { symbol: string; address: Address }[];
   presets: { id: number; name: string; blurb: string }[];
 } = {
   live: false,
   router:
-    ACTIVE_NETWORK === "testnet" ? "0x5cEDF6954aD8EC29cc4c50A4f0a387D433D01490" : "",
+    ACTIVE_NETWORK === "testnet" ? "0x927E23B683AcBbeB7F2FbBFa035aF80acfE0b31a" : "",
   usdg: ACTIVE_NETWORK === "testnet" ? "0xca71484e6FA828dc261C7b4e902d3DF47542aDa4" : "",
+  usdgDecimals: ACTIVE_NETWORK === "testnet" ? 18 : 6,
   coat: ACTIVE_NETWORK === "testnet" ? "0xD3f44c7DD32D12C7a6776C23c839DEcA8196cf07" : "",
   stocks:
     ACTIVE_NETWORK === "testnet"
@@ -60,6 +62,18 @@ export const basketRouterAbi = [
   },
   {
     type: "function",
+    name: "buyBasket",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "presetId", type: "uint256" },
+      { name: "usdgIn", type: "uint256" },
+      { name: "recipient", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "buyBasketCoat",
     stateMutability: "nonpayable",
     inputs: [
@@ -78,7 +92,7 @@ export const basketRouterAbi = [
     inputs: [
       { name: "tokens", type: "address[]" },
       { name: "amounts", type: "uint256[]" },
-      { name: "wantEth", type: "bool" },
+      { name: "outCur", type: "uint8" },
       { name: "minOut", type: "uint256" },
       { name: "recipient", type: "address" },
       { name: "deadline", type: "uint256" },
@@ -92,7 +106,7 @@ export const basketRouterAbi = [
     inputs: [
       { name: "stock", type: "address" },
       { name: "amountIn", type: "uint256" },
-      { name: "wantEth", type: "bool" },
+      { name: "outCur", type: "uint8" },
       { name: "minOut", type: "uint256" },
       { name: "recipient", type: "address" },
       { name: "deadline", type: "uint256" },
