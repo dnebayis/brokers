@@ -11,6 +11,8 @@ export const FLOOR: {
   usdg: Address | "";
   usdgDecimals: number;
   coat: Address | "";
+  coatRouter: Address | "";
+  booster: Address | "";
   stocks: { symbol: string; address: Address }[];
   presets: { id: number; name: string; blurb: string }[];
 } = {
@@ -20,6 +22,8 @@ export const FLOOR: {
   usdg: ACTIVE_NETWORK === "testnet" ? "0xca71484e6FA828dc261C7b4e902d3DF47542aDa4" : "",
   usdgDecimals: ACTIVE_NETWORK === "testnet" ? 18 : 6,
   coat: ACTIVE_NETWORK === "testnet" ? "0xD3f44c7DD32D12C7a6776C23c839DEcA8196cf07" : "",
+  coatRouter: ACTIVE_NETWORK === "testnet" ? "0x5fBCa6b6Dd403659B273Ea7d6d13e6a2e2462123" : "",
+  booster: ACTIVE_NETWORK === "testnet" ? "0x39e4B20401dc4cA45c0b14800c86Fc3Df953A245" : "",
   stocks:
     ACTIVE_NETWORK === "testnet"
       ? [{ symbol: "tAAPL", address: "0x44B8DA4948e3Eacb0f2E20a42c694Af49942e5C9" }]
@@ -180,5 +184,48 @@ export const erc20MiniAbi = [
       { name: "", type: "uint256" },
     ],
     outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
+
+export const boosterEthUsdAbi = [
+  {
+    type: "function",
+    name: "ethUsdFeed",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "ethUsdManualE8",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
+
+export const aggregatorMiniAbi = [
+  {
+    type: "function",
+    name: "latestRoundData",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      { name: "roundId", type: "uint80" },
+      { name: "answer", type: "int256" },
+      { name: "startedAt", type: "uint256" },
+      { name: "updatedAt", type: "uint256" },
+      { name: "answeredInRound", type: "uint80" },
+    ],
+  },
+] as const;
+
+export const coatRouterQuoteAbi = [
+  {
+    type: "function",
+    name: "quoteBuy",
+    stateMutability: "view",
+    inputs: [{ name: "ethIn", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
   },
 ] as const;

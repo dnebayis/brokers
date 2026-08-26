@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useBalance, useReadContract, useWriteContract } from "wagmi";
 import { formatEther, parseEther, parseUnits } from "viem";
 import { activeChain } from "@/lib/chains";
-import { FLOOR, floorReady, basketRouterAbi, erc20MiniAbi } from "@/lib/floor";
+import {
+  FLOOR,
+  floorReady,
+  basketRouterAbi,
+  erc20MiniAbi,
+  boosterEthUsdAbi,
+  aggregatorMiniAbi,
+  coatRouterQuoteAbi,
+} from "@/lib/floor";
 import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
 import { Icon } from "@/components/ui/Icon";
@@ -63,6 +71,106 @@ export function Terminal() {
     args: [0n],
     query: { enabled: floorReady },
   });
+
+  const [sellQuote, setSellQuote] = useState<string>("");
+  const [holdings, setHoldings] = useState<{ symbol: string; text: string }[]>([]);
+
+  // Sell-side quote: per-leg Chainlink floors summed (re-inflated from the 5% guard), fee
+  // off once, then converted into the chosen exit currency. Estimate, not a promise — the
+  // wallet still enforces the on-chain floors.
+  useEffect(() => {
+    if (dir !== "sell" || offline || !address || !livePreset) {
+      setSellQuote("");
+      setHoldings([]);
+      return;
+    }
+    let stale = false;
+    const t = setTimeout(async () => {
+      try {
+        const tokens = [...livePreset[0]];
+        let usdgFloor = 0n;
+        const held: { symbol: string; text: string }[] = [];
+        for (const tk of tokens) {
+          const bal = (await client.readContract({
+            address: tk,
+            abi: erc20MiniAbi,
+            functionName: "balanceOf",
+            args: [address],
+          })) as bigint;
+          if (bal === 0n) continue;
+          held.push({
+            symbol: symbolOf(tk),
+            text: (Number(bal) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 4 }),
+          });
+          usdgFloor += (await client.readContract({
+            address: router,
+            abi: basketRouterAbi,
+            functionName: "minUsdgOut",
+            args: [tk, bal],
+          })) as bigint;
+        }
+        if (stale) return;
+        setHoldings(held);
+        if (usdgFloor === 0n) {
+          setSellQuote("nothing to sell yet");
+          return;
+        }
+        const est = (usdgFloor * 10000n) / 9500n; // undo the guard haircut
+        const net = (est * (10000n - (feeBps ?? 30n))) / 10000n;
+        const usd = Number(net) / 10 ** FLOOR.usdgDecimals;
+        if (cur === "usdg") {
+          setSellQuote(`≈ ${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDG`);
+          return;
+        }
+        // ETH/USD from the Booster's own source (feed, else manual fallback)
+        let ethUsd8 = 0n;
+        const feed = (await client.readContract({
+          address: FLOOR.booster as `0x${string}`,
+          abi: boosterEthUsdAbi,
+          functionName: "ethUsdFeed",
+        })) as `0x${string}`;
+        if (BigInt(feed) !== 0n) {
+          const rd = (await client.readContract({
+            address: feed,
+            abi: aggregatorMiniAbi,
+            functionName: "latestRoundData",
+          })) as readonly [bigint, bigint, bigint, bigint, bigint];
+          ethUsd8 = rd[1];
+        } else {
+          ethUsd8 = (await client.readContract({
+            address: FLOOR.booster as `0x${string}`,
+            abi: boosterEthUsdAbi,
+            functionName: "ethUsdManualE8",
+          })) as bigint;
+        }
+        if (ethUsd8 === 0n) {
+          setSellQuote(`≈ $${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}`);
+          return;
+        }
+        const ethWei = BigInt(Math.round((usd / (Number(ethUsd8) / 1e8)) * 1e18));
+        if (cur === "eth") {
+          if (!stale)
+            setSellQuote(`≈ ${(Number(ethWei) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 5 })} ETH`);
+          return;
+        }
+        const coatOut = (await client.readContract({
+          address: FLOOR.coatRouter as `0x${string}`,
+          abi: coatRouterQuoteAbi,
+          functionName: "quoteBuy",
+          args: [ethWei],
+        })) as bigint;
+        if (!stale)
+          setSellQuote(`≈ ${(Number(coatOut) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 0 })} $COAT`);
+      } catch {
+        if (!stale) setSellQuote("quote unavailable");
+      }
+    }, 400);
+    return () => {
+      stale = true;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dir, cur, address, offline, livePreset, feeBps]);
 
   const feePct = feeBps !== undefined ? Number(feeBps) / 100 : 0.3;
   const presetName = livePreset ? livePreset[2] : FLOOR.presets[0].name;
@@ -246,6 +354,11 @@ export function Terminal() {
             <>
               <span className="label">You sell — one transaction</span>
               <div className="mt-1.5">{basketPanel}</div>
+              {holdings.length > 0 && (
+                <p className="label mt-2">
+                  You hold: {holdings.map((h) => `${h.text} ${h.symbol}`).join(" · ")}
+                </p>
+              )}
               <p className="text-sm text-ink-soft mt-1">
                 Your entire position: every basket stock you hold, swept in a single trade.
               </p>
@@ -285,6 +398,9 @@ export function Terminal() {
               <div className="flex items-center justify-between">
                 <span className="label">You receive</span>
                 {currencySelect}
+              </div>
+              <div className="font-sans text-2xl text-ink-strong mt-1.5">
+                {sellQuote || "—"}
               </div>
               {cur === "coat" && (
                 <p className="label mt-2">
