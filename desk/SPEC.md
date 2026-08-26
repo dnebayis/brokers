@@ -15,7 +15,7 @@ Desk NFT whole with the portfolio inside.
 
 | Decision | Value | Source |
 |---|---|---|
-| Supply | **500 Desks, hard cap** (constant) | user |
+| Supply | **Waved: pilot 500, then mint closes; owner may reopen later waves on demand via settable `mintCap`; hard ceiling `MAX_DESKS = 2000` (constant, forever)** | user 2026-08-26 |
 | Mint price | **120,000 COAT**, settable | user 2026-08-26 (was 100k proposal) |
 | Mint COAT destination | **No burn.** 100% to CoatBonusPool, distributed to ACTIVE Brokers | user |
 | Service fee | **0.5%** per engine-executed trade, settable | community vote 6/7 |
@@ -54,6 +54,24 @@ Reads from the deployed core (interfaces only, no modifications):
 `Booster.isActive/activeShares` (bonus eligibility), `CoattailBroker.ownerOf/accountOf`
 (claim destination + pilot gating), `StrategyRegistry.getBasket` (composition),
 Booster stock feeds pattern for price guards.
+
+## Trait system (the rarity-churn problem, solved before mint)
+
+Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT recur:
+
+1. **Fixed traits are curated off-chain for ALL 2,000 ids at once** (`art/traits_gen.py`,
+   deterministic seed `THE.DESK.TRAITS.V1`): exact counts per option (no hash luck), zero
+   exact-duplicate scenes by construction, and wave 1 (ids 1-500) tracks the global rarity
+   proportions. The full table is uploaded on-chain before wave 1 and its sha256 digest
+   (`ac7a3505bb56a310437661d2447654d315d788a46eb5680e202c8efe192efa50`) is published, so
+   later waves are provably pre-committed — nobody can rig Desk #1777's traits after seeing
+   demand. Seven axes: wall (9) · wood (5) · screens (3) · chart direction (2, red 10%) ·
+   gadget (4, gold calculator 5%) · companion (5, cat 8%) · accent color (6). 32,400 scene
+   space for 2,000 desks.
+2. **Live data never enters the trait list.** Holdings/value/age appear only as
+   `display_type: number`, rounded — rarity engines exclude those by spec. Attributes that
+   rank a Desk are frozen at upload, forever; a claim or rebalance can refresh the image,
+   never the rank.
 
 ## Trust & safety invariants
 

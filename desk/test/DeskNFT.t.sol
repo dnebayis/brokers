@@ -75,9 +75,11 @@ contract DeskNFTTest is Test {
         assertEq(coat.balanceOf(pool), 1e18);
     }
 
-    function test_cap500() public {
+    function test_supplyWaves() public {
         vm.prank(ownerAddr);
         desks.setMintPrice(0); // cap test without COAT bookkeeping noise
+
+        // wave 1: pilot cap 500
         vm.startPrank(alice);
         for (uint256 i; i < 500; ++i) {
             desks.mint();
@@ -86,6 +88,27 @@ contract DeskNFTTest is Test {
         desks.mint();
         vm.stopPrank();
         assertEq(desks.totalMinted(), 500);
+
+        // owner opens wave 2 within the hard ceiling
+        vm.prank(ownerAddr);
+        desks.setMintCap(502);
+        vm.startPrank(alice);
+        desks.mint();
+        desks.mint();
+        vm.expectRevert(DeskNFT.SoldOut.selector);
+        desks.mint();
+        vm.stopPrank();
+        assertEq(desks.totalMinted(), 502);
+
+        // ceiling and floor rules
+        vm.startPrank(ownerAddr);
+        vm.expectRevert(DeskNFT.CapAboveMax.selector);
+        desks.setMintCap(2001);
+        vm.expectRevert(DeskNFT.CapBelowMinted.selector);
+        desks.setMintCap(400);
+        desks.setMintCap(2000); // full ceiling is fine
+        vm.stopPrank();
+        assertEq(desks.MAX_DESKS(), 2000);
     }
 
     function test_walletControlFollowsTheNft() public {

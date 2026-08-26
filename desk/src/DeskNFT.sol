@@ -36,14 +36,18 @@ interface IDeskRenderer {
 ///         the CoatBonusPool for distribution to active Brokers), and every Desk deploys its
 ///         own ERC-6551 wallet at mint. Open to everyone; no allowlist, no holder gate
 ///         (community-communicated decision, 2026-08-26).
-/// @dev The 500 cap is a constant by design: it is the product's scarcity promise, the one
-///      number that must not be a lever. Everything else (price, renderer, open/closed) ships
-///      settable — the 36,750 lesson.
+/// @dev Supply is waved (user decision 2026-08-26): the pilot mints up to `mintCap` = 500,
+///      then mint closes; if demand justifies it the owner can raise the cap in later waves,
+///      but never above the constant `MAX_DESKS` = 2,000 — that ceiling is the scarcity
+///      promise and is not a lever. Everything else (price, cap-within-ceiling, renderer,
+///      open/closed) ships settable — the 36,750 lesson. Trait assignments for ALL 2,000 ids
+///      are curated and digest-committed before wave 1, so later waves cannot be rigged.
 contract DeskNFT is ERC721, Ownable2Step, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Strings for uint256;
 
-    uint256 public constant MAX_DESKS = 500;
+    /// @notice Hard ceiling for all waves, forever. Constant by design.
+    uint256 public constant MAX_DESKS = 2000;
     bytes32 public constant SALT = bytes32(0);
 
     IERC20 public immutable coat;
@@ -52,11 +56,15 @@ contract DeskNFT is ERC721, Ownable2Step, ReentrancyGuard {
     address public immutable accountImpl;
 
     uint256 public mintPrice = 120_000e18;
+    /// @notice Current wave ceiling. Pilot = 500; owner may raise toward MAX_DESKS if demand
+    ///         justifies later waves, and may never lower it below what is already minted.
+    uint256 public mintCap = 500;
     bool public mintOpen;
     address public renderer;
     uint256 public totalMinted;
 
     event MintPriceSet(uint256 price);
+    event MintCapSet(uint256 cap);
     event MintOpenSet(bool open);
     event RendererSet(address renderer);
     event DeskMinted(uint256 indexed tokenId, address indexed to, address account, uint256 coatPaid);
@@ -64,6 +72,8 @@ contract DeskNFT is ERC721, Ownable2Step, ReentrancyGuard {
     error ZeroAddress();
     error MintClosed();
     error SoldOut();
+    error CapAboveMax();
+    error CapBelowMinted();
 
     constructor(
         IERC20 coat_,
@@ -89,6 +99,15 @@ contract DeskNFT is ERC721, Ownable2Step, ReentrancyGuard {
         emit MintPriceSet(price);
     }
 
+    /// @notice Open a later wave (or trim an unopened one). Never above the 2,000 ceiling,
+    ///         never below what already exists.
+    function setMintCap(uint256 cap) external onlyOwner {
+        if (cap > MAX_DESKS) revert CapAboveMax();
+        if (cap < totalMinted) revert CapBelowMinted();
+        mintCap = cap;
+        emit MintCapSet(cap);
+    }
+
     function setMintOpen(bool open) external onlyOwner {
         mintOpen = open;
         emit MintOpenSet(open);
@@ -105,7 +124,7 @@ contract DeskNFT is ERC721, Ownable2Step, ReentrancyGuard {
     ///         receive Desk #id and its freshly deployed 6551 wallet.
     function mint() external nonReentrant returns (uint256 tokenId, address account) {
         if (!mintOpen) revert MintClosed();
-        if (totalMinted >= MAX_DESKS) revert SoldOut();
+        if (totalMinted >= mintCap) revert SoldOut();
         tokenId = ++totalMinted;
 
         uint256 price = mintPrice;
