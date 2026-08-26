@@ -89,8 +89,8 @@ def monitor(c, x, top, w, screen_h, up=True, screen="#0d1b2e", frame="#2b2f36"):
 
 
 def calculator(c, x, gold=False):
-    body = "#c8a94e" if gold else "#b9bdc4"
-    edge = "#8a6f23" if gold else "#7e838b"
+    body = "#f2c53d" if gold else "#b9bdc4"
+    edge = "#a67c1a" if gold else "#7e838b"
     scr = "#1c2620"
     dig = "#43d17c"
     c.rect(x, 15, x + 6, 21, body)
@@ -104,6 +104,30 @@ def calculator(c, x, gold=False):
                 c.put(bx, by, edge)
     c.put(x + 1, 19, edge); c.put(x + 3, 19, edge); c.put(x + 5, 19, edge)
     c.put(x + 1, 20, body); c.put(x + 3, 20, body)
+    if gold:
+        c.put(x, 15, "#ffe98a")            # glint
+        c.put(x + 6, 15, "#ffe98a")
+
+
+def wall_frame(c, x, y, kind):
+    """Framed art on the back wall. 9x9 gilded frame, 7x7 canvas."""
+    gold_f, dark = "#c9a84e", "#141a24"
+    c.rect(x, y, x + 8, y + 8, gold_f)
+    c.rect(x + 1, y + 1, x + 7, y + 7, dark)
+    if kind == "stonks":
+        pts = [(1, 6), (2, 5), (3, 5), (4, 4), (5, 3), (6, 2)]
+        for dx, dy in pts:
+            c.put(x + dx, y + dy, "#43d17c")
+        c.put(x + 6, y + 1, "#43d17c")     # arrowhead
+        c.put(x + 5, y + 2, "#43d17c")
+    elif kind == "ape":
+        fur, face = "#6b4a33", "#c9a17c"
+        c.rect(x + 2, y + 2, x + 6, y + 6, fur)       # head
+        c.rect(x + 3, y + 4, x + 5, y + 6, face)      # muzzle
+        c.put(x + 3, y + 3, face); c.put(x + 5, y + 3, face)  # brow shading
+        c.put(x + 3, y + 3, "#1d232b"); c.put(x + 5, y + 3, "#1d232b")  # eyes
+        c.rect(x + 3, y + 6, x + 5, y + 6, "#8a6a4d")  # mouth line
+    c.rect(x + 1, y + 7, x + 7, y + 7, "#0e131b")      # inner shadow
 
 
 def coffee(c, x, mug="#d9dee5"):
@@ -184,7 +208,8 @@ def v1(c):
 def v2(c):
     monitor(c, 6, 8, 14, 10)
     calculator(c, 24)
-    papers(c, 33, pen="#43d17c")
+    papers(c, 31, pen="#43d17c")
+    wall_frame(c, 24, 4, "stonks")
 
 
 @variant("Night Shift", "#23262d", "#191c22", "dark", "kırmızı grafik + yanan lamba; tek koyu tema")
@@ -206,8 +231,9 @@ def v4(c):
 def v5(c):
     monitor(c, 6, 11, 10, 7)
     calculator(c, 20)
-    papers(c, 30)
-    coffee(c, 35, mug="#8a4a3a")
+    papers(c, 29)
+    coffee(c, 34, mug="#8a4a3a")
+    wall_frame(c, 22, 2, "stonks")
 
 
 @variant("Cat Desk", "#6b5a7d", "#524561", "walnut", "masa kedisi; topluluk favorisi adayı")
@@ -215,13 +241,15 @@ def v6(c):
     monitor(c, 5, 9, 12, 9)
     cat(c, 24)
     coffee(c, 33)
+    wall_frame(c, 21, 4, "ape")
 
 
 @variant("Gold Rush", "#a3814a", "#7f6438", "oak", "altın hesap makinesi; nadir trait adayı")
 def v7(c):
     monitor(c, 6, 9, 12, 9)
     calculator(c, 23, gold=True)
-    papers(c, 33, pen="#caa84a")
+    coffee(c, 33)
+    wall_frame(c, 24, 3, "ape")
 
 
 @variant("Minimal", "#7d838c", "#5f646c", "birch", "tek ekran + kahve; en sade kompozisyon")
@@ -232,10 +260,11 @@ def v8(c):
 
 @variant("War Room", "#6e3a3f", "#532b2f", "dark", "çift ekran + hesap makinesi + lamba; maksimalist")
 def v9(c):
-    monitor(c, 4, 9, 11, 9)
-    monitor(c, 17, 12, 8, 6)
-    calculator(c, 27)
-    lamp(c, 35, on=True)
+    # centering rule: no item may end past x=36 or hug the desk edge
+    monitor(c, 3, 9, 11, 9)
+    monitor(c, 15, 12, 8, 6)
+    calculator(c, 24)
+    lamp(c, 32, on=True)
 
 
 def build():
