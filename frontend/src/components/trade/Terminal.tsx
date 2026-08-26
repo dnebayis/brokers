@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAccount, useBalance, useReadContract, useWriteContract } from "wagmi";
-import { formatEther, parseEther, parseUnits } from "viem";
+import { parseUnits } from "viem";
 import { activeChain } from "@/lib/chains";
 import {
   FLOOR,
@@ -43,6 +43,16 @@ export function Terminal() {
   // 100% keeps the contract's 0-sentinel (sweep the exact live balance); anything less
   // scales each leg down here.
   const sellPortion = (bal: bigint) => (sellPct === 100 ? bal : (bal * BigInt(sellPct)) / 100n);
+
+  const symbolOf = (a: string) =>
+    FLOOR.stocks.find((s) => s.address.toLowerCase() === a.toLowerCase())?.symbol ?? short(a);
+  const decimalsOf = (c: Cur) => (c === "usdg" ? FLOOR.usdgDecimals : 18);
+  let amountWei: bigint | undefined;
+  try {
+    amountWei = amount && Number(amount) > 0 ? parseUnits(amount, decimalsOf(cur)) : undefined;
+  } catch {
+    amountWei = undefined;
+  }
 
   const router = FLOOR.router as `0x${string}`;
   const offline = !floorReady;
@@ -265,20 +275,9 @@ export function Terminal() {
 
   const feePct = feeBps !== undefined ? Number(feeBps) / 100 : 0.3;
   const presetName = livePreset ? livePreset[2] : FLOOR.presets[0].name;
-  const symbolOf = (a: string) =>
-    FLOOR.stocks.find((s) => s.address.toLowerCase() === a.toLowerCase())?.symbol ?? short(a);
   const legs = livePreset
     ? livePreset[0].map((t, i) => ({ symbol: symbolOf(t), pct: Number(livePreset[1][i]) / 100 }))
     : [];
-
-  const decimalsOf = (c: Cur) => (c === "usdg" ? FLOOR.usdgDecimals : 18);
-  let amountWei: bigint | undefined;
-  try {
-    amountWei =
-      amount && Number(amount) > 0 ? parseUnits(amount, decimalsOf(cur)) : undefined;
-  } catch {
-    amountWei = undefined;
-  }
 
   const balOf = (c: Cur): bigint | undefined =>
     c === "eth" ? ethBal?.value : c === "coat" ? (coatBal as bigint | undefined) : (usdgBal as bigint | undefined);
