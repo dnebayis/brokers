@@ -16,16 +16,22 @@ import { StatusLine } from "@/components/ui/Status";
 // Human plans, not contract enums. Claiming is NOT offered as a plan of its own: the
 // keeper already claims for every Broker each hour, so selling that as a feature would be
 // dishonest. What actually needs a decision is where the stock goes after the claim.
-type Plan = "sweep" | "usdg";
+type Plan = "sweep" | "usdg" | "coat";
 const PLAN_LABEL: Record<Plan, string> = {
   sweep: "Send me the stocks",
   usdg: "Convert to USDG and send",
+  coat: "Convert to $COAT and send",
 };
 const PLAN_SUB: Record<Plan, string> = {
   sweep: "the basket stocks your Broker earns, moved to your address",
   usdg: "sold through The Floor, stablecoin delivered to your address",
+  coat: "sold through The Floor, then bought back as $COAT through the hooked pool",
 };
-const PLAN_MODE: Record<Plan, number> = { sweep: PB_MODE.SWEEP, usdg: PB_MODE.TO_USDG };
+const PLAN_MODE: Record<Plan, number> = {
+  sweep: PB_MODE.SWEEP,
+  usdg: PB_MODE.TO_USDG,
+  coat: PB_MODE.TO_COAT,
+};
 
 type Installed = { autoClaim: boolean; mode: number; dest: Address; paused: boolean; setter: Address };
 
@@ -40,9 +46,8 @@ function planOf(p: Installed): string {
 /** One playbook control surface for every owned Broker: pick a plan once, apply it to one
  *  or all. Plans that move stock out of the Broker wallet need its one-time per-stock
  *  approval, surfaced as an explicit checklist — never a hidden signature.
- *  The contract also supports a convert-to-$COAT mode; it is deliberately NOT offered here
- *  because the keeper does not run it (the hooked pool has no Chainlink floor, so an
- *  automated exit would be unguarded). Anyone wanting $COAT can take the stock and trade it. */
+ *  The $COAT exit crosses the hooked pool, which has no Chainlink floor of its own, so the
+ *  keeper prices that order and passes a minimum-out before running it. */
 export function PlaybookPanel({
   brokers,
   walletsById,
@@ -253,7 +258,7 @@ export function PlaybookPanel({
               // Sweeping to the Broker's own wallet would be a no-op (the stock is already
               // there), so that destination is only offered for the USDG plan, where it
               // means "turn the holdings into stablecoin but leave them inside the NFT".
-              (plan === "usdg"
+              (plan !== "sweep"
                 ? ([
                     ["me", "my connected wallet"],
                     ["broker", "keep it in the Broker's wallet"],

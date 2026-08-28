@@ -220,7 +220,8 @@ leave the core untouched and never take custody:
   80% of it is streamed into Broker payroll, so non-holders trading the basket fund holders.
 - **Playbooks** (2026-08-28) — standing orders the hourly keeper executes for a Broker. The
   salary is already claimed automatically for every Broker; what a playbook decides is where it
-  goes next: the stocks sent to an address, or converted to USDG through The Floor and delivered.
+  goes next: the stocks sent to an address, or converted to USDG or $COAT through The Floor and
+  delivered.
   Installed by the Broker's owner, pausable and revocable at any time, and void the moment the
   Broker changes hands. It adds no fee of its own; conversions ride The Floor.
 

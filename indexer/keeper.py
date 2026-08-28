@@ -96,6 +96,96 @@ def _diagnose_poke(w3, booster, registry_abi, booster_address, buffer_wei) -> No
         print(json.dumps({"action": "poke.diagnosis", "status": "unavailable", "error": str(exc)[:200]}))
 
 
+
+def _coat_min_out(w3, engine, floor_addr, booster_address, token_id):
+    """Minimum $COAT a TO_COAT playbook must deliver, or None if it cannot be priced.
+
+    Mirrors what the venue will actually do: every stock the Broker holds is floored by the
+    Floor's Chainlink guard (`minUsdgOut`), the fee comes off, the total is converted to ETH
+    at the Booster's own ETH/USD source, and CoatRouter's spot `quoteBuy` turns that into
+    COAT. The spot views exclude the hooked pool's ~1% fee, so 2% comes off for the pool and
+    1% more for ordinary drift between this call and the mined transaction.
+    """
+    from web3 import Web3
+
+    if not floor_addr:
+        return None
+    try:
+        brokers_addr = engine.functions.brokers().call()
+        booster_addr = engine.functions.booster().call()
+        tba = w3.eth.contract(address=Web3.to_checksum_address(brokers_addr), abi=[
+            {"type": "function", "name": "accountOf", "stateMutability": "view",
+             "inputs": [{"name": "tokenId", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "address"}]},
+        ]).functions.accountOf(token_id).call()
+        booster = w3.eth.contract(address=Web3.to_checksum_address(booster_addr), abi=[
+            {"type": "function", "name": "knownTokenCount", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+            {"type": "function", "name": "knownTokens", "stateMutability": "view",
+             "inputs": [{"name": "i", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "address"}]},
+            {"type": "function", "name": "ethUsdFeed", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+            {"type": "function", "name": "ethUsdManualE8", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+        ])
+        floor = w3.eth.contract(address=Web3.to_checksum_address(floor_addr), abi=[
+            {"type": "function", "name": "minUsdgOut", "stateMutability": "view",
+             "inputs": [{"name": "stock", "type": "address"}, {"name": "amount", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "uint256"}]},
+            {"type": "function", "name": "feeBps", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+            {"type": "function", "name": "usdg", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+            {"type": "function", "name": "coatRouter", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+        ])
+        erc20 = [{"type": "function", "name": "balanceOf", "stateMutability": "view",
+                  "inputs": [{"name": "a", "type": "address"}],
+                  "outputs": [{"name": "", "type": "uint256"}]},
+                 {"type": "function", "name": "decimals", "stateMutability": "view",
+                  "inputs": [], "outputs": [{"name": "", "type": "uint8"}]}]
+
+        floor_usdg = 0
+        for i in range(int(booster.functions.knownTokenCount().call())):
+            stock = booster.functions.knownTokens(i).call()
+            bal = int(w3.eth.contract(address=stock, abi=erc20).functions.balanceOf(tba).call())
+            if bal:
+                floor_usdg += int(floor.functions.minUsdgOut(stock, bal).call())
+        if floor_usdg == 0:
+            return None
+
+        net_usdg = floor_usdg * (10_000 - int(floor.functions.feeBps().call())) // 10_000
+        usdg_dec = int(w3.eth.contract(address=floor.functions.usdg().call(),
+                                       abi=erc20).functions.decimals().call())
+        feed_addr = booster.functions.ethUsdFeed().call()
+        if int(feed_addr, 16) != 0:
+            eth_usd8 = int(w3.eth.contract(address=feed_addr, abi=[
+                {"type": "function", "name": "latestRoundData", "stateMutability": "view",
+                 "inputs": [], "outputs": [
+                     {"name": "a", "type": "uint80"}, {"name": "answer", "type": "int256"},
+                     {"name": "c", "type": "uint256"}, {"name": "d", "type": "uint256"},
+                     {"name": "e", "type": "uint80"}]},
+            ]).functions.latestRoundData().call()[1])
+        else:
+            eth_usd8 = int(booster.functions.ethUsdManualE8().call())
+        if eth_usd8 <= 0:
+            return None
+
+        eth_wei = net_usdg * 10 ** 8 * 10 ** 18 // (10 ** usdg_dec * eth_usd8)
+        eth_wei = eth_wei * 99 // 100  # the USDG->WETH leg's own spread
+        coat_spot = int(w3.eth.contract(
+            address=Web3.to_checksum_address(floor.functions.coatRouter().call()), abi=[
+                {"type": "function", "name": "quoteBuy", "stateMutability": "view",
+                 "inputs": [{"name": "ethIn", "type": "uint256"}],
+                 "outputs": [{"name": "", "type": "uint256"}]},
+            ]).functions.quoteBuy(eth_wei).call())
+        guard = coat_spot * 98 // 100 * 99 // 100
+        return guard if guard > 0 else None
+    except Exception:
+        return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Coattail Booster keeper")
     parser.add_argument("--execute", action="store_true", help="send poke when eligible")
@@ -382,10 +472,19 @@ def main() -> None:
             for i in range(min(total, pb_batch)):
                 token_id = int(engine.functions.enrolledAt(i).call())
                 mode = int(engine.functions.playbookOf(token_id).call()[1])
-                # TO_COAT (3) exits cross the hooked pool, which has no Chainlink floor;
-                # they need an off-chain quoted minOut. v1 keeper skips them (owners can
-                # still be run manually) rather than sending an unguarded 0.
                 if mode == 3:
+                    # TO_COAT crosses the hooked pool, which has no Chainlink floor of its
+                    # own, so the guard has to be computed here: Chainlink floors of the
+                    # Broker's holdings -> ETH at the Booster's own price -> COAT at spot,
+                    # then haircut for the pool's fee and normal drift. A quote we cannot
+                    # compute means we skip that order rather than send an unguarded zero.
+                    guard = _coat_min_out(w3, engine, floor_addr, booster_address, token_id)
+                    if guard is None:
+                        print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
+                                          "status": "skipped", "reason": "no COAT quote"}))
+                        continue
+                    ids.append(token_id)
+                    min_outs.append(guard)
                     continue
                 ids.append(token_id)
                 min_outs.append(0)

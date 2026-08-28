@@ -47,9 +47,9 @@ Known operational limits, stated plainly:
 - GitHub's scheduler is not reliable. Runs have been skipped for hours; a missed hour is
   made up on the next successful run (balances roll forward), but the delay is real.
 - The keeper relay wallet needs periodic gas top-ups.
-- The engine's convert-to-$COAT mode is deliberately not offered in the UI and not run by the
-  keeper: the hooked pool has no Chainlink floor, so an automated exit there would be
-  unguarded. Take the stocks and trade them if you want $COAT.
+- The $COAT exit has no Chainlink floor of its own (it crosses the hooked pool), so the keeper
+  computes that order's minimum out before running it, and skips any order it cannot price
+  rather than sending an unguarded one.
 
 ## Guarantees that do not move
 

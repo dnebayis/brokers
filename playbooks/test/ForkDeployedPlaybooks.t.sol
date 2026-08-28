@@ -99,6 +99,36 @@ contract ForkDeployedPlaybooksTest is Test {
         assertEq(IERC20(USDG).balanceOf(address(ENGINE)), 0, "engine keeps no custody");
     }
 
+    /// The $COAT exit with the keeper's own computed guard. The number below is what
+    /// `keeper._coat_min_out` returned for this Broker against live mainnet state; the test
+    /// proves an order priced that way actually fills instead of reverting.
+    function test_prod_convertToCoat_keeperGuardHolds() public {
+        address[3] memory stocks = _stocks();
+        vm.prank(owner);
+        ENGINE.setPlaybook(TOKEN_ID, true, PlaybookEngine.Mode.TO_COAT, owner);
+        for (uint256 i; i < 3; ++i) {
+            vm.prank(owner);
+            ITBAFork(tba).execute(
+                stocks[i], 0, abi.encodeCall(IERC20.approve, (address(ENGINE), type(uint256).max)), 0
+            );
+        }
+        uint256 keeperGuard = 5_757_220_994_798_154_517_628; // keeper._coat_min_out, live read
+        uint256 before = IERC20(COAT).balanceOf(owner);
+        uint256[] memory ids = new uint256[](1);
+        uint256[] memory mins = new uint256[](1);
+        ids[0] = TOKEN_ID;
+        mins[0] = keeperGuard;
+        vm.prank(KEEPER);
+        ENGINE.run(ids, mins);
+        uint256 delivered = IERC20(COAT).balanceOf(owner) - before;
+        emit log_named_uint("COAT delivered", delivered / 1e18);
+        emit log_named_uint("keeper guard   ", keeperGuard / 1e18);
+        assertGe(delivered, keeperGuard, "the keeper's guard must be fillable, not just safe");
+        for (uint256 i; i < 3; ++i) {
+            assertEq(IERC20(stocks[i]).balanceOf(tba), 0, "wallet swept");
+        }
+    }
+
     /// Auto-claim alone: no approvals, no conversion, nothing leaves the Broker wallet.
     function test_prod_autoClaimOnly_needsNoApprovals() public {
         vm.prank(owner);
