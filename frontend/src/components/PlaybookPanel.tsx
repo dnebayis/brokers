@@ -56,7 +56,7 @@ export function PlaybookPanel({
   brokers,
   walletsById,
 }: {
-  brokers: { id: bigint; active: boolean }[];
+  brokers: { id: bigint; active: boolean | null }[];
   walletsById: Record<string, Address | undefined>;
 }) {
   const { address } = useAccount();
@@ -249,7 +249,7 @@ export function PlaybookPanel({
     });
 
   if (!playbooksReady || !address || brokers.length === 0) return null;
-  const activeBrokers = brokers.filter((b) => b.active);
+  const activeBrokers = brokers.filter((b) => b.active === true);
 
   return (
     <div className="card">

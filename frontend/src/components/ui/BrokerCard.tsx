@@ -17,7 +17,7 @@ export function BrokerCard({
   wallet,
 }: {
   id: bigint;
-  active: boolean;
+  active: boolean | null;
   selected?: boolean;
   onSelect?: () => void;
   backingUsd?: number;
@@ -54,10 +54,14 @@ export function BrokerCard({
           <span className="font-pixel text-[12px] text-ink-strong">#{id.toString()}</span>
           <span
             className={`font-pixel text-[9px] px-1.5 py-0.5 border ${
-              active ? "border-good text-good" : "border-ink-soft text-ink-soft"
+              active === null
+                ? "border-ink-soft text-ink-soft opacity-60"
+                : active
+                  ? "border-good text-good"
+                  : "border-ink-soft text-ink-soft"
             }`}
           >
-            {active ? "ON" : "OFF"}
+            {active === null ? "…" : active ? "ON" : "OFF"}
           </span>
         </div>
         <div className="text-[11px] text-ink-soft mt-1 truncate">

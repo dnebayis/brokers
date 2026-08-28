@@ -80,7 +80,7 @@ export function ActivateTab() {
   // lives on Home — this tab shows only the visitor's own numbers.
   void activeSharesData;
   const burnLabel = burnData !== undefined ? fmt(burnData as bigint, 18, 0) : PARAMS.activationBurn.toLocaleString();
-  const activeOwned = brokers.filter((item) => item.active).length;
+  const activeOwned = brokers.filter((item) => item.active === true).length;
   const backing = useBrokerBacking(brokers.map((b) => b.id));
   // Each Broker's own 6551 wallet address, so the card can offer one-tap copy
   // (people send stock/tips straight to a Broker). accountOf is a pure view and
@@ -109,7 +109,9 @@ export function ActivateTab() {
     return () => { stale = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brokers]);
-  const inactiveOwned = brokers.length - activeOwned;
+  // counts only Brokers we positively read as off, so an unread one never inflates the
+  // "activate all" cost or the burn it would ask for
+  const inactiveOwned = brokers.filter((item) => item.active === false).length;
   const activateAllCost = burnData !== undefined ? (burnData as bigint) * BigInt(inactiveOwned) : undefined;
   const refetch = () => { refetchShares(); refetchCoat(); };
 
@@ -251,7 +253,8 @@ export function ActivateTab() {
   const activateAll = () =>
     act.run(async () => {
       if (!address) throw new Error("Connect your wallet.");
-      const inactive = brokers.filter((item) => !item.active);
+      // `active === false` only: an unread Broker (null) must not be pushed into a burn flow.
+  const inactive = brokers.filter((item) => item.active === false);
       if (!inactive.length) throw new Error("Every owned Broker is already active.");
       const burn = (await client.readContract({
         address: ADDR.broker, abi: brokerAbi, functionName: "ACTIVATION_BURN",

@@ -8,7 +8,10 @@ import { brokerAbi } from "./abis";
 import { client } from "./client";
 import { alchemyOwnedTokenIds } from "./alchemy";
 
-export type OwnedBroker = { id: bigint; active: boolean };
+// `active: null` means the chain did not answer, NOT that the Broker is off. Rendering an
+// unanswered read as "OFF" was showing people's working Brokers as switched off whenever the
+// RPC was rate limited, which is exactly when it is least excusable.
+export type OwnedBroker = { id: bigint; active: boolean | null };
 
 // Find a wallet's Brokers. Primary path: the Alchemy NFT API (one request, scales). Fallback:
 // bounded on-chain enumeration. Either way, ownership + active status are confirmed on-chain.
@@ -78,11 +81,41 @@ export function useOwnedBrokers() {
             { address: ADDR.broker, abi: brokerAbi, functionName: "activated", args: [id] } as const,
           ]);
           const results = await client.multicall({ contracts: calls, allowFailure: true });
+          const mine: { id: bigint; active: boolean | null }[] = [];
+          const unanswered: bigint[] = [];
           batch.forEach((id, i) => {
             const owner = results[i * 2]?.result as string | undefined;
-            const active = results[i * 2 + 1]?.result as boolean | undefined;
-            if (owner && owner.toLowerCase() === ownerKey) out.push({ id, active: !!active });
+            const activeRes = results[i * 2 + 1];
+            if (!owner || owner.toLowerCase() !== ownerKey) return;
+            if (activeRes?.status === "success") {
+              mine.push({ id, active: !!activeRes.result });
+            } else {
+              mine.push({ id, active: null });
+              unanswered.push(id);
+            }
           });
+          // One retry for the reads the batch dropped, as plain single calls: a rate-limited
+          // or oversized multicall fails per item, and a single read usually succeeds.
+          if (unanswered.length > 0) {
+            const retried = await Promise.all(
+              unanswered.map(async (id) => {
+                try {
+                  const a = await client.readContract({
+                    address: ADDR.broker, abi: brokerAbi, functionName: "activated", args: [id],
+                  });
+                  return [id, !!a] as const;
+                } catch {
+                  return [id, null] as const;
+                }
+              }),
+            );
+            const fixed = new Map(retried.map(([id, a]) => [id.toString(), a]));
+            for (const row of mine) {
+              const v = fixed.get(row.id.toString());
+              if (v !== undefined) row.active = v;
+            }
+          }
+          out.push(...mine);
         }
         return out;
       };
