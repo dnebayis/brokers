@@ -11,11 +11,15 @@ a "playbook" on a Broker; the keeper executes it every hour.
 ## Locked decisions
 
 1. **v1 modules** (one contract, `PlaybookEngine`):
-   - **Auto-claim** — keeper calls the Booster's permissionless `claimFor` for enrolled
-     Brokers each round. Zero approvals needed.
-   - **Sweep** — move the TBA's claimed stocks to an owner-chosen address each round.
-   - **Convert** — sell the TBA's claimed stocks through The Floor (`sellBasket`) into
-     USDG or $COAT, delivered to the owner-chosen destination.
+   - **Sweep** — move the Broker wallet's claimed stocks to an owner-chosen address each round.
+   - **Convert** — sell those stocks through The Floor (`sellBasket`) into USDG, delivered to
+     the owner-chosen destination (or left inside the Broker wallet as stablecoin).
+   - Auto-claim runs underneath both, but is **not offered as a plan of its own**: the keeper's
+     claim distributor already claims for every Broker each hour, so selling that as a feature
+     would be dishonest. What needs a decision is where the earnings go afterwards.
+   - The contract also has a convert-to-$COAT mode. It is **not exposed in the UI**: the keeper
+     will not run it unguarded (the hooked pool has no Chainlink floor), and anyone who wants
+     $COAT can take the stocks and trade them.
 2. **Fees: none added.** Conversions route through The Floor, whose 0.3% already streams
    80% to Broker payroll. Playbooks is a volume feeder, not a new toll booth.
 3. **Authority model:**

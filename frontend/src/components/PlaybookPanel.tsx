@@ -13,29 +13,36 @@ import { useTx } from "@/lib/useTx";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
 
-// Human plans, not contract enums. "Off" clears; the rest map to (autoClaim, mode).
-type Plan = "claim" | "usdg" | "coat";
+// Human plans, not contract enums. Claiming is NOT offered as a plan of its own: the
+// keeper already claims for every Broker each hour, so selling that as a feature would be
+// dishonest. What actually needs a decision is where the stock goes after the claim.
+type Plan = "sweep" | "usdg";
 const PLAN_LABEL: Record<Plan, string> = {
-  claim: "Collect my salary automatically",
-  usdg: "Collect and convert to USDG",
-  coat: "Collect and convert to $COAT",
+  sweep: "Send me the stocks",
+  usdg: "Convert to USDG and send",
 };
-const PLAN_MODE: Record<Plan, number> = { claim: PB_MODE.NONE, usdg: PB_MODE.TO_USDG, coat: PB_MODE.TO_COAT };
+const PLAN_SUB: Record<Plan, string> = {
+  sweep: "the basket stocks your Broker earns, moved to your address",
+  usdg: "sold through The Floor, stablecoin delivered to your address",
+};
+const PLAN_MODE: Record<Plan, number> = { sweep: PB_MODE.SWEEP, usdg: PB_MODE.TO_USDG };
 
 type Installed = { autoClaim: boolean; mode: number; dest: Address; paused: boolean; setter: Address };
 
 function planOf(p: Installed): string {
   if (p.paused) return "paused";
-  if (p.mode === PB_MODE.TO_USDG) return "auto-collect → USDG";
-  if (p.mode === PB_MODE.TO_COAT) return "auto-collect → $COAT";
-  if (p.mode === PB_MODE.SWEEP) return "auto-collect → sweep";
-  if (p.autoClaim) return "auto-collect";
+  if (p.mode === PB_MODE.TO_USDG) return "USDG → your address";
+  if (p.mode === PB_MODE.TO_COAT) return "$COAT → your address";
+  if (p.mode === PB_MODE.SWEEP) return "stocks → your address";
   return "off";
 }
 
 /** One playbook control surface for every owned Broker: pick a plan once, apply it to one
- *  or all. Conversions additionally need the Broker wallet's one-time per-stock approval,
- *  surfaced as an explicit checklist — never a hidden signature. */
+ *  or all. Plans that move stock out of the Broker wallet need its one-time per-stock
+ *  approval, surfaced as an explicit checklist — never a hidden signature.
+ *  The contract also supports a convert-to-$COAT mode; it is deliberately NOT offered here
+ *  because the keeper does not run it (the hooked pool has no Chainlink floor, so an
+ *  automated exit would be unguarded). Anyone wanting $COAT can take the stock and trade it. */
 export function PlaybookPanel({
   brokers,
   walletsById,
@@ -48,15 +55,16 @@ export function PlaybookPanel({
   const tx = useTx();
 
   const engine = PLAYBOOKS.engine as Address;
-  const [plan, setPlan] = useState<Plan>("claim");
-  const [destKind, setDestKind] = useState<"broker" | "me" | "custom">("broker");
+  const [plan, setPlan] = useState<Plan>("sweep");
+  const [destKind, setDestKind] = useState<"broker" | "me" | "custom">("me");
   const [customDest, setCustomDest] = useState("");
   const [installed, setInstalled] = useState<Record<string, Installed>>({});
   const [stocks, setStocks] = useState<Address[]>([]);
   const [allowed, setAllowed] = useState<Record<string, boolean>>({}); // `${tba}|${stock}`
   const [reloadKey, setReloadKey] = useState(0);
 
-  const needsConvert = plan === "usdg" || plan === "coat";
+  // Both plans move stock out of the Broker wallet, so both need its one-time allowance.
+  const needsApproval = true;
 
   // Installed playbooks + the Booster's stock list (the set conversions must be approved for).
   useEffect(() => {
@@ -100,7 +108,7 @@ export function PlaybookPanel({
 
   // Allowance checklist, only when a convert plan is selected.
   useEffect(() => {
-    if (!needsConvert || stocks.length === 0) return;
+    if (!needsApproval || stocks.length === 0) return;
     let stale = false;
     (async () => {
       const entries: Record<string, boolean> = {};
@@ -124,10 +132,11 @@ export function PlaybookPanel({
       stale = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needsConvert, stocks, brokers, reloadKey]);
+  }, [needsApproval, stocks, brokers, reloadKey]);
 
   const dest = (): Address => {
-    if (destKind === "broker") return "0x0000000000000000000000000000000000000000";
+    if (destKind === "broker" && plan === "usdg") return "0x0000000000000000000000000000000000000000";
+    if (destKind === "broker") return address!; // sweeping to itself is a no-op — use the owner
     if (destKind === "me") return address!;
     return customDest as Address;
   };
@@ -135,7 +144,7 @@ export function PlaybookPanel({
   const destInvalid = destKind === "custom" && !isAddress(customDest);
 
   const missingApprovals = useMemo(() => {
-    if (!needsConvert) return [];
+    if (!needsApproval) return [];
     const out: { id: bigint; tba: Address; stock: Address }[] = [];
     for (const b of brokers) {
       const tba = walletsById[b.id.toString()];
@@ -143,7 +152,7 @@ export function PlaybookPanel({
       for (const s of stocks) if (!allowed[`${tba}|${s}`]) out.push({ id: b.id, tba, stock: s });
     }
     return out;
-  }, [needsConvert, brokers, walletsById, stocks, allowed]);
+  }, [needsApproval, brokers, walletsById, stocks, allowed]);
 
   async function approveOne(tba: Address, stock: Address) {
     const data = encodeFunctionData({
@@ -165,7 +174,7 @@ export function PlaybookPanel({
     tx.run(async () => {
       if (destInvalid) throw new Error("Enter a valid destination address.");
       // approvals first, so a saved playbook is never silently inert
-      if (needsConvert) {
+      if (needsApproval) {
         const todo = missingApprovals.filter((m) => ids.some((id) => id === m.id));
         for (let i = 0; i < todo.length; i++) {
           tx.setStatus(`Broker wallet approval ${i + 1}/${todo.length} — one time only…`);
@@ -209,39 +218,51 @@ export function PlaybookPanel({
     <div className="card">
       <h2 className="pixel-title text-[15px] mb-1">Playbooks</h2>
       <p className="text-ink-soft text-sm mb-4">
-        Put a Broker on autopilot: the engine collects its salary every hour and, if you
-        want, converts it and delivers it where you say. Free — conversions ride The Floor,
-        whose fee already pays Broker salaries. Selling the Broker switches its playbook off.
+        Your Broker&rsquo;s salary is already claimed for you every hour — it just stops in the
+        Broker&rsquo;s own wallet, and getting it out means signing once per stock. A playbook
+        automates that last step: say where the earnings should go and the hourly engine takes
+        them there. Free, non-custodial, revocable, and switched off the moment you sell the Broker.
       </p>
 
       {/* the plan */}
       <span className="label">The plan</span>
       <div className="grid gap-1.5 mt-1 mb-3">
         {(Object.keys(PLAN_LABEL) as Plan[]).map((p) => (
-          <label key={p} className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <label key={p} className="flex items-start gap-2 text-sm cursor-pointer select-none">
             <input
               type="radio"
               name="pb-plan"
               checked={plan === p}
               onChange={() => setPlan(p)}
-              className="accent-[var(--c-accent)]"
+              className="accent-[var(--c-accent)] mt-1"
             />
-            {PLAN_LABEL[p]}
+            <span>
+              {PLAN_LABEL[p]}
+              <span className="block text-ink-soft text-[12px]">{PLAN_SUB[p]}</span>
+            </span>
           </label>
         ))}
       </div>
 
       {/* where proceeds land */}
-      {needsConvert && (
+      {needsApproval && (
         <>
           <span className="label">Deliver to</span>
           <div className="flex flex-wrap items-center gap-3 mt-1 mb-3 text-sm">
             {(
-              [
-                ["broker", "the Broker's own wallet"],
-                ["me", "my connected wallet"],
-                ["custom", "another address"],
-              ] as const
+              // Sweeping to the Broker's own wallet would be a no-op (the stock is already
+              // there), so that destination is only offered for the USDG plan, where it
+              // means "turn the holdings into stablecoin but leave them inside the NFT".
+              (plan === "usdg"
+                ? ([
+                    ["me", "my connected wallet"],
+                    ["broker", "keep it in the Broker's wallet"],
+                    ["custom", "another address"],
+                  ] as const)
+                : ([
+                    ["me", "my connected wallet"],
+                    ["custom", "another address"],
+                  ] as const)) as readonly (readonly ["broker" | "me" | "custom", string])[]
             ).map(([k, label]) => (
               <label key={k} className="flex items-center gap-1.5 cursor-pointer select-none">
                 <input
@@ -265,7 +286,7 @@ export function PlaybookPanel({
           )}
           {missingApprovals.length > 0 && (
             <p className="text-[12px] text-ink-soft mb-3">
-              Converting needs {missingApprovals.length} one-time Broker-wallet approval
+              Moving stock out of the Broker wallet needs {missingApprovals.length} one-time approval
               {missingApprovals.length > 1 ? "s" : ""} (one per stock, never again) — they run
               automatically before the playbook is saved.
             </p>

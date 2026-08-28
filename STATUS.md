@@ -28,8 +28,10 @@ Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
   leg, non-custodial, 0.3% fee (hard cap 1%), 80% of it converted to native ETH and streamed
   into Broker payroll by the hourly keeper.
 - **Playbooks** (`playbooks/`, `PlaybookEngine`) — per-Broker standing orders the keeper
-  executes: auto-claim, sweep, or convert to USDG/$COAT and deliver anywhere. Owner-installed,
-  pausable, revocable, and self-invalidating when the Broker changes hands. No fee of its own.
+  executes. Claiming is already automatic for every Broker, so a playbook decides what happens
+  *after* the claim: send the stocks to an address, or convert them to USDG through The Floor
+  and deliver that. Owner-installed, pausable, revocable, and void the moment the Broker changes
+  hands. No fee of its own.
 
 ## Automation
 
@@ -45,9 +47,9 @@ Known operational limits, stated plainly:
 - GitHub's scheduler is not reliable. Runs have been skipped for hours; a missed hour is
   made up on the next successful run (balances roll forward), but the delay is real.
 - The keeper relay wallet needs periodic gas top-ups.
-- Playbooks `TO_COAT` orders are skipped by the keeper until quoted minimum-out computation
-  ships (v1.1) — the hooked pool has no Chainlink floor, and an unguarded exit is not
-  acceptable. Owners can still run those orders themselves.
+- The engine's convert-to-$COAT mode is deliberately not offered in the UI and not run by the
+  keeper: the hooked pool has no Chainlink floor, so an automated exit there would be
+  unguarded. Take the stocks and trade them if you want $COAT.
 
 ## Guarantees that do not move
 

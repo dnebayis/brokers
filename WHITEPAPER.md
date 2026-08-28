@@ -218,10 +218,11 @@ leave the core untouched and never take custody:
   one transaction, paying in $COAT, ETH or USDG. Every leg is Chainlink-guarded with a hard
   on-chain minimum. Its 0.3% fee (capped at 1%) is converted to native ETH by the keeper and
   80% of it is streamed into Broker payroll, so non-holders trading the basket fund holders.
-- **Playbooks** (2026-08-28) — standing orders the hourly keeper executes for a Broker:
-  auto-claim the salary, sweep it, or convert it to USDG/$COAT and deliver it to a chosen
-  address. Installed by the Broker's owner, pausable and revocable at any time, and void the
-  moment the Broker changes hands. It adds no fee of its own; conversions ride The Floor.
+- **Playbooks** (2026-08-28) — standing orders the hourly keeper executes for a Broker. The
+  salary is already claimed automatically for every Broker; what a playbook decides is where it
+  goes next: the stocks sent to an address, or converted to USDG through The Floor and delivered.
+  Installed by the Broker's owner, pausable and revocable at any time, and void the moment the
+  Broker changes hands. It adds no fee of its own; conversions ride The Floor.
 
 Neither product issues a token, dilutes the collection, or creates a path to the engine's
 output that bypasses owning an active Broker.
