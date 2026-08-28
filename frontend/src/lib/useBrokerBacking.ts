@@ -8,9 +8,11 @@
 // The Activate tab shows both: "worth at least X" and "earned Y since you switched it on".
 
 import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 import { loadKnownTokens, brokerBacking, earnedSinceActivation } from "./brokerValue";
 
 export function useBrokerBacking(ids: bigint[]) {
+  const { address } = useAccount();
   const key = ids.map((i) => i.toString()).join(",");
   const [byId, setById] = useState<Record<string, number>>({});
   const [earnedById, setEarnedById] = useState<Record<string, number>>({});
@@ -42,7 +44,7 @@ export function useBrokerBacking(ids: bigint[]) {
               }
             }),
           ),
-          earnedSinceActivation(ids, metas).catch(() => ({}) as Record<string, number>),
+          earnedSinceActivation(ids, metas, address).catch(() => ({}) as Record<string, number>),
         ]);
         if (!live) return;
         const map: Record<string, number> = {};
@@ -64,7 +66,7 @@ export function useBrokerBacking(ids: bigint[]) {
       live = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, address]);
 
   return { byId, earnedById, totalUsd, totalEarnedUsd, loading };
 }

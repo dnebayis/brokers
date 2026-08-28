@@ -115,6 +115,7 @@ const ACTIVATED = parseAbiItem(
 export async function earnedSinceActivation(
   ids: bigint[],
   metas: TokenMeta[],
+  owner?: Address,
 ): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
   if (ids.length === 0) return out;
@@ -141,13 +142,23 @@ export async function earnedSinceActivation(
     ),
   ]);
 
-  // The current streak starts at the LATEST activation per token.
-  const since = new Map<string, bigint>();
+  // The current streak starts at the LATEST activation per token — and it only counts
+  // as a streak if THIS owner performed it. Buying an active Broker force-deactivates
+  // it without a new Activated event, so the latest activation can belong to the
+  // previous owner: that Broker has no streak for the buyer until they switch it on.
+  const latest = new Map<string, { block: bigint; by: string }>();
   for (const l of activations) {
     if (l.args.tokenId === undefined) continue;
     const key = l.args.tokenId.toString();
-    const prev = since.get(key);
-    if (prev === undefined || l.blockNumber! > prev) since.set(key, l.blockNumber!);
+    const prev = latest.get(key);
+    if (prev === undefined || l.blockNumber! > prev.block) {
+      latest.set(key, { block: l.blockNumber!, by: (l.args.owner as string).toLowerCase() });
+    }
+  }
+  const since = new Map<string, bigint>();
+  for (const [key, v] of latest) {
+    if (owner && v.by !== owner.toLowerCase()) continue; // someone else's streak — hide
+    since.set(key, v.block);
   }
 
   // Per-token USD tallies for the streak, keyed "tokenId|token", so the carryover can be
