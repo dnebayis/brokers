@@ -6,7 +6,7 @@ import { encodeFunctionData, isAddress, type Address } from "viem";
 import { activeChain } from "@/lib/chains";
 import { ADDR } from "@/lib/config";
 import { boosterAbi, brokerAccountAbi } from "@/lib/abis";
-import { erc20MiniAbi } from "@/lib/floor";
+import { FLOOR, erc20MiniAbi, basketRouterAbi } from "@/lib/floor";
 import { PLAYBOOKS, playbooksReady, playbookEngineAbi, PB_MODE } from "@/lib/playbooks";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
 import { useTx } from "@/lib/useTx";
@@ -27,6 +27,10 @@ const PLAN_SUB: Record<Plan, string> = {
   usdg: "sold through The Floor, stablecoin delivered to your address",
   coat: "sold through The Floor, then bought back as $COAT through the hooked pool",
 };
+// Mirrors the keeper's PLAYBOOKS_MIN_USDG: under this an order waits, because moving it
+// would cost more gas than the earnings being moved.
+const RUN_AT = 5;
+
 const PLAN_MODE: Record<Plan, number> = {
   sweep: PB_MODE.SWEEP,
   usdg: PB_MODE.TO_USDG,
@@ -66,6 +70,7 @@ export function PlaybookPanel({
   const [installed, setInstalled] = useState<Record<string, Installed>>({});
   const [stocks, setStocks] = useState<Address[]>([]);
   const [allowed, setAllowed] = useState<Record<string, boolean>>({}); // `${tba}|${stock}`
+  const [worth, setWorth] = useState<Record<string, number>>({}); // tokenId -> USD in its wallet
   const [reloadKey, setReloadKey] = useState(0);
 
   // Both plans move stock out of the Broker wallet, so both need its one-time allowance.
@@ -101,6 +106,33 @@ export function PlaybookPanel({
         });
         setInstalled(map);
         setStocks(toks);
+
+        // What each Broker's wallet is worth, valued exactly the way the keeper values it
+        // (the Floor's Chainlink floor). An order waits until this clears the threshold, so
+        // showing it turns "nothing happened" into a number the owner can watch.
+        const worths: Record<string, number> = {};
+        for (const b of brokers) {
+          const w = walletsById[b.id.toString()];
+          if (!w) continue;
+          let usd = 0;
+          for (const t of toks) {
+            try {
+              const bal = (await client.readContract({
+                address: t, abi: erc20MiniAbi, functionName: "balanceOf", args: [w],
+              })) as bigint;
+              if (bal === 0n) continue;
+              const floorOut = (await client.readContract({
+                address: FLOOR.router as Address, abi: basketRouterAbi,
+                functionName: "minUsdgOut", args: [t, bal],
+              })) as bigint;
+              usd += Number(floorOut) / 10 ** FLOOR.usdgDecimals;
+            } catch {
+              /* one unreadable leg should not blank the whole row */
+            }
+          }
+          worths[b.id.toString()] = usd;
+        }
+        if (!stale) setWorth(worths);
       } catch {
         /* panel stays read-only-empty on RPC hiccups */
       }
@@ -312,6 +344,13 @@ export function PlaybookPanel({
               <span>
                 <b className="text-ink-strong">#{key}</b>{" "}
                 <span className={live ? "text-good" : "text-ink-soft"}>{pb ? planOf(pb) : "…"}</span>
+                {live && worth[key] !== undefined && (
+                  <span className="block text-[11px] text-ink-soft">
+                    {worth[key] >= RUN_AT
+                      ? `$${worth[key].toFixed(2)} in its wallet, runs on the next hourly pass`
+                      : `$${worth[key].toFixed(2)} of $${RUN_AT} - the engine moves it once it gets there`}
+                  </span>
+                )}
               </span>
               <span className="flex gap-2">
                 <button className="btn btn-ghost !py-1 !px-2 text-[10px]" onClick={() => applyTo([b.id])} disabled={tx.busy}>
