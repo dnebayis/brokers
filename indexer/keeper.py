@@ -509,6 +509,12 @@ def main() -> None:
                 {"type": "function", "name": "run", "stateMutability": "nonpayable",
                  "inputs": [{"name": "ids", "type": "uint256[]"},
                             {"name": "minOuts", "type": "uint256[]"}], "outputs": []},
+                # the valuation helpers below read these two off the engine, so they must be
+                # in this ABI or every order silently prices as None and waits forever
+                {"type": "function", "name": "brokers", "stateMutability": "view",
+                 "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+                {"type": "function", "name": "booster", "stateMutability": "view",
+                 "inputs": [], "outputs": [{"name": "", "type": "address"}]},
             ])
             pb_batch = int(os.environ.get("PLAYBOOKS_MAX_BATCH", "25"))
             total = int(engine.functions.enrolledCount().call())
@@ -531,7 +537,12 @@ def main() -> None:
                             ]).functions.decimals().call())
                     worth = _holdings_floor_usdg(w3, engine, floor_addr, token_id)
                     threshold = int(min_usdg_env * 10 ** usdg_dec_pb)
-                    if worth is None or worth < threshold:
+                    if worth is None:
+                        print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
+                                          "status": "unpriced",
+                                          "note": "holdings could not be valued; retrying next run"}))
+                        continue
+                    if worth < threshold:
                         print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
                                           "status": "waiting", "worthRaw": worth,
                                           "minRaw": threshold}))
