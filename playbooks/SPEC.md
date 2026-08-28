@@ -67,3 +67,18 @@ Rollout, all complete: unit tests (8/8) → testnet end-to-end on-chain (real mi
 Open item for v1.1: the keeper skips `TO_COAT` orders because the hooked pool has no
 Chainlink floor and an unguarded exit is unacceptable; quoted minimum-out computation in the
 keeper closes this. Owners can run those orders themselves in the meantime.
+
+## v2 backlog (locked reasons, not wishes)
+
+1. **`sweep(token, to)` — the missing rescue path.** v1 has none. Normal operation never
+   leaves a balance in the engine (pull, sell and deliver all happen inside one call), but a
+   token sent directly to the engine address is locked forever. v2 must ship an owner-only
+   rescue, and it must be written the way The Floor's is: recoverable only above what is
+   owed, so a rescue can never touch anything a holder is entitled to.
+2. **Per-order isolation inside `run()`.** v1 has no try/catch per order, so one unfillable
+   order reverts the whole batch. The keeper works around it with a free `eth_call`
+   pre-flight, but the contract should not depend on a careful caller.
+3. **Batched selling across Brokers.** Measured: the swap is 61% of a run's ~988k gas.
+   Aggregating several Brokers' holdings into one basket sale and distributing pro rata is
+   worth roughly 2.5x at scale. Only worth the added complexity, and the shared-failure risk
+   it reintroduces, once enrolment makes the saving real.
