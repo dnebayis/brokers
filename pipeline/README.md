@@ -21,9 +21,10 @@ Generated API attempts and temporary review files were removed after approval. A
 PNGs remain in the offline review archive but are excluded from Git; canonical `.bin`, `.traits`,
 `collection-manifest.json` and the audit report are versioned.
 
-The active chain-46630 staging renderer received all 1,776 canonical payloads in 62 successful,
-receipt-checked transactions and is bound to the testnet Broker. The remaining renderer gate is a
-full remote read-back comparison against `collection-manifest.json`; see `../STATUS.md`.
+All 1,776 canonical payloads are uploaded and bound on the **mainnet** renderer
+(`0xB1b64E0CE411135DfaB728a482b21981B07fAd31`), verified 1776/1776 on-chain, so `tokenURI`
+renders the art plus live status. The chain-46630 staging renderer carries the same payloads.
+Addresses are in `../ADDRESSES.md`.
 
 ## Setup
 

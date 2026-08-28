@@ -57,7 +57,9 @@ npm audit --omit=dev
 ```
 
 The app is non-custodial: it prepares transactions that the user's wallet signs.
-Receipt status must be `success` before any flow is shown as complete. No current
-mainnet deployment is promoted. The active chain-46630 staging addresses are in
-`deployments.json` and `../ADDRESSES.md`; `coattail.cash` must use
-`NEXT_PUBLIC_NETWORK=testnet` until the mainnet gates in `../STATUS.md` pass.
+Receipt status must be `success` before any flow is shown as complete. `coattail.cash`
+serves **mainnet** (`NEXT_PUBLIC_NETWORK=mainnet`); chain-46630 staging remains available
+for testing. Core addresses come from `deployments.json` plus Vercel env; the two periphery
+products carry their own config (`src/lib/floor.ts`, `src/lib/playbooks.ts`), each of which
+hides its UI on a network where the contract address is empty. Full address list:
+`../ADDRESSES.md`; live system state: `../STATUS.md`.

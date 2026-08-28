@@ -2,7 +2,7 @@
 
 > **Coattail Brokers** — ride the coattails of smart money. Own an active Broker NFT that accrues a claim on the tokenized-stock basket derived from disclosed US Congress trades, funded by the collection's own trading.
 >
-> Status: **mainnet not deployed.** A fresh chain-46630 staging deployment is live with its mint open and full renderer submission complete. Its StrategyRegistry is at epoch 1 with a deterministic test basket, and Brokers #487 and #742 have received the basket assets into their TBAs via receipt-checked claims. The full 888-wallet load, a clean market-hours mainnet-fork report, the renderer read-back sweep and production key/provider configuration remain mainnet-release gates. See `STATUS.md`. Not financial or legal advice.
+> Status: **live on mainnet (chain 4663) since 2026-08-18.** The collection is sold out (1,776/1,776), $COAT trades, and the engine has been buying the disclosed-Congress basket hourly ever since — StrategyRegistry at epoch 50, ~1,034 Brokers active, ~138.7M $COAT (13.9% of supply) burned. Two products now run on the same engine: **The Floor**, a public one-transaction terminal for the basket, and **Playbooks**, standing orders the engine executes per Broker. Every contract is source-verified on `robinhoodchain.blockscout.com`. Live state: `STATUS.md`; addresses: `ADDRESSES.md`. Not financial or legal advice.
 
 ---
 
@@ -207,9 +207,24 @@ All contracts are deployable permissionlessly. That technical property is not a 
 
 ## 11. Release status
 
-Design decisions and completed verification are summarized in `STATUS.md`, which is the only
-canonical release-blocker list. Post-launch product possibilities such as additional strategies
-or living-portfolio art are not part of the v1 GO gate.
+**Shipped.** Mainnet launch was 2026-08-18: mint and $COAT trading opened together, the
+collection sold out, and the engine has bought the disclosed-Congress basket every hour since.
+Live figures and known operational limits are in `STATUS.md`; addresses in `ADDRESSES.md`.
+
+Two products were added on top of the engine after launch, both as periphery contracts that
+leave the core untouched and never take custody:
+
+- **The Floor** (2026-08-27) — a public terminal that buys or exits the entire live basket in
+  one transaction, paying in $COAT, ETH or USDG. Every leg is Chainlink-guarded with a hard
+  on-chain minimum. Its 0.3% fee (capped at 1%) is converted to native ETH by the keeper and
+  80% of it is streamed into Broker payroll, so non-holders trading the basket fund holders.
+- **Playbooks** (2026-08-28) — standing orders the hourly keeper executes for a Broker:
+  auto-claim the salary, sweep it, or convert it to USDG/$COAT and deliver it to a chosen
+  address. Installed by the Broker's owner, pausable and revocable at any time, and void the
+  moment the Broker changes hands. It adds no fee of its own; conversions ride The Floor.
+
+Neither product issues a token, dilutes the collection, or creates a path to the engine's
+output that bypasses owning an active Broker.
 
 ---
 
@@ -221,7 +236,9 @@ or living-portfolio art are not part of the v1 GO gate.
 
 **Historical testnet proof:** the earlier deployment established the ERC-6551, signed-basket, activation/deactivation, selected reward-claim and v4 fee-routing mechanics. Those addresses are retired; they are not release evidence for the new clean deployment.
 
-**Still open (pre-mainnet):** the authoritative live list is only `STATUS.md`. The principal gates are the 888-wallet transaction run, a clean market-hours mainnet-fork release report, the renderer read-back sweep, and production key/provider configuration. A wallet-backed frontend E2E is **not** a gate (project decision, 2026-08-16): frontend correctness rests on the contract tests, the render-level E2E suite and a manual pre-launch click-through. The target key model separates a hardware-wallet owner from distinct deployer, keeper and oracle keys; today only a deployer key exists, so creating those production identities is part of the configuration gate.
+**Post-launch decisions:** the buyback slice was re-pointed to the Booster by holder vote (executed on-chain, Aug 2026), making the effective flow 90% stock / 10% treasury and reversible by the same setter. The Floor and Playbooks were built as periphery, keeping the core contracts frozen. A holder vote also approved a per-Broker desk product; it is designed and built but **frozen** in favour of Playbooks, and will not ship without another public note.
+
+**Accepted risks, stated plainly:** the project runs on a single shared deployer/owner key rather than the target hardware-wallet-plus-separate-identities model; no third-party audit firm was engaged; and the basket oracle is a trusted signer with drift caps. Current operational limits live in `STATUS.md`.
 
 ---
 

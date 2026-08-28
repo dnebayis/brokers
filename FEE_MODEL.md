@@ -1,6 +1,6 @@
 # Coattail Brokers — Fee-Split & Flywheel Model (v1)
 
-Purpose: pressure-test the **80 / 10 / 10** split (Booster / project treasury / buyback) against realistic volume, and decide whether the numbers hold. All figures illustrative; **assumption: ETH = $3,000** (restate at launch).
+Purpose: pressure-test the **80 / 10 / 10** split (Booster / project treasury / buyback) against realistic volume, and decide whether the numbers hold. All figures illustrative; **assumption: ETH = $3,000**. Written pre-launch and kept as the reasoning record — §5 documents the two fee sources added after launch, and the buyback slice was later re-pointed to the Booster by holder vote (effective 90/10).
 
 ---
 
@@ -86,7 +86,23 @@ The v1 buyback share is immutably 10%. Each execution is capped at `0.01 ETH` (a
 
 ---
 
-## 5. Verdict & actions
+## 5. Second and third fee sources (added post-launch)
+
+This model was written when $COAT swap volume was the only fuel. Two more inflows now reach the
+same Booster, both as **native ETH**, both on top of the split above rather than replacing it:
+
+- **The Floor** takes 30 bps on every basket trade. The keeper converts the accrued USDG to ETH
+  and sends **80% to the Booster**, 20% to treasury. This income does not depend on $COAT trading
+  at all — a stranger who never touches the token still funds Broker payroll by trading the basket.
+- **Playbooks** adds no fee. Its conversions route through The Floor, so an owner automating their
+  Broker mechanically increases Floor volume, which increases payroll.
+
+Both ceilings are hard-coded (Floor fee ≤1%), both splits are settable levers, and neither path
+can pay out to anyone but Brokers and the treasury.
+
+---
+
+## 6. Verdict & actions
 
 1. **80/10/10 (holder-first).** 80% of every fee buys stock; 10% funds the project's future; 10% feeds the permissionless, 30-minute-TWAP guarded buyback and burn. The split is immutable. Creator income is the mint plus the separate 2.5% ERC-2981 royalty.
 2. **Treat $COAT swap volume as the primary fuel** — the `CoatFeeHook` routing and $COAT liquidity are the highest-leverage things to get right.

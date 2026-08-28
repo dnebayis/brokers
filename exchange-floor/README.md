@@ -6,6 +6,7 @@ settles into the caller's wallet inside the same transaction.
 
 **Mainnet (chain 4663):** `BasketRouter` at
 [`0x478F22A32663cF37702d65352A7579A73e61FDc7`](https://robinhoodchain.blockscout.com/address/0x478F22A32663cF37702d65352A7579A73e61FDc7)
+— live since 2026-08-27, source-verified. The UI is the **Floor** tab on `coattail.cash`.
 
 ## How it works
 

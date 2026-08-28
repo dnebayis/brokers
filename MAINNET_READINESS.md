@@ -1,8 +1,10 @@
 # Coattail Brokers — mainnet deploy readiness
 
-_Updated 2026-08-17. Pre-deploy GO checklist and deploy-day sequence. Mechanics live in
-[contracts/DEPLOY.md](contracts/DEPLOY.md); the canonical remaining-work list is [STATUS.md](STATUS.md).
-This is not a GO notice — it is the readiness board the owner works through before broadcasting._
+_**Historical record.** This was the pre-deploy GO checklist and deploy-day sequence used for the
+2026-08-18 mainnet launch. It is kept for provenance and is no longer a live work list — the system
+shipped and the checks below were completed or consciously waived at the time. For what is running
+today see [STATUS.md](STATUS.md); for addresses see [ADDRESSES.md](ADDRESSES.md); deploy mechanics
+live in [contracts/DEPLOY.md](contracts/DEPLOY.md)._
 
 ## Verified this session (2026-08-16 → 17)
 

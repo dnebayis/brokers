@@ -163,6 +163,16 @@ pass the same checks. Adding a route needs no redeploy — it is a post-deploy o
 
 The shared WETH/USDG mid pool is `0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca`. Rialto is the liquidity venue, not the issuer or owner of the canonical stock tokens.
 
+## Periphery products (mainnet, chain 4663)
+
+| Component | Address | Notes |
+|---|---|---|
+| BasketRouter ("The Floor") | `0x478F22A32663cF37702d65352A7579A73e61FDc7` | one-tx basket entry/exit in $COAT, ETH or USDG; 30 bps fee, 80% to the Booster as native ETH; deployed block 48146067-era, source-verified |
+| PlaybookEngine ("Playbooks") | `0x3b39C832a906E7fE5292F6872c3D3f9eE8340438` | per-Broker standing orders run by the hourly keeper; no fee of its own; source-verified |
+
+Both are periphery: they hold no user funds between transactions, and neither required a change
+to the core contracts. Keeper relay for both: `0xa492c8fFa033016144B169501D2e428BeDD518CA`.
+
 ## Deployment recording rule
 
-After a clean testnet or mainnet deployment, store the generated manifest, parameter hash, chain ID, deployment block and bytecode checks. Never copy addresses manually into the frontend before the manifest passes the wiring checks. Remaining deployment work is listed only in [STATUS.md](STATUS.md).
+After a clean testnet or mainnet deployment, store the generated manifest, parameter hash, chain ID, deployment block and bytecode checks. Never copy addresses manually into the frontend before the manifest passes the wiring checks. Live system state is in [STATUS.md](STATUS.md).

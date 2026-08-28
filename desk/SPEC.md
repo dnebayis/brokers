@@ -4,6 +4,11 @@
 > 2026-08-26 with 13 votes. Decisions below are LOCKED; changes require a new community round.
 > Build constraint: everything lives in this `desk/` folder. The deployed core
 > (`contracts/`, indexer, keeper) is not modified; Desk contracts only READ it.
+>
+> **Status 2026-08-28: FROZEN, not cancelled.** Contracts and art are built and tested; work
+> stopped at the on-chain renderer so that Playbooks (`../playbooks/`) could ship first. The
+> vote that approved this product stands, and nothing here is withdrawn — if the Desk is ever
+> dropped for good, that will be said publicly rather than left to silence.
 
 ## Product
 

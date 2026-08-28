@@ -1,4 +1,9 @@
-# Playbooks — Spec v1 (locked 2026-08-28)
+# Playbooks — Spec v1 (locked and shipped 2026-08-28)
+
+> **Live on mainnet:** `PlaybookEngine` at `0x3b39C832a906E7fE5292F6872c3D3f9eE8340438`
+> (chain 4663, source-verified). The panel is in My Brokers on `coattail.cash`; the hourly
+> keeper runs installed playbooks. Testnet engine: `0xb9d25e5D211C3AD08647F8826F33906F6b8D2463`
+> (chain 46630), where the full path was exercised end to end before launch.
 
 **One line:** your Broker doesn't just get paid, it follows your orders. The owner installs
 a "playbook" on a Broker; the keeper executes it every hour.
@@ -42,5 +47,10 @@ for id in enrolled:
     deliver USDG/COAT/raw stocks to cfg.dest (keeper passes minOut for COAT)
 ```
 
-Rollout: unit tests → testnet end-to-end (reusing the funded Floor pools) → frontend
-"Playbooks" panel inside My Brokers → mainnet deploy + enrollment UX → announcement.
+Rollout, all complete: unit tests (8/8) → testnet end-to-end on-chain (real mint, real
+36,750 COAT activation, TBA approval via `execute`, sweep + convert + pause verified) →
+"Playbooks" panel in My Brokers → mainnet deploy and keeper stage armed.
+
+Open item for v1.1: the keeper skips `TO_COAT` orders because the hooked pool has no
+Chainlink floor and an unguarded exit is unacceptable; quoted minimum-out computation in the
+keeper closes this. Owners can run those orders themselves in the meantime.

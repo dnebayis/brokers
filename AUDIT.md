@@ -106,13 +106,18 @@ All three loop over `knownTokens`, which only ever grows (`_trackToken` never re
 
 ## Verdict
 
-No theft-class bug was found in the core value flow. All listed HIGH and MEDIUM findings are fixed and regression-tested. Accepted informational risks remain, especially the hardware-wallet admin and trusted oracle. Current release blockers and current test counts live only in `STATUS.md`; a paid third-party audit remains advisable.
+No theft-class bug was found in the core value flow. All listed HIGH and MEDIUM findings are fixed and regression-tested. Accepted informational risks remain, especially the hardware-wallet admin and trusted oracle. Live system state lives in `STATUS.md`; a paid third-party audit remains advisable and has not been commissioned.
 
-## Current staging qualification
+## Scope note
 
-The active chain-46630 deployment is a frontend/renderer staging release, not evidence of stock
-distribution: its `StrategyRegistry` remains empty and no Broker has a claimable stock balance.
-The pre-mainnet testnet keeper purchase and claim cycle is tracked only in `STATUS.md`.
+This review covers the core protocol contracts (Broker, Booster, COAT, hook, router, splitter,
+locker, renderer, TBA). The two periphery products shipped later — **The Floor** (`exchange-floor/`)
+and **Playbooks** (`playbooks/`) — are outside this document; each carries its own unit and fork
+suites, the latter running against the deployed mainnet contracts. Neither takes custody: user funds
+are never held between transactions, and the core contracts were not modified to add them.
+
+The system has been live on mainnet since 2026-08-18; distribution to Broker wallets is happening
+continuously and is verifiable on-chain. Live state is in `STATUS.md`.
 
 ### Fix log
 - **2026-08-15 — mainnet-readiness adversarial pass.** Added `AtomicV4Launcher` and an initializer-gated `0x2044` hook so hook deployment, pool initialization, LP token-ID binding and permanent-locker mint are atomic. Enforced the protected-block buy ceiling against aggregate v4 swap output (not fragmentable `take` transfers). Reworked the hook oracle to update its live cumulative on every swap while rate-limiting only historical checkpoints. Buyback and Booster now process unsolicited ETH in bounded, resumable batches; buyback uses a fee-aware 3% gross-spot gate plus a 5% net execution floor. StockRouter accounts the recipient's actual balance delta, and hook flush events report only successfully sent ETH. Deployment probes immutable registry/WETH dependencies and cross-contract launch linkage. Regression tests cover the previously exploitable TWAP reversal, fragmented launch settlement and oversized-buffer liveness cases; the atomic single-sided launch passed against real mainnet v4.
