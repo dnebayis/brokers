@@ -97,82 +97,120 @@ def _diagnose_poke(w3, booster, registry_abi, booster_address, buffer_wei) -> No
 
 
 
-def _holdings_floor_usdg(w3, engine, floor_addr, token_id):
-    """Chainlink-floored USDG value of what a Broker's wallet holds, or None if unreadable.
+MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11"
+_MC3_ABI = [{
+    "type": "function", "name": "aggregate3", "stateMutability": "payable",
+    "inputs": [{"name": "calls", "type": "tuple[]", "components": [
+        {"name": "target", "type": "address"},
+        {"name": "allowFailure", "type": "bool"},
+        {"name": "callData", "type": "bytes"}]}],
+    "outputs": [{"name": "returnData", "type": "tuple[]", "components": [
+        {"name": "success", "type": "bool"}, {"name": "returnData", "type": "bytes"}]}],
+}]
 
-    Both the run-worth-it check and the $COAT guard build on this: the protocol's own
-    conservative valuation of the stock sitting in that Broker's wallet.
+
+def _mc_call(w3, calls, chunk=150):
+    """Batch many view calls through Multicall3. `calls` are (contract, fn_name, args).
+
+    Valuing Brokers one field at a time meant ~1,400 sequential round trips for 164 enrolled
+    playbooks, which took over three minutes and would only get worse. Batching keeps the
+    stage flat as enrolment grows. Failures come back as None rather than raising, so one
+    unreadable token cannot blank the run.
+    """
+    from web3 import Web3
+
+    mc = w3.eth.contract(address=Web3.to_checksum_address(MULTICALL3), abi=_MC3_ABI)
+    out = []
+    for i in range(0, len(calls), chunk):
+        part = calls[i:i + chunk]
+        # web3 renamed these between 6.x and 7.x and requirements.txt pins only ">=6",
+        # so support both rather than breaking on whichever the runner resolves.
+        def _encode(contract, fn, args):
+            if hasattr(contract, "encode_abi"):
+                try:
+                    return contract.encode_abi(fn, args=list(args))
+                except TypeError:
+                    return contract.encode_abi(abi_element_identifier=fn, args=list(args))
+            return contract.encodeABI(fn_name=fn, args=list(args))
+
+        def _decode(contract, fn, data):
+            if hasattr(contract, "decode_function_result"):
+                return contract.decode_function_result(fn, data)
+            # web3 6.x has no per-contract decoder: fall back to the ABI codec, using the
+            # output types declared for this function.
+            from eth_abi import decode as abi_decode
+
+            entry = next(
+                a for a in contract.abi
+                if a.get("type") == "function" and a.get("name") == fn
+            )
+            types = [o["type"] for o in entry.get("outputs", [])]
+            return abi_decode(types, bytes(data))
+
+        payload = [(c[0].address, True, _encode(c[0], c[1], c[2])) for c in part]
+        try:
+            res = mc.functions.aggregate3(payload).call()
+        except Exception:
+            out.extend([None] * len(part))
+            continue
+        for (contract, fn, _args), (ok, data) in zip(part, res):
+            if not ok:
+                out.append(None)
+                continue
+            try:
+                decoded = _decode(contract, fn, data)
+                out.append(decoded[0] if len(decoded) == 1 else decoded)
+            except Exception:
+                out.append(None)
+    return out
+
+
+def _holdings_floor_usdg_many(ctx, token_ids):
+    """Chainlink-floored USDG value for many Brokers at once. Returns {token_id: value|None}."""
+    if ctx is None or not token_ids:
+        return {}
+    w3 = ctx["w3"]
+    from web3 import Web3
+
+    tbas = _mc_call(w3, [(ctx["brokers"], "accountOf", (tid,)) for tid in token_ids])
+    pairs, meta = [], []
+    for tid, tba in zip(token_ids, tbas):
+        if not tba:
+            continue
+        # the raw ABI decoder hands back lowercase addresses; web3 rejects those downstream
+        tba = Web3.to_checksum_address(tba)
+        for stock in ctx["stocks"]:
+            pairs.append((stock, "balanceOf", (tba,)))
+            meta.append((tid, stock))
+    balances = _mc_call(w3, pairs)
+    quote_calls, quote_meta = [], []
+    for (tid, stock), bal in zip(meta, balances):
+        if bal:
+            quote_calls.append((ctx["floor"], "minUsdgOut", (stock.address, int(bal))))
+            quote_meta.append(tid)
+    quotes = _mc_call(w3, quote_calls)
+    worth = {tid: (0 if tba else None) for tid, tba in zip(token_ids, tbas)}
+    for tid, q in zip(quote_meta, quotes):
+        if q is None:
+            worth[tid] = None if worth.get(tid) is None else worth[tid]
+            continue
+        if worth.get(tid) is not None:
+            worth[tid] += int(q)
+    return worth
+
+
+def _pb_context(w3, engine, floor_addr):
+    """Everything the per-Broker valuation needs that is identical for every Broker.
+
+    Read once per run: the stock list alone was 9 calls per Broker, which turned a 25-order
+    batch into hundreds of sequential round trips and made the stage the slowest thing in
+    the keeper. Returns None when the venue is not configured.
     """
     from web3 import Web3
 
     if not floor_addr:
         return None
     try:
-        brokers_addr = engine.functions.brokers().call()
-        booster_addr = engine.functions.booster().call()
-        tba = w3.eth.contract(address=Web3.to_checksum_address(brokers_addr), abi=[
-            {"type": "function", "name": "accountOf", "stateMutability": "view",
-             "inputs": [{"name": "tokenId", "type": "uint256"}],
-             "outputs": [{"name": "", "type": "address"}]},
-        ]).functions.accountOf(token_id).call()
-        booster = w3.eth.contract(address=Web3.to_checksum_address(booster_addr), abi=[
-            {"type": "function", "name": "knownTokenCount", "stateMutability": "view",
-             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
-            {"type": "function", "name": "knownTokens", "stateMutability": "view",
-             "inputs": [{"name": "i", "type": "uint256"}],
-             "outputs": [{"name": "", "type": "address"}]},
-        ])
-        floor = w3.eth.contract(address=Web3.to_checksum_address(floor_addr), abi=[
-            {"type": "function", "name": "minUsdgOut", "stateMutability": "view",
-             "inputs": [{"name": "stock", "type": "address"}, {"name": "amount", "type": "uint256"}],
-             "outputs": [{"name": "", "type": "uint256"}]},
-        ])
-        erc20 = [{"type": "function", "name": "balanceOf", "stateMutability": "view",
-                  "inputs": [{"name": "a", "type": "address"}],
-                  "outputs": [{"name": "", "type": "uint256"}]}]
-        total = 0
-        for i in range(int(booster.functions.knownTokenCount().call())):
-            stock = booster.functions.knownTokens(i).call()
-            bal = int(w3.eth.contract(address=stock, abi=erc20).functions.balanceOf(tba).call())
-            if bal:
-                total += int(floor.functions.minUsdgOut(stock, bal).call())
-        return total
-    except Exception:
-        return None
-
-
-def _coat_min_out(w3, engine, floor_addr, booster_address, token_id):
-    """Minimum $COAT a TO_COAT playbook must deliver, or None if it cannot be priced.
-
-    Mirrors what the venue will actually do: every stock the Broker holds is floored by the
-    Floor's Chainlink guard (`minUsdgOut`), the fee comes off, the total is converted to ETH
-    at the Booster's own ETH/USD source, and CoatRouter's spot `quoteBuy` turns that into
-    COAT. The spot views exclude the hooked pool's ~1% fee, so 2% comes off for the pool and
-    1% more for ordinary drift between this call and the mined transaction.
-    """
-    from web3 import Web3
-
-    if not floor_addr:
-        return None
-    try:
-        brokers_addr = engine.functions.brokers().call()
-        booster_addr = engine.functions.booster().call()
-        tba = w3.eth.contract(address=Web3.to_checksum_address(brokers_addr), abi=[
-            {"type": "function", "name": "accountOf", "stateMutability": "view",
-             "inputs": [{"name": "tokenId", "type": "uint256"}],
-             "outputs": [{"name": "", "type": "address"}]},
-        ]).functions.accountOf(token_id).call()
-        booster = w3.eth.contract(address=Web3.to_checksum_address(booster_addr), abi=[
-            {"type": "function", "name": "knownTokenCount", "stateMutability": "view",
-             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
-            {"type": "function", "name": "knownTokens", "stateMutability": "view",
-             "inputs": [{"name": "i", "type": "uint256"}],
-             "outputs": [{"name": "", "type": "address"}]},
-            {"type": "function", "name": "ethUsdFeed", "stateMutability": "view",
-             "inputs": [], "outputs": [{"name": "", "type": "address"}]},
-            {"type": "function", "name": "ethUsdManualE8", "stateMutability": "view",
-             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
-        ])
         floor = w3.eth.contract(address=Web3.to_checksum_address(floor_addr), abi=[
             {"type": "function", "name": "minUsdgOut", "stateMutability": "view",
              "inputs": [{"name": "stock", "type": "address"}, {"name": "amount", "type": "uint256"}],
@@ -184,27 +222,76 @@ def _coat_min_out(w3, engine, floor_addr, booster_address, token_id):
             {"type": "function", "name": "coatRouter", "stateMutability": "view",
              "inputs": [], "outputs": [{"name": "", "type": "address"}]},
         ])
+        booster = w3.eth.contract(address=Web3.to_checksum_address(engine.functions.booster().call()), abi=[
+            {"type": "function", "name": "knownTokenCount", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+            {"type": "function", "name": "knownTokens", "stateMutability": "view",
+             "inputs": [{"name": "i", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "address"}]},
+            {"type": "function", "name": "ethUsdFeed", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+            {"type": "function", "name": "ethUsdManualE8", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+        ])
         erc20 = [{"type": "function", "name": "balanceOf", "stateMutability": "view",
                   "inputs": [{"name": "a", "type": "address"}],
                   "outputs": [{"name": "", "type": "uint256"}]},
                  {"type": "function", "name": "decimals", "stateMutability": "view",
                   "inputs": [], "outputs": [{"name": "", "type": "uint8"}]}]
+        stocks = [booster.functions.knownTokens(i).call()
+                  for i in range(int(booster.functions.knownTokenCount().call()))]
+        return {
+            "w3": w3,
+            "brokers": w3.eth.contract(address=Web3.to_checksum_address(engine.functions.brokers().call()), abi=[
+                {"type": "function", "name": "accountOf", "stateMutability": "view",
+                 "inputs": [{"name": "tokenId", "type": "uint256"}],
+                 "outputs": [{"name": "", "type": "address"}]},
+            ]),
+            "booster": booster,
+            "floor": floor,
+            "stocks": [w3.eth.contract(address=t, abi=erc20) for t in stocks],
+            "fee_bps": int(floor.functions.feeBps().call()),
+            "usdg_dec": int(w3.eth.contract(address=floor.functions.usdg().call(), abi=erc20)
+                            .functions.decimals().call()),
+        }
+    except Exception:
+        return None
 
-        floor_usdg = 0
-        for i in range(int(booster.functions.knownTokenCount().call())):
-            stock = booster.functions.knownTokens(i).call()
-            bal = int(w3.eth.contract(address=stock, abi=erc20).functions.balanceOf(tba).call())
+
+def _holdings_floor_usdg(ctx, token_id):
+    """Chainlink-floored USDG value of what a Broker's wallet holds, or None if unreadable."""
+    if ctx is None:
+        return None
+    try:
+        tba = ctx["brokers"].functions.accountOf(token_id).call()
+        total = 0
+        for stock in ctx["stocks"]:
+            bal = int(stock.functions.balanceOf(tba).call())
             if bal:
-                floor_usdg += int(floor.functions.minUsdgOut(stock, bal).call())
-        if floor_usdg == 0:
-            return None
+                total += int(ctx["floor"].functions.minUsdgOut(stock.address, bal).call())
+        return total
+    except Exception:
+        return None
 
-        net_usdg = floor_usdg * (10_000 - int(floor.functions.feeBps().call())) // 10_000
-        usdg_dec = int(w3.eth.contract(address=floor.functions.usdg().call(),
-                                       abi=erc20).functions.decimals().call())
-        feed_addr = booster.functions.ethUsdFeed().call()
-        if int(feed_addr, 16) != 0:
-            eth_usd8 = int(w3.eth.contract(address=feed_addr, abi=[
+
+def _coat_min_out(ctx, token_id):
+    """Minimum $COAT a TO_COAT playbook must deliver, or None if it cannot be priced.
+
+    Mirrors what the venue will actually do: the Chainlink-floored value of the holdings,
+    minus the Floor's fee, converted to ETH at the Booster's own ETH/USD source, then to
+    COAT at CoatRouter's spot. The spot view excludes the hooked pool's fee, so 2% comes off
+    for the pool and 1% more for ordinary drift before the transaction is mined.
+    """
+    if ctx is None:
+        return None
+    try:
+        floor_usdg = _holdings_floor_usdg(ctx, token_id)
+        if not floor_usdg:
+            return None
+        net = floor_usdg * (10_000 - ctx["fee_bps"]) // 10_000
+        feed = ctx["booster"].functions.ethUsdFeed().call()
+        if int(feed, 16) != 0:
+            eth_usd8 = int(ctx["w3"].eth.contract(address=feed, abi=[
                 {"type": "function", "name": "latestRoundData", "stateMutability": "view",
                  "inputs": [], "outputs": [
                      {"name": "a", "type": "uint80"}, {"name": "answer", "type": "int256"},
@@ -212,14 +299,13 @@ def _coat_min_out(w3, engine, floor_addr, booster_address, token_id):
                      {"name": "e", "type": "uint80"}]},
             ]).functions.latestRoundData().call()[1])
         else:
-            eth_usd8 = int(booster.functions.ethUsdManualE8().call())
+            eth_usd8 = int(ctx["booster"].functions.ethUsdManualE8().call())
         if eth_usd8 <= 0:
             return None
-
-        eth_wei = net_usdg * 10 ** 8 * 10 ** 18 // (10 ** usdg_dec * eth_usd8)
-        eth_wei = eth_wei * 99 // 100  # the USDG->WETH leg's own spread
-        coat_spot = int(w3.eth.contract(
-            address=Web3.to_checksum_address(floor.functions.coatRouter().call()), abi=[
+        eth_wei = net * 10 ** 8 * 10 ** 18 // (10 ** ctx["usdg_dec"] * eth_usd8)
+        eth_wei = eth_wei * 99 // 100
+        coat_spot = int(ctx["w3"].eth.contract(
+            address=ctx["floor"].functions.coatRouter().call(), abi=[
                 {"type": "function", "name": "quoteBuy", "stateMutability": "view",
                  "inputs": [{"name": "ethIn", "type": "uint256"}],
                  "outputs": [{"name": "", "type": "uint256"}]},
@@ -515,28 +601,40 @@ def main() -> None:
                  "inputs": [], "outputs": [{"name": "", "type": "address"}]},
                 {"type": "function", "name": "booster", "stateMutability": "view",
                  "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+                {"type": "function", "name": "keeper", "stateMutability": "view",
+                 "inputs": [], "outputs": [{"name": "", "type": "address"}]},
             ])
             pb_batch = int(os.environ.get("PLAYBOOKS_MAX_BATCH", "25"))
             total = int(engine.functions.enrolledCount().call())
             ids, min_outs = [], []
+            # Scan window. Always starting at index 0 would starve everyone past the batch
+            # size forever: enrolment order is fixed, so entry 26 would never be reached. The
+            # window rotates with the hour instead, so every enrolled Broker comes up.
+            relay_for_preflight = engine.functions.keeper().call()
+            pb_ctx = _pb_context(w3, engine, floor_addr)
+            scan = min(total, int(os.environ.get("PLAYBOOKS_MAX_SCAN", "200")))
+            start = 0
+            if total > scan:
+                start = (datetime.now(timezone.utc).hour * scan) % total
             # Running a playbook costs ~1M gas; a Broker earns cents an hour. Converting
             # every hour would burn far more gas than the salary is worth, so an order only
             # runs once the Broker's wallet is worth moving. Claiming stays hourly and free
             # for everyone — this gate only delays the sweep/convert step, never the earning.
             min_usdg_env = float(os.environ.get("PLAYBOOKS_MIN_USDG", "5"))
-            usdg_dec_pb = None
-            for i in range(min(total, pb_batch)):
-                token_id = int(engine.functions.enrolledAt(i).call())
-                mode = int(engine.functions.playbookOf(token_id).call()[1])
+            window = [int(x) for x in _mc_call(
+                w3, [(engine, "enrolledAt", ((start + o) % total,)) for o in range(scan)]) if x is not None]
+            modes = _mc_call(w3, [(engine, "playbookOf", (tid,)) for tid in window])
+            worth_by_id = _holdings_floor_usdg_many(
+                pb_ctx, [tid for tid, m in zip(window, modes) if m is not None and int(m[1]) != 0])
+            for token_id, mode_row in zip(window, modes):
+                if len(ids) >= pb_batch:
+                    break
+                if mode_row is None:
+                    continue
+                mode = int(mode_row[1])
                 if mode != 0:
-                    if usdg_dec_pb is None:
-                        usdg_dec_pb = int(w3.eth.contract(
-                            address=floor.functions.usdg().call(), abi=[
-                                {"type": "function", "name": "decimals", "stateMutability": "view",
-                                 "inputs": [], "outputs": [{"name": "", "type": "uint8"}]},
-                            ]).functions.decimals().call())
-                    worth = _holdings_floor_usdg(w3, engine, floor_addr, token_id)
-                    threshold = int(min_usdg_env * 10 ** usdg_dec_pb)
+                    worth = worth_by_id.get(token_id)
+                    threshold = int(min_usdg_env * 10 ** (pb_ctx["usdg_dec"] if pb_ctx else 6))
                     if worth is None:
                         print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
                                           "status": "unpriced",
@@ -553,7 +651,7 @@ def main() -> None:
                     # Broker's holdings -> ETH at the Booster's own price -> COAT at spot,
                     # then haircut for the pool's fee and normal drift. A quote we cannot
                     # compute means we skip that order rather than send an unguarded zero.
-                    guard = _coat_min_out(w3, engine, floor_addr, booster_address, token_id)
+                    guard = _coat_min_out(pb_ctx, token_id)
                     if guard is None:
                         print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
                                           "status": "skipped", "reason": "no COAT quote"}))
@@ -563,12 +661,25 @@ def main() -> None:
                     continue
                 ids.append(token_id)
                 min_outs.append(0)
-            if ids:
-                submit("playbooks.run", lambda: engine.functions.run(ids, min_outs),
-                       min_gas=500_000 + 700_000 * len(ids))
+            # One order that cannot fill (a dead route, a guard the market moved past) would
+            # revert the whole transaction and take every other holder's order down with it.
+            # Simulate each one free first and carry only the ones that pass, exactly as the
+            # poke stage does. A dropped order is reported and retried next hour.
+            healthy_ids, healthy_mins = [], []
+            for token_id, guard in zip(ids, min_outs):
+                try:
+                    engine.functions.run([token_id], [guard]).call({"from": relay_for_preflight})
+                    healthy_ids.append(token_id)
+                    healthy_mins.append(guard)
+                except Exception as exc:
+                    print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
+                                      "status": "deferred", "reason": str(exc)[:160]}))
+            if healthy_ids:
+                submit("playbooks.run", lambda: engine.functions.run(healthy_ids, healthy_mins),
+                       min_gas=500_000 + 700_000 * len(healthy_ids))
             else:
                 print(json.dumps({"action": "playbooks.run", "status": "skipped",
-                                  "enrolled": total}))
+                                  "enrolled": total, "eligible": len(ids)}))
         except Exception as exc:  # standing orders defer to the next hour, never break payroll
             print(json.dumps({"action": "playbooks.run", "status": "deferred", "error": str(exc)[:200]}))
 
