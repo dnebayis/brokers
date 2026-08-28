@@ -1,11 +1,13 @@
 import type { Address } from "viem";
 import { ACTIVE_NETWORK } from "./chains";
 
-// Playbooks config. Same launch pattern as The Floor: the mainnet address lands here in
-// the launch commit; until then the panel simply doesn't render on mainnet.
+// Playbooks config. LIVE on mainnet since 2026-08-28 (engine deployed and wired to the
+// production Brokers/Booster/Floor, hourly keeper armed via the PLAYBOOKS_ENGINE secret).
 export const PLAYBOOKS: { engine: Address | "" } = {
   engine:
-    ACTIVE_NETWORK === "testnet" ? "0xb9d25e5D211C3AD08647F8826F33906F6b8D2463" : "",
+    ACTIVE_NETWORK === "testnet"
+      ? "0xb9d25e5D211C3AD08647F8826F33906F6b8D2463"
+      : "0x3b39C832a906E7fE5292F6872c3D3f9eE8340438",
 };
 
 export const playbooksReady = PLAYBOOKS.engine !== "";
