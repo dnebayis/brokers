@@ -2,9 +2,6 @@ import { ACTIVE_NETWORK } from "./chains";
 import type { Address } from "viem";
 import deployments from "../../deployments.json";
 
-// Swap tab hidden — COAT trading happens off-site for now. Flip to true to restore the in-app swap.
-export const SWAP_ENABLED = false;
-
 // Deployment manifests are deliberately zeroed until the clean release deployment passes.
 type AddrSet = {
   broker: Address;
@@ -18,7 +15,7 @@ type AddrSet = {
   stockRouter: Address;
   lpLocker: Address;
   feeHook: Address;
-  router: Address | ""; // permanent swap router — deploy + paste to enable the Swap tab
+  router: Address | ""; // CoatRouter (COAT<->ETH periphery; trading UI lives in the Floor tab)
   buybackBurner: Address;
   poolId: `0x${string}`;
   // Ownerless periphery that claims any number of Brokers in one tx (claimBatch caps at 5).

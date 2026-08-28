@@ -92,6 +92,23 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
         </ol>
       </section>
 
+      {/* The Floor — the no-NFT path in, one line, straight to the terminal */}
+      <section className="card border-l-[3px] border-l-accent">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="pixel-title text-[15px] mb-1">Just want the basket?</h2>
+            <p className="text-ink-soft text-sm">
+              Skip the NFT: <b className="text-ink-strong">The Floor</b> trades the live Congress
+              basket in one transaction — pay with $COAT, ETH or USDG, exit any time. Every trade
+              helps fund Broker salaries.
+            </p>
+          </div>
+          <button className="btn btn-accent shrink-0" onClick={() => onNavigate("trade")}>
+            Open the Floor &#8594;
+          </button>
+        </div>
+      </section>
+
       {/* Facts */}
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {FACTS.map((f) => (

@@ -11,6 +11,7 @@ import { activeChain } from "@/lib/chains";
 import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
+import { PlaybookPanel } from "@/components/PlaybookPanel";
 import { useBrokerBacking } from "@/lib/useBrokerBacking";
 import { loadKnownTokens, usd } from "@/lib/brokerValue";
 import { fmt, short } from "@/lib/format";
@@ -701,6 +702,12 @@ export function ActivateTab() {
           </div>
         </details>
       </div>
+
+      {/* ── Playbooks: standing orders the hourly engine executes per Broker ── */}
+      <PlaybookPanel
+        brokers={brokers.map((b) => ({ id: b.id, active: b.active }))}
+        walletsById={walletsById as Record<string, `0x${string}` | undefined>}
+      />
 
       {/* ── The selected Broker: everything about ONE Broker, only when one is open ── */}
       {info && (

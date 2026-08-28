@@ -37,7 +37,7 @@ export function DocsTab() {
         withdraw them before selling. Rewards are trading-volume funded and never guaranteed.
       </P>
       <div className="flex flex-wrap gap-2 my-3">
-        {["1,776 Brokers", "ERC-6551 wallets", "Real ERC-8056 stocks", "Uniswap v4", "On-chain art target", "Permanent LP lock"].map((p) => (
+        {["1,776 Brokers", "ERC-6551 wallets", "Real tokenized stocks", "Uniswap v4", "The Floor terminal", "Permanent LP lock"].map((p) => (
           <span key={p} className="border border-line bg-cream-2 px-2.5 py-1 text-xs">{p}</span>
         ))}
       </div>
@@ -96,6 +96,19 @@ export function DocsTab() {
         Contracts do not run themselves. An independent hourly keeper advances hook flush, splitter flush,
         threshold-eligible stock purchase and TWAP-eligible buyback stages. If it is offline, balances roll
         forward and anyone may call the permissionless entry points.
+      </P>
+
+      <H>The Floor</H>
+      <P>
+        The <b>Floor</b> tab is the public trading terminal on the same rails the engine uses: one
+        transaction buys the entire live Congress basket at its live weights, paying with $COAT, ETH
+        or USDG — and exits work the same way, whole position or a slice, into any of the three.
+        Every leg is priced against Chainlink with a hard on-chain minimum, so no pool can quote a
+        fill below the floor. It is non-custodial: everything settles into your wallet within the
+        same transaction, and the contract only ever holds accrued fees. The fee is 0.3%
+        (owner-lowerable, hard-capped at 1%); a keeper converts it to native ETH and streams{" "}
+        <b>80% into the Booster payroll</b>, 20% to the treasury. Paying with — or exiting into —
+        $COAT routes through the hooked pool, so those trades feed the flywheel twice.
       </P>
 
       <H>Tokenomics</H>

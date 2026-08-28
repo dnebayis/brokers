@@ -68,6 +68,20 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
   },
   {
     no: "03",
+    status: "live",
+    title: "The Floor: the terminal opens",
+    body: (
+      <>
+        Delivered. The engine&rsquo;s rails are no longer holders-only: <b>The Floor</b> lets anyone
+        buy or exit the live Congress basket in one transaction, paying with $COAT, ETH or USDG —
+        Chainlink-guarded, non-custodial, settled in your wallet in the same block. Every trade
+        pays a 0.3% fee and 80% of it streams straight into Broker payroll: strangers trading the
+        basket now feed the 1,776.
+      </>
+    ),
+  },
+  {
+    no: "04",
     status: "horizon",
     title: "Beyond Congress",
     body: (
@@ -81,7 +95,7 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
     ),
   },
   {
-    no: "04",
+    no: "05",
     status: "design",
     title: "The vault: Congress for everyone",
     body: (
@@ -97,21 +111,22 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
     ),
   },
   {
-    no: "05",
-    status: "exploratory",
-    title: "The broker as a primitive",
+    no: "06",
+    status: "works",
+    title: "Playbooks: the broker takes orders",
     body: (
       <>
-        Right now a broker quietly accumulates. But an NFT that owns a real wallet with a real,
-        on-chain history is more than a collectible — it&rsquo;s a <b>portfolio with a track
-        record</b>. The direction we&rsquo;re exploring: brokers that carry a verifiable history,
-        reward the ones that stay active, and let that wallet play a role in the wider on-chain
-        economy. The object you hold becomes a financial identity, not just a receipt.
+        An NFT that owns a real wallet is more than a collectible — it&rsquo;s a <b>portfolio that
+        can follow instructions</b>. In the works now: <b>Playbooks</b>, standing orders the hourly
+        engine executes for your Broker — collect the salary automatically, convert it to USDG or
+        $COAT, deliver it wherever you choose. One setup, revocable any time, dies with a transfer
+        so a buyer never inherits your instructions. No new fee: conversions ride The Floor, whose
+        fee already pays salaries.
       </>
     ),
   },
   {
-    no: "06",
+    no: "07",
     status: "hardening",
     title: "A machine no one has to run",
     body: (
@@ -125,7 +140,7 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
     ),
   },
   {
-    no: "07",
+    no: "08",
     status: "continuous",
     title: "Nothing you can’t check",
     body: (
@@ -173,7 +188,7 @@ export function RoadmapTab() {
       <p className="text-ink leading-relaxed mt-3">
         A roadmap here doesn&rsquo;t mean rewriting what exists. The contracts are frozen by design.
         What grows is everything <i>around</i> them: how much the basket can reach, what signals it
-        can follow, how independently it runs, and how completely you can verify it. Seven horizons,
+        can follow, how independently it runs, and how completely you can verify it. Eight horizons,
         in the order they arrive.
       </p>
 
@@ -213,9 +228,9 @@ export function RoadmapTab() {
 
       {/* Close */}
       <p className="text-ink-strong text-lg leading-relaxed mt-10">
-        A wider basket on an earlier signal. More strategies than one — and a vault that opens
-        them to everyone. A broker that becomes an identity. A machine that runs without us. And
-        nothing, anywhere, you have to take on faith.
+        A wider basket on an earlier signal. A public floor where anyone can trade it — live now.
+        More strategies than one, a vault that opens them to everyone, and a broker that takes your
+        orders. A machine that runs without us. And nothing, anywhere, you have to take on faith.
       </p>
       <p className="text-ink leading-relaxed mt-3">
         That&rsquo;s the whole plan. It&rsquo;s already sold out, already burning, already buying. The
