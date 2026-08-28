@@ -357,6 +357,47 @@ def main() -> None:
         except Exception as exc:  # never let the venue stage break payroll stages
             print(json.dumps({"action": "floor.flush", "status": "deferred", "error": str(exc)[:200]}))
 
+    # Playbooks: execute holders' standing orders (auto-claim / sweep / convert). Same
+    # env-gating contract as the Floor stage — without PLAYBOOKS_ENGINE set this is inert.
+    pb_addr = os.environ.get("PLAYBOOKS_ENGINE", "").strip()
+    if pb_addr:
+        try:
+            engine = w3.eth.contract(address=Web3.to_checksum_address(pb_addr), abi=[
+                {"type": "function", "name": "enrolledCount", "stateMutability": "view",
+                 "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+                {"type": "function", "name": "enrolledAt", "stateMutability": "view",
+                 "inputs": [{"name": "i", "type": "uint256"}],
+                 "outputs": [{"name": "", "type": "uint256"}]},
+                {"type": "function", "name": "playbookOf", "stateMutability": "view",
+                 "inputs": [{"name": "tokenId", "type": "uint256"}], "outputs": [
+                     {"name": "autoClaim", "type": "bool"}, {"name": "mode", "type": "uint8"},
+                     {"name": "dest", "type": "address"}, {"name": "paused", "type": "bool"}]},
+                {"type": "function", "name": "run", "stateMutability": "nonpayable",
+                 "inputs": [{"name": "ids", "type": "uint256[]"},
+                            {"name": "minOuts", "type": "uint256[]"}], "outputs": []},
+            ])
+            pb_batch = int(os.environ.get("PLAYBOOKS_MAX_BATCH", "25"))
+            total = int(engine.functions.enrolledCount().call())
+            ids, min_outs = [], []
+            for i in range(min(total, pb_batch)):
+                token_id = int(engine.functions.enrolledAt(i).call())
+                mode = int(engine.functions.playbookOf(token_id).call()[1])
+                # TO_COAT (3) exits cross the hooked pool, which has no Chainlink floor;
+                # they need an off-chain quoted minOut. v1 keeper skips them (owners can
+                # still be run manually) rather than sending an unguarded 0.
+                if mode == 3:
+                    continue
+                ids.append(token_id)
+                min_outs.append(0)
+            if ids:
+                submit("playbooks.run", lambda: engine.functions.run(ids, min_outs),
+                       min_gas=500_000 + 700_000 * len(ids))
+            else:
+                print(json.dumps({"action": "playbooks.run", "status": "skipped",
+                                  "enrolled": total}))
+        except Exception as exc:  # standing orders defer to the next hour, never break payroll
+            print(json.dumps({"action": "playbooks.run", "status": "deferred", "error": str(exc)[:200]}))
+
     if failed_actions:
         # Stages are isolated by design: a deferred stage retries next run and never
         # strands funds. `buyback.execute` legitimately defers early (SpotTooFarFromTwap
@@ -365,7 +406,7 @@ def main() -> None:
         # stock the poke just bought would never reach the broker TBAs. Only flush/poke
         # deferrals (which do strand value / block distribution) are fatal under strict.
         message = "keeper stages deferred: " + ", ".join(failed_actions)
-        fatal = [a for a in failed_actions if a not in ("buyback.execute", "floor.flush")]
+        fatal = [a for a in failed_actions if a not in ("buyback.execute", "floor.flush", "playbooks.run")]
         # Weekend BadFeed (0xb0171a5d) is the market being closed, not a fault: stock
         # feeds stop updating after Friday's close, the staleness guard trips, and the
         # poke rightly refuses to buy on stale prices. Funds simply accrue until Monday.
