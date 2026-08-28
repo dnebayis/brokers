@@ -50,6 +50,11 @@ Known operational limits, stated plainly:
 - The $COAT exit has no Chainlink floor of its own (it crosses the hooked pool), so the keeper
   computes that order's minimum out before running it, and skips any order it cannot price
   rather than sending an unguarded one.
+- Playbook orders wait until the Broker's wallet is worth at least 5 USDG before the keeper
+  moves it: a run costs ~1M gas and a Broker earns cents an hour, so hourly conversion would
+  cost the treasury more than the salaries are worth. Claiming stays hourly for everyone.
+  Measured cost of the move itself, on live mainnet state: 0 bps to sweep stocks, ~36 bps to
+  convert to USDG.
 
 ## Guarantees that do not move
 

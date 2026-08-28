@@ -53,6 +53,13 @@ for id in enrolled:
     deliver USDG/COAT/raw stocks to cfg.dest (keeper passes minOut for COAT)
 ```
 
+**Economics gate (added after measuring):** one playbook run costs ~1M gas (~$0.15 at
+current prices) while a Broker earns cents an hour, so running every order hourly would burn
+more gas than the salaries are worth. The keeper therefore only executes an order once the
+Broker's wallet is worth at least `PLAYBOOKS_MIN_USDG` (default 5 USDG, Chainlink-floored).
+Claiming is untouched: it stays hourly and free for every Broker, so nothing about earning
+slows down — only the sweep/convert step waits until it is worth doing.
+
 Rollout, all complete: unit tests (8/8) → testnet end-to-end on-chain (real mint, real
 36,750 COAT activation, TBA approval via `execute`, sweep + convert + pause verified) →
 "Playbooks" panel in My Brokers → mainnet deploy and keeper stage armed.

@@ -50,6 +50,9 @@ jobs:
       FLOOR_ROUTER: ${{ secrets.FLOOR_ROUTER }}
       # Playbooks standing-order execution (same env-gating: empty secret = inert stage).
       PLAYBOOKS_ENGINE: ${{ secrets.PLAYBOOKS_ENGINE }}
+      # A playbook run costs ~1M gas, so an order waits until the Broker's wallet is worth
+      # moving. Claiming is unaffected: it stays hourly and free for every Broker.
+      PLAYBOOKS_MIN_USDG: "5"
       # Optional Discord channel webhook for operator alerts (low relay gas, fatal
       # stage deferrals). Unset -> alerts are silent no-ops.
       OPS_WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL }}

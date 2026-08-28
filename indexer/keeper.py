@@ -97,6 +97,50 @@ def _diagnose_poke(w3, booster, registry_abi, booster_address, buffer_wei) -> No
 
 
 
+def _holdings_floor_usdg(w3, engine, floor_addr, token_id):
+    """Chainlink-floored USDG value of what a Broker's wallet holds, or None if unreadable.
+
+    Both the run-worth-it check and the $COAT guard build on this: the protocol's own
+    conservative valuation of the stock sitting in that Broker's wallet.
+    """
+    from web3 import Web3
+
+    if not floor_addr:
+        return None
+    try:
+        brokers_addr = engine.functions.brokers().call()
+        booster_addr = engine.functions.booster().call()
+        tba = w3.eth.contract(address=Web3.to_checksum_address(brokers_addr), abi=[
+            {"type": "function", "name": "accountOf", "stateMutability": "view",
+             "inputs": [{"name": "tokenId", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "address"}]},
+        ]).functions.accountOf(token_id).call()
+        booster = w3.eth.contract(address=Web3.to_checksum_address(booster_addr), abi=[
+            {"type": "function", "name": "knownTokenCount", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+            {"type": "function", "name": "knownTokens", "stateMutability": "view",
+             "inputs": [{"name": "i", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "address"}]},
+        ])
+        floor = w3.eth.contract(address=Web3.to_checksum_address(floor_addr), abi=[
+            {"type": "function", "name": "minUsdgOut", "stateMutability": "view",
+             "inputs": [{"name": "stock", "type": "address"}, {"name": "amount", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "uint256"}]},
+        ])
+        erc20 = [{"type": "function", "name": "balanceOf", "stateMutability": "view",
+                  "inputs": [{"name": "a", "type": "address"}],
+                  "outputs": [{"name": "", "type": "uint256"}]}]
+        total = 0
+        for i in range(int(booster.functions.knownTokenCount().call())):
+            stock = booster.functions.knownTokens(i).call()
+            bal = int(w3.eth.contract(address=stock, abi=erc20).functions.balanceOf(tba).call())
+            if bal:
+                total += int(floor.functions.minUsdgOut(stock, bal).call())
+        return total
+    except Exception:
+        return None
+
+
 def _coat_min_out(w3, engine, floor_addr, booster_address, token_id):
     """Minimum $COAT a TO_COAT playbook must deliver, or None if it cannot be priced.
 
@@ -469,9 +513,29 @@ def main() -> None:
             pb_batch = int(os.environ.get("PLAYBOOKS_MAX_BATCH", "25"))
             total = int(engine.functions.enrolledCount().call())
             ids, min_outs = [], []
+            # Running a playbook costs ~1M gas; a Broker earns cents an hour. Converting
+            # every hour would burn far more gas than the salary is worth, so an order only
+            # runs once the Broker's wallet is worth moving. Claiming stays hourly and free
+            # for everyone — this gate only delays the sweep/convert step, never the earning.
+            min_usdg_env = float(os.environ.get("PLAYBOOKS_MIN_USDG", "5"))
+            usdg_dec_pb = None
             for i in range(min(total, pb_batch)):
                 token_id = int(engine.functions.enrolledAt(i).call())
                 mode = int(engine.functions.playbookOf(token_id).call()[1])
+                if mode != 0:
+                    if usdg_dec_pb is None:
+                        usdg_dec_pb = int(w3.eth.contract(
+                            address=floor.functions.usdg().call(), abi=[
+                                {"type": "function", "name": "decimals", "stateMutability": "view",
+                                 "inputs": [], "outputs": [{"name": "", "type": "uint8"}]},
+                            ]).functions.decimals().call())
+                    worth = _holdings_floor_usdg(w3, engine, floor_addr, token_id)
+                    threshold = int(min_usdg_env * 10 ** usdg_dec_pb)
+                    if worth is None or worth < threshold:
+                        print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
+                                          "status": "waiting", "worthRaw": worth,
+                                          "minRaw": threshold}))
+                        continue
                 if mode == 3:
                     # TO_COAT crosses the hooked pool, which has no Chainlink floor of its
                     # own, so the guard has to be computed here: Chainlink floors of the

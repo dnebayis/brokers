@@ -227,6 +227,8 @@ export function PlaybookPanel({
         Broker&rsquo;s own wallet, and getting it out means signing once per stock. A playbook
         automates that last step: say where the earnings should go and the hourly engine takes
         them there. Free, non-custodial, revocable, and switched off the moment you sell the Broker.
+        Orders run once the Broker&rsquo;s wallet is worth about $5, so the gas never costs more
+        than the salary it is moving.
       </p>
 
       {/* the plan */}
