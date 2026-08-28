@@ -1,8 +1,18 @@
 name: mainnet-readiness
 
+# Runs on main and pull requests only. Working branches are pushed as mirrors of the same
+# commit, so building both doubled the queue for zero extra signal — and a busy queue is
+# exactly when GitHub starts dropping the hourly keeper's scheduled runs. Superseded runs
+# on the same ref are cancelled for the same reason: the keeper's cadence is production,
+# CI for an already-replaced commit is not.
 on:
   push:
+    branches: [main]
   pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   contracts:

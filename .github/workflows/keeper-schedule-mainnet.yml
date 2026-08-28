@@ -15,7 +15,12 @@ permissions:
 on:
   workflow_dispatch:
   schedule:
+    # Two offset entries: GitHub silently drops scheduled runs when the repo's queue is
+    # busy, and a second slot in the same hour is a cheap extra chance to fire. The keeper
+    # is idempotent and sends no transaction when there is nothing to do, so a duplicate
+    # run costs reads, not gas.
     - cron: "11 * * * *"
+    - cron: "41 * * * *"
 
 concurrency:
   group: mainnet-booster-keeper
