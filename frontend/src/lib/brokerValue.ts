@@ -102,10 +102,16 @@ const ACTIVATED = parseAbiItem(
 
 /** USD earned per Broker since its CURRENT activation: claims logged at or after the
  *  latest Activated event (a transfer force-deactivates, so the latest activation is
- *  the current owner's own switch-on), plus what is claimable right now — all valued
- *  at today's feed prices. Withdrawing or selling the stock later doesn't shrink it.
- *  Brokers never activated get no entry (the card hides the line). Two tokenId-filtered
- *  log queries for the whole set. */
+ *  the current owner's own switch-on), plus what is claimable right now — MINUS the
+ *  entitlement that was already crystallized before that switch-on. Deactivation moves
+ *  earnings into `pending`, and pending travels with the NFT, so a freshly bought and
+ *  re-activated Broker starts its claimable balance with the previous owner's unclaimed
+ *  earnings; without the subtraction the line reads as lifetime, not "since switch-on".
+ *  The carryover is measured with an archive read of claimable() at the activation block
+ *  (the primary RPC serves archive state); if that read fails and no claim has happened
+ *  since switch-on, the current pending() balance is the same number; otherwise we skip
+ *  the subtraction rather than show too little. All valued at today's feed prices.
+ *  Brokers never activated get no entry (the card hides the line). */
 export async function earnedSinceActivation(
   ids: bigint[],
   metas: TokenMeta[],
@@ -143,25 +149,93 @@ export async function earnedSinceActivation(
     const prev = since.get(key);
     if (prev === undefined || l.blockNumber! > prev) since.set(key, l.blockNumber!);
   }
-  for (const key of since.keys()) out[key] = 0;
 
+  // Per-token USD tallies for the streak, keyed "tokenId|token", so the carryover can be
+  // subtracted per token and floored at zero without one stock masking another.
+  const claimedSince = new Map<string, number>();
+  const claimedCount = new Map<string, number>();
   for (const l of claims) {
     if (l.args.tokenId === undefined) continue;
     const key = l.args.tokenId.toString();
     const start = since.get(key);
     if (start === undefined || l.blockNumber! < start) continue;
+    claimedCount.set(key, (claimedCount.get(key) ?? 0) + 1);
     const meta = priceOf(metas, l.args.token as Address);
     if (!meta) continue;
-    out[key] += Number(formatUnits(l.args.amount as bigint, meta.decimals)) * meta.priceUsd;
+    const k = `${key}|${(l.args.token as string).toLowerCase()}`;
+    claimedSince.set(
+      k,
+      (claimedSince.get(k) ?? 0) + Number(formatUnits(l.args.amount as bigint, meta.decimals)) * meta.priceUsd,
+    );
   }
+
+  // Carryover: what was already claimable the moment this streak began (the previous
+  // owner's crystallized-but-unclaimed earnings that travelled with the NFT).
+  const carryovers = await Promise.all(
+    ids.map(async (id): Promise<Map<string, number> | null> => {
+      const key = id.toString();
+      const start = since.get(key);
+      if (start === undefined) return null;
+      const co = new Map<string, number>();
+      try {
+        const [tokens, amounts] = (await client.readContract({
+          address: ADDR.booster,
+          abi: boosterAbi,
+          functionName: "claimable",
+          args: [id],
+          blockNumber: start,
+        })) as readonly [readonly Address[], readonly bigint[]];
+        tokens.forEach((token, j) => {
+          const meta = priceOf(metas, token);
+          if (meta) co.set(token.toLowerCase(), Number(formatUnits(amounts[j], meta.decimals)) * meta.priceUsd);
+        });
+        return co;
+      } catch {
+        // Archive miss (fallback RPC). While nothing has been claimed this streak, the
+        // crystallized carryover still sits untouched in pending(): same number, read now.
+        if ((claimedCount.get(key) ?? 0) > 0) return co; // already drained — skip subtraction
+        try {
+          const raws = await Promise.all(
+            metas.map((m) =>
+              client.readContract({
+                address: ADDR.booster,
+                abi: boosterAbi,
+                functionName: "pending",
+                args: [id, m.token],
+              }),
+            ),
+          );
+          metas.forEach((m, j) => {
+            // pending is stored SCALE(1e18)-scaled on top of the token's own decimals
+            const whole = (raws[j] as bigint) / 10n ** 18n;
+            co.set(m.token.toLowerCase(), Number(formatUnits(whole, m.decimals)) * m.priceUsd);
+          });
+        } catch {
+          /* leave empty: overstating beats crashing the card */
+        }
+        return co;
+      }
+    }),
+  );
+
   ids.forEach((id, i) => {
     const key = id.toString();
-    if (!(key in out)) return; // never activated
+    if (!since.has(key)) return; // never activated
+    const co = carryovers[i] ?? new Map<string, number>();
+    const perToken = new Map<string, number>();
+    for (const [k, v] of claimedSince) {
+      if (k.startsWith(`${key}|`)) perToken.set(k.slice(key.length + 1), v);
+    }
     const [tokens, amounts] = pendings[i] as readonly [readonly Address[], readonly bigint[]];
     tokens.forEach((token, j) => {
       const meta = priceOf(metas, token);
-      if (meta) out[key] += Number(formatUnits(amounts[j], meta.decimals)) * meta.priceUsd;
+      if (!meta) return;
+      const t = token.toLowerCase();
+      perToken.set(t, (perToken.get(t) ?? 0) + Number(formatUnits(amounts[j], meta.decimals)) * meta.priceUsd);
     });
+    let total = 0;
+    for (const [t, v] of perToken) total += Math.max(0, v - (co.get(t) ?? 0));
+    out[key] = total;
   });
   return out;
 }

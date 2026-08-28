@@ -52,6 +52,9 @@ export const boosterAbi = [
   { type: "function", name: "claimable", stateMutability: "view", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [
     { name: "tokens", type: "address[]" }, { name: "amounts", type: "uint256[]" },
   ] },
+  { type: "function", name: "pending", stateMutability: "view", inputs: [
+    { name: "tokenId", type: "uint256" }, { name: "token", type: "address" },
+  ], outputs: [{ type: "uint256" }] },
 ] as const;
 
 export const strategyRegistryAbi = [
