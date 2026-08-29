@@ -44,7 +44,12 @@ jobs:
       # Low tokenizable coverage is a normal wait-state, not a failure: run.py keeps the previous
       # epoch and skips the post cleanly (green). Real anomalies (snapshot health, sample data)
       # still hard-fail regardless of strict. The coverage floor reflects RH Chain's tokenized
-      # universe (~40-50% of Congress net-buying); tune via the MIN_ROUTE_COVERAGE repo variable.
+      # universe. The gate is NOT a representativeness claim: coverage is structurally low
+      # because this chain has tokenized a minority of what Congress buys, and the single
+      # largest missed name has no pool or feed here at all. Holding the gate high only
+      # froze the basket at a stale epoch, which is worse than tracking the tradable set
+      # and publishing the gap. It is now a sanity floor against degenerate data; the
+      # honest number is disclosed in the docs and in every run's output.
       MIN_ROUTE_COVERAGE: ${{ vars.MIN_ROUTE_COVERAGE || '0.40' }}
       UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
       # Reuses the existing oracle key (shared-key launch, accepted-risk decision).

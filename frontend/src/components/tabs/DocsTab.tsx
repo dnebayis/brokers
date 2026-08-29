@@ -142,6 +142,17 @@ export function DocsTab() {
         so any posted vector is checkable against public filings. Disclosures lag up to ~45 days (median ~26):
         Brokers track what was <i>filed</i>, framed openly as a feature.
       </P>
+      <P>
+        <b>How much gets dropped is the part worth stating plainly.</b> Congress buys whatever it likes;
+        this chain has tokenized a fraction of it, and of that fraction only names with a live pool
+        <i>and</i> an official price feed can be bought safely. In recent windows that has meant the
+        basket represents a <b>minority</b> of all disclosed net buying, sometimes under a fifth, and a
+        single untradable name can dominate what is left out. So a Broker mirrors Congress <i>within the
+        set this chain can actually trade</i>, not the whole disclosed portfolio. The engine expands that
+        set whenever a name clears the bar — it is 25 names today — and every run publishes both the
+        coverage figure and the biggest names it had to skip, so the gap is measurable rather than
+        implied.
+      </P>
 
       <H>Contracts — live on {activeChain.name}</H>
       <table className="w-full border-collapse text-[13px] my-2">
