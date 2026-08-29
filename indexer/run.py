@@ -322,7 +322,25 @@ def main():
 
     cov = coverage(net, exclude=[t for t, _b, _r in dropped])
 
+    # What is actually eating the coverage. Without this the gate reports a number with no
+    # cause, and "expand the universe" stays a guess instead of a list. Names here are the
+    # biggest net-bought tickers we cannot route today, largest first.
+    from aggregate import is_tokenized
+
+    _skip = {t for t, _b, _r in dropped}
+    _pos = {s: v for s, v in net.items() if v > 0}
+    _total = sum(_pos.values()) or 1.0
+    missed = sorted(
+        ((s, v) for s, v in _pos.items() if not is_tokenized(s) or s in _skip),
+        key=lambda kv: kv[1], reverse=True,
+    )[:15]
+    missed_report = [{"ticker": s, "netNotional": v, "shareOfBuying": v / _total} for s, v in missed]
+
     print(f"\nTokenizable coverage of net buying: {cov*100:.1f}%")
+    if missed_report:
+        print("Biggest names we cannot route (share of all net buying):")
+        for m in missed_report[:8]:
+            print(f"  {m['ticker']:<6} {m['shareOfBuying']*100:5.1f}%")
     print(f"Basket ({len(basket)} tickers, weights in bps, sum={sum(w for _,w in basket)}):")
     tickers, weights, addrs = [], [], []
     for tkr, bps in basket:
@@ -348,6 +366,7 @@ def main():
         "tokens": addrs,
         "weightsBps": weights,
         "routePreflight": preflight_report,
+        "missedCoverage": missed_report,
         "smartShadow": shadow_report,
     }
     if args.out:
