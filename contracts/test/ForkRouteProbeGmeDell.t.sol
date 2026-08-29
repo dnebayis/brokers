@@ -38,7 +38,8 @@ contract ForkRouteProbeGmeDellTest is Test {
         emit log_named_uint(string.concat(sym, " feed age (hours)"), (block.timestamp - updatedAt) / 3600);
 
         router.setRoute(stock, MID_POOL, USDG, pool, StockRouter.PoolKind.V3);
-        uint256 out = router.swapExactETHForStock{value: spend}(stock, 1, address(this), block.timestamp + 600);
+        uint256 out =
+            router.swapExactETHForStock{value: spend}(stock, 1, address(this), block.timestamp + 600);
         assertGt(out, 0, "route produced no stock");
         emit log_named_uint(string.concat(sym, " bought (1e18)"), out);
 
