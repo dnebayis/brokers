@@ -22,6 +22,7 @@ on:
     # between 2026-08-27 and 2026-08-29. The cron fires every three hours now and the run
     # loops hourly inside, so a slot that lands covers three hours instead of one minute.
     - cron: "37 */3 * * *"
+    - cron: "57 */3 * * *"
 
 concurrency:
   group: mainnet-indexer
@@ -31,8 +32,8 @@ jobs:
   update-and-poke:
     if: ${{ vars.MAINNET_STRATEGY_REGISTRY_ADDRESS != '' }}
     runs-on: ubuntu-latest
-    # Three hourly passes plus slack; the job is asleep for almost all of it.
-    timeout-minutes: 200
+    # Five hourly passes plus slack; the job is asleep for almost all of it.
+    timeout-minutes: 320
     defaults:
       run:
         working-directory: indexer
@@ -88,14 +89,14 @@ jobs:
         run: |
           set -uo pipefail
           fail=0
-          for i in 1 2 3; do
+          for i in 1 2 3 4 5; do
             if [ "$i" -gt 1 ]; then sleep 3600; fi
-            echo "::group::indexer pass ${i}/3"
+            echo "::group::indexer pass ${i}/5"
             if python run.py --post --out latest-basket.json; then
               fail=0
             else
               fail=1
-              echo "::warning::indexer pass ${i}/3 failed; the next pass retries"
+              echo "::warning::indexer pass ${i}/5 failed; the next pass retries"
             fi
             echo "::endgroup::"
           done

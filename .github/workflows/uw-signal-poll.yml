@@ -26,6 +26,7 @@ on:
     # was not being delivered at all. The cron fires every three hours now and the run
     # polls every fifteen minutes inside it, which restores the real cadence.
     - cron: "23 */3 * * *"
+    - cron: "53 */3 * * *"
 
 permissions:
   contents: read
@@ -39,20 +40,20 @@ jobs:
   poll:
     if: ${{ vars.MAINNET_STRATEGY_REGISTRY_ADDRESS != '' && vars.UW_SIGNAL_ENABLED == '1' }}
     runs-on: ubuntu-latest
-    # 12 polls fifteen minutes apart, plus slack. Mostly asleep.
-    timeout-minutes: 200
+    # 20 polls fifteen minutes apart, plus slack. Mostly asleep.
+    timeout-minutes: 320
     env:
       UW_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Check for fresh politician-trade triggers
         # A manual dispatch polls once with the operator's lookback. A scheduled run polls
-        # every fifteen minutes for three hours. The stateless fixed-window design is what
+        # every fifteen minutes for five hours. The stateless fixed-window design is what
         # makes that safe: each pass looks back further than the gap between passes, so a
         # trigger cannot fall between two of them, and a double dispatch is a no-op.
         run: |
           set -uo pipefail
-          passes=12
+          passes=20
           [ "${{ github.event_name }}" = "schedule" ] || passes=1
           fail=0
           for i in $(seq 1 "$passes"); do

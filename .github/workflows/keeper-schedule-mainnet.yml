@@ -22,10 +22,16 @@ on:
     # job. Asking less often is therefore the fix, not asking more often: the cron now
     # fires every three hours and the run does its own hourly loop inside (see below), so
     # one slot that lands covers a full three-hour window instead of a single minute.
-    # The second entry is a 30-minute-late backup; the concurrency group below drops it
-    # if the earlier one is still looping.
+    # Three slots per block, and the run loops for FIVE hours rather than three. That
+    # slack is the point: measured 2026-08-29, GitHub dropped an entire three-hour block
+    # across every scheduled workflow in the repo at once, which with exactly-three-hour
+    # coverage left a real hole with nothing queued behind it. At five hours, one slot
+    # that lands covers past the whole of the next block, so coverage survives a dropped
+    # block instead of ending with it. Extra fires are not waste: the concurrency group
+    # queues one and drops the rest, so they extend coverage rather than pile up.
     - cron: "11 */3 * * *"
-    - cron: "41 */3 * * *"
+    - cron: "31 */3 * * *"
+    - cron: "51 */3 * * *"
 
 concurrency:
   group: mainnet-booster-keeper
@@ -36,8 +42,8 @@ jobs:
     # Inert until the mainnet Broker address variable is set post-deploy.
     if: ${{ vars.MAINNET_BROKER_ADDRESS != '' }}
     runs-on: ubuntu-latest
-    # Three hourly passes plus slack. The job spends almost all of it asleep.
-    timeout-minutes: 200
+    # Five hourly passes plus slack. The job spends almost all of it asleep.
+    timeout-minutes: 320
     defaults:
       run:
         working-directory: indexer
@@ -78,22 +84,23 @@ jobs:
           cache-dependency-path: indexer/requirements.txt
       - run: pip install -r requirements.txt
       - name: Check threshold and poke the last valid basket
-        # Three passes an hour apart. The keeper is idempotent and sends no transaction
+        # Five passes an hour apart. The keeper is idempotent and sends no transaction
         # when there is nothing to do, so a pass that lands on a quiet hour costs reads.
         # Only the LAST pass decides the job's exit status: an early pass that hits a
         # flaky RPC is retried by the next one, and failing the whole job for it would
         # cry wolf. A pass that fails is still printed and annotated.
         run: |
           set -uo pipefail
+          passes=5
           fail=0
-          for i in 1 2 3; do
+          for i in $(seq 1 "$passes"); do
             if [ "$i" -gt 1 ]; then sleep 3600; fi
-            echo "::group::keeper pass ${i}/3"
+            echo "::group::keeper pass ${i}/${passes}"
             if python keeper.py --execute; then
               fail=0
             else
               fail=1
-              echo "::warning::keeper pass ${i}/3 failed; the next pass retries"
+              echo "::warning::keeper pass ${i}/${passes} failed; the next pass retries"
             fi
             echo "::endgroup::"
           done

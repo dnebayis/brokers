@@ -22,6 +22,7 @@ on:
     # of those 288 slots actually started, so the sales bot was effectively off). The cron
     # now fires every three hours and the run sweeps every five minutes inside it.
     - cron: "7 */3 * * *"
+    - cron: "47 */3 * * *"
 
 permissions:
   contents: read
@@ -34,14 +35,14 @@ jobs:
   sweep:
     if: ${{ vars.DISCORD_SALES_ENABLED == '1' }}
     runs-on: ubuntu-latest
-    # 36 sweeps five minutes apart, plus slack. Mostly asleep.
-    timeout-minutes: 200
+    # 60 sweeps five minutes apart, plus slack. Mostly asleep.
+    timeout-minutes: 320
     steps:
       - name: Sweep and post sales
         env:
           SECRET: ${{ secrets.RECHECK_SECRET }}
         # A manual dispatch (test embed / bio debug) sweeps once and stops. A scheduled
-        # run sweeps every five minutes for three hours, which is what the cron used to
+        # run sweeps every five minutes for five hours, which is what the cron used to
         # ask GitHub for and no longer gets. The cursor lives in KV, so a pass that finds
         # nothing is free and a late pass just catches up.
         run: |
@@ -51,7 +52,7 @@ jobs:
           bio_addr="${{ github.event.inputs.bio_addr || '' }}"
           [ -n "$test_id" ] && url="${url}?testId=${test_id}"
           [ -n "$bio_addr" ] && url="${url}?bioTest=${bio_addr}"
-          passes=36
+          passes=60
           [ "${{ github.event_name }}" = "schedule" ] || passes=1
           fail=0
           for i in $(seq 1 "$passes"); do
