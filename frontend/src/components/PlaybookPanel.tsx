@@ -13,9 +13,10 @@ import { useTx } from "@/lib/useTx";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
 
-// Human plans, not contract enums. Claiming is NOT offered as a plan of its own: the
-// keeper already claims for every Broker each hour, so selling that as a feature would be
-// dishonest. What actually needs a decision is where the stock goes after the claim.
+// Human plans, not contract enums. Claiming is NOT offered as a plan of its own: a
+// playbook claims as its first step anyway, the app has a permissionless one-click claim,
+// and the weekly ClaimSweeper pass claims for everyone regardless, so selling it as a
+// feature would be dishonest. What needs a decision is where the stock goes after that.
 type Plan = "sweep" | "usdg" | "coat";
 const PLAN_LABEL: Record<Plan, string> = {
   sweep: "Send me the stocks",
@@ -229,7 +230,7 @@ export function PlaybookPanel({
         });
         await waitForSuccessfulReceipt(h);
       }
-      tx.setStatus("Playbook saved — the hourly engine takes it from here.", "ok");
+      tx.setStatus("Playbook saved — the engine takes it from here.", "ok");
       setReloadKey((k) => k + 1);
     });
 
@@ -255,12 +256,14 @@ export function PlaybookPanel({
     <div className="card">
       <h2 className="pixel-title text-[15px] mb-1">Playbooks</h2>
       <p className="text-ink-soft text-sm mb-4">
-        Your Broker&rsquo;s salary is already claimed for you every hour — it just stops in the
-        Broker&rsquo;s own wallet, and getting it out means signing once per stock. A playbook
-        automates that last step: say where the earnings should go and the hourly engine takes
-        them there. Free, non-custodial, revocable, and switched off the moment you sell the Broker.
-        Orders run once the Broker&rsquo;s wallet is worth about $5, so the gas never costs more
-        than the salary it is moving.
+        Your Broker earns every time the engine buys, and that salary lands as stock in the
+        Broker&rsquo;s own wallet. Getting it out from there means claiming, then signing once
+        per stock. A playbook automates the whole thing: say where the earnings should go and
+        the engine claims and delivers them for you. Free, non-custodial, revocable, and
+        switched off the moment you sell the Broker. An order runs once the Broker&rsquo;s
+        wallet is worth about $5, so the gas never costs more than the salary it is moving,
+        and nothing is lost while it waits: unclaimed earnings sit in the Booster in your
+        Broker&rsquo;s name and you can always claim them yourself in one click.
       </p>
 
       {/* the plan */}
@@ -347,7 +350,7 @@ export function PlaybookPanel({
                 {live && worth[key] !== undefined && (
                   <span className="block text-[11px] text-ink-soft">
                     {worth[key] >= RUN_AT
-                      ? `$${worth[key].toFixed(2)} in its wallet, runs on the next hourly pass`
+                      ? `$${worth[key].toFixed(2)} in its wallet, runs on the next keeper pass`
                       : `$${worth[key].toFixed(2)} of $${RUN_AT} - the engine moves it once it gets there`}
                   </span>
                 )}

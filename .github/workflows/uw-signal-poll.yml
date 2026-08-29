@@ -21,7 +21,11 @@ on:
         required: false
         default: "20"
   schedule:
-    - cron: "*/15 * * * *"
+    # Sparse cron, fifteen-minute work. Measured 2026-08-27..29, GitHub started 2 or 3
+    # of the 96 slots this asked for daily, so the <=15min lag this workflow exists to buy
+    # was not being delivered at all. The cron fires every three hours now and the run
+    # polls every fifteen minutes inside it, which restores the real cadence.
+    - cron: "23 */3 * * *"
 
 permissions:
   contents: read
@@ -35,25 +39,41 @@ jobs:
   poll:
     if: ${{ vars.MAINNET_STRATEGY_REGISTRY_ADDRESS != '' && vars.UW_SIGNAL_ENABLED == '1' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # 12 polls fifteen minutes apart, plus slack. Mostly asleep.
+    timeout-minutes: 200
     env:
       UW_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Check for fresh politician-trade triggers
+        # A manual dispatch polls once with the operator's lookback. A scheduled run polls
+        # every fifteen minutes for three hours. The stateless fixed-window design is what
+        # makes that safe: each pass looks back further than the gap between passes, so a
+        # trigger cannot fall between two of them, and a double dispatch is a no-op.
         run: |
-          set -euo pipefail
-          minutes="${{ github.event.inputs.lookback_minutes || '20' }}"
-          since=$(date -u -d "${minutes} minutes ago" +%Y-%m-%dT%H:%M:%SZ)
-          body=$(curl -sS -H "Authorization: Bearer ${UW_KEY}" -H "Accept: application/json" \
-            "https://api.unusualwhales.com/api/alerts?noti_types[]=politician_trades&newer_than=${since}&limit=500")
-          count=$(echo "$body" | jq 'if type=="array" then length
-                                     elif (.data|type?)=="array" then (.data|length)
-                                     else 0 end')
-          echo "triggers since ${since}: ${count}"
-          if [ "$count" -gt 0 ]; then
-            echo "new disclosure detected — dispatching the indexer now"
-            gh workflow run indexer-schedule-mainnet.yml -R "${GITHUB_REPOSITORY}"
-          else
-            echo "quiet — hourly backstop remains in charge"
-          fi
+          set -uo pipefail
+          passes=12
+          [ "${{ github.event_name }}" = "schedule" ] || passes=1
+          fail=0
+          for i in $(seq 1 "$passes"); do
+            if [ "$i" -gt 1 ]; then sleep 900; fi
+            minutes="${{ github.event.inputs.lookback_minutes || '20' }}"
+            since=$(date -u -d "${minutes} minutes ago" +%Y-%m-%dT%H:%M:%SZ)
+            body=$(curl -sS -H "Authorization: Bearer ${UW_KEY}" -H "Accept: application/json" \
+              "https://api.unusualwhales.com/api/alerts?noti_types[]=politician_trades&newer_than=${since}&limit=500") || body=""
+            count=$(echo "$body" | jq 'if type=="array" then length
+                                       elif (.data|type?)=="array" then (.data|length)
+                                       else 0 end' 2>/dev/null || echo "err")
+            if [ "$count" = "err" ]; then
+              fail=1
+              echo "::warning::pass ${i}/${passes}: alerts API unreadable; next pass retries"
+              continue
+            fi
+            fail=0
+            echo "pass ${i}/${passes} — triggers since ${since}: ${count}"
+            if [ "$count" -gt 0 ]; then
+              echo "new disclosure detected — dispatching the indexer now"
+              gh workflow run indexer-schedule-mainnet.yml -R "${GITHUB_REPOSITORY}" || true
+            fi
+          done
+          exit "$fail"

@@ -618,8 +618,12 @@ def main() -> None:
                 start = (datetime.now(timezone.utc).hour * scan) % total
             # Running a playbook costs ~1M gas; a Broker earns cents an hour. Converting
             # every hour would burn far more gas than the salary is worth, so an order only
-            # runs once the Broker's wallet is worth moving. Claiming stays hourly and free
-            # for everyone — this gate only delays the sweep/convert step, never the earning.
+            # runs once the Broker's wallet is worth moving. Note this gate skips the WHOLE
+            # order, the claim included — the claim is the playbook's first step, not a
+            # separate stage — so a below-threshold Broker is claimed by the weekly
+            # ClaimSweeper pass or by the holder's own one-click claim, exactly like a
+            # Broker with no playbook at all. Nothing is lost either way: unclaimed
+            # earnings sit in the Booster's accounting under that Broker's id.
             min_usdg_env = float(os.environ.get("PLAYBOOKS_MIN_USDG", "5"))
             window = [int(x) for x in _mc_call(
                 w3, [(engine, "enrolledAt", ((start + o) % total,)) for o in range(scan)]) if x is not None]

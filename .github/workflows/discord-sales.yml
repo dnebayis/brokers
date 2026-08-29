@@ -17,7 +17,11 @@ on:
         required: false
         default: ""
   schedule:
-    - cron: "*/5 * * * *"
+    # Sparse cron, five-minute work. Asking for 288 runs a day was a large part of why
+    # GitHub deprioritised every schedule in this repo (measured 2026-08-27..29: 2 or 3
+    # of those 288 slots actually started, so the sales bot was effectively off). The cron
+    # now fires every three hours and the run sweeps every five minutes inside it.
+    - cron: "7 */3 * * *"
 
 permissions:
   contents: read
@@ -30,18 +34,30 @@ jobs:
   sweep:
     if: ${{ vars.DISCORD_SALES_ENABLED == '1' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # 36 sweeps five minutes apart, plus slack. Mostly asleep.
+    timeout-minutes: 200
     steps:
       - name: Sweep and post sales
         env:
           SECRET: ${{ secrets.RECHECK_SECRET }}
+        # A manual dispatch (test embed / bio debug) sweeps once and stops. A scheduled
+        # run sweeps every five minutes for three hours, which is what the cron used to
+        # ask GitHub for and no longer gets. The cursor lives in KV, so a pass that finds
+        # nothing is free and a late pass just catches up.
         run: |
-          set -euo pipefail
+          set -uo pipefail
           url="https://www.coattail.cash/api/discord/sales"
           test_id="${{ github.event.inputs.test_id || '' }}"
           bio_addr="${{ github.event.inputs.bio_addr || '' }}"
           [ -n "$test_id" ] && url="${url}?testId=${test_id}"
           [ -n "$bio_addr" ] && url="${url}?bioTest=${bio_addr}"
-          resp=$(curl -sS -H "Authorization: Bearer ${SECRET}" "$url")
-          echo "$resp"
-          [ "$(echo "$resp" | jq -r '.ok')" = "true" ]
+          passes=36
+          [ "${{ github.event_name }}" = "schedule" ] || passes=1
+          fail=0
+          for i in $(seq 1 "$passes"); do
+            if [ "$i" -gt 1 ]; then sleep 300; fi
+            resp=$(curl -sS -H "Authorization: Bearer ${SECRET}" "$url" || echo '{"ok":false}')
+            echo "pass ${i}/${passes}: $resp"
+            if [ "$(echo "$resp" | jq -r '.ok')" = "true" ]; then fail=0; else fail=1; fi
+          done
+          exit "$fail"

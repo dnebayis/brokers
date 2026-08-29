@@ -15,12 +15,17 @@ permissions:
 on:
   workflow_dispatch:
   schedule:
-    # Two offset entries: GitHub silently drops scheduled runs when the repo's queue is
-    # busy, and a second slot in the same hour is a cheap extra chance to fire. The keeper
-    # is idempotent and sends no transaction when there is nothing to do, so a duplicate
-    # run costs reads, not gas.
-    - cron: "11 * * * *"
-    - cron: "41 * * * *"
+    # SPARSE cron, hourly work. Measured 2026-08-27..29: of the 48 hourly slots this
+    # workflow asked for each day, GitHub actually started 2 or 3. Every scheduled
+    # workflow in the repo collapsed the same way on the same day, so the cause is the
+    # scheduler deprioritising a repo that asks for ~400 scheduled runs a day, not this
+    # job. Asking less often is therefore the fix, not asking more often: the cron now
+    # fires every three hours and the run does its own hourly loop inside (see below), so
+    # one slot that lands covers a full three-hour window instead of a single minute.
+    # The second entry is a 30-minute-late backup; the concurrency group below drops it
+    # if the earlier one is still looping.
+    - cron: "11 */3 * * *"
+    - cron: "41 */3 * * *"
 
 concurrency:
   group: mainnet-booster-keeper
@@ -31,7 +36,8 @@ jobs:
     # Inert until the mainnet Broker address variable is set post-deploy.
     if: ${{ vars.MAINNET_BROKER_ADDRESS != '' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Three hourly passes plus slack. The job spends almost all of it asleep.
+    timeout-minutes: 200
     defaults:
       run:
         working-directory: indexer
@@ -56,7 +62,9 @@ jobs:
       # Playbooks standing-order execution (same env-gating: empty secret = inert stage).
       PLAYBOOKS_ENGINE: ${{ secrets.PLAYBOOKS_ENGINE }}
       # A playbook run costs ~1M gas, so an order waits until the Broker's wallet is worth
-      # moving. Claiming is unaffected: it stays hourly and free for every Broker.
+      # moving. The wait skips the order's claim step too, so a below-threshold Broker is
+      # claimed by the weekly ClaimSweeper pass or by the holder in one click, same as a
+      # Broker with no playbook. Earnings accrue in the Booster until claimed either way.
       PLAYBOOKS_MIN_USDG: "5"
       # Optional Discord channel webhook for operator alerts (low relay gas, fatal
       # stage deferrals). Unset -> alerts are silent no-ops.
@@ -70,7 +78,26 @@ jobs:
           cache-dependency-path: indexer/requirements.txt
       - run: pip install -r requirements.txt
       - name: Check threshold and poke the last valid basket
-        run: python keeper.py --execute
+        # Three passes an hour apart. The keeper is idempotent and sends no transaction
+        # when there is nothing to do, so a pass that lands on a quiet hour costs reads.
+        # Only the LAST pass decides the job's exit status: an early pass that hits a
+        # flaky RPC is retried by the next one, and failing the whole job for it would
+        # cry wolf. A pass that fails is still printed and annotated.
+        run: |
+          set -uo pipefail
+          fail=0
+          for i in 1 2 3; do
+            if [ "$i" -gt 1 ]; then sleep 3600; fi
+            echo "::group::keeper pass ${i}/3"
+            if python keeper.py --execute; then
+              fail=0
+            else
+              fail=1
+              echo "::warning::keeper pass ${i}/3 failed; the next pass retries"
+            fi
+            echo "::endgroup::"
+          done
+          exit "$fail"
       # Claim distribution moved to claim-distribution-mainnet.yml (weekly, via
       # ClaimSweeper 40-NFT sweeps). Hourly 5-NFT pushes were ~90% of the keeper
       # wallet's gas; rewards accrue safely in the Booster until claimed either way.
