@@ -265,6 +265,19 @@ export function PlaybookPanel({
         and nothing is lost while it waits: unclaimed earnings sit in the Booster in your
         Broker&rsquo;s name and you can always claim them yourself in one click.
       </p>
+      {/* The question every holder asks once they read the above: what happens to the stock
+          that is ALREADY sitting in the wallet. The engine reads the full balanceOf on each
+          run, not just the amount it claimed that run, so the answer is "it goes too" — and
+          saying so here is cheaper than answering it one Discord message at a time. */}
+      <p className="text-ink-soft text-sm mb-4">
+        This applies to what is already in there, not just to future earnings. On every run the
+        engine reads the Broker wallet&rsquo;s whole balance of each stock, so anything that
+        accrued before you set the playbook is picked up on the first pass, and changing the
+        plan later re-applies it to everything in the wallet. Two things it will not touch: a
+        stock you have not approved yet, which is skipped without failing the rest, and any
+        token that reached the wallet by some other route, since the engine only walks the list
+        of stocks the engine itself has bought.
+      </p>
 
       {/* the plan */}
       <span className="label">The plan</span>
