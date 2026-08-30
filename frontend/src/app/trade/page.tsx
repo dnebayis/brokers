@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { FLOOR } from "@/lib/floor";
 import { Terminal } from "@/components/trade/Terminal";
+import { MarketClosedSign } from "@/components/MarketClosedSign";
 
 export default function TradePage() {
   const [preview, setPreview] = useState(false);
@@ -23,6 +24,7 @@ export default function TradePage() {
   return (
     <main className="mx-auto max-w-xl px-6 py-10">
       <h1 className="font-pixel text-lg text-ink-strong mb-4">The Floor</h1>
+      <MarketClosedSign />
       <Terminal />
     </main>
   );
