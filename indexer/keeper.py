@@ -192,7 +192,10 @@ def _holdings_floor_usdg_many(ctx, token_ids):
     worth = {tid: (0 if tba else None) for tid, tba in zip(token_ids, tbas)}
     for tid, q in zip(quote_meta, quotes):
         if q is None:
-            worth[tid] = None if worth.get(tid) is None else worth[tid]
+            # A leg we cannot price (stale feed, dead quote) makes the whole valuation
+            # unusable: summing only the legs that DID quote would understate the wallet
+            # and could push a partially-priced Broker past the gate into a doomed order.
+            worth[tid] = None
             continue
         if worth.get(tid) is not None:
             worth[tid] += int(q)
@@ -232,6 +235,13 @@ def _pb_context(w3, engine, floor_addr):
              "inputs": [], "outputs": [{"name": "", "type": "address"}]},
             {"type": "function", "name": "ethUsdManualE8", "stateMutability": "view",
              "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+            {"type": "function", "name": "claimable", "stateMutability": "view",
+             "inputs": [{"name": "tokenId", "type": "uint256"}],
+             "outputs": [{"name": "tokens", "type": "address[]"},
+                         {"name": "amounts", "type": "uint256[]"}]},
+            {"type": "function", "name": "isActive", "stateMutability": "view",
+             "inputs": [{"name": "tokenId", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "bool"}]},
         ])
         erc20 = [{"type": "function", "name": "balanceOf", "stateMutability": "view",
                   "inputs": [{"name": "a", "type": "address"}],
@@ -243,6 +253,9 @@ def _pb_context(w3, engine, floor_addr):
         return {
             "w3": w3,
             "brokers": w3.eth.contract(address=Web3.to_checksum_address(engine.functions.brokers().call()), abi=[
+                {"type": "function", "name": "ownerOf", "stateMutability": "view",
+                 "inputs": [{"name": "tokenId", "type": "uint256"}],
+                 "outputs": [{"name": "", "type": "address"}]},
                 {"type": "function", "name": "accountOf", "stateMutability": "view",
                  "inputs": [{"name": "tokenId", "type": "uint256"}],
                  "outputs": [{"name": "", "type": "address"}]},
@@ -603,6 +616,9 @@ def main() -> None:
                  "inputs": [], "outputs": [{"name": "", "type": "address"}]},
                 {"type": "function", "name": "keeper", "stateMutability": "view",
                  "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+                {"type": "function", "name": "setterOf", "stateMutability": "view",
+                 "inputs": [{"name": "tokenId", "type": "uint256"}],
+                 "outputs": [{"name": "", "type": "address"}]},
             ])
             pb_batch = int(os.environ.get("PLAYBOOKS_MAX_BATCH", "25"))
             total = int(engine.functions.enrolledCount().call())
@@ -628,14 +644,62 @@ def main() -> None:
             window = [int(x) for x in _mc_call(
                 w3, [(engine, "enrolledAt", ((start + o) % total,)) for o in range(scan)]) if x is not None]
             modes = _mc_call(w3, [(engine, "playbookOf", (tid,)) for tid in window])
+            # A playbook dies silently when the Broker changes hands (the engine checks
+            # setter == current owner and returns). Dead entries stay enrolled, so without
+            # this filter the keeper pays for a guaranteed no-op on them every single hour.
+            dead_ids = set()
+            if pb_ctx is not None:
+                setters = _mc_call(w3, [(engine, "setterOf", (tid,)) for tid in window])
+                owners = _mc_call(w3, [(pb_ctx["brokers"], "ownerOf", (tid,)) for tid in window])
+                for tid, s, o in zip(window, setters, owners):
+                    if s is not None and o is not None and str(s).lower() != str(o).lower():
+                        dead_ids.add(tid)
             worth_by_id = _holdings_floor_usdg_many(
-                pb_ctx, [tid for tid, m in zip(window, modes) if m is not None and int(m[1]) != 0])
+                pb_ctx, [tid for tid, m in zip(window, modes)
+                         if m is not None and int(m[1]) != 0 and tid not in dead_ids])
+            # NONE-mode playbooks exist only for their auto-claim; running one with nothing
+            # claimable is a paid no-op (observed: ~137k gas, zero logs, every single hour).
+            # Value the claim first and only carry orders that will actually move stock.
+            claimable_by_id = {}
+            if pb_ctx is not None:
+                claim_ids = [tid for tid, m in zip(window, modes)
+                             if m is not None and int(m[1]) == 0 and bool(m[0]) and not bool(m[3])
+                             and tid not in dead_ids]
+                actives = _mc_call(w3, [(pb_ctx["booster"], "isActive", (tid,)) for tid in claim_ids])
+                for tid, row, act in zip(claim_ids, _mc_call(
+                        w3, [(pb_ctx["booster"], "claimable", (tid,)) for tid in claim_ids]), actives):
+                    if act is not None and not act:
+                        # the engine only claims for ACTIVE Brokers; an inactive one is a
+                        # guaranteed no-op regardless of what claimable() reports
+                        claimable_by_id[tid] = 0
+                        continue
+                    claimable_by_id[tid] = None if row is None else sum(int(a) for a in row[1])
             for token_id, mode_row in zip(window, modes):
                 if len(ids) >= pb_batch:
                     break
                 if mode_row is None:
                     continue
                 mode = int(mode_row[1])
+                if bool(mode_row[3]):
+                    continue  # paused: the engine returns immediately, don't spend gas on it
+                if token_id in dead_ids:
+                    print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
+                                      "status": "skipped",
+                                      "reason": "playbook died on transfer; new owner must re-enroll"}))
+                    continue
+                if mode == 0:
+                    # Auto-claim-only order. Without autoClaim it can never do anything;
+                    # with nothing claimable it is a no-op this hour. Skip both, retry
+                    # next run — unclaimed earnings sit safely in the Booster meanwhile.
+                    if not bool(mode_row[0]):
+                        continue
+                    if pb_ctx is not None:
+                        owed = claimable_by_id.get(token_id)
+                        if owed is not None and owed == 0:
+                            continue
+                    ids.append(token_id)
+                    min_outs.append(0)
+                    continue
                 if mode != 0:
                     worth = worth_by_id.get(token_id)
                     threshold = int(min_usdg_env * 10 ** (pb_ctx["usdg_dec"] if pb_ctx else 6))

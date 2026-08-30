@@ -255,10 +255,12 @@ export function Terminal() {
               `≈ $${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })} of stocks`,
             );
         }
-      } catch {
+      } catch (e) {
         if (!stale) {
-          if (dir === "sell") setSellQuote("quote unavailable");
-          else setBuyQuote("");
+          const closed = /0xb0171a5d|BadFeed/i.test(String((e as Error)?.message ?? e));
+          if (dir === "sell")
+            setSellQuote(closed ? "market closed — prices frozen until it reopens" : "quote unavailable");
+          else setBuyQuote(closed ? "market closed — prices frozen until it reopens" : "");
         }
       }
     };
