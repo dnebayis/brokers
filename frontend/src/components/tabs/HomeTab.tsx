@@ -2,6 +2,7 @@
 
 import type { TabId } from "@/components/Tabs";
 import { HomeMetrics } from "@/components/HomeMetrics";
+import { MarketClosedSign } from "@/components/MarketClosedSign";
 import { ActivationMath } from "@/components/ActivationMath";
 import { ProofPanel } from "@/components/ProofPanel";
 import { OPENSEA_URL } from "@/lib/config";
@@ -26,6 +27,7 @@ const FACTS: { k: string; v: string }[] = [
 export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
   return (
     <div className="grid gap-6">
+      <MarketClosedSign />
       {/* Hero */}
       <section className="card">
         <p className="chip mb-4 inline-block">Ride the coattails of smart money</p>

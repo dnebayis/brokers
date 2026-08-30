@@ -71,7 +71,7 @@ export function MarketClosedSign() {
   if (!closed) return null;
 
   return (
-    <div className="mb-6 flex flex-col items-center" aria-label="Market closed">
+    <div className="mb-6 w-full max-w-2xl mx-auto flex flex-col items-center" aria-label="Market closed">
       {/* the string it hangs from */}
       <div className="flex gap-16">
         <div className="w-[3px] h-5 bg-ink" />
