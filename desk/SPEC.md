@@ -91,10 +91,12 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
 ## Build order
 
 1. CoatBonusPool (independent, testable now) ← **done, 7 tests green**
-2. **Art preview FIRST** (user gate): DeskRenderer SVG drafts shown to the user before
-   anything ships; art direction locked before mint flow is finalized
-3. DeskAccount + DeskNFT (mint flow end-to-end on fork)
-4. DeskEngine (fork tests against real USDG pools)
+2. **Art preview FIRST** (user gate) ← **done 2026-08-31: 16 real wave-1 desks rendered
+   from the curated table, user approved; DeskRenderer.sol shipped with byte-for-byte
+   parity fixtures against the Python reference (scene_gen.py), 6 renderer tests green,
+   traits keccak commit `0xa9ca0d1af9e49f121368ad423a74c685ede94ca1cf3bdf7591b7f24b7016974e`**
+3. DeskAccount + DeskNFT (mint flow end-to-end on fork) ← contracts done, 19 tests green
+4. DeskEngine (fork tests against real USDG pools) ← contract done; fork pass pending
 5. **Full testnet deployment (chain 46630)**: every contract deployed and every flow
    (mint, deposit, buy, rebalance, fee split, bonus round, withdraw, desk sale) exercised
    on testnet BEFORE any mainnet transaction (user gate, 2026-08-26)

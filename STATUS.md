@@ -1,6 +1,6 @@
 # Coattail Brokers — system status
 
-_Updated 2026-08-28. This is the canonical description of what is live. It supersedes the
+_Updated 2026-08-31. This is the canonical description of what is live. It supersedes the
 pre-launch remaining-work list; the historical deploy-day sequence is preserved in
 [MAINNET_READINESS.md](MAINNET_READINESS.md)._
 
@@ -14,6 +14,7 @@ pre-launch remaining-work list; the historical deploy-day sequence is preserved 
 | Active Brokers | ~1,034 switched on and earning (live figure on the site) |
 | $COAT burned | ~138.7M, 13.9% of supply, permanently removed |
 | Stock universe | 7 route-ready names wired into the Booster; expandable by owner op, no redeploy |
+| Weekend trading | OPEN since 2026-08-31 (community vote): both staleness windows widened 24h → 96h by owner txs, so weekends trade at Friday's close; an off-chain keeper watchdog replaces the tripwire the wide window loosened |
 | Verification | every contract source-verified on `https://robinhoodchain.blockscout.com` |
 
 Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
@@ -46,6 +47,10 @@ Known operational limits, stated plainly:
 
 - GitHub's scheduler is not reliable. Runs have been skipped for hours; a missed hour is
   made up on the next successful run (balances roll forward), but the delay is real.
+- The 96h feed-staleness window means a genuinely broken feed could serve a stale price for
+  up to four days on-chain. The keeper's feed watchdog narrows this in practice: on trading
+  days it alerts when any stock feed is quiet past 30h (70h on Mondays for the weekend
+  backlog).
 - The keeper relay wallet needs periodic gas top-ups.
 - The $COAT exit has no Chainlink floor of its own (it crosses the hooked pool), so the keeper
   computes that order's minimum out before running it, and skips any order it cannot price
