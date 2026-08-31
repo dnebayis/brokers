@@ -13,9 +13,10 @@ export function parseErr(e: unknown): string {
   const m = any?.shortMessage || any?.details || any?.message || String(e);
   if (/user rejected|denied|rejected the request/i.test(m)) return "Cancelled in wallet.";
   if (/insufficient funds/i.test(m)) return "Insufficient ETH for value + gas.";
-  // BadFeed(): the Chainlink staleness guard tripped. Outside market hours the stock
-  // feeds stop updating, so this is almost always "the market is closed", not a fault.
+  // BadFeed(): the Chainlink staleness guard tripped. The window is wide enough to
+  // trade straight through weekends at Friday's close, so tripping it means a feed
+  // genuinely missed its updates (or an unusually long market holiday).
   if (/0xb0171a5d|BadFeed/i.test(m))
-    return "Stock prices are frozen while the market is closed, so trading is paused. It resumes automatically on the first fresh price after the market opens.";
+    return "The price feed for a stock in this trade has not updated within the safety window, so the contract refuses to price it. Trading resumes automatically on the next fresh price.";
   return m.length > 160 ? m.slice(0, 160) + "…" : m;
 }

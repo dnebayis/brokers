@@ -89,6 +89,22 @@ export function Terminal() {
 
   const [sellQuote, setSellQuote] = useState<string>("");
   const [buyQuote, setBuyQuote] = useState<string>("");
+  // Weekend disclosure: the guard windows are wide enough to trade straight through
+  // the weekend, but the reference price is Friday's close. Judged on the market's own
+  // clock (New York) and set after mount so server and client can never disagree.
+  const [marketClosedNow, setMarketClosedNow] = useState(false);
+  useEffect(() => {
+    const check = () =>
+      setMarketClosedNow(
+        ["Sat", "Sun"].includes(
+          new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" })
+            .format(new Date()),
+        ),
+      );
+    check();
+    const iv = setInterval(check, 60_000);
+    return () => clearInterval(iv);
+  }, []);
   const [holdings, setHoldings] = useState<{ symbol: string; text: string }[]>([]);
   const [slipBps, setSlipBps] = useState(100); // 1% default, applied on top of quoted mins
   const applySlip = (x: bigint) => (x * (10000n - BigInt(slipBps))) / 10000n;
@@ -257,10 +273,10 @@ export function Terminal() {
         }
       } catch (e) {
         if (!stale) {
-          const closed = /0xb0171a5d|BadFeed/i.test(String((e as Error)?.message ?? e));
+          const badFeed = /0xb0171a5d|BadFeed/i.test(String((e as Error)?.message ?? e));
           if (dir === "sell")
-            setSellQuote(closed ? "market closed — prices frozen until it reopens" : "quote unavailable");
-          else setBuyQuote(closed ? "market closed — prices frozen until it reopens" : "");
+            setSellQuote(badFeed ? "price feed stale, waiting for a fresh update" : "quote unavailable");
+          else setBuyQuote(badFeed ? "price feed stale, waiting for a fresh update" : "");
         }
       }
     };
@@ -574,6 +590,11 @@ export function Terminal() {
         <p className="label mt-2">
           Fee {feePct}% — funds Broker payroll · priced against Chainlink with an on-chain floor
         </p>
+        {marketClosedNow && (
+          <p className="label mt-1 text-accent">
+            Market closed — quotes reference Friday&rsquo;s closing prices until it reopens
+          </p>
+        )}
         <button
           className="btn btn-accent w-full mt-3"
           onClick={go}

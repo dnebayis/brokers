@@ -329,6 +329,67 @@ def _coat_min_out(ctx, token_id):
         return None
 
 
+def _feed_watchdog(w3) -> None:
+    """Alert when a stock feed misses an update it should have made.
+
+    The on-chain staleness guard was widened to 96h (owner decision, community vote) so
+    weekends trade at Friday's close. That guard used to double as a tripwire for a feed
+    breaking mid-week; this watchdog replaces that lost tripwire off-chain. Thresholds by
+    New York weekday: Sat/Sun are expected-stale (skip), Monday tolerates the weekend
+    backlog (70h), Tue-Fri anything past 30h means a trading day passed with no update.
+    A market-holiday Tuesday can false-alarm once; noise beats a four-day blind spot.
+    """
+    import os
+    from zoneinfo import ZoneInfo
+    booster_addr = os.environ.get("BOOSTER_ADDRESS", "")
+    if not booster_addr:
+        return
+    try:
+        from web3 import Web3
+        ny = datetime.now(ZoneInfo("America/New_York"))
+        wd = ny.weekday()  # Mon=0 .. Sun=6
+        if wd >= 5:
+            return
+        limit_h = 70 if wd == 0 else 30
+        booster = w3.eth.contract(address=Web3.to_checksum_address(booster_addr), abi=[
+            {"type": "function", "name": "knownTokenCount", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
+            {"type": "function", "name": "knownTokens", "stateMutability": "view",
+             "inputs": [{"name": "i", "type": "uint256"}],
+             "outputs": [{"name": "", "type": "address"}]},
+            {"type": "function", "name": "stockFeed", "stateMutability": "view",
+             "inputs": [{"name": "t", "type": "address"}],
+             "outputs": [{"name": "", "type": "address"}]},
+        ])
+        feed_abi = [{"type": "function", "name": "latestRoundData", "stateMutability": "view",
+                     "inputs": [], "outputs": [
+                         {"name": "roundId", "type": "uint80"},
+                         {"name": "answer", "type": "int256"},
+                         {"name": "startedAt", "type": "uint256"},
+                         {"name": "updatedAt", "type": "uint256"},
+                         {"name": "answeredInRound", "type": "uint80"}]}]
+        now = int(datetime.now(timezone.utc).timestamp())
+        laggards = []
+        for i in range(int(booster.functions.knownTokenCount().call())):
+            token = booster.functions.knownTokens(i).call()
+            feed = booster.functions.stockFeed(token).call()
+            if int(feed, 16) == 0:
+                continue
+            updated = int(w3.eth.contract(address=feed, abi=feed_abi)
+                          .functions.latestRoundData().call()[3])
+            age_h = (now - updated) / 3600
+            if age_h > limit_h:
+                laggards.append(f"{token[:10]}… {age_h:.0f}h")
+        if laggards:
+            from ops_alerts import alert
+            message = (f"stock feed watchdog: {len(laggards)} feed(s) past the {limit_h}h "
+                       f"expected-update window on a trading day — " + "; ".join(laggards))
+            print(f"::warning::{message}")
+            alert(f"🩺 {message}")
+    except Exception as exc:  # the watchdog must never break the keeper it watches
+        print(json.dumps({"action": "feed.watchdog", "status": "skipped", "error": str(exc)[:160]}))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Coattail Booster keeper")
     parser.add_argument("--execute", action="store_true", help="send poke when eligible")
@@ -409,6 +470,7 @@ def main() -> None:
             )
         except Exception:  # never let a reporting read break the keeper
             keeper_gas_wei = 0
+    _feed_watchdog(w3)
     status: Dict = {
         "activeShares": shares,
         "boosterBalanceWei": booster_balance,
@@ -760,19 +822,12 @@ def main() -> None:
         # deferrals (which do strand value / block distribution) are fatal under strict.
         message = "keeper stages deferred: " + ", ".join(failed_actions)
         fatal = [a for a in failed_actions if a not in ("buyback.execute", "floor.flush", "playbooks.run")]
-        # Weekend BadFeed (0xb0171a5d) is the market being closed, not a fault: stock
-        # feeds stop updating after Friday's close, the staleness guard trips, and the
-        # poke rightly refuses to buy on stale prices. Funds simply accrue until Monday.
-        # Only on weekdays does a BadFeed deferral signal a real feed problem.
-        # Judge only the actions still considered fatal: buyback.execute is already
-        # non-fatal above (its TWAP guard, e.g. SpotTooFarFromTwap 0x81e45c32, defers
-        # by design and must not veto the weekend exemption for the poke).
-        weekend = datetime.now(timezone.utc).weekday() >= 5
-        if weekend and set(fatal) <= {"booster.poke"} \
-                and all("0xb0171a5d" in str(failed_errors.get(a, "")) for a in fatal):
-            print(f"::warning::{message} — weekend feed staleness (market closed); "
-                  "funds accrue until Monday's first fresh feed")
-            fatal = []
+        # NOTE: there used to be a weekend exemption here that downgraded a BadFeed
+        # (0xb0171a5d) poke deferral to a warning, because the 24h staleness guard
+        # tripped every weekend by design. The guard is 96h now (owner txs, community
+        # vote): weekends are inside the window and trade at Friday's close, so any
+        # BadFeed at any time means a feed genuinely missed its updates (or a market
+        # holiday stretched past four days, which is rare enough to want the alarm).
         if fatal and os.environ.get("KEEPER_STRICT") == "1":
             from ops_alerts import alert
             alert("🔴 keeper FAILED — " + message + " | " +
