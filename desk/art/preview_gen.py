@@ -91,8 +91,9 @@ def monitor(c, x, top, w, screen_h, up=True, screen="#0d1b2e", frame="#2b2f36"):
     ch = "#43d17c" if up else "#e0564f"
     n = w - 4
     for i in range(n):
-        frac = i / max(n - 1, 1)
-        rise = int(frac * (screen_h - 3))
+        # integer math, not float: the Solidity port divides the same way, and parity
+        # between this file and DeskRenderer must be exact to the pixel
+        rise = (i * (screen_h - 3)) // max(n - 1, 1)
         y = (top + screen_h - 1 - rise) if up else (top + 2 + rise)
         if i == n - 1:
             # live tick: the chart's leading pixel pulses like a fresh candle
