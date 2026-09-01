@@ -22,6 +22,24 @@ from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, wei_en
 from health import snapshot_health
 
 
+def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode, now=None):
+    """One JSONL line of the shadow-vs-live series.
+
+    `live` is always the conviction basket and `shadow` the smart one, regardless of
+    which of them was posted; `posted` records that, so the series keeps measuring the
+    same two things before and after a SMART_BASKET=live flip.
+    """
+    now = now or datetime.now(timezone.utc)
+    return json.dumps({
+        "at": now.isoformat(timespec="seconds"),
+        "divergenceBps": divergence,
+        "shadow": [{"ticker": s, "bps": w} for s, w in smart_basket],
+        "live": [{"ticker": s, "bps": w} for s, w in conviction_basket],
+        "posted": "smart" if mode == "live" else "conviction",
+        "vetoed": sorted(vetoed),
+    }, sort_keys=True)
+
+
 def _load_trades(sample: bool):
     if sample:
         path = os.path.join(os.path.dirname(__file__), "sample.json")
@@ -250,6 +268,10 @@ def main():
                   "member name format may have changed upstream; layer is running inert")
         smart_net, vetoed = smart_aggregate(trades)
         smart_basket = to_basket({s: v for s, v in smart_net.items() if s not in vetoed}, buyers)
+        # The conviction basket is the "live" column of the shadow series forever: once
+        # SMART_BASKET=live reassigns `basket` below, the series would otherwise start
+        # comparing the smart basket with itself and the receipts would go blind.
+        conviction_basket = list(basket)
         live_w = dict(basket)
         smart_w = dict(smart_basket)
         divergence = sum(abs(live_w.get(s, 0) - smart_w.get(s, 0)) for s in set(live_w) | set(smart_w)) // 2
@@ -277,13 +299,9 @@ def main():
         if history_path:
             try:
                 with open(history_path, "a") as fh:
-                    fh.write(json.dumps({
-                        "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                        "divergenceBps": divergence,
-                        "shadow": [{"ticker": s, "bps": w} for s, w in smart_basket],
-                        "live": [{"ticker": s, "bps": w} for s, w in basket],
-                        "vetoed": sorted(vetoed),
-                    }, sort_keys=True) + "\n")
+                    fh.write(shadow_history_row(
+                        divergence, smart_basket, conviction_basket, vetoed, SMART_BASKET,
+                    ) + "\n")
                 print(f"  shadow history appended -> {history_path}")
             except OSError as e:
                 print(f"::warning::could not append shadow history: {e}")

@@ -9,7 +9,7 @@
 // is reconstructable from the tx hash it links.
 
 import { NextResponse } from "next/server";
-import { formatEther, formatUnits, parseAbiItem, decodeEventLog } from "viem";
+import { formatEther, formatUnits, parseAbiItem, decodeEventLog, zeroAddress } from "viem";
 import { ADDR } from "@/lib/config";
 import { boosterAbi, aggregatorAbi } from "@/lib/abis";
 import { env, serverClient, kvGet, kvSet } from "@/lib/discordVerify";
@@ -22,7 +22,6 @@ const ORDER_FULFILLED = parseAbiItem(
 const CURSOR_KEY = "sales:lastBlock";
 const MAX_RANGE = 400_000n;   // bounds one sweep; the cron catches up across runs
 const MAX_POSTS = 40;         // hard flood guard (a first-run replay); chunked by 10 per message
-const ZERO = "0x0000000000000000000000000000000000000000";
 const OS_CHAIN = "robinhood"; // OpenSea's chain identifier (matches their asset URLs)
 
 function short(a: string): string {
@@ -86,7 +85,7 @@ async function ethUsd(): Promise<number> {
     const feed = (await serverClient.readContract({
       address: ADDR.booster, abi: boosterAbi, functionName: "ethUsdFeed",
     })) as `0x${string}`;
-    if (!feed || feed === ZERO) return 0;
+    if (!feed || feed === zeroAddress) return 0;
     const [dec, rd] = await Promise.all([
       serverClient.readContract({ address: feed, abi: aggregatorAbi, functionName: "decimals" }),
       serverClient.readContract({ address: feed, abi: aggregatorAbi, functionName: "latestRoundData" }),
@@ -201,7 +200,7 @@ export async function GET(request: Request) {
   const transfers = await serverClient.getLogs({
     address: ADDR.broker, event: TRANSFER, fromBlock: from, toBlock: latest,
   });
-  const moves = transfers.filter((t) => (t.args.from as string).toLowerCase() !== ZERO);
+  const moves = transfers.filter((t) => (t.args.from as string).toLowerCase() !== zeroAddress);
 
   // One receipt fetch per unique sale tx, shared across its transfers.
   const byTx = new Map<string, typeof moves>();

@@ -11,7 +11,7 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 
 ASSETS_URL = "https://api.robinhood.com/rhj/assets"
@@ -20,7 +20,8 @@ TARGET = Path(__file__).with_name("tokens.py")
 
 
 def fetch_mainnet_addresses() -> dict[str, str]:
-    with urlopen(ASSETS_URL, timeout=30) as response:  # noqa: S310 -- fixed official HTTPS endpoint
+    req = Request(ASSETS_URL, headers={"User-Agent": "Mozilla/5.0"})
+    with urlopen(req, timeout=30) as response:  # noqa: S310 -- fixed official HTTPS endpoint
         payload = json.load(response)
 
     assets = payload.get("assets")

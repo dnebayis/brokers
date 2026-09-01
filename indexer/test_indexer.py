@@ -415,3 +415,63 @@ class TrackRecordTests(unittest.TestCase):
         self.assertIsNone(_window_return({"2026-08-20": 100.0, "2026-08-21": 101.0}, "2026-08-20"))
         # no close within 7 days after disclosure -> refuse
         self.assertIsNone(_window_return(closes, "2026-06-01"))
+
+
+class OpsAlertTests(unittest.TestCase):
+    """The alert channel is the only path that reaches a human, so its own behaviour
+    (no-op without a URL, retry once, never raise) has to be pinned down."""
+
+    def test_no_webhook_is_a_silent_noop(self):
+        import ops_alerts
+        with patch.dict("os.environ", {"OPS_WEBHOOK_URL": ""}), \
+                patch("urllib.request.urlopen") as urlopen:
+            self.assertFalse(ops_alerts.alert("hi"))
+            urlopen.assert_not_called()
+
+    def test_sends_with_browser_user_agent_and_truncates(self):
+        import ops_alerts
+        with patch.dict("os.environ", {"OPS_WEBHOOK_URL": "https://discord.test/hook"}), \
+                patch("urllib.request.urlopen") as urlopen:
+            self.assertTrue(ops_alerts.alert("x" * 3000))
+            req = urlopen.call_args[0][0]
+            self.assertEqual(req.get_header("User-agent"), "Mozilla/5.0")
+            self.assertEqual(len(json.loads(req.data)["content"]), 1900)
+
+    def test_transient_failure_is_retried_once_then_reported_not_raised(self):
+        import ops_alerts
+        with patch.dict("os.environ", {"OPS_WEBHOOK_URL": "https://discord.test/hook"}), \
+                patch("urllib.request.urlopen", side_effect=[OSError("429"), Mock()]) as urlopen, \
+                patch("ops_alerts.time.sleep") as sleep:
+            self.assertTrue(ops_alerts.alert("hi"))
+            self.assertEqual(urlopen.call_count, 2)
+            sleep.assert_called_once()
+        with patch.dict("os.environ", {"OPS_WEBHOOK_URL": "https://discord.test/hook"}), \
+                patch("urllib.request.urlopen", side_effect=OSError("down")), \
+                patch("ops_alerts.time.sleep"):
+            self.assertFalse(ops_alerts.alert("hi"))
+
+
+class ShadowHistoryTests(unittest.TestCase):
+    def test_live_column_stays_the_conviction_basket_after_the_flip(self):
+        from run import shadow_history_row
+        smart = [("INTC", 10000)]
+        conviction = [("INTC", 5000), ("SPCX", 5000)]
+        row = json.loads(shadow_history_row(5000, smart, conviction, {"AAPL"}, "live",
+                                            now=datetime(2026, 9, 1, 12, 0, 0)))
+        self.assertEqual(row["live"], [{"ticker": "INTC", "bps": 5000}, {"ticker": "SPCX", "bps": 5000}])
+        self.assertEqual(row["shadow"], [{"ticker": "INTC", "bps": 10000}])
+        self.assertEqual(row["posted"], "smart")
+        self.assertEqual(row["vetoed"], ["AAPL"])
+        shadow_row = json.loads(shadow_history_row(5000, smart, conviction, set(), "shadow"))
+        self.assertEqual(shadow_row["posted"], "conviction")
+
+
+class RetryDelayTests(unittest.TestCase):
+    def test_retry_after_header_wins_over_exponential_backoff(self):
+        from unusual_whales import _retry_delay
+        resp = Mock(headers={"Retry-After": "45"})
+        exc = Exception(); exc.response = resp
+        self.assertEqual(_retry_delay(exc, 0), 45.0)
+        resp.headers = {"Retry-After": "garbage"}
+        self.assertEqual(_retry_delay(exc, 2), 4.0)
+        self.assertEqual(_retry_delay(Exception(), 3), 8.0)

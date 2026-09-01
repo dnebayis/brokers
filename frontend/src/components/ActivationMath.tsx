@@ -10,14 +10,13 @@
 // feeds the contract uses. Cached in localStorage via useStoredQuery so a reload costs
 // zero RPC while fresh.
 
-import { formatUnits, parseAbiItem } from "viem";
+import { formatUnits, parseAbiItem, zeroAddress } from "viem";
 import { ADDR, OPENSEA_URL, PARAMS } from "@/lib/config";
 import { boosterAbi, routerAbi, aggregatorAbi } from "@/lib/abis";
 import { publicClient as client } from "@/lib/client";
 import { loadKnownTokens } from "@/lib/brokerValue";
 import { useStoredQuery } from "@/lib/useStoredQuery";
 
-const ZERO = "0x0000000000000000000000000000000000000000";
 const BOUGHT = parseAbiItem("event Bought(address indexed token, uint256 ethIn, uint256 tokenOut)");
 // ~24h of blocks with slack; the timestamp filter below does the exact cut.
 const LOOKBACK_BLOCKS = 2_200_000n;
@@ -42,7 +41,7 @@ async function loadMath(): Promise<MathData> {
     const feed = (await client.readContract({
       address: ADDR.booster, abi: boosterAbi, functionName: "ethUsdFeed",
     })) as `0x${string}`;
-    if (feed && feed !== ZERO && ADDR.router) {
+    if (feed && feed !== zeroAddress && ADDR.router) {
       const [dec, rd, coatPerEth] = await Promise.all([
         client.readContract({ address: feed, abi: aggregatorAbi, functionName: "decimals" }),
         client.readContract({ address: feed, abi: aggregatorAbi, functionName: "latestRoundData" }),

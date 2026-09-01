@@ -43,15 +43,16 @@ Desk NFT whole with the portfolio inside.
    Broker's existing 6551 wallet (assets follow the NFT, same as salary). Owner can sweep
    only COAT that is not allocated to any round. Also a permanent rail for future COAT
    flows to active Brokers (partner contributions, campaigns).
-2. **DeskNFT** — ERC-721, 500 cap, mint pulls COAT to the bonus pool, deploys the Desk's
+2. **DeskNFT** — ERC-721, settable `mintCap` (pilot 500) under a constant `MAX_DESKS = 2000`
+   ceiling, mint pulls COAT to the bonus pool, deploys the Desk's
    6551 account (canonical registry), renders on-chain SVG via DeskRenderer.
 3. **DeskAccount** — 6551 account implementation for Desks: identical control model to
    BrokerAccount (owner-only execute) plus a standing, revocable authorization for the
    DeskEngine restricted to engine operations (pull USDG up to cap, deliver stocks).
 4. **DeskEngine** — executes buys/rebalances: pulls USDG from a Desk, swaps through the
    allowlisted USDG stock pools with Chainlink `minOut` guards (same guard math as
-   Booster), returns stock to the same Desk, takes the 0.5% fee, splits 50/30/20 and
-   converts the Booster share to native ETH.
+   Booster), returns stock to the same Desk, takes the 0.5% fee, splits it 80% Booster /
+   20% treasury (both settable) and converts the Booster share to native ETH.
 5. **DeskRenderer** — on-chain SVG + metadata (fixed traits; live holdings via
    `display_type: number`).
 
@@ -84,8 +85,8 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
 - The engine can only: pull USDG within the user-set cap, deliver purchased stock back
   to the same Desk, and take the published fee. It can never redirect assets elsewhere.
 - Every price-sensitive swap is guarded by Chainlink-derived `minOut` (Booster's math).
-- Every parameter that could need tuning ships settable (the 36,750 lesson); the 500
-  supply cap and the "no pooled custody" model are the only constants.
+- Every parameter that could need tuning ships settable (the 36,750 lesson); the 2,000
+  hard ceiling and the "no pooled custody" model are the only constants.
 - CoatBonusPool can never touch COAT already allocated to a posted round.
 
 ## Build order

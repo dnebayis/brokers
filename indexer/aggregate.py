@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable, List, Dict, Tuple
 
@@ -50,7 +50,7 @@ def _within_window(date_str: str, cutoff: datetime) -> bool:
 
 def aggregate(trades: List[Dict]) -> Dict[str, float]:
     """Net (or gross) notional per ticker over the trailing window."""
-    cutoff = datetime.utcnow() - timedelta(days=TRAILING_DAYS)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=TRAILING_DAYS)
     net: Dict[str, float] = {}
     for tr in trades:
         if not _within_window(tr.get("transactionDate", ""), cutoff):
@@ -129,7 +129,7 @@ def smart_aggregate(trades: List[Dict], now: datetime | None = None) -> Tuple[Di
     net is still positive, because the only lever this system has is to stop routing
     NEW money at a name Congress is exiting.
     """
-    now = now or datetime.utcnow()
+    now = now or datetime.now(timezone.utc).replace(tzinfo=None)
     cutoff = now - timedelta(days=TRAILING_DAYS)
     net: Dict[str, float] = {}
     gross_buy: Dict[str, float] = {}
@@ -248,7 +248,7 @@ def buyer_counts(trades: List[Dict]) -> Dict[str, int]:
     read than the same dollars from one wallet. Sells are ignored here — a member exiting
     doesn't remove another member's conviction; the dollar `aggregate` already nets those.
     """
-    cutoff = datetime.utcnow() - timedelta(days=TRAILING_DAYS)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=TRAILING_DAYS)
     buyers: Dict[str, set] = {}
     for tr in trades:
         if not _within_window(tr.get("transactionDate", ""), cutoff):

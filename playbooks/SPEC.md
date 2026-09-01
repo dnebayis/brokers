@@ -64,10 +64,6 @@ Rollout, all complete: unit tests (8/8) → testnet end-to-end on-chain (real mi
 36,750 COAT activation, TBA approval via `execute`, sweep + convert + pause verified) →
 "Playbooks" panel in My Brokers → mainnet deploy and keeper stage armed.
 
-Open item for v1.1: the keeper skips `TO_COAT` orders because the hooked pool has no
-Chainlink floor and an unguarded exit is unacceptable; quoted minimum-out computation in the
-keeper closes this. Owners can run those orders themselves in the meantime.
-
 ## v2 backlog (locked reasons, not wishes)
 
 1. **`sweep(token, to)` — the missing rescue path.** v1 has none. Normal operation never

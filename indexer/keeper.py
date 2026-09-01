@@ -150,7 +150,11 @@ def _mc_call(w3, calls, chunk=150):
         payload = [(c[0].address, True, _encode(c[0], c[1], c[2])) for c in part]
         try:
             res = mc.functions.aggregate3(payload).call()
-        except Exception:
+        except Exception as exc:
+            # A rate-limited RPC and unreadable data look identical downstream ("unpriced");
+            # one line per failed chunk keeps the cause visible.
+            print(json.dumps({"action": "multicall", "status": "chunk_failed",
+                              "calls": len(part), "error": str(exc)[:160]}))
             out.extend([None] * len(part))
             continue
         for (contract, fn, _args), (ok, data) in zip(part, res):
@@ -267,7 +271,11 @@ def _pb_context(w3, engine, floor_addr):
             "usdg_dec": int(w3.eth.contract(address=floor.functions.usdg().call(), abi=erc20)
                             .functions.decimals().call()),
         }
-    except Exception:
+    except Exception as exc:
+        # Without this context every playbook order is "unpriced" for the whole pass, so
+        # the reason must not be silent.
+        print(json.dumps({"action": "playbooks.context", "status": "unavailable",
+                          "error": str(exc)[:160]}))
         return None
 
 
@@ -535,6 +543,9 @@ def main() -> None:
                 raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
                 try:
                     tx_hash = w3.eth.send_raw_transaction(raw)
+                    # Logged before the receipt wait: a cancelled run or a timed-out
+                    # receipt must not leave a gas-spending transaction unrecorded.
+                    print(json.dumps({"action": label, "status": "sent", "tx": tx_hash.hex()}))
                     break
                 except Exception as exc:
                     if "nonce" in str(exc).lower() and send_try < 3:
@@ -764,16 +775,16 @@ def main() -> None:
                     continue
                 if mode != 0:
                     worth = worth_by_id.get(token_id)
-                    threshold = int(min_usdg_env * 10 ** (pb_ctx["usdg_dec"] if pb_ctx else 6))
+                    min_usdg_raw = int(min_usdg_env * 10 ** (pb_ctx["usdg_dec"] if pb_ctx else 6))
                     if worth is None:
                         print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
                                           "status": "unpriced",
                                           "note": "holdings could not be valued; retrying next run"}))
                         continue
-                    if worth < threshold:
+                    if worth < min_usdg_raw:
                         print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
                                           "status": "waiting", "worthRaw": worth,
-                                          "minRaw": threshold}))
+                                          "minRaw": min_usdg_raw}))
                         continue
                 if mode == 3:
                     # TO_COAT crosses the hooked pool, which has no Chainlink floor of its

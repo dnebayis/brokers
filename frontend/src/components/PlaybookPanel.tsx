@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAccount, useWriteContract } from "wagmi";
-import { encodeFunctionData, isAddress, type Address } from "viem";
+import { encodeFunctionData, isAddress, zeroAddress, type Address } from "viem";
 import { activeChain } from "@/lib/chains";
 import { ADDR } from "@/lib/config";
 import { boosterAbi, brokerAccountAbi } from "@/lib/abis";
@@ -173,7 +173,7 @@ export function PlaybookPanel({
   }, [needsApproval, stocks, brokers, reloadKey]);
 
   const dest = (): Address => {
-    if (destKind === "broker" && plan === "usdg") return "0x0000000000000000000000000000000000000000";
+    if (destKind === "broker" && plan === "usdg") return zeroAddress;
     if (destKind === "broker") return address!; // sweeping to itself is a no-op — use the owner
     if (destKind === "me") return address!;
     return customDest as Address;

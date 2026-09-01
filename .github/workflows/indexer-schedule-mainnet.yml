@@ -24,8 +24,14 @@ on:
     - cron: "37 */3 * * *"
     - cron: "57 */3 * * *"
 
+# Scheduled runs loop for five hours; a dispatched run (the earlier-signal poll, or an
+# operator) is a single pass that must start NOW, not queue behind that loop and then be
+# cancelled by the next cron slot (GitHub keeps one pending run per group). So the two
+# event kinds get their own groups. Two runs may then overlap for a few minutes, which is
+# safe: run.py re-reads the on-chain basket right before signing and posting an
+# unchanged basket is a no-op, so the worst case is one redundant read.
 concurrency:
-  group: mainnet-indexer
+  group: mainnet-indexer-${{ github.event_name }}
   cancel-in-progress: false
 
 jobs:
@@ -63,14 +69,17 @@ jobs:
       # Optional Discord channel webhook for operator alerts (health FAIL, preflight
       # drops, UW page-cap truncation). Unset -> alerts are silent no-ops.
       OPS_WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL }}
-      # Shadow-vs-live divergence series, appended every run and persisted across runs
-      # via the actions cache below — the SMART_BASKET=live decision reads this file.
-      SHADOW_HISTORY_FILE: shadow-history.mainnet.jsonl
+      # Shadow-vs-live divergence series, appended every scheduled pass and persisted
+      # across runs via the actions cache below — the SMART_BASKET=live decision reads
+      # this file. Dispatched single-pass runs do not touch it: two runs restoring and
+      # re-saving the same cache would overwrite each other's appends.
+      SHADOW_HISTORY_FILE: ${{ github.event_name == 'schedule' && 'shadow-history.mainnet.jsonl' || '' }}
     steps:
       - uses: actions/checkout@v4
       # Restore the newest previous shadow history (unique key per run + prefix restore:
       # the post-job save always succeeds, and the next run picks up the latest).
       - uses: actions/cache@v4
+        if: github.event_name == 'schedule'
         with:
           path: indexer/shadow-history.mainnet.jsonl
           key: shadow-history-mainnet-${{ github.run_id }}
@@ -82,21 +91,23 @@ jobs:
           cache: pip
           cache-dependency-path: indexer/requirements.txt
       - run: pip install -r requirements.txt
-      - name: Rebuild and post the basket (three hourly passes)
+      - name: Rebuild and post the basket (hourly passes; a dispatch is one pass)
         # Posting an unchanged basket is already a no-op on chain, so extra passes cost
         # reads, not gas. Only the last pass sets the exit status; the artifacts uploaded
         # below are that last pass's output, and the shadow history appends every pass.
         run: |
           set -uo pipefail
+          passes=5
+          [ "${{ github.event_name }}" = "schedule" ] || passes=1
           fail=0
-          for i in 1 2 3 4 5; do
+          for i in $(seq 1 "$passes"); do
             if [ "$i" -gt 1 ]; then sleep 3600; fi
-            echo "::group::indexer pass ${i}/5"
+            echo "::group::indexer pass ${i}/${passes}"
             if python run.py --post --out latest-basket.json; then
               fail=0
             else
               fail=1
-              echo "::warning::indexer pass ${i}/5 failed; the next pass retries"
+              echo "::warning::indexer pass ${i}/${passes} failed; the next pass retries"
             fi
             echo "::endgroup::"
           done
@@ -107,7 +118,7 @@ jobs:
           name: latest-indexer-basket-mainnet
           path: indexer/latest-basket.json
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.event_name == 'schedule'
         with:
           name: shadow-history-mainnet
           path: indexer/shadow-history.mainnet.jsonl

@@ -3,11 +3,10 @@
 import time
 from typing import List, Dict
 
-import requests
-
 from config import (
     FMP_API_KEY, FMP_BASE, SENATE_ENDPOINT, HOUSE_ENDPOINT, PAGE_LIMIT, MAX_PAGES,
 )
+from unusual_whales import _get_with_retry
 
 
 def _fetch_pages(endpoint: str) -> List[Dict]:
@@ -17,8 +16,9 @@ def _fetch_pages(endpoint: str) -> List[Dict]:
     for page in range(MAX_PAGES):
         url = f"{FMP_BASE}/{endpoint}"
         params = {"page": page, "limit": PAGE_LIMIT, "apikey": FMP_API_KEY}
-        resp = requests.get(url, params=params, timeout=30)
-        resp.raise_for_status()
+        # Same retry/backoff as the primary source: a stray 5xx or 429 on one page must
+        # not abort the whole fallback path.
+        resp = _get_with_retry(url, {"User-Agent": "Mozilla/5.0"}, params)
         batch = resp.json()
         if not isinstance(batch, list) or not batch:
             break

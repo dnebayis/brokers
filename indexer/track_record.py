@@ -27,9 +27,10 @@ import json
 import math
 import os
 import time
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 UW_BASE = "https://api.unusualwhales.com"
@@ -51,6 +52,13 @@ def _get(url: str, headers: dict | None = None, tries: int = 4):
             req = urllib.request.Request(url, headers=headers or {"User-Agent": "coattail-backtest/1.0"})
             with urllib.request.urlopen(req, timeout=60) as r:
                 return r.read()
+        except urllib.error.HTTPError as exc:
+            # A bad key or param is an answer, not a blip: retrying it just burns minutes.
+            if 400 <= exc.code < 500 and exc.code != 429:
+                raise
+            if attempt == tries - 1:
+                raise
+            time.sleep(3 * (attempt + 1))
         except Exception:
             if attempt == tries - 1:
                 raise
@@ -62,7 +70,7 @@ def fetch(out_path: Path) -> None:
     if not key:
         raise RuntimeError("UNUSUAL_WHALES_API_KEY not set")
     headers = {"Authorization": f"Bearer {key}", "Accept": "application/json"}
-    newer = (datetime.utcnow() - timedelta(days=HISTORY_DAYS)).date().isoformat()
+    newer = (datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=HISTORY_DAYS)).date().isoformat()
     rows, page = [], 1
     while page <= 200:
         url = (f"{UW_BASE}/api/politician-portfolios/recent_trades"
@@ -174,7 +182,7 @@ def score(raw_path: Path, out_path: Path) -> None:
     print(f"{len(rows)} rows, {len(buys)} buys")
 
     d1 = min(r["disclosureDate"] for r in buys)
-    d2 = datetime.utcnow().date().isoformat()
+    d2 = datetime.now(timezone.utc).replace(tzinfo=None).date().isoformat()
     cache_path = raw_path.with_name("price-cache.json")
     cache: dict = {}
     if cache_path.exists():
@@ -242,7 +250,7 @@ def score(raw_path: Path, out_path: Path) -> None:
                        "shrunkPct": round(pct, 2), "multiplier": round(mult, 3)}
 
     out = {
-        "generatedAt": datetime.utcnow().isoformat(),
+        "generatedAt": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
         "horizonDays": HORIZON_DAYS, "historyDays": HISTORY_DAYS,
         "minTrades": MIN_TRADES, "shrinkK": SHRINK_K,
         "coeff": TRACK_COEFF, "clamp": [TRACK_MIN, TRACK_MAX],

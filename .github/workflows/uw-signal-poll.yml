@@ -45,6 +45,7 @@ jobs:
     env:
       UW_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
       GH_TOKEN: ${{ github.token }}
+      LOOKBACK_MINUTES: ${{ github.event.inputs.lookback_minutes || '20' }}
     steps:
       - name: Check for fresh politician-trade triggers
         # A manual dispatch polls once with the operator's lookback. A scheduled run polls
@@ -58,13 +59,19 @@ jobs:
           fail=0
           for i in $(seq 1 "$passes"); do
             if [ "$i" -gt 1 ]; then sleep 900; fi
-            minutes="${{ github.event.inputs.lookback_minutes || '20' }}"
-            since=$(date -u -d "${minutes} minutes ago" +%Y-%m-%dT%H:%M:%SZ)
-            body=$(curl -sS -H "Authorization: Bearer ${UW_KEY}" -H "Accept: application/json" \
+            since=$(date -u -d "${LOOKBACK_MINUTES} minutes ago" +%Y-%m-%dT%H:%M:%SZ)
+            # Bounded and retried: a hung connection must not stall the five-hour loop,
+            # and an empty body is a transport failure, not "zero triggers".
+            body=$(curl -sS --max-time 30 --retry 3 --retry-all-errors --retry-delay 5 \
+              -H "Authorization: Bearer ${UW_KEY}" -H "Accept: application/json" \
               "https://api.unusualwhales.com/api/alerts?noti_types[]=politician_trades&newer_than=${since}&limit=500") || body=""
-            count=$(echo "$body" | jq 'if type=="array" then length
-                                       elif (.data|type?)=="array" then (.data|length)
-                                       else 0 end' 2>/dev/null || echo "err")
+            if [ -z "$body" ]; then
+              count="err"
+            else
+              count=$(echo "$body" | jq 'if type=="array" then length
+                                         elif (.data|type?)=="array" then (.data|length)
+                                         else 0 end' 2>/dev/null || echo "err")
+            fi
             if [ "$count" = "err" ]; then
               fail=1
               echo "::warning::pass ${i}/${passes}: alerts API unreadable; next pass retries"

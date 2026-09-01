@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatUnits } from "viem";
+import { formatUnits, zeroAddress } from "viem";
 import { ADDR, OPENSEA_URL } from "@/lib/config";
 import { brokerAbi, coatAbi, boosterAbi, routerAbi, aggregatorAbi, erc20Abi } from "@/lib/abis";
 import { publicClient as client } from "@/lib/client";
 
-const DEXSCREENER = "https://dexscreener.com/robinhood/0x2d503dda028be83d2e133e5e73a8839f1f202d9f6447e3d863e33ad2c8ebc3d2";
+const DEXSCREENER = `https://dexscreener.com/robinhood/${ADDR.poolId}`;
 const INITIAL_COAT_SUPPLY = 1_000_000_000; // 1B, fixed at launch
-const ZERO = "0x0000000000000000000000000000000000000000";
 
 type Metrics = {
   minted?: number;
@@ -56,7 +55,7 @@ export function HomeMetrics() {
       let ethUsd = 0;
       try {
         const feed = (await client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "ethUsdFeed" })) as `0x${string}`;
-        if (feed && feed !== ZERO) {
+        if (feed && feed !== zeroAddress) {
           const [dec, rd] = await Promise.all([
             client.readContract({ address: feed, abi: aggregatorAbi, functionName: "decimals" }),
             client.readContract({ address: feed, abi: aggregatorAbi, functionName: "latestRoundData" }),
@@ -98,7 +97,7 @@ export function HomeMetrics() {
               client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "stockFeed", args: [token] }),
               client.readContract({ address: token, abi: erc20Abi, functionName: "decimals" }),
             ]);
-            if (!feed || (feed as string) === ZERO) continue;
+            if (!feed || (feed as string) === zeroAddress) continue;
             const [fdec, rd] = await Promise.all([
               client.readContract({ address: feed as `0x${string}`, abi: aggregatorAbi, functionName: "decimals" }),
               client.readContract({ address: feed as `0x${string}`, abi: aggregatorAbi, functionName: "latestRoundData" }),

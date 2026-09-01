@@ -7,12 +7,11 @@
 // so total = pending + inWallet is the hard floor under the NFT: what you'd hold even if
 // the collectible were worth nothing. All reads; nothing here sends a transaction.
 
-import { formatUnits, parseAbiItem, type Address } from "viem";
+import { formatUnits, parseAbiItem, zeroAddress, type Address } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { boosterAbi, brokerAbi, aggregatorAbi, erc20Abi } from "./abis";
 import { publicClient as client } from "./client";
 
-const ZERO = "0x0000000000000000000000000000000000000000";
 
 export type TokenMeta = { token: Address; decimals: number; priceUsd: number };
 
@@ -40,7 +39,7 @@ export async function loadKnownTokens(known?: Address[]): Promise<TokenMeta[]> {
           client.readContract({ address: token, abi: erc20Abi, functionName: "decimals" }),
           client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "stockFeed", args: [token] }),
         ]);
-        if (!feed || (feed as string) === ZERO) return null;
+        if (!feed || (feed as string) === zeroAddress) return null;
         const [fdec, rd] = await Promise.all([
           client.readContract({ address: feed as Address, abi: aggregatorAbi, functionName: "decimals" }),
           client.readContract({ address: feed as Address, abi: aggregatorAbi, functionName: "latestRoundData" }),

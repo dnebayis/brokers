@@ -36,6 +36,19 @@ RETRY_STATUSES = {429, 500, 502, 503, 504}
 FETCH_ATTEMPTS = int(os.environ.get("UW_FETCH_ATTEMPTS", "4"))
 
 
+def _retry_delay(exc: Exception, attempt: int) -> float:
+    """Retry-After when the server says so (a 429 window is ~60s, far past 1-2-4s),
+    otherwise exponential backoff."""
+    response = getattr(exc, "response", None)
+    header = getattr(response, "headers", {}).get("Retry-After") if response is not None else None
+    if header:
+        try:
+            return min(max(float(header), 1.0), 120.0)
+        except (TypeError, ValueError):
+            pass
+    return float(2 ** attempt)
+
+
 def _get_with_retry(url: str, headers: Dict, params: Dict) -> requests.Response:
     last_error: Exception | None = None
     attempts = max(FETCH_ATTEMPTS, 1)
@@ -57,7 +70,7 @@ def _get_with_retry(url: str, headers: Dict, params: Dict) -> requests.Response:
                 raise
             last_error = exc
             if attempt < attempts - 1:
-                time.sleep(2 ** attempt)
+                time.sleep(_retry_delay(exc, attempt))
     raise RuntimeError(f"Unusual Whales unavailable after {attempts} attempts: {last_error}")
 
 

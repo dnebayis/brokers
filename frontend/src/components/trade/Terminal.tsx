@@ -92,10 +92,10 @@ export function Terminal() {
   // Weekend disclosure: the guard windows are wide enough to trade straight through
   // the weekend, but the reference price is Friday's close. Judged on the market's own
   // clock (New York) and set after mount so server and client can never disagree.
-  const [marketClosedNow, setMarketClosedNow] = useState(false);
+  const [weekendSession, setWeekendSession] = useState(false);
   useEffect(() => {
     const check = () =>
-      setMarketClosedNow(
+      setWeekendSession(
         ["Sat", "Sun"].includes(
           new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" })
             .format(new Date()),
@@ -590,9 +590,9 @@ export function Terminal() {
         <p className="label mt-2">
           Fee {feePct}% — funds Broker payroll · priced against Chainlink with an on-chain floor
         </p>
-        {marketClosedNow && (
+        {weekendSession && (
           <p className="label mt-1 text-accent">
-            Market closed — quotes reference Friday&rsquo;s closing prices until it reopens
+            Weekend session — trading is open; quotes reference Friday&rsquo;s closing prices
           </p>
         )}
         <button
