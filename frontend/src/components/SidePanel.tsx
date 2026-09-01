@@ -7,6 +7,7 @@ import { brokerAbi, boosterAbi, coatAbi, routerAbi } from "@/lib/abis";
 import { activeChain } from "@/lib/chains";
 import { fmt } from "@/lib/format";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
+import { CoatAddress, SocialLinks } from "@/components/ui/SocialLinks";
 
 export function SidePanel() {
   const { address } = useAccount();
@@ -73,6 +74,14 @@ export function SidePanel() {
           <li>Burn 36,750 $COAT per Broker to activate</li>
           <li>Claim earned stocks into its wallet</li>
         </ol>
+      </div>
+
+      <div className="card !p-4">
+        <div className="font-pixel text-[11px] text-ink-strong mb-3">Links</div>
+        <SocialLinks variant="labels" />
+        <div className="mt-3">
+          <CoatAddress compact />
+        </div>
       </div>
     </aside>
   );

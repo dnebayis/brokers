@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { BrokerMark } from "./ui/BrokerMark";
 import { ThemeToggle } from "./ui/ThemeToggle";
+import { SocialLinks } from "./ui/SocialLinks";
 import { short } from "@/lib/format";
 import { wagmiConfig } from "@/lib/wagmi";
 
@@ -76,6 +77,9 @@ export function Header() {
           </div>
         </div>
         <div className="flex items-center gap-2.5">
+          <div className="hidden sm:block">
+            <SocialLinks />
+          </div>
           <ThemeToggle />
           <button className="btn btn-ghost shadow-pixel-sm" disabled={busy}
             onClick={() => isConnected ? disconnect() : setOpen(true)}>

@@ -12,6 +12,7 @@ import { FeedTab } from "@/components/tabs/FeedTab";
 import { LeadersTab } from "@/components/tabs/LeadersTab";
 import { RoadmapTab } from "@/components/tabs/RoadmapTab";
 import { DocsTab } from "@/components/tabs/DocsTab";
+import { CoatAddress, SocialLinks } from "@/components/ui/SocialLinks";
 
 export default function Page() {
   const [tab, setTab] = useState<TabId>("home");
@@ -54,9 +55,15 @@ export default function Page() {
         )}
       </main>
       <footer className="border-t-2 border-ink">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-ink-soft flex flex-wrap justify-between gap-2">
-          <span>Coattail Brokers · fully on-chain on Robinhood Chain</span>
-          <span>Not financial or legal advice · participation involves risk</span>
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 grid gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <SocialLinks variant="labels" />
+            <CoatAddress />
+          </div>
+          <div className="text-xs text-ink-soft flex flex-wrap justify-between gap-2">
+            <span>Coattail Brokers · fully on-chain on Robinhood Chain</span>
+            <span>Not financial or legal advice · participation involves risk</span>
+          </div>
         </div>
       </footer>
     </div>

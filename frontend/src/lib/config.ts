@@ -37,6 +37,15 @@ export const BROKER_DEPLOYMENT_BLOCK = ACTIVE_NETWORK === "testnet" ? 0x60cdc73n
 // market, so every "get a Broker" call to action points here.
 export const OPENSEA_URL = "https://opensea.io/collection/coattailbrokers";
 
+// Every public door in one place: the same links render in the header, the side panel
+// and the footer, so a URL change is one edit.
+export const LINKS = {
+  opensea: OPENSEA_URL,
+  coatOnOpenSea: `https://opensea.io/token/robinhood/${ADDR.coat.toLowerCase()}?timeframe=seven_days`,
+  x: "https://x.com/Brokersart",
+  discord: "https://discord.gg/kTjj2V9r2D",
+} as const;
+
 export const PARAMS = {
   activationBurn: 36_750,
   maxSupply: 1776,

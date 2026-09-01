@@ -18,9 +18,56 @@ The simulation is read-only and costs no gas.
 from __future__ import annotations
 
 import os
+import re
 import time
 
 BPS = 10_000
+
+# A leg is only "dropped" on a genuine revert. Anything that looks like the RPC rather than
+# the pool (rate limit, timeout, connection reset, a node without state) is retried, and if
+# it persists the whole pre-flight is declared unavailable so the caller keeps the previous
+# epoch instead of posting a basket with legs silently missing. Without this a 429 burst
+# once read as "no route can fill", collapsed coverage, and skipped the post as a clean
+# no-op with nothing to show for it.
+PROBE_ATTEMPTS = int(os.environ.get("ROUTE_PREFLIGHT_ATTEMPTS", "3"))
+_TRANSPORT_RE = re.compile(
+    r"429|too many requests|rate limit|timed? ?out|timeout|connection|reset by peer|"
+    r"502|503|504|bad gateway|service unavailable|metadata is not found|"
+    r"remote end closed|max retries|name or service not known",
+    re.IGNORECASE,
+)
+
+
+class RouteProbeUnavailable(RuntimeError):
+    """The pre-flight could not reach a verdict: the RPC, not the route, failed."""
+
+
+def is_transport_error(exc: BaseException) -> bool:
+    try:
+        from web3.exceptions import ContractLogicError
+        if isinstance(exc, ContractLogicError):
+            return False
+    except ImportError:  # pragma: no cover - web3 always present in CI
+        pass
+    try:
+        import requests
+        if isinstance(exc, requests.exceptions.RequestException):
+            return True
+    except ImportError:  # pragma: no cover
+        pass
+    if isinstance(exc, (TimeoutError, ConnectionError, OSError)):
+        return True
+    return bool(_TRANSPORT_RE.search(str(exc)))
+
+
+def is_revert(exc: BaseException) -> bool:
+    try:
+        from web3.exceptions import ContractLogicError
+        if isinstance(exc, ContractLogicError):
+            return True
+    except ImportError:  # pragma: no cover
+        pass
+    return "revert" in str(exc).lower()
 
 ROUTER_ABI = [
     {"type": "function", "name": "swapExactETHForStock", "stateMutability": "payable",
@@ -70,15 +117,30 @@ def simulate_leg(w3, router_address, booster_address, stock, wei) -> tuple[bool,
     router = w3.eth.contract(address=router_address, abi=ROUTER_ABI)
     deadline = int(time.time()) + 600
     overrides = {booster_address: {"balance": hex(wei + 10**18)}}
-    try:
-        out = router.functions.swapExactETHForStock(stock, 0, booster_address, deadline).call(
-            {"from": booster_address, "value": wei}, "latest", overrides
-        )
-        if int(out) <= 0:
-            return False, 0, "route returned zero stock"
-        return True, int(out), ""
-    except Exception as exc:  # a revert here is the signal, not an error
-        return False, 0, str(exc)[:200]
+    attempts = max(PROBE_ATTEMPTS, 1)
+    last: BaseException | None = None
+    for attempt in range(attempts):
+        try:
+            out = router.functions.swapExactETHForStock(stock, 0, booster_address, deadline).call(
+                {"from": booster_address, "value": wei}, "latest", overrides
+            )
+            if int(out) <= 0:
+                return False, 0, "route returned zero stock"
+            return True, int(out), ""
+        except Exception as exc:
+            if is_revert(exc) and not is_transport_error(exc):
+                # The revert is the signal: this route cannot fill at this block.
+                return False, 0, str(exc)[:200]
+            if not is_transport_error(exc):
+                # Unknown failure class: refuse to guess. Dropping a leg on a mystery
+                # would be the silent failure this module exists to prevent.
+                raise RouteProbeUnavailable(f"{stock}: unclassified probe failure: {str(exc)[:200]}")
+            last = exc
+            if attempt < attempts - 1:
+                time.sleep(2 ** attempt)
+    raise RouteProbeUnavailable(
+        f"{stock}: RPC unavailable after {attempts} attempts: {str(last)[:200]}"
+    )
 
 
 def preflight_basket(w3, basket, booster_address, buffer_wei, router_address=None):
@@ -87,6 +149,7 @@ def preflight_basket(w3, basket, booster_address, buffer_wei, router_address=Non
     `basket` is the [(ticker, bps)] list from `aggregate.to_basket`, `address_of` maps a
     ticker to its token. Returns (live_basket, dropped) where `dropped` is
     [(ticker, bps, reason)] — an empty `dropped` means the basket is executable as built.
+    Raises RouteProbeUnavailable when the RPC, not a route, is what failed.
     """
     from tokens import address_of
 

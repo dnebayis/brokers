@@ -16,7 +16,9 @@ from datetime import datetime, timezone
 from aggregate import (
     aggregate, buyer_counts, conviction_multiplier, to_basket, coverage, smart_aggregate,
 )
-from route_preflight import preflight_basket, preflight_enabled, resolve_booster_context
+from route_preflight import (
+    RouteProbeUnavailable, preflight_basket, preflight_enabled, resolve_booster_context,
+)
 from tokens import address_of
 from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, wei_env
 from health import snapshot_health
@@ -318,9 +320,25 @@ def main():
         w3 = make_web3()
         router_address, poke_threshold = resolve_booster_context(w3, BOOSTER_ADDRESS)
         buffer_wei = wei_env("ROUTE_PREFLIGHT_BUFFER_WEI", str(poke_threshold))
-        basket, dropped = preflight_basket(
-            w3, basket, BOOSTER_ADDRESS, buffer_wei, router_address=router_address
-        )
+        try:
+            basket, dropped = preflight_basket(
+                w3, basket, BOOSTER_ADDRESS, buffer_wei, router_address=router_address
+            )
+        except RouteProbeUnavailable as exc:
+            # The RPC failed, not a route. Posting now would mean either dropping legs
+            # we never actually tested or trusting a basket the poke may revert on, so
+            # the honest move is the same as low coverage: keep the previous epoch and
+            # let the next pass retry. Loud, because this is exactly the class of
+            # failure that used to look like a clean no-op.
+            message = f"route pre-flight unavailable, previous epoch remains active: {exc}"
+            print(f"::warning::{message}")
+            from ops_alerts import alert
+            alert(f"⚠️ indexer: {message}")
+            if args.out:
+                json.dump({"generatedAt": datetime.now(timezone.utc).isoformat(),
+                           "skipped": "route pre-flight unavailable", "reason": str(exc)},
+                          open(args.out, "w"), indent=2)
+            return
         print(f"\nRoute pre-flight at {buffer_wei / 1e18:.4f} ETH buffer via {router_address}: "
               f"{len(basket)} executable, {len(dropped)} dropped")
         for ticker, bps, reason in dropped:

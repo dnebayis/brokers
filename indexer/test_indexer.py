@@ -475,3 +475,53 @@ class RetryDelayTests(unittest.TestCase):
         resp.headers = {"Retry-After": "garbage"}
         self.assertEqual(_retry_delay(exc, 2), 4.0)
         self.assertEqual(_retry_delay(Exception(), 3), 8.0)
+
+
+class RouteProbeClassificationTests(unittest.TestCase):
+    """A revert drops the leg; an RPC fault must never masquerade as one."""
+
+    def _w3(self, side_effect):
+        w3 = Mock()
+        call = Mock(side_effect=side_effect)
+        fn = Mock(return_value=Mock(call=call))
+        w3.eth.contract.return_value = Mock(functions=Mock(swapExactETHForStock=fn))
+        return w3, call
+
+    ADDR = "0x" + "11" * 20
+
+    @patch("route_preflight.time.sleep", lambda *_: None)
+    def test_a_revert_drops_the_leg(self):
+        from web3.exceptions import ContractLogicError
+        from route_preflight import simulate_leg
+        w3, call = self._w3(ContractLogicError("execution reverted: STF"))
+        ok, out, reason = simulate_leg(w3, self.ADDR, self.ADDR, self.ADDR, 10**15)
+        self.assertFalse(ok)
+        self.assertIn("reverted", reason)
+        self.assertEqual(call.call_count, 1)
+
+    @patch("route_preflight.time.sleep", lambda *_: None)
+    def test_a_transient_rpc_fault_is_retried_then_succeeds(self):
+        import requests
+        from route_preflight import simulate_leg
+        w3, call = self._w3([requests.exceptions.ConnectionError("reset by peer"),
+                             ValueError("429 Too Many Requests"), 5])
+        ok, out, _ = simulate_leg(w3, self.ADDR, self.ADDR, self.ADDR, 10**15)
+        self.assertTrue(ok)
+        self.assertEqual(out, 5)
+        self.assertEqual(call.call_count, 3)
+
+    @patch("route_preflight.time.sleep", lambda *_: None)
+    def test_a_persistent_rpc_fault_raises_instead_of_dropping(self):
+        from route_preflight import RouteProbeUnavailable, preflight_basket, simulate_leg
+        w3, _ = self._w3(TimeoutError("read timed out"))
+        with self.assertRaises(RouteProbeUnavailable):
+            simulate_leg(w3, self.ADDR, self.ADDR, self.ADDR, 10**15)
+        with patch("tokens.address_of", return_value=self.ADDR), \
+                self.assertRaises(RouteProbeUnavailable):
+            preflight_basket(w3, [("INTC", 10000)], self.ADDR, 10**16, router_address=self.ADDR)
+
+    def test_an_unknown_failure_is_not_a_drop(self):
+        from route_preflight import RouteProbeUnavailable, simulate_leg
+        w3, _ = self._w3(KeyError("weird"))
+        with self.assertRaises(RouteProbeUnavailable):
+            simulate_leg(w3, self.ADDR, self.ADDR, self.ADDR, 10**15)

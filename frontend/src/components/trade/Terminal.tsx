@@ -196,27 +196,27 @@ export function Terminal() {
     if (offline || !livePreset) return;
     let stale = false;
 
-    const refresh = async () => {
+    const refresh = async (): Promise<boolean> => {
       try {
         if (dir === "sell") {
-          if (!address) return;
+          if (!address) return true;
           const { held, floorNet } = await readSellFloor();
-          if (stale) return;
+          if (stale) return true;
           setHoldings(held);
           if (floorNet === 0n) {
             setSellQuote("nothing to sell yet");
-            return;
+            return true;
           }
           const est = (floorNet * 10000n) / 9500n; // re-inflate the guard haircut for display
           const usd = Number(est) / 10 ** FLOOR.usdgDecimals;
           if (cur === "usdg") {
             setSellQuote(`≈ ${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDG`);
-            return;
+            return true;
           }
           const p8 = await readEthUsd8();
           if (p8 === 0n) {
             setSellQuote(`≈ $${usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}`);
-            return;
+            return true;
           }
           const ethWei = usdgToEthWei((est * (10000n - (feeBps ?? 30n))) / 10000n, p8);
           if (cur === "eth") {
@@ -224,7 +224,7 @@ export function Terminal() {
               setSellQuote(
                 `≈ ${(Number(ethWei) / 1e18).toLocaleString("en-US", { maximumFractionDigits: 5 })} ETH`,
               );
-            return;
+            return true;
           }
           const coatOut = (await client.readContract({
             address: FLOOR.coatRouter as `0x${string}`,
@@ -240,7 +240,7 @@ export function Terminal() {
           // buy side: what the payment is worth in basket terms, fee off
           if (amountWei === undefined) {
             setBuyQuote("");
-            return;
+            return true;
           }
           let usdgVal: bigint;
           if (cur === "usdg") {
@@ -249,7 +249,7 @@ export function Terminal() {
             const p8 = await readEthUsd8();
             if (p8 === 0n) {
               setBuyQuote("");
-              return;
+              return true;
             }
             const ethWei =
               cur === "eth"
@@ -278,15 +278,28 @@ export function Terminal() {
             setSellQuote(badFeed ? "price feed stale, waiting for a fresh update" : "quote unavailable");
           else setBuyQuote(badFeed ? "price feed stale, waiting for a fresh update" : "");
         }
+        return false;
       }
+      return true;
     };
 
-    const t = setTimeout(refresh, 150);
-    const iv = setInterval(refresh, 10_000);
+    // Polling backs off while the feed keeps failing (10s -> 30s -> 60s) and snaps back
+    // to 10s on the first good quote, so a degraded RPC is not hammered every 10 seconds
+    // for as long as the tab stays open.
+    let failures = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = async () => {
+      const ok = await refresh();
+      failures = ok ? 0 : failures + 1;
+      if (stale) return;
+      const delay = failures === 0 ? 10_000 : failures === 1 ? 30_000 : 60_000;
+      timer = setTimeout(tick, delay);
+    };
+    const t = setTimeout(tick, 150);
     return () => {
       stale = true;
       clearTimeout(t);
-      clearInterval(iv);
+      if (timer) clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dir, cur, amount, address, offline, livePreset, feeBps, sellPct]);
