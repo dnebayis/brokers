@@ -13,6 +13,7 @@ import { client, waitForSuccessfulReceipt } from "@/lib/client";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
 import { PlaybookPanel } from "@/components/PlaybookPanel";
 import { useBrokerBacking } from "@/lib/useBrokerBacking";
+import { useBrokerCoat } from "@/lib/useBrokerCoat";
 import { loadKnownTokens, usd } from "@/lib/brokerValue";
 import { fmt, short } from "@/lib/format";
 import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
@@ -86,6 +87,8 @@ export function ActivateTab() {
   // (people send stock/tips straight to a Broker). accountOf is a pure view and
   // the address never changes, so one fetch per owned id is enough.
   const [walletsById, setWalletsById] = useState<Record<string, string>>({});
+  const [coatReload, setCoatReload] = useState(0);
+  const brokerCoat = useBrokerCoat(walletsById, coatReload);
   useEffect(() => {
     let stale = false;
     const missing = brokers.filter((b) => !walletsById[b.id.toString()]);
@@ -563,6 +566,26 @@ export function ActivateTab() {
       check(info.id.toString());
     });
 
+  // COAT inside a Broker wallet is spendable only from the owner's wallet (activation
+  // burns from msg.sender), so it gets its own one-signature exit.
+  const withdrawCoat = () =>
+    claimTx.run(async () => {
+      if (!info) throw new Error("Check a Broker first.");
+      if (!address || !isOwner) throw new Error("You don't own this Broker.");
+      const bal = (await client.readContract({ address: ADDR.coat, abi: coatAbi, functionName: "balanceOf", args: [info.wallet] })) as bigint;
+      if (bal <= 0n) throw new Error("No $COAT in this Broker's wallet.");
+      claimTx.setStatus(`Moving ${fmt(bal, 18, 0)} $COAT from Broker #${info.id} to your wallet…`);
+      const transferCall = encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [address, bal] });
+      const h = await writeContractAsync({
+        address: info.wallet, abi: brokerAccountAbi, functionName: "execute",
+        args: [ADDR.coat, 0n, transferCall, 0], chainId: activeChain.id,
+      });
+      await waitForSuccessfulReceipt(h);
+      claimTx.setStatus(`${fmt(bal, 18, 0)} $COAT is in your wallet.`, "ok");
+      setCoatReload((n) => n + 1);
+      refetch();
+    });
+
   const selectedHolding = holdings.find((holding) => holding.token === selectedStock);
 
   const transferStock = () =>
@@ -610,6 +633,9 @@ export function ActivateTab() {
                 {backing.totalEarnedUsd !== null && backing.totalEarnedUsd > 0 && (
                   <> · earned <b className="text-good">{usd(backing.totalEarnedUsd)}</b> since switch-on</>
                 )}.
+                {brokerCoat.total > 0n && (
+                  <> · <b className="text-accent">{fmt(brokerCoat.total, 18, 0)} $COAT</b> sitting inside your Brokers</>
+                )}
                 {" "}Tap a Broker to open it.
               </>
             : "Every active Broker holds real stock in its own wallet."}
@@ -629,7 +655,7 @@ export function ActivateTab() {
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
             {brokers.map((b) => (
-              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} wallet={walletsById[b.id.toString()]} />
+              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} wallet={walletsById[b.id.toString()]} coatInside={brokerCoat.byId[b.id.toString()]} />
             ))}
           </div>
         )}
@@ -756,6 +782,20 @@ export function ActivateTab() {
             </div>
           ) : (
             <p className="text-ink-soft text-sm">No claimed stock in this wallet yet.</p>
+          )}
+          {(brokerCoat.byId[info.id.toString()] ?? 0n) > 0n && (
+            <div className="mt-3 border-t border-line pt-3">
+              <div className="flex items-center gap-3">
+                <span className="badge border-accent text-accent">$COAT</span>
+                <span className="font-pixel text-sm">{fmt(brokerCoat.byId[info.id.toString()], 18, 0)}</span>
+                <span className="text-[11px] text-ink-soft">inside this Broker · moves with the NFT</span>
+              </div>
+              {isOwner && (
+                <button className="btn btn-ghost w-full mt-2" onClick={withdrawCoat} disabled={claimTx.busy}>
+                  {claimTx.busy ? "WORKING…" : "Withdraw $COAT to my wallet"}
+                </button>
+              )}
+            </div>
           )}
           {pending.length > 0 && (
             <div className="mt-4 border-t border-line pt-3">

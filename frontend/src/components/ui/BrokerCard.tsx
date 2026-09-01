@@ -19,6 +19,7 @@ export function BrokerCard({
   backingUsd,
   earnedUsd,
   wallet,
+  coatInside,
 }: {
   id: bigint;
   active: boolean | null;
@@ -28,6 +29,8 @@ export function BrokerCard({
   earnedUsd?: number;
   /** The Broker's own on-chain (ERC-6551) wallet address, for one-tap copying. */
   wallet?: string;
+  /** $COAT held inside that wallet (18 decimals); shown only when non-zero. */
+  coatInside?: bigint;
 }) {
   const [copied, setCopied] = useState(false);
   const money = (n: number) =>
@@ -73,6 +76,11 @@ export function BrokerCard({
           </div>
           <div className="text-[11px] text-ink-soft mt-1 truncate">
             {backingUsd !== undefined ? <>Holds {money(backingUsd)} of stock</> : "On-chain artwork"}
+            {coatInside !== undefined && coatInside > 0n && (
+              <span className="ml-2 font-pixel text-[9px] text-accent border border-accent px-1 py-0.5 align-middle">
+                +{Math.floor(Number(coatInside) / 1e18).toLocaleString("en-US")} $COAT inside
+              </span>
+            )}
           </div>
         </div>
         <div className="text-right shrink-0">

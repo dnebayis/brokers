@@ -525,3 +525,36 @@ class RouteProbeClassificationTests(unittest.TestCase):
         w3, _ = self._w3(KeyError("weird"))
         with self.assertRaises(RouteProbeUnavailable):
             simulate_leg(w3, self.ADDR, self.ADDR, self.ADDR, 10**15)
+
+
+class CoatBonusAllocationTests(unittest.TestCase):
+    """Active Brokers get double shares into their own wallets; inactive ones get a single
+    share into the owner's wallet; every wei is assigned."""
+
+    def test_two_to_one_weighting_and_destinations(self):
+        from coat_bonus_snapshot import allocate
+        entries = [
+            (1, True, "0xOwnerA", "0xWallet1"),
+            (2, False, "0xOwnerA", "0xWallet2"),
+            (3, False, "0xOwnerB", "0xWallet3"),
+        ]
+        rows, per_share = allocate(entries, 4_000, active_weight=2, inactive_weight=1)
+        self.assertEqual(per_share, 1_000)
+        self.assertEqual(rows["0xWallet1"], 2_000)   # active -> its 6551 wallet, 2 shares
+        self.assertEqual(rows["0xOwnerA"], 1_000)    # inactive -> owner wallet, 1 share
+        self.assertEqual(rows["0xOwnerB"], 1_000)
+        self.assertNotIn("0xWallet2", rows)
+        self.assertEqual(sum(rows.values()), 4_000)
+
+    def test_remainder_goes_to_first_recipient_and_sum_is_exact(self):
+        from coat_bonus_snapshot import allocate
+        entries = [(1, True, "0xA", "0xW1"), (2, False, "0xB", "0xW2")]
+        rows, per_share = allocate(entries, 1_000, 2, 1)
+        self.assertEqual(per_share, 333)
+        self.assertEqual(sum(rows.values()), 1_000)
+        self.assertEqual(rows["0xW1"], 666 + 1)
+
+    def test_zero_inactive_weight_excludes_inactive(self):
+        from coat_bonus_snapshot import allocate
+        rows, _ = allocate([(1, True, "0xA", "0xW1"), (2, False, "0xB", "0xW2")], 100, 1, 0)
+        self.assertEqual(rows, {"0xW1": 100})
