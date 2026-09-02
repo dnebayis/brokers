@@ -46,6 +46,21 @@ export const LINKS = {
   discord: "https://discord.gg/kTjj2V9r2D",
 } as const;
 
+// $COAT paid out to Broker holders from the treasury, one entry per tranche. Each drop is
+// a plain ERC-20 transfer per Broker wallet, so it is not visible through any contract
+// getter; the receipts file in the repo carries every tx hash. Valued at today's $COAT
+// price on the site, the same way stock is valued at today's feeds.
+export const COAT_DROPS: { label: string; block: number; coat: number; recipients: number; receipts: string }[] = [
+  {
+    label: "tranche 1 · active Brokers",
+    block: 52561613,
+    coat: 14_000_000,
+    recipients: 1175,
+    receipts: "https://github.com/dnebayis/brokers/blob/main/indexer/reports/coat-bonus-t1.sent.csv",
+  },
+];
+export const COAT_DROPPED_TOTAL = COAT_DROPS.reduce((a, d) => a + d.coat, 0);
+
 export const PARAMS = {
   activationBurn: 36_750,
   maxSupply: 1776,

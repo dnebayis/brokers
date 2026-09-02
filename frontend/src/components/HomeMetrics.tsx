@@ -1,7 +1,7 @@
 "use client";
 
 import { formatUnits, zeroAddress } from "viem";
-import { ADDR, LINKS, OPENSEA_URL } from "@/lib/config";
+import { ADDR, COAT_DROPPED_TOTAL, COAT_DROPS, LINKS, OPENSEA_URL } from "@/lib/config";
 import { brokerAbi, coatAbi, boosterAbi, routerAbi, aggregatorAbi, erc20Abi } from "@/lib/abis";
 import { publicClient as client } from "@/lib/client";
 import { useStoredQuery } from "@/lib/useStoredQuery";
@@ -145,11 +145,18 @@ export function HomeMetrics() {
   const loading = m === undefined;
   const unreachable = !loading && (m.unreachable || isError);
 
-  const stats: { k: string; v: string }[] = [
+  // Everything paid to holders so far: the stock the engine bought for them, plus the
+  // $COAT the treasury dropped into Broker wallets, both valued at today's prices.
+  const coatDroppedUsd = m?.priceUsd !== undefined ? COAT_DROPPED_TOTAL * m.priceUsd : undefined;
+  const paidUsd =
+    m?.earnedUsd !== undefined && coatDroppedUsd !== undefined ? m.earnedUsd + coatDroppedUsd : undefined;
+  const stats: { k: string; v: string; sub?: string }[] = [
     { k: "Brokers", v: m?.minted !== undefined ? `${m.minted.toLocaleString("en-US")} / 1,776` : "—" },
     { k: "Active & earning", v: m?.active !== undefined ? m.active.toLocaleString("en-US") : "—" },
     { k: "$COAT burned", v: m?.burned !== undefined ? `${compact(m.burned)}${m.burnedPct ? ` · ${m.burnedPct.toFixed(1)}%` : ""}` : "—" },
+    { k: "Paid to holders", v: usd(paidUsd), sub: "stock + $COAT drops" },
     { k: "Stock distributed", v: usd(m?.earnedUsd) },
+    { k: "$COAT dropped", v: usd(coatDroppedUsd), sub: `${compact(COAT_DROPPED_TOTAL)} COAT · ${COAT_DROPS.length} tranche${COAT_DROPS.length === 1 ? "" : "s"}` },
     { k: "$COAT price", v: usd(m?.priceUsd) },
     { k: "Fully-diluted value", v: usd(m?.fdvUsd) },
   ];
@@ -164,7 +171,7 @@ export function HomeMetrics() {
           <a href={DEXSCREENER} target="_blank" rel="noopener noreferrer" className="btn btn-ghost text-[12px] px-3 py-1.5">DexScreener ↗</a>
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3" aria-busy={loading}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" aria-busy={loading}>
         {stats.map((s) => (
           <div key={s.k} className="stat">
             <div className="text-[11px] text-ink-soft uppercase tracking-widest">{s.k}</div>
@@ -173,13 +180,28 @@ export function HomeMetrics() {
             ) : (
               <div className="font-pixel text-base text-ink-strong mt-1 break-words">{s.v}</div>
             )}
+            {s.sub && !loading && <div className="text-[11px] text-ink-soft mt-0.5">{s.sub}</div>}
           </div>
         ))}
       </div>
+      {COAT_DROPS.length > 0 && (
+        <p className="text-ink-soft text-[11px] mt-2">
+          $COAT drops so far:{" "}
+          {COAT_DROPS.map((d, i) => (
+            <span key={d.block}>
+              {i > 0 && " · "}
+              <a href={d.receipts} target="_blank" rel="noopener noreferrer" className="underline hover:text-ink-strong">
+                {d.label}
+              </a>{" "}
+              ({compact(d.coat)} COAT to {d.recipients.toLocaleString("en-US")} wallets, block {d.block.toLocaleString("en-US")})
+            </span>
+          ))}
+        </p>
+      )}
       <p className="text-ink-soft text-[11px] mt-3" role="status" aria-live="polite">
         {unreachable
           ? "Chain metrics are temporarily unavailable — the RPC is not answering. Nothing on-chain is affected; this panel retries on its own."
-          : "Live from the chain · $COAT burned is removed from supply permanently · stock value uses on-chain feeds."}
+          : "Live from the chain · $COAT burned is removed from supply permanently · stock and $COAT are valued at today's on-chain prices."}
       </p>
     </section>
   );
