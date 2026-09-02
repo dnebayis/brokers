@@ -3,7 +3,7 @@
 
 For a sample of token ids (all rares + a spread + any ids passed on the command line):
   1. what the COLLECTION serves (`CoattailBroker.tokenURI`) must equal `v2.tokenURI` byte for byte
-  2. the image inside must equal the image v1 would serve (same pixels, same encoding)
+  2. the image inside must equal the image v1 serves (same base64 SVG, compared JSON to JSON)
   3. the seven fixed traits must equal v1's, in order
   4. no live holding may appear as a quoted string; every live holding must be a
      `display_type: number` attribute with a JSON number of at most 4 decimals
@@ -59,11 +59,9 @@ def main():
             if served != v2:
                 print(f"#{tid}: collection tokenURI != v2.tokenURI"); bad += 1; continue
         j = token_json(v2)
-        v1_svg = call(V1, "renderSVG(uint256)(string)", tid).strip('"')
-        v1_img = "data:image/svg+xml;base64," + base64.b64encode(v1_svg.encode()).decode()
-        if j["image"] != v1_img:
-            print(f"#{tid}: image differs from v1"); bad += 1
         v1_json = token_json(call(V1, "tokenURI(uint256)(string)", tid).strip('"'))
+        if j["image"] != v1_json["image"]:
+            print(f"#{tid}: image differs from v1"); bad += 1
         fixed_v1 = [(a["trait_type"], a["value"]) for a in v1_json["attributes"] if a["trait_type"] in FIXED]
         fixed_v2 = [(a["trait_type"], a["value"]) for a in j["attributes"] if a["trait_type"] in FIXED]
         if fixed_v1 != fixed_v2:
