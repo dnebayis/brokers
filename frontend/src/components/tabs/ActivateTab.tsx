@@ -130,7 +130,7 @@ export function ActivateTab() {
         : info.active
           ? "Already active — it's earning."
           : coatBalBig !== undefined && burnBig !== undefined && coatBalBig < burnBig
-            ? `Not enough $COAT — need ${burnLabel}. Buy some in Swap.`
+            ? `Not enough $COAT — need ${burnLabel}. Buy some on the Floor tab.`
             : "";
   const canActivate = !!info && isOwner && !info.active && !activateReason;
 

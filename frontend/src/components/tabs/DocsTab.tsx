@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RoutingNotice } from "@/components/trade/RoutingNotice";
 import { ADDR, CONTRACTS_FOR_DOCS } from "@/lib/config";
 import { activeChain } from "@/lib/chains";
 import { publicClient as client } from "@/lib/client";
@@ -182,6 +183,9 @@ export function DocsTab() {
       <p className="text-ink-soft text-sm mt-1">
         v4 pool id: <Code>{ADDR.poolId.slice(0, 10)}…{ADDR.poolId.slice(-6)}</Code> · fee 1% · single-sided 1B $COAT.
       </p>
+      <div className="mt-3">
+        <RoutingNotice compact />
+      </div>
 
       <H>Open Broker API</H>
       <P>
