@@ -558,3 +558,41 @@ class CoatBonusAllocationTests(unittest.TestCase):
         from coat_bonus_snapshot import allocate
         rows, _ = allocate([(1, True, "0xA", "0xW1"), (2, False, "0xB", "0xW2")], 100, 1, 0)
         self.assertEqual(rows, {"0xW1": 100})
+
+
+class PlaybookWorthTests(unittest.TestCase):
+    """The run threshold counts wallet stock AND what the Booster still owes (claimable);
+    an unpriceable leg still poisons the whole valuation."""
+
+    def _ctx(self):
+        stock = Mock(); stock.address = "0x" + "aa" * 20
+        return {"w3": Mock(), "brokers": Mock(), "floor": Mock(), "booster": Mock(), "stocks": [stock]}
+
+    def test_claimable_counts_toward_worth(self):
+        from keeper import _holdings_floor_usdg_many
+        tba = "0x" + "bb" * 20
+        calls = []
+        def mc(w3, reqs, chunk=150):
+            calls.append([r[1] for r in reqs])
+            fn = reqs[0][1] if reqs else None
+            if fn == "accountOf": return [tba]
+            if fn == "balanceOf": return [10**18]                       # 1 share in the wallet
+            if fn == "claimable": return [(["0x" + "aa" * 20], [2 * 10**18])]  # 2 shares owed
+            if fn == "minUsdgOut": return [3_000_000] * len(reqs)          # $3 per leg
+            return [None] * len(reqs)
+        with patch("keeper._mc_call", side_effect=mc):
+            worth = _holdings_floor_usdg_many(self._ctx(), [7])
+        self.assertEqual(worth, {7: 6_000_000})  # wallet leg + claimable leg
+        self.assertIn(["claimable"], calls)
+
+    def test_an_unpriceable_leg_poisons_the_valuation(self):
+        from keeper import _holdings_floor_usdg_many
+        def mc(w3, reqs, chunk=150):
+            fn = reqs[0][1] if reqs else None
+            if fn == "accountOf": return ["0x" + "bb" * 20]
+            if fn == "balanceOf": return [10**18]
+            if fn == "claimable": return [([], [])]
+            if fn == "minUsdgOut": return [None]
+            return [None] * len(reqs)
+        with patch("keeper._mc_call", side_effect=mc):
+            self.assertEqual(_holdings_floor_usdg_many(self._ctx(), [7]), {7: None})

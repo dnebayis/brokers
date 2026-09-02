@@ -74,6 +74,10 @@ export function PlaybookPanel({
   const [allowed, setAllowed] = useState<Record<string, boolean>>({}); // `${tba}|${stock}`
   const [worth, setWorth] = useState<Record<string, number>>({}); // tokenId -> USD in its wallet
   const [reloadKey, setReloadKey] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setReloadKey((k) => k + 1), 60_000);
+    return () => clearInterval(iv);
+  }, []);
 
   // Both plans move stock out of the Broker wallet, so both need its one-time allowance.
   const needsApproval = true;
@@ -128,14 +132,30 @@ export function PlaybookPanel({
             args: [walletsById[b.id.toString()]!] as const,
           })),
         );
-        const bals = await client.multicall({ allowFailure: true, contracts: balCalls });
+        // Earnings the engine owes but has not moved yet (claimable) count too: a playbook's
+        // first step is the claim, so what the owner sees should tick up the moment the
+        // engine buys, not an hour later when the stock lands in the wallet.
+        const [bals, claims] = await Promise.all([
+          client.multicall({ allowFailure: true, contracts: balCalls }),
+          client.multicall({
+            allowFailure: true,
+            contracts: owners.map((b) => ({
+              address: ADDR.booster, abi: boosterAbi, functionName: "claimable" as const, args: [b.id] as const,
+            })),
+          }),
+        ]);
         const legs: { key: string; token: Address; bal: bigint }[] = [];
-        owners.forEach((b, bi) =>
+        owners.forEach((b, bi) => {
           toks.forEach((t, ti) => {
             const bal = bals[bi * toks.length + ti]?.result as bigint | undefined;
             if (bal && bal > 0n) legs.push({ key: b.id.toString(), token: t, bal });
-          }),
-        );
+          });
+          const c = claims[bi]?.result as readonly [readonly Address[], readonly bigint[]] | undefined;
+          c?.[0].forEach((t, i) => {
+            const amt = c[1][i];
+            if (amt > 0n) legs.push({ key: b.id.toString(), token: t, bal: amt });
+          });
+        });
         const floors = legs.length
           ? await client.multicall({
               allowFailure: true,
@@ -401,10 +421,10 @@ export function PlaybookPanel({
                   <span className="block text-[11px] text-ink-soft tabular-nums">
                     {live
                       ? w >= RUN_AT
-                        ? `$${w.toFixed(2)} in its wallet, runs on the next keeper pass`
-                        : `$${w.toFixed(2)} of $${RUN_AT} in its wallet, the engine moves it once it gets there`
+                        ? `$${w.toFixed(2)} earned, runs on the next hourly pass`
+                        : `$${w.toFixed(2)} of $${RUN_AT} earned, the engine moves it once it gets there`
                           + (daysLeft !== null ? ` (about ${daysLeft} day${daysLeft === 1 ? "" : "s"} at today's rate)` : "")
-                      : `$${w.toFixed(2)} of stock in its wallet`}
+                      : `$${w.toFixed(2)} earned and waiting in its wallet`}
                   </span>
                 )}
                 {live && w !== undefined && w < RUN_AT && (

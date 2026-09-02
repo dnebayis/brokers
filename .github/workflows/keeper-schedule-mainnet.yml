@@ -72,6 +72,10 @@ jobs:
       # claimed by the weekly ClaimSweeper pass or by the holder in one click, same as a
       # Broker with no playbook. Earnings accrue in the Booster until claimed either way.
       PLAYBOOKS_MIN_USDG: "5"
+      # Every enrolled Broker is valued on every pass (reads only, four multicalls), so an
+      # order runs on the first hourly pass after it clears the threshold instead of
+      # waiting for a 200-wide window to rotate around to it.
+      PLAYBOOKS_MAX_SCAN: "2000"
       # Optional Discord channel webhook for operator alerts (low relay gas, fatal
       # stage deferrals). Unset -> alerts are silent no-ops.
       OPS_WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL }}

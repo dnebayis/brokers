@@ -170,7 +170,13 @@ def _mc_call(w3, calls, chunk=150):
 
 
 def _holdings_floor_usdg_many(ctx, token_ids):
-    """Chainlink-floored USDG value for many Brokers at once. Returns {token_id: value|None}."""
+    """Chainlink-floored USDG value for many Brokers at once. Returns {token_id: value|None}.
+
+    Counts what is already in the Broker wallet AND what the Booster still owes it
+    (claimable): a playbook's first step is the claim, so the order can move both, and
+    gating on the wallet alone made an order wait for the weekly sweep to land the stock
+    before its earnings even counted toward the threshold.
+    """
     if ctx is None or not token_ids:
         return {}
     w3 = ctx["w3"]
@@ -192,6 +198,14 @@ def _holdings_floor_usdg_many(ctx, token_ids):
         if bal:
             quote_calls.append((ctx["floor"], "minUsdgOut", (stock.address, int(bal))))
             quote_meta.append(tid)
+    owed = _mc_call(w3, [(ctx["booster"], "claimable", (tid,)) for tid in token_ids])
+    for tid, row in zip(token_ids, owed):
+        if row is None:
+            continue
+        for stock_addr, amt in zip(row[0], row[1]):
+            if int(amt) > 0:
+                quote_calls.append((ctx["floor"], "minUsdgOut", (Web3.to_checksum_address(stock_addr), int(amt))))
+                quote_meta.append(tid)
     quotes = _mc_call(w3, quote_calls)
     worth = {tid: (0 if tba else None) for tid, tba in zip(token_ids, tbas)}
     for tid, q in zip(quote_meta, quotes):
