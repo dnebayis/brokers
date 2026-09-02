@@ -75,7 +75,7 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
         Delivered. The engine&rsquo;s rails are no longer holders-only: <b>The Floor</b> lets anyone
         buy or exit the live Congress basket in one transaction, paying with $COAT, ETH or USDG —
         Chainlink-guarded, non-custodial, settled in your wallet in the same block. Every trade
-        pays a 0.3% fee and 80% of it streams straight into Broker payroll: strangers trading the
+        pays a 0.3% fee and all of it streams straight into Broker payroll: strangers trading the
         basket now feed the 1,776.
       </>
     ),

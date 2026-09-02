@@ -88,10 +88,10 @@ export function DocsTab() {
         The engine is <b>$COAT trading volume</b>, not NFT royalties. The <Code>CoatFeeHook</Code> — a live
         Uniswap v4 <Code>afterSwap</Code> hook — skims 1% of every swap: <b>sells</b> (COAT→ETH) take the fee
         in ETH → <Code>FeeSplitter</Code> → the flywheel; <b>buys</b> (ETH→COAT) take it in COAT and burn it, reducing <Code>totalSupply</Code>. The
-        FeeSplitter routes ETH <b>80 / 10 / 10</b>: 80% to the Booster (buys stock for holders), 10% to the
-        project treasury (infra/audit/dev — not the creator), 10% to a settable buyback sink. By holder vote
-        (executed on-chain, Aug 2026) that buyback slice currently points at the Booster too — an effective{" "}
-        <b>90% stock / 10% treasury</b> flow, reversible by the same setter.
+        FeeSplitter&rsquo;s ratios are fixed at <b>80 / 10 / 10</b>, but each slice&rsquo;s destination is a
+        settable sink. Both the buyback slice (by holder vote) and the project treasury slice (by owner
+        decision) now point at the Booster, so <b>100% of every $COAT trade fee buys stock for holders</b>.
+        Reversible by the same setter; the change is visible on the FeeSplitter contract.
       </P>
       <P>
         Contracts do not run themselves. An independent hourly keeper advances hook flush, splitter flush,
@@ -108,7 +108,7 @@ export function DocsTab() {
         fill below the floor. It is non-custodial: everything settles into your wallet within the
         same transaction, and the contract only ever holds accrued fees. The fee is 0.3%
         (owner-lowerable, hard-capped at 1%); a keeper converts it to native ETH and streams{" "}
-        <b>80% into the Booster payroll</b>, 20% to the treasury. Paying with — or exiting into —
+        <b>100% into the Booster payroll</b> (the treasury share was set to zero). Paying with — or exiting into —
         $COAT routes through the hooked pool, so those trades feed the flywheel twice.
       </P>
 
@@ -123,7 +123,7 @@ export function DocsTab() {
             ["Primary mint cap", "2 per address; secondary ownership unrestricted"],
             ["Mint price", "0.001 ETH → creator"],
             ["Secondary royalty", "2.5% → current creator (ERC-2981)"],
-            ["Fee split", "80/10/10 constants; buyback slice voted to the Booster — effective 90% stock / 10% project"],
+            ["Fee split", "80/10/10 constants; buyback and treasury sinks both point at the Booster — effective 100% stock"],
           ].map(([k, v]) => (
             <tr key={k}>
               <td className="border border-line px-2.5 py-2 font-medium w-40">{k}</td>

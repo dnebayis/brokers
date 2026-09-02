@@ -1,5 +1,11 @@
 # Coattail Brokers — Fee-Split & Flywheel Model (v1)
 
+> **Live routing note (owner ops, reversible):** the 80/10/10 ratios below are constants, but every slice's
+> destination is a settable sink. As of the FeeSplitter `setSinks` and Floor `setSplit` transactions
+> (blocks 52,952,305 and 52,952,360), all three FeeSplitter sinks and 100% of the Floor fee point at the
+> Booster: every fee the protocol takes buys stock for holders. The scenario tables below keep the
+> original split for the record.
+
 Purpose: pressure-test the **80 / 10 / 10** split (Booster / project treasury / buyback) against realistic volume, and decide whether the numbers hold. All figures illustrative; **assumption: ETH = $3,000**. Written pre-launch and kept as the reasoning record — §5 documents the two fee sources added after launch, and the buyback slice was later re-pointed to the Booster by holder vote (effective 90/10).
 
 ---

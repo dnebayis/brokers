@@ -9,14 +9,14 @@ Coattail Brokers is a 1,776-piece ERC-721 collection on Robinhood Chain. Every N
 - `0.001 ETH` mint, closed by default, primary cap 2.
 - Unique pseudo-random IDs drawn without replacement from `1..1776`; no sequential-ID assumption.
 - Fixed 1B COAT supply, no team/reserve allocation, native ETH/COAT Uniswap v4 single-sided launch.
-- 1% LP + 1% hook fee; buy-side COAT burns, sell-side ETH splits 80/10/10.
+- 1% LP + 1% hook fee; buy-side COAT burns, sell-side ETH splits 80/10/10 by constant, with all three sinks currently pointed at the Booster (100% to payroll).
 - Permanent ownerless LP locker and informational 4.2 ETH paired-principal graduation.
 - Hourly stock keeper, six-hour Congress refresh and a fixed five-stock V1 route-ready universe.
 - Owner-only claim plus permissionless non-redirectable `claimFor`/five-ID `claimBatch`.
 
 ## Products on top of the engine
 
-- **The Floor** (`exchange-floor/`) — one-transaction entry and exit for the live Congress basket, paying in $COAT, ETH or USDG. Chainlink-guarded per leg, non-custodial, 0.3% fee of which 80% is converted to native ETH and streamed into Broker payroll.
+- **The Floor** (`exchange-floor/`) — one-transaction entry and exit for the live Congress basket, paying in $COAT, ETH or USDG. Chainlink-guarded per leg, non-custodial, 0.3% fee of which 100% (treasury share set to 0) is converted to native ETH and streamed into Broker payroll.
 - **Playbooks** (`playbooks/`) — per-Broker standing orders the hourly keeper executes: auto-claim the salary, sweep it, or convert it to USDG/$COAT and deliver it anywhere. Owner-installed, revocable, and self-invalidating on transfer. No fee of its own; conversions ride The Floor.
 
 ## Repository

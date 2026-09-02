@@ -24,8 +24,8 @@ const FACTS: { k: string; v: string; sub: string; href: string }[] = [
   },
   {
     k: "Fee split",
-    v: "80 / 10 / 10",
-    sub: "Every $COAT trade fee is split on-chain: stock buys, treasury, buyback.",
+    v: "100% payroll",
+    sub: "Every $COAT trade fee now buys stock for holders: all three FeeSplitter sinks point at the Booster.",
     href: explorerAddress(ADDR.feeSplitter),
   },
   {

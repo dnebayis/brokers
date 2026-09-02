@@ -15,6 +15,7 @@ pre-launch remaining-work list; the historical deploy-day sequence is preserved 
 | $COAT burned | ~138.7M, 13.9% of supply, permanently removed |
 | Stock universe | 7 route-ready names wired into the Booster; expandable by owner op, no redeploy |
 | Weekend trading | OPEN since 2026-08-31 (community vote): both staleness windows widened 24h → 96h by owner txs, so weekends trade at Friday's close; an off-chain keeper watchdog replaces the tripwire the wide window loosened |
+| Fee routing | 100% of hook fees and 100% of Floor fees now reach the Booster: FeeSplitter's treasury and buyback sinks both point at the Booster (owner ops, reversible), Floor split set to 100/0 |
 | Verification | every contract source-verified on `https://robinhoodchain.blockscout.com` |
 
 Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
@@ -26,8 +27,8 @@ Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
   share of every engine purchase. Claims land in the Broker's own ERC-6551 wallet.
 - **The Floor** (`exchange-floor/`, `BasketRouter`) — public terminal: buy or exit the whole
   live basket in one transaction, paying in $COAT, ETH or USDG. Chainlink floor on every
-  leg, non-custodial, 0.3% fee (hard cap 1%), 80% of it converted to native ETH and streamed
-  into Broker payroll by the hourly keeper.
+  leg, non-custodial, 0.3% fee (hard cap 1%), all of it converted to native ETH and streamed
+  into Broker payroll by the hourly keeper (treasury share set to 0 by owner op).
 - **Playbooks** (`playbooks/`, `PlaybookEngine`) — per-Broker standing orders the keeper
   executes. Claiming is already automatic for every Broker, so a playbook decides what happens
   *after* the claim: send the stocks to an address, or convert them to USDG through The Floor

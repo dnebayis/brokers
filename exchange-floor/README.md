@@ -18,7 +18,7 @@ settles into the caller's wallet inside the same transaction.
 - Every stock leg is priced against Chainlink (via the Booster's feeds) with a hard
   on-chain minimum: pools cannot quote a fill below the floor.
 - Fee: 30bps (hard cap 100bps). `flushFees` converts accrued USDG to native ETH and
-  streams 80% into the Booster payroll, 20% to treasury. Run hourly by the keeper.
+  streams 100% into the Booster payroll (treasury share set to 0 by owner op). Run hourly by the keeper.
 
 ## Layout
 

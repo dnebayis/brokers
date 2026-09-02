@@ -48,7 +48,7 @@ export function SidePanel() {
         <Row k="Minted" v={`${minted} / ${max}`} />
         <div className="h-2 bg-cream-3 border border-ink my-2"><span className="block h-full bg-ink" style={{ width: `${pct}%` }} /></div>
         <Row k="Active Brokers" v={active.toString()} />
-        <Row k="Fee split" v="80 / 10 / 10" />
+        <Row k="Fee to payroll" v="100%" />
         {routerReady && coatPerEth !== undefined && (
           <Row k="$COAT / ETH" v={fmt(coatPerEth as bigint, 18, 0)} />
         )}
