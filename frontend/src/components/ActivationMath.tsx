@@ -103,6 +103,18 @@ function usd(n: number | null | undefined, digits = 2): string {
   return "$" + n.toLocaleString("en-US", { maximumFractionDigits: digits, minimumFractionDigits: n < 100 ? 2 : 0 });
 }
 
+/** The same cached query the home panel uses; any tab can read today's per-Broker rate. */
+export function useActivationMath() {
+  return useStoredQuery<MathData>({
+    storageKey: "coattail.activationmath.v1",
+    queryKey: ["activation-math"],
+    queryFn: loadMath,
+    staleTime: 10 * 60_000,
+    refetchInterval: 15 * 60_000,
+    persistIf: (d) => d.dist24hUsd > 0,
+  });
+}
+
 export function ActivationMath({ onNavigate }: { onNavigate: (tab: "activate") => void }) {
   const { data } = useStoredQuery<MathData>({
     storageKey: "coattail.activationmath.v1",

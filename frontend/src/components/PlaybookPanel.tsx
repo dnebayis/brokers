@@ -12,6 +12,7 @@ import { client, waitForSuccessfulReceipt } from "@/lib/client";
 import { useTx } from "@/lib/useTx";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
+import { useActivationMath } from "@/components/ActivationMath";
 
 // Human plans, not contract enums. Claiming is NOT offered as a plan of its own: a
 // playbook claims as its first step anyway, the app has a permissionless one-click claim,
@@ -77,32 +78,41 @@ export function PlaybookPanel({
   // Both plans move stock out of the Broker wallet, so both need its one-time allowance.
   const needsApproval = true;
 
-  // Installed playbooks + the Booster's stock list (the set conversions must be approved for).
+  // Effects key on the ids, not the array identity: the parent re-renders often (polling,
+  // status lines) and a restarted effect used to mark the previous one stale before its
+  // valuation loop finished, so the dollar line under a playbook never appeared.
+  const brokersKey = brokers.map((b) => `${b.id}:${b.active}`).join(",");
+  const walletsKey = brokers.map((b) => walletsById[b.id.toString()] ?? "").join(",");
+  const rate = useActivationMath().data?.perActiveUsd ?? null;
+  const [loadError, setLoadError] = useState(false);
+
+  // Installed playbooks, the Booster's stock list and what each Broker wallet is worth —
+  // four multicalls in total, however many Brokers and stocks there are.
   useEffect(() => {
     if (!playbooksReady || brokers.length === 0) return;
     let stale = false;
     (async () => {
       try {
+        const pbCalls = brokers.flatMap((b) => [
+          { address: engine, abi: playbookEngineAbi, functionName: "playbookOf" as const, args: [b.id] as const },
+          { address: engine, abi: playbookEngineAbi, functionName: "setterOf" as const, args: [b.id] as const },
+        ]);
         const [pbs, count] = await Promise.all([
-          Promise.all(
-            brokers.map((b) =>
-              Promise.all([
-                client.readContract({ address: engine, abi: playbookEngineAbi, functionName: "playbookOf", args: [b.id] }),
-                client.readContract({ address: engine, abi: playbookEngineAbi, functionName: "setterOf", args: [b.id] }),
-              ]),
-            ),
-          ),
+          client.multicall({ allowFailure: true, contracts: pbCalls }),
           client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokenCount" }),
         ]);
-        const toks = (await Promise.all(
-          Array.from({ length: Number(count) }, (_, i) =>
-            client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokens", args: [BigInt(i)] }),
-          ),
-        )) as Address[];
+        const toks = (await client.multicall({
+          allowFailure: false,
+          contracts: Array.from({ length: Number(count) }, (_, i) => ({
+            address: ADDR.booster, abi: boosterAbi, functionName: "knownTokens" as const, args: [BigInt(i)] as const,
+          })),
+        })) as Address[];
         if (stale) return;
         const map: Record<string, Installed> = {};
         brokers.forEach((b, i) => {
-          const [pb, setter] = pbs[i] as [readonly [boolean, number, Address, boolean], Address];
+          const pb = pbs[i * 2]?.result as readonly [boolean, number, Address, boolean] | undefined;
+          const setter = pbs[i * 2 + 1]?.result as Address | undefined;
+          if (!pb || !setter) return;
           map[b.id.toString()] = { autoClaim: pb[0], mode: Number(pb[1]), dest: pb[2], paused: pb[3], setter };
         });
         setInstalled(map);
@@ -111,38 +121,49 @@ export function PlaybookPanel({
         // What each Broker's wallet is worth, valued exactly the way the keeper values it
         // (the Floor's Chainlink floor). An order waits until this clears the threshold, so
         // showing it turns "nothing happened" into a number the owner can watch.
-        const worths: Record<string, number> = {};
-        for (const b of brokers) {
-          const w = walletsById[b.id.toString()];
-          if (!w) continue;
-          let usd = 0;
-          for (const t of toks) {
-            try {
-              const bal = (await client.readContract({
-                address: t, abi: erc20MiniAbi, functionName: "balanceOf", args: [w],
-              })) as bigint;
-              if (bal === 0n) continue;
-              const floorOut = (await client.readContract({
+        const owners = brokers.filter((b) => walletsById[b.id.toString()]);
+        const balCalls = owners.flatMap((b) =>
+          toks.map((t) => ({
+            address: t, abi: erc20MiniAbi, functionName: "balanceOf" as const,
+            args: [walletsById[b.id.toString()]!] as const,
+          })),
+        );
+        const bals = await client.multicall({ allowFailure: true, contracts: balCalls });
+        const legs: { key: string; token: Address; bal: bigint }[] = [];
+        owners.forEach((b, bi) =>
+          toks.forEach((t, ti) => {
+            const bal = bals[bi * toks.length + ti]?.result as bigint | undefined;
+            if (bal && bal > 0n) legs.push({ key: b.id.toString(), token: t, bal });
+          }),
+        );
+        const floors = legs.length
+          ? await client.multicall({
+              allowFailure: true,
+              contracts: legs.map((l) => ({
                 address: FLOOR.router as Address, abi: basketRouterAbi,
-                functionName: "minUsdgOut", args: [t, bal],
-              })) as bigint;
-              usd += Number(floorOut) / 10 ** FLOOR.usdgDecimals;
-            } catch {
-              /* one unreadable leg should not blank the whole row */
-            }
-          }
-          worths[b.id.toString()] = usd;
+                functionName: "minUsdgOut" as const, args: [l.token, l.bal] as const,
+              })),
+            })
+          : [];
+        const worths: Record<string, number> = {};
+        for (const b of owners) worths[b.id.toString()] = 0;
+        legs.forEach((l, i) => {
+          const out = floors[i]?.result as bigint | undefined;
+          if (out !== undefined) worths[l.key] += Number(out) / 10 ** FLOOR.usdgDecimals;
+        });
+        if (!stale) {
+          setWorth(worths);
+          setLoadError(false);
         }
-        if (!stale) setWorth(worths);
       } catch {
-        /* panel stays read-only-empty on RPC hiccups */
+        if (!stale) setLoadError(true);
       }
     })();
     return () => {
       stale = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brokers, reloadKey]);
+  }, [brokersKey, walletsKey, reloadKey]);
 
   // Allowance checklist, only when a convert plan is selected.
   useEffect(() => {
@@ -170,7 +191,7 @@ export function PlaybookPanel({
       stale = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needsApproval, stocks, brokers, reloadKey]);
+  }, [needsApproval, stocks, brokersKey, walletsKey, reloadKey]);
 
   const dest = (): Address => {
     if (destKind === "broker" && plan === "usdg") return zeroAddress;
@@ -350,25 +371,49 @@ export function PlaybookPanel({
       )}
 
       {/* per-broker rows */}
+      {loadError && (
+        <p className="text-[12px] text-accent mb-2" role="status">
+          Could not read the Broker wallets right now (the RPC is not answering); nothing on-chain
+          is affected, this panel retries when you come back.
+        </p>
+      )}
       <div className="grid gap-1.5 mb-3">
         {activeBrokers.map((b) => {
           const key = b.id.toString();
           const pb = installed[key];
-          const live = pb && pb.setter.toLowerCase() === address.toLowerCase() && planOf(pb) !== "off";
+          const mine = !!pb && pb.setter.toLowerCase() === address.toLowerCase();
+          const plan = pb ? planOf(pb) : "…";
+          const live = mine && plan !== "off";
+          const orphaned = !!pb && !mine && plan !== "off";
+          const w = worth[key];
+          const daysLeft =
+            w !== undefined && w < RUN_AT && rate !== null && rate > 0 ? Math.ceil((RUN_AT - w) / rate) : null;
           return (
-            <div key={key} className="flex items-center justify-between border border-line px-3 py-2 text-sm">
-              <span>
+            <div key={key} className="flex items-center justify-between gap-3 border border-line px-3 py-2 text-sm">
+              <span className="min-w-0">
                 <b className="text-ink-strong">#{key}</b>{" "}
-                <span className={live ? "text-good" : "text-ink-soft"}>{pb ? planOf(pb) : "…"}</span>
-                {live && worth[key] !== undefined && (
-                  <span className="block text-[11px] text-ink-soft">
-                    {worth[key] >= RUN_AT
-                      ? `$${worth[key].toFixed(2)} in its wallet, runs on the next keeper pass`
-                      : `$${worth[key].toFixed(2)} of $${RUN_AT} - the engine moves it once it gets there`}
+                {orphaned ? (
+                  <span className="text-warn">set by a previous owner, press Apply to turn it on</span>
+                ) : (
+                  <span className={live ? "text-good" : "text-ink-soft"}>{live ? plan : pb ? "no playbook" : "…"}</span>
+                )}
+                {w !== undefined && (
+                  <span className="block text-[11px] text-ink-soft tabular-nums">
+                    {live
+                      ? w >= RUN_AT
+                        ? `$${w.toFixed(2)} in its wallet, runs on the next keeper pass`
+                        : `$${w.toFixed(2)} of $${RUN_AT} in its wallet, the engine moves it once it gets there`
+                          + (daysLeft !== null ? ` (about ${daysLeft} day${daysLeft === 1 ? "" : "s"} at today's rate)` : "")
+                      : `$${w.toFixed(2)} of stock in its wallet`}
+                  </span>
+                )}
+                {live && w !== undefined && w < RUN_AT && (
+                  <span className="block h-1 mt-1 bg-cream-3 border border-line" aria-hidden="true">
+                    <span className="block h-full bg-good" style={{ width: `${Math.min(100, (w / RUN_AT) * 100)}%` }} />
                   </span>
                 )}
               </span>
-              <span className="flex gap-2">
+              <span className="flex gap-2 shrink-0">
                 <button className="btn btn-ghost !py-1 !px-2 text-[10px]" onClick={() => applyTo([b.id])} disabled={tx.busy}>
                   Apply
                 </button>

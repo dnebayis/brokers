@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { encodeFunctionData, formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { getCapabilities, sendCalls, waitForCallsStatus } from "wagmi/actions";
@@ -92,6 +92,14 @@ export function ActivateTab() {
   // (people send stock/tips straight to a Broker). accountOf is a pure view and
   // the address never changes, so one fetch per owned id is enough.
   const [walletsById, setWalletsById] = useState<Record<string, string>>({});
+  // Identity-stable: the panel keys its RPC effects on this, and a fresh array on every
+  // render used to restart its (slow) valuation loop before it could ever finish.
+  const brokersKey = brokers.map((b) => `${b.id}:${b.active}`).join(",");
+  const playbookBrokers = useMemo(
+    () => brokers.map((b) => ({ id: b.id, active: b.active })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [brokersKey],
+  );
   const [coatReload, setCoatReload] = useState(0);
   const brokerCoat = useBrokerCoat(walletsById, coatReload);
   const holdingUsd = (h: { bal: bigint; decimals: number; priceUsd?: number }) =>
@@ -747,7 +755,7 @@ export function ActivateTab() {
 
       {/* ── Playbooks: standing orders the hourly engine executes per Broker ── */}
       <PlaybookPanel
-        brokers={brokers.map((b) => ({ id: b.id, active: b.active }))}
+        brokers={playbookBrokers}
         walletsById={walletsById as Record<string, `0x${string}` | undefined>}
       />
 
