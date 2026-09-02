@@ -596,3 +596,20 @@ class PlaybookWorthTests(unittest.TestCase):
             return [None] * len(reqs)
         with patch("keeper._mc_call", side_effect=mc):
             self.assertEqual(_holdings_floor_usdg_many(self._ctx(), [7]), {7: None})
+
+
+class PlaybookBatchSizingTests(unittest.TestCase):
+    """An unaffordable batch shrinks to what the relay can carry instead of deferring whole."""
+
+    def test_shrinks_by_have_want_ratio_with_margin(self):
+        from keeper import _shrink_batch
+        self.assertEqual(_shrink_batch(50, have=27_000, want=32_000), 35)   # 50*0.84*0.85
+        self.assertEqual(_shrink_batch(50, have=100, want=32_000), 5)        # floor
+        self.assertEqual(_shrink_batch(50, have=40_000, want=32_000), 50)    # affordable as-is
+        self.assertEqual(_shrink_batch(5, have=1, want=1000), 5)             # never below floor
+
+    def test_parses_the_node_message(self):
+        from keeper import _have_want
+        self.assertEqual(_have_want("insufficient funds for gas * price + value: address 0xabc have 26988874357459337 want 32647453000000000"),
+                         (26988874357459337, 32647453000000000))
+        self.assertEqual(_have_want("execution reverted"), (None, None))

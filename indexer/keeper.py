@@ -169,6 +169,22 @@ def _mc_call(w3, calls, chunk=150):
     return out
 
 
+
+def _have_want(message):
+    """Parse the node's 'insufficient funds ... have X want Y' into ints, else (None, None)."""
+    import re
+    m = re.search(r"have (\d+) want (\d+)", message)
+    return (int(m.group(1)), int(m.group(2))) if m else (None, None)
+
+
+def _shrink_batch(size, have, want, floor=5):
+    """Largest batch the relay can carry: scale by have/want with a 15% margin, never
+    below `floor` (a batch that small is sent as-is and left to the node's verdict)."""
+    if size <= floor or want <= 0 or have >= want:
+        return size
+    return max(floor, min(size - 1, int(size * have / want * 0.85)))
+
+
 def _holdings_floor_usdg_many(ctx, token_ids):
     """Chainlink-floored USDG value for many Brokers at once. Returns {token_id: value|None}.
 
@@ -830,8 +846,35 @@ def main() -> None:
                     print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
                                       "status": "deferred", "reason": str(exc)[:160]}))
             if healthy_ids:
-                submit("playbooks.run", lambda: engine.functions.run(healthy_ids, healthy_mins),
-                       min_gas=500_000 + 700_000 * len(healthy_ids))
+                # A big batch needs its whole gas budget up front, and an unaffordable one
+                # used to defer EVERY order in the pass. Send what the relay can carry now:
+                # shrink by the have/want ratio the node reports, floor of 5, and keep
+                # going with the remainder as long as sends succeed.
+                pending_ids, pending_mins = list(healthy_ids), list(healthy_mins)
+                size = len(pending_ids)
+                while pending_ids:
+                    b_ids, b_mins = pending_ids[:size], pending_mins[:size]
+                    try:
+                        est = int(engine.functions.run(b_ids, b_mins).estimate_gas({"from": account.address}))
+                        gas_limit = max(est * 2, 500_000 + 700_000 * len(b_ids))
+                        have = int(w3.eth.get_balance(account.address))
+                        want = gas_limit * int(w3.eth.gas_price)
+                    except Exception as exc:
+                        have, want = _have_want(str(exc))
+                        if have is None:
+                            # not an affordability problem: let submit report it the normal way
+                            have, want = 1, 1
+                    new_size = _shrink_batch(size, have, want)
+                    if new_size < size:
+                        print(json.dumps({"action": "playbooks.run", "status": "resized",
+                                          "from": size, "to": new_size}))
+                        size = new_size
+                        continue
+                    if not submit("playbooks.run",
+                                  lambda b_ids=b_ids, b_mins=b_mins: engine.functions.run(b_ids, b_mins),
+                                  min_gas=500_000 + 700_000 * len(b_ids)):
+                        break
+                    pending_ids, pending_mins = pending_ids[size:], pending_mins[size:]
             else:
                 print(json.dumps({"action": "playbooks.run", "status": "skipped",
                                   "enrolled": total, "eligible": len(ids)}))
