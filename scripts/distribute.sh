@@ -31,6 +31,11 @@ DRY_RUN="${DRY_RUN:-0}"
 
 [ -f "$OUT" ] || echo "address,amount,tx,status" > "$OUT"
 
+if [ "$DRY_RUN" != "1" ] && ! echo "$CAST_FLAGS" | grep -qE -- "--private-key +[0-9a-fA-Fx]+|--account|--ledger|--trezor|--keystore|--interactive"; then
+  echo "CAST_FLAGS carries no signer (got: '$CAST_FLAGS'). Set e.g. CAST_FLAGS=\"--private-key \$KEY\" with the variable actually exported." >&2
+  exit 2
+fi
+
 DECIMALS=18
 SYMBOL="native"
 if [ -n "$TOKEN" ]; then
@@ -60,22 +65,33 @@ while IFS=, read -r addr amount _rest; do
     continue
   fi
 
+  # cast's own error is the only useful diagnostic (a missing key, a rejected tx, an RPC
+  # refusal), so keep it instead of discarding it; and stop at the first failure rather
+  # than stamping every remaining row "failed" — one cause, one message, fix, re-run.
+  errlog=$(mktemp)
   if [ -n "$TOKEN" ]; then
     tx=$(cast send "$TOKEN" 'transfer(address,uint256)' "$addr" "$raw" \
-         --rpc-url "$ETH_RPC_URL" $CAST_FLAGS --json 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin)['transactionHash'])" || true)
+         --rpc-url "$ETH_RPC_URL" $CAST_FLAGS --json 2>"$errlog" | python3 -c "import json,sys; print(json.load(sys.stdin)['transactionHash'])" 2>/dev/null || true)
   else
     tx=$(cast send "$addr" --value "$raw" \
-         --rpc-url "$ETH_RPC_URL" $CAST_FLAGS --json 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin)['transactionHash'])" || true)
+         --rpc-url "$ETH_RPC_URL" $CAST_FLAGS --json 2>"$errlog" | python3 -c "import json,sys; print(json.load(sys.stdin)['transactionHash'])" 2>/dev/null || true)
   fi
 
   if [ -n "$tx" ]; then
     echo "$addr,$amount,$tx,sent" >> "$OUT"
     echo "SENT $addr  $amount $SYMBOL  $tx"
     sent=$((sent + 1))
+    rm -f "$errlog"
   else
     echo "$addr,$amount,,failed" >> "$OUT"
     echo "FAIL $addr  $amount $SYMBOL" >&2
+    echo "---- cast said:" >&2; cat "$errlog" >&2; echo "----" >&2
+    rm -f "$errlog"
     failed=$((failed + 1))
+    if [ "${CONTINUE_ON_FAIL:-0}" != "1" ]; then
+      echo "stopping at the first failure (set CONTINUE_ON_FAIL=1 to keep going); re-run the same command to resume" >&2
+      break
+    fi
   fi
 done < "$CSV"
 
