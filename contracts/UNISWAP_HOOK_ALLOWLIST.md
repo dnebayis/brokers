@@ -68,10 +68,12 @@ https://coattail.cash
 
 ## Audit
 
-No third-party audit firm was engaged. The repository carries an internal security review
-(`AUDIT.md`) covering the hook, the token and the fee path, plus unit, fuzz, invariant and
-mainnet-fork test suites. The hook is immutable, so the code under review is the code that
-will run.
+No third-party audit firm was engaged. The repository carries an internal security review of
+the hook, the token and the fee path: https://github.com/dnebayis/brokers/blob/main/AUDIT.md
+Test suites (unit, fuzz, invariant and mainnet-fork) live at
+https://github.com/dnebayis/brokers/tree/main/contracts/test; the hook's own tests are in that
+directory under the CoatFeeHook name. The hook is immutable, so the code under review is the
+code that runs.
 
 ## Traction
 
