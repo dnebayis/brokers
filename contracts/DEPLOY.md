@@ -189,3 +189,17 @@ number is added. `Status` stays a two-value string trait for marketplace filters
 3. Owner switch (reversible): `CoattailBroker.setRenderer(<v2>)`. Marketplaces refresh on
    their own schedule; `indexer/renderer_readback_audit.py` can spot-check `tokenURI`.
 4. Rollback: `setRenderer(<v1>)`.
+
+## Renderer v3 (pure traits)
+
+v2's `display_type: number` figures were still counted by OpenSea's trait panel, so v3 keeps
+`attributes` to the seven fixed art traits only (exactly v1's fixed section) and moves live state
+(Status, holdings, COAT inside) into the description tail and a separate `live` JSON object that
+marketplaces never score. Same v1 art passthrough, same byte-identical SVG.
+
+1. `forge test --match-contract ForkRendererV3 --fork-url <mainnet rpc>` must pass.
+2. Deploy: `RENDERER_V1=<v1> BROKER_ADDRESS=<broker> COAT_ADDRESS=<coat> forge script
+   script/DeployRendererV3.s.sol --rpc-url <rpc> --private-key <owner> --broadcast`
+3. Owner switch (reversible): `CoattailBroker.setRenderer(<v3>)`; audit with
+   `RENDERER_V3=<v3> python3 indexer/renderer_v2_audit.py [--all]`; then re-run
+   `scripts/opensea_refresh.py`.

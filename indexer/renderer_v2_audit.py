@@ -18,7 +18,9 @@ import base64, json, os, sys, time, subprocess, random
 RPC = os.environ.get("RH_RPC_URL", "https://rpc.mainnet.chain.robinhood.com")
 BROKER = "0x1122dB21998707F8c2eD8182734356C947fA5e98"
 V1 = "0xB1b64E0CE411135DfaB728a482b21981B07fAd31"
-V2 = "0x5b9F2Ee635a05Ee7a3fe245DF80AA37d6865057F"
+V2 = os.environ.get("RENDERER_V2", "0x5b9F2Ee635a05Ee7a3fe245DF80AA37d6865057F")
+# v3 = pure attributes (fixed traits only) + `live` object. Set RENDERER_V3 to audit that shape.
+V3 = os.environ.get("RENDERER_V3", "")
 FIXED = ("Type", "Headwear", "Eyes", "Mouth", "Jewelry", "Face", "Accessory")
 
 
@@ -49,15 +51,18 @@ def main():
         ids += random.sample(range(1, 1777), 20)
     ids = sorted(set(ids))
 
+    target = V3 or V2
+    pure = bool(V3)
     live_renderer = call(BROKER, "renderer()(address)")
-    print(f"collection renderer = {live_renderer}  ({'V2' if live_renderer.lower()==V2.lower() else 'NOT V2'})")
+    tag = "V3" if pure else "V2"
+    print(f"collection renderer = {live_renderer}  ({tag if live_renderer.lower()==target.lower() else 'NOT '+tag})")
     bad = 0
     for tid in ids:
-        v2 = call(V2, "tokenURI(uint256)(string)", tid).strip('"')
+        v2 = call(target, "tokenURI(uint256)(string)", tid).strip('"')
         if not pre:
             served = call(BROKER, "tokenURI(uint256)(string)", tid).strip('"')
             if served != v2:
-                print(f"#{tid}: collection tokenURI != v2.tokenURI"); bad += 1; continue
+                print(f"#{tid}: collection tokenURI != {tag}.tokenURI"); bad += 1; continue
         j = token_json(v2)
         v1_json = token_json(call(V1, "tokenURI(uint256)(string)", tid).strip('"'))
         if j["image"] != v1_json["image"]:
@@ -66,6 +71,12 @@ def main():
         fixed_v2 = [(a["trait_type"], a["value"]) for a in j["attributes"] if a["trait_type"] in FIXED]
         if fixed_v1 != fixed_v2:
             print(f"#{tid}: fixed traits differ {fixed_v1} vs {fixed_v2}"); bad += 1
+        if pure:
+            extra = [a["trait_type"] for a in j["attributes"] if a["trait_type"] not in FIXED]
+            if extra: print(f"#{tid}: non-trait attributes leaked: {extra}"); bad += 1
+            if "live" not in j or "status" not in j["live"]: print(f"#{tid}: live object missing"); bad += 1
+            time.sleep(0.4)
+            continue
         for a in j["attributes"]:
             t = a["trait_type"]
             if t in FIXED or t == "Status":
