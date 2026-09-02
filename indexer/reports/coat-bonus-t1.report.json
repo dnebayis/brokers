@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-09-02T12:06:12+00:00",
+  "block": 52561613,
+  "brokers": 1776,
+  "active": 1175,
+  "inactive": 601,
+  "weights": {
+    "active": 1,
+    "inactive": 0
+  },
+  "totalCoat": 14000000.0,
+  "perShareCoat": 11914.893617021276,
+  "activeBrokerCoat": 11914.893617021276,
+  "inactiveBrokerCoat": 0.0,
+  "recipients": 1175,
+  "sumCoat": 14000000.0
+}
