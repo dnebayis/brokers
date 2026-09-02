@@ -173,3 +173,19 @@ Only after both read open, do the frontend flip and publish the announcement:
 
 > The mint gate is reversible (`setMintOpen(false)` re-closes it); `enableTrading()` is **not** — once
 > $COAT trading opens it stays open. Treat 4c as the irreversible launch moment.
+
+## Renderer v2 (metadata fix, art untouched)
+
+`BrokerRendererV2` reads `bitmapOf`/`traitsOf` from the deployed v1 renderer and renders the
+same SVG byte for byte; the fixed traits are emitted identically. Only the live section changes:
+stock holdings become `display_type: number` values rounded to four decimals (dust omitted), so
+rarity engines stop ranking Brokers by the decimal places of a balance, and a `COAT inside`
+number is added. `Status` stays a two-value string trait for marketplace filters.
+
+1. `forge test --match-contract ForkRendererV2 --fork-url <mainnet rpc>` must pass (24 real ids,
+   rares included: SVG hash and fixed-trait prefix identical to v1).
+2. Deploy: `RENDERER_V1=<v1> BROKER_ADDRESS=<broker> COAT_ADDRESS=<coat> forge script
+   script/DeployRendererV2.s.sol --rpc-url <rpc> --private-key <owner> --broadcast`
+3. Owner switch (reversible): `CoattailBroker.setRenderer(<v2>)`. Marketplaces refresh on
+   their own schedule; `indexer/renderer_readback_audit.py` can spot-check `tokenURI`.
+4. Rollback: `setRenderer(<v1>)`.
