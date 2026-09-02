@@ -12,6 +12,7 @@ import { fmt } from "@/lib/format";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
 import { StepFlow, type StepState } from "@/components/ui/StepFlow";
+import { useCoatPrice, usdLabel } from "@/lib/useCoatPrice";
 
 const SLIPPAGE_BPS = 300n; // 3%
 const routerReady = ADDR.router !== "";
@@ -26,7 +27,9 @@ export function CoatSwap() {
   const [dir, setDir] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [quote, setQuote] = useState("");
+  const [quoteWei, setQuoteWei] = useState<bigint | undefined>(undefined);
   const [steps, setSteps] = useState<StepState[]>(["idle", "idle"]);
+  const price = useCoatPrice();
   const setStep = (i: number, s: StepState) => setSteps((p) => p.map((v, j) => (j === i ? s : v)));
 
   const { data: eth } = useBalance({ address, chainId: activeChain.id });
@@ -65,6 +68,7 @@ export function CoatSwap() {
   async function onAmount(v: string) {
     setAmount(v);
     setQuote("");
+    setQuoteWei(undefined);
     if (!routerReady || !v || isNaN(Number(v)) || Number(v) <= 0) return;
     try {
       const out =
@@ -72,8 +76,10 @@ export function CoatSwap() {
           ? await client.readContract({ address: ADDR.router as `0x${string}`, abi: routerAbi, functionName: "quoteBuy", args: [parseEther(v)] })
           : await client.readContract({ address: ADDR.router as `0x${string}`, abi: routerAbi, functionName: "quoteSell", args: [parseUnits(v, 18)] });
       setQuote(fmt(out as bigint, 18, dir === "buy" ? 2 : 6));
+      setQuoteWei(out as bigint);
     } catch {
       setQuote("—");
+      setQuoteWei(undefined);
     }
   }
 
@@ -81,6 +87,7 @@ export function CoatSwap() {
     setDir(next);
     setAmount("");
     setQuote("");
+    setQuoteWei(undefined);
     setSteps(["idle", "idle"]);
   }
 
@@ -151,9 +158,9 @@ export function CoatSwap() {
       </p>
 
       <div className="grid grid-cols-3 gap-2.5 mb-4">
-        <Stat k="Your ETH" v={eth ? fmt(eth.value, 18, 4) : "—"} />
-        <Stat k="Your $COAT" v={fmt(coat as bigint | undefined, 18, 0)} />
-        <Stat k="Fee / swap" v="1% + 1% hook" />
+        <Stat k="Your ETH" v={eth ? fmt(eth.value, 18, 4) : "—"} sub={usdLabel(price.ethWeiToUsd(eth?.value))} />
+        <Stat k="Your $COAT" v={fmt(coat as bigint | undefined, 18, 0)} sub={usdLabel(price.coatWeiToUsd(coat as bigint | undefined))} />
+        <Stat k="$COAT price" v={usdLabel(price.coatUsd || undefined)} sub={price.ready ? `ETH ${usdLabel(price.ethUsd)}` : "loading"} />
       </div>
 
       <div className="grid grid-cols-2 gap-2 mb-4" aria-label="Swap direction">
@@ -171,6 +178,9 @@ export function CoatSwap() {
       <div className="relative">
         <input className="fld" inputMode="decimal" placeholder="0.0" value={amount} onChange={(e) => onAmount(e.target.value)} disabled={!routerReady} />
       </div>
+      <p className="text-ink-soft text-[12px] mt-1.5 tabular-nums" aria-live="polite">
+        ≈ {usdLabel(dir === "buy" ? price.ethWeiToUsd(amountWei) : price.coatWeiToUsd(amountWei))}
+      </p>
       {dir === "sell" && rawSellAmount && (
         <p className="text-ink-soft text-sm mt-2">
           Order amount: <b className="text-ink-strong tabular-nums">{rawSellAmount} COAT</b>. Use MAX to sell the full balance; dots in this field are decimal points, not thousands separators.
@@ -178,6 +188,10 @@ export function CoatSwap() {
       )}
       <span className="label mt-3.5">You receive ({dir === "buy" ? "COAT" : "ETH"}, est.)</span>
       <input className="fld" readOnly value={quote} placeholder="—" />
+      <p className="text-ink-soft text-[12px] mt-1.5 tabular-nums" aria-live="polite">
+        ≈ {usdLabel(dir === "buy" ? price.coatWeiToUsd(quoteWei) : price.ethWeiToUsd(quoteWei))}
+        {quoteWei !== undefined && " before the 2% in fees"}
+      </p>
       <p className="text-ink-soft text-sm mt-2">Slippage 3% · minimum shown on confirm.</p>
 
       <button className="btn btn-accent w-full mt-4" onClick={needsApproval ? approveSell : doSwap} disabled={!canSwap || swap.busy || approval.busy}>
@@ -198,11 +212,12 @@ export function CoatSwap() {
   );
 }
 
-function Stat({ k, v }: { k: string; v: string }) {
+function Stat({ k, v, sub }: { k: string; v: string; sub?: string }) {
   return (
     <div className="stat">
       <div className="text-[11px] text-ink-soft uppercase tracking-widest">{k}</div>
-      <div className="font-pixel text-lg text-ink-strong mt-1">{v}</div>
+      <div className="font-pixel text-lg text-ink-strong mt-1 break-words">{v}</div>
+      {sub && <div className="text-[11px] text-ink-soft mt-0.5 tabular-nums">{sub}</div>}
     </div>
   );
 }

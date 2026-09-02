@@ -14,6 +14,7 @@ import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
 import { PlaybookPanel } from "@/components/PlaybookPanel";
 import { useBrokerBacking } from "@/lib/useBrokerBacking";
 import { useBrokerCoat } from "@/lib/useBrokerCoat";
+import { useCoatPrice, usdLabel } from "@/lib/useCoatPrice";
 import { loadKnownTokens, usd } from "@/lib/brokerValue";
 import { fmt, short } from "@/lib/format";
 import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
@@ -23,7 +24,7 @@ import { StepFlow, type StepState } from "@/components/ui/StepFlow";
 import { BrokerCard } from "@/components/ui/BrokerCard";
 
 type Info = { id: bigint; active: boolean; owner: `0x${string}`; wallet: `0x${string}` } | null;
-type Holding = { token: Address; sym: string; bal: bigint; decimals: number };
+type Holding = { token: Address; sym: string; bal: bigint; decimals: number; priceUsd?: number };
 
 export function ActivateTab() {
   const { address } = useAccount();
@@ -36,7 +37,7 @@ export function ActivateTab() {
   const [tokenId, setTokenId] = useState("");
   const [info, setInfo] = useState<Info>(null);
   const [holdings, setHoldings] = useState<Holding[]>([]);
-  const [pending, setPending] = useState<{ sym: string; bal: bigint }[]>([]);
+  const [pending, setPending] = useState<{ sym: string; bal: bigint; decimals: number; priceUsd?: number }[]>([]);
   const [recipient, setRecipient] = useState("");
   const [selectedStock, setSelectedStock] = useState<Address | "">("");
   const [transferAmount, setTransferAmount] = useState("");
@@ -80,7 +81,11 @@ export function ActivateTab() {
   // activeSharesData stays subscribed for refetchShares(); the figure itself now
   // lives on Home — this tab shows only the visitor's own numbers.
   void activeSharesData;
+  const price = useCoatPrice();
   const burnLabel = burnData !== undefined ? fmt(burnData as bigint, 18, 0) : PARAMS.activationBurn.toLocaleString();
+  const burnUsdLabel = usdLabel(price.coatWeiToUsd(
+    burnData !== undefined ? (burnData as bigint) : BigInt(PARAMS.activationBurn) * 10n ** 18n,
+  ));
   const activeOwned = brokers.filter((item) => item.active === true).length;
   const backing = useBrokerBacking(brokers.map((b) => b.id));
   // Each Broker's own 6551 wallet address, so the card can offer one-tap copy
@@ -89,6 +94,8 @@ export function ActivateTab() {
   const [walletsById, setWalletsById] = useState<Record<string, string>>({});
   const [coatReload, setCoatReload] = useState(0);
   const brokerCoat = useBrokerCoat(walletsById, coatReload);
+  const holdingUsd = (h: { bal: bigint; decimals: number; priceUsd?: number }) =>
+    h.priceUsd === undefined ? undefined : Number(formatUnits(h.bal, h.decimals)) * h.priceUsd;
   useEffect(() => {
     let stale = false;
     const missing = brokers.filter((b) => !walletsById[b.id.toString()]);
@@ -204,12 +211,18 @@ export function ActivateTab() {
         ]);
         return { token, sym: symbol, bal, decimals: Number(decimals) } satisfies Holding;
       }));
-      const nonZero = balances.filter((holding) => holding.bal > 0n);
+      // Price each holding from the Booster's own feeds so the wallet reads in dollars too.
+      const metas = await loadKnownTokens(tokens).catch(() => []);
+      const priced = balances.map((h) => ({
+        ...h,
+        priceUsd: metas.find((m) => m.token.toLowerCase() === h.token.toLowerCase())?.priceUsd,
+      }));
+      const nonZero = priced.filter((holding) => holding.bal > 0n);
       setHoldings(nonZero);
       setSelectedStock((current) => nonZero.some((holding) => holding.token === current) ? current : (nonZero[0]?.token ?? ""));
       setPending(claimable[0].map((token, i) => {
-        const holding = balances.find((item) => item.token.toLowerCase() === token.toLowerCase());
-        return { sym: holding?.sym ?? short(token), bal: claimable[1][i] };
+        const holding = priced.find((item) => item.token.toLowerCase() === token.toLowerCase());
+        return { sym: holding?.sym ?? short(token), bal: claimable[1][i], decimals: holding?.decimals ?? 18, priceUsd: holding?.priceUsd };
       }).filter((h) => h.bal > 0n));
     } catch {
       if (!silent) {
@@ -634,7 +647,7 @@ export function ActivateTab() {
                   <> · earned <b className="text-good">{usd(backing.totalEarnedUsd)}</b> since switch-on</>
                 )}.
                 {brokerCoat.total > 0n && (
-                  <> · <b className="text-accent">{fmt(brokerCoat.total, 18, 0)} $COAT</b> sitting inside your Brokers</>
+                  <> · <b className="text-accent">{fmt(brokerCoat.total, 18, 0)} $COAT</b> ({usdLabel(price.coatWeiToUsd(brokerCoat.total))}) sitting inside your Brokers</>
                 )}
                 {" "}Tap a Broker to open it.
               </>
@@ -644,7 +657,7 @@ export function ActivateTab() {
           <Stat k="Owned" v={brokers.length.toString()} />
           <Stat k="Active" v={activeOwned.toString()} />
           <Stat k="Claim-ready" v={claimReadyCount.toString()} />
-          <Stat k="Your $COAT" v={fmt(coatBal as bigint | undefined, 18, 0)} />
+          <Stat k="Your $COAT" v={fmt(coatBal as bigint | undefined, 18, 0)} sub={usdLabel(price.coatWeiToUsd(coatBal as bigint | undefined))} />
         </div>
         {!address ? (
           <p className="text-ink-soft text-sm">Connect your wallet to see your Brokers.</p>
@@ -664,7 +677,7 @@ export function ActivateTab() {
         {info && isOwner && !info.active && (
           <>
             <button className="btn btn-accent w-full mt-4" onClick={activate} disabled={act.busy || !canActivate}>
-              <Icon name="power" /> {act.busy ? "WORKING…" : `ACTIVATE #${info.id.toString()} — burn ${burnLabel} $COAT`}
+              <Icon name="power" /> {act.busy ? "WORKING…" : `ACTIVATE #${info.id.toString()} — burn ${burnLabel} $COAT${price.ready ? ` (≈ ${burnUsdLabel})` : ""}`}
             </button>
             {activateReason && <p className="text-accent text-sm mt-2">{activateReason}</p>}
             <StepFlow steps={[{ label: "approve COAT", state: steps[0] }, { label: "activate", state: steps[1] }]} />
@@ -777,6 +790,7 @@ export function ActivateTab() {
                 <div key={h.token} className="flex items-center gap-3">
                   <span className="badge">{h.sym}</span>
                   <span className="font-pixel text-sm">{fmt(h.bal, h.decimals, 7)}</span>
+                  <span className="text-[12px] text-ink-soft tabular-nums">{usdLabel(holdingUsd(h))}</span>
                 </div>
               ))}
             </div>
@@ -788,6 +802,7 @@ export function ActivateTab() {
               <div className="flex items-center gap-3">
                 <span className="badge border-accent text-accent">$COAT</span>
                 <span className="font-pixel text-sm">{fmt(brokerCoat.byId[info.id.toString()], 18, 0)}</span>
+                <span className="text-[12px] text-ink-soft tabular-nums">{usdLabel(price.coatWeiToUsd(brokerCoat.byId[info.id.toString()]))}</span>
                 <span className="text-[11px] text-ink-soft">inside this Broker · moves with the NFT</span>
               </div>
               {isOwner && (
@@ -800,7 +815,12 @@ export function ActivateTab() {
           {pending.length > 0 && (
             <div className="mt-4 border-t border-line pt-3">
               <div className="label">Accruing — auto-claimed to this wallet hourly</div>
-              {pending.map((h) => <div key={h.sym} className="text-sm">{h.sym}: {fmt(h.bal, 18, 4)}</div>)}
+              {pending.map((h) => (
+                <div key={h.sym} className="text-sm">
+                  {h.sym}: {fmt(h.bal, h.decimals, 4)}
+                  <span className="text-ink-soft text-[12px] ml-2 tabular-nums">{usdLabel(holdingUsd(h))}</span>
+                </div>
+              ))}
             </div>
           )}
           {isOwner && hasClaimable && (
@@ -880,11 +900,12 @@ export function ActivateTab() {
 }
 
 
-function Stat({ k, v }: { k: string; v: string }) {
+function Stat({ k, v, sub }: { k: string; v: string; sub?: string }) {
   return (
     <div className="stat">
       <div className="text-[11px] text-ink-soft uppercase tracking-widest">{k}</div>
-      <div className="font-pixel text-lg text-ink-strong mt-1">{v}</div>
+      <div className="font-pixel text-lg text-ink-strong mt-1 break-words">{v}</div>
+      {sub && <div className="text-[11px] text-ink-soft mt-0.5 tabular-nums">{sub}</div>}
     </div>
   );
 }
