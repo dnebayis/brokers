@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T09:57:10.375042+00:00",
+  "generatedAt": "2026-09-03T09:58:34.413639+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 53328603,
+    "block": 53329420,
     "dropped": []
   },
   "missedCoverage": [
@@ -482,5 +482,10 @@
     ],
     "divergenceBps": 5000
   },
-  "commentary": null
+  "commentary": {
+    "text": "This basket holds INTC, SPCX, and MU. INTC carries the basket, with disclosed buys from Nancy Pelosi. SPCX is also in the basket, with disclosed buys from William R. Timmons IV, Dan Meuser, and John James. MU is included due to disclosed buys from members like Dan Newhouse, Michael Rulli, and Sheldon Whitehouse. The largest name that could not be bought was BE because it is not tokenized or not tradable on this chain.",
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-09-03T09:58:34+00:00",
+    "inputHash": "6e99e876a9aed407"
+  }
 }
