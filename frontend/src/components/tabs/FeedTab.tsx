@@ -2,6 +2,7 @@
 
 import { useStoredQuery } from "@/lib/useStoredQuery";
 import { BasketNow } from "@/components/BasketNow";
+import { BasketScorecard } from "@/components/BasketScorecard";
 
 type FeedItem = {
   chamber: "House" | "Senate";
@@ -43,6 +44,7 @@ export function FeedTab() {
   return (
     <div className="grid gap-5">
     <BasketNow />
+    <BasketScorecard />
     <div className="card">
       <div className="flex items-center justify-between mb-1">
         <h2 className="pixel-title text-[15px]">Congress disclosures</h2>

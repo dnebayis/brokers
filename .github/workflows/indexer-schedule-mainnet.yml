@@ -82,6 +82,8 @@ jobs:
       # A note is rewritten at most once per this many hours, and only when the facts changed.
       NOTE_MIN_HOURS: ${{ vars.NOTE_MIN_HOURS || '5' }}
       BASKET_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/basket-latest.json
+      # Scorecard (engine cost vs live price per name), incremental over the published copy.
+      SCORECARD_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/basket-scorecard.json
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -116,6 +118,11 @@ jobs:
               fail=0
               # the site reads this file; publish every pass so the feed is at most an hour old
               bash ../scripts/publish_data.sh latest-basket.json basket-latest.json || echo "::warning::data publish failed"
+              if python scorecard.py --out scorecard.json; then
+                bash ../scripts/publish_data.sh scorecard.json basket-scorecard.json || echo "::warning::scorecard publish failed"
+              else
+                echo "::warning::scorecard build failed; the published copy stays"
+              fi
             else
               fail=1
               echo "::warning::indexer pass ${i}/${passes} failed; the next pass retries"

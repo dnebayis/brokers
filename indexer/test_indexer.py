@@ -761,3 +761,36 @@ class CommentaryTests(unittest.TestCase):
         out = generate(self.PAYLOAD, prev, key="k", call=lambda *a: calls.append(a) or self.NOTE, now=now)
         self.assertEqual(len(calls), 1)
         self.assertGreater(out["promptVersion"], 1)
+
+
+class ScorecardTests(unittest.TestCase):
+    def test_aggregate_prices_cost_against_live_feed(self):
+        from scorecard import aggregate, WEI
+        events = [
+            {"token": "0xAAA", "ts": 100, "sharesRaw": 2 * WEI, "usdIn": 200.0},   # 2 shares at $100
+            {"token": "0xAAA", "ts": 200, "sharesRaw": 2 * WEI, "usdIn": 240.0},   # 2 shares at $120
+            {"token": "0xBBB", "ts": 150, "sharesRaw": 1 * WEI, "usdIn": 50.0},
+        ]
+        out = aggregate(events, {"0xaaa": 121.0, "0xbbb": 40.0}, {"0xaaa": {"symbol": "AAA"}, "0xbbb": {"symbol": "BBB"}})
+        aaa = next(n for n in out["names"] if n["symbol"] == "AAA")
+        self.assertEqual(aaa["shares"], 4.0)
+        self.assertEqual(aaa["avgCost"], 110.0)
+        self.assertEqual(aaa["value"], 484.0)
+        self.assertEqual(aaa["pnlUsd"], 44.0)
+        self.assertEqual(aaa["pnlPct"], 10.0)
+        bbb = next(n for n in out["names"] if n["symbol"] == "BBB")
+        self.assertEqual(bbb["pnlUsd"], -10.0)
+        self.assertEqual(out["totals"], {"usdSpent": 490.0, "value": 524.0, "pnlUsd": 34.0, "pnlPct": 6.94})
+        self.assertEqual([n["symbol"] for n in out["names"]], ["AAA", "BBB"])  # winners first
+
+    def test_unpriced_purchases_never_distort_the_average(self):
+        from scorecard import aggregate, WEI
+        events = [
+            {"token": "0xAAA", "ts": 1, "sharesRaw": 1 * WEI, "usdIn": 100.0},
+            {"token": "0xAAA", "ts": 2, "sharesRaw": 1 * WEI, "usdIn": None},
+        ]
+        out = aggregate(events, {"0xaaa": 100.0}, {"0xaaa": {"symbol": "AAA"}})
+        aaa = out["names"][0]
+        self.assertEqual(aaa["avgCost"], 100.0)
+        self.assertEqual(aaa["unpricedBuys"], 1)
+        self.assertEqual(aaa["pnlUsd"], 0.0)
