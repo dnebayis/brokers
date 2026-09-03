@@ -119,9 +119,16 @@ def validate_note(text: str, allowed_tickers: List[str]) -> Tuple[bool, str]:
 
 
 def _gemini(prompt: str, key: str, model: str) -> str:
+    # Gemini 2.5 spends "thinking" tokens out of the same output budget: with a small cap
+    # the visible answer came back empty ("too short"). Thinking is switched off for this
+    # short factual note and the cap is generous; the validator still bounds the length.
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 400},
+        "generationConfig": {
+            "temperature": 0.4,
+            "maxOutputTokens": 1024,
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
     }).encode()
     req = urllib.request.Request(
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
@@ -171,6 +178,8 @@ def generate(payload: Dict, previous: Optional[Dict] = None, key: str = "",
             last = f"provider error: {str(exc)[:120]}"
             continue
         ok, reason = validate_note(text, allowed)
+        if not ok:
+            print(f"basket note attempt rejected ({reason}; {len(text)} chars): {text[:200]!r}")
         if ok:
             return {
                 "text": text, "model": model,
