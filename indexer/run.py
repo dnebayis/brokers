@@ -319,6 +319,7 @@ def main():
                 with open(history_path, "a") as fh:
                     fh.write(shadow_history_row(
                         divergence, smart_basket, conviction_basket, vetoed, SMART_BASKET,
+                        filed_window=filed_report,
                     ) + "\n")
                 print(f"  shadow history appended -> {history_path}")
             except OSError as e:
@@ -335,7 +336,7 @@ def main():
 
         w3 = make_web3()
         router_address, poke_threshold = resolve_booster_context(w3, BOOSTER_ADDRESS)
-        buffer_wei = wei_env("ROUTE_PREFLIGHT_BUFFER_WEI", str(poke_threshold, filed_window=filed_report))
+        buffer_wei = wei_env("ROUTE_PREFLIGHT_BUFFER_WEI", str(poke_threshold))
         try:
             basket, dropped = preflight_basket(
                 w3, basket, BOOSTER_ADDRESS, buffer_wei, router_address=router_address

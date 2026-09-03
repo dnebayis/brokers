@@ -1,6 +1,9 @@
 import unittest
 import base64
 import json
+import os
+import sys
+import tempfile
 from datetime import datetime, timezone
 from unittest.mock import Mock, patch
 
@@ -637,6 +640,37 @@ class SendSignedTests(unittest.TestCase):
         self.assertEqual(simulate_reason(ok, "0x1"), "")
         bad = Mock(); bad.call.side_effect = Exception("execution reverted: 0x8b05c814")
         self.assertIn("0x8b05c814", simulate_reason(bad, "0x1"))
+
+
+class IndexerMainPreflightTests(unittest.TestCase):
+    """main() must survive the on-chain pre-flight block, which `--sample` runs skip. The
+    2026-09-03 typo str(poke_threshold, filed_window=...) crashed every mainnet pass while
+    CI stayed green, because nothing exercised this branch."""
+
+    def test_main_runs_the_preflight_branch_and_passes_the_threshold_as_buffer(self):
+        import run, config
+        out = os.path.join(tempfile.mkdtemp(), "basket.json")
+        real_load = run._load_trades
+        seen = {}
+        def fake_preflight(w3, basket, booster, buffer_wei, router_address=None):
+            seen["buffer"] = buffer_wei; seen["router"] = router_address
+            return basket, []
+        w3 = Mock(); w3.eth.block_number = 1; w3.eth.chain_id = 4663
+        with patch.object(sys, "argv", ["run.py", "--out", out]), \
+             patch.object(run, "_load_trades", lambda sample: real_load(True)), \
+             patch.object(run, "preflight_enabled", lambda: True), \
+             patch.object(run, "BOOSTER_ADDRESS", "0x" + "11" * 20), \
+             patch.object(config, "make_web3", lambda: w3), \
+             patch.object(run, "resolve_booster_context", lambda w3, b: ("0x" + "22" * 20, 10**16)), \
+             patch.object(run, "preflight_basket", fake_preflight), \
+             patch.dict(os.environ):
+            os.environ.pop("ROUTE_PREFLIGHT_BUFFER_WEI", None)
+            run.main()
+        self.assertEqual(seen["buffer"], 10**16)             # the poke threshold, as a plain int
+        self.assertEqual(seen["router"], "0x" + "22" * 20)
+        payload = json.load(open(out))
+        self.assertIn("filedWindowShadow", payload)
+        self.assertTrue(payload["tickers"])
 
 
 class PlaybookWorthTests(unittest.TestCase):
