@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { encodeFunctionData, formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { getCapabilities, sendCalls, waitForCallsStatus } from "wagmi/actions";
@@ -39,6 +39,10 @@ export function ActivateTab() {
 
   const [tokenId, setTokenId] = useState("");
   const [info, setInfo] = useState<Info>(null);
+  // check() runs several rounds of reads; a newer check (a click on another Broker, or the
+  // 20 s poll) must win, or a slow first Broker's holdings land under the second Broker's card
+  // and Withdraw/Send would encode the wrong wallet and amount.
+  const checkSeq = useRef(0);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [pending, setPending] = useState<{ sym: string; bal: bigint; decimals: number; priceUsd?: number }[]>([]);
   const [recipient, setRecipient] = useState("");
@@ -203,6 +207,8 @@ export function ActivateTab() {
     const silent = opts?.silent === true;
     const raw = idStr ?? tokenId;
     if (!raw) return silent ? undefined : act.setStatus("Enter a token id.", "err");
+    const seq = ++checkSeq.current;
+    const stale = () => seq !== checkSeq.current;
     try {
       const id = BigInt(raw);
       const [active, owner, wallet, basket, claimable] = await Promise.all([
@@ -212,6 +218,7 @@ export function ActivateTab() {
         client.readContract({ address: ADDR.strategyRegistry, abi: strategyRegistryAbi, functionName: "getBasket", args: [0n] }),
         client.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "claimable", args: [id] }),
       ]);
+      if (stale()) return;
       setInfo({ id, active, owner, wallet });
       if (!silent) act.setStatus(`Owner ${short(owner)}${address && owner.toLowerCase() === address.toLowerCase() ? " (you)" : ""}`);
       // Show every stock the Broker wallet can hold — the current basket plus every
@@ -230,6 +237,7 @@ export function ActivateTab() {
       }));
       // Price each holding from the Booster's own feeds so the wallet reads in dollars too.
       const metas = await loadKnownTokens(tokens).catch(() => []);
+      if (stale()) return;
       const priced = balances.map((h) => ({
         ...h,
         priceUsd: metas.find((m) => m.token.toLowerCase() === h.token.toLowerCase())?.priceUsd,
@@ -241,10 +249,16 @@ export function ActivateTab() {
         const holding = priced.find((item) => item.token.toLowerCase() === token.toLowerCase());
         return { sym: holding?.sym ?? short(token), bal: claimable[1][i], decimals: holding?.decimals ?? 18, priceUsd: holding?.priceUsd };
       }).filter((h) => h.bal > 0n));
-    } catch {
-      if (!silent) {
+    } catch (e) {
+      if (stale() || silent) return;
+      // A revert (ownerOf on an unminted id) means the id is wrong; anything else is the RPC,
+      // and telling a buyer "not found" during a rate-limit read as "this listing is fake".
+      const name = String((e as { name?: string })?.name ?? "");
+      if (/ContractFunction/i.test(name)) {
         act.setStatus("Token not found — is the id right?", "err");
         setInfo(null);
+      } else {
+        act.setStatus("Could not reach the chain just now — try again in a moment.", "err");
       }
     }
   }
@@ -332,6 +346,9 @@ export function ActivateTab() {
       const caps = await getCapabilities(wagmiConfig, { account: address, chainId: activeChain.id });
       const forChain = (caps as Record<string | number, { atomic?: { status?: string } }>)[activeChain.id] ?? caps;
       const status = (forChain as { atomic?: { status?: string } })?.atomic?.status;
+      // "supported": executes atomically today. "ready": can, after a wallet upgrade the
+      // request may trigger. Either way the bundle below is sent with forceAtomic, so a wallet
+      // that would run the calls one by one refuses instead of leaving a half-done sweep.
       return status === "supported" || status === "ready";
     } catch {
       return false;
@@ -468,6 +485,21 @@ export function ActivateTab() {
       // the Wallet to process"). Send in bundles of BUNDLE calls, halve the bundle on a size
       // error, and if the wallet refuses even the first single-call bundle, sign one by one.
       const BUNDLE = 12;
+      // On any failure, say what actually happened instead of guessing: re-read every planned
+      // transfer's balance and count the ones that are gone from the Broker wallet.
+      const describeMoved = async (): Promise<string> => {
+        try {
+          const planned = jobs.flatMap((j) => j.transfers.map((t) => ({ wallet: j.wallet, token: t.token, amount: t.amount })));
+          const now = await Promise.all(planned.map((t) =>
+            client.readContract({ address: t.token, abi: erc20Abi, functionName: "balanceOf", args: [t.wallet] }) as Promise<bigint>));
+          const moved = planned.filter((t, k) => now[k] < t.amount).length;
+          if (moved === 0) return "Nothing moved; your Brokers still hold everything.";
+          if (moved === planned.length) return "Every withdrawal did land; refresh to see your wallet.";
+          return `${moved} of ${planned.length} withdrawals landed before it stopped; the rest are still in the Broker wallets. Run it again to finish.`;
+        } catch {
+          return "Could not re-check balances; refresh before trying again.";
+        }
+      };
       let sentAll = false;
       if (calls.length > 1 && (await atomicSupported())) {
         let size = Math.min(BUNDLE, calls.length);
@@ -477,19 +509,30 @@ export function ActivateTab() {
           const chunk = calls.slice(i, i + size);
           try {
             claimTx.setStatus(`Bundle ${bundles + 1}: ${chunk.length} step${chunk.length > 1 ? "s" : ""} in one confirmation (${calls.length - i} left)…`);
-            const { id } = await sendCalls(wagmiConfig, { calls: chunk, chainId: activeChain.id });
+            // forceAtomic: the wallet must execute the whole bundle or none of it. A wallet that
+            // can only run the calls one by one rejects the request, and we fall back to signing
+            // one by one ourselves, which is honest about being non-atomic.
+            const { id } = await sendCalls(wagmiConfig, { calls: chunk, chainId: activeChain.id, forceAtomic: true });
             claimTx.setStatus("Waiting for the bundle to confirm…");
-            const result = await waitForCallsStatus(wagmiConfig, { id });
-            if (result.status !== "success") throw new Error("The batch did not complete — nothing partial was left behind.");
+            const result = await waitForCallsStatus(wagmiConfig, { id, timeout: 180_000 });
+            if (result.status !== "success") {
+              throw new Error(`The bundle did not complete. ${await describeMoved()}`);
+            }
             i += chunk.length;
             bundles += 1;
           } catch (e) {
             const msg = String((e as { shortMessage?: string; message?: string })?.shortMessage
               || (e as { message?: string })?.message || e);
-            const tooLarge = /too large|bundle|batch/i.test(msg) && !/rejected|denied/i.test(msg);
+            const rejected = /rejected|denied/i.test(msg);
+            const tooLarge = /too large|bundle|batch/i.test(msg) && !rejected;
+            const notAtomic = /atomic|not supported|unsupported|5792|method/i.test(msg) && !rejected;
             if (tooLarge && size > 1) { size = Math.max(1, Math.floor(size / 2)); continue; }
-            if (tooLarge && i === 0) break; // this wallet cannot bundle at all: sign one by one
-            throw e;
+            if ((tooLarge || notAtomic) && i === 0) break; // cannot bundle atomically: sign one by one
+            if (/timed? ?out|timeout/i.test(msg)) {
+              throw new Error(`The bundle was not confirmed within 3 minutes. ${await describeMoved()}`);
+            }
+            if (/did not complete/.test(msg)) throw e;
+            throw new Error(`${msg} ${await describeMoved()}`);
           }
         }
         sentAll = i >= calls.length;
