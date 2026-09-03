@@ -61,6 +61,13 @@ export const COAT_DROPS: { label: string; block: number; coat: number; recipient
     recipients: 1175,
     receipts: "https://github.com/dnebayis/brokers/blob/main/indexer/reports/coat-bonus-t1.sent.csv",
   },
+  {
+    label: "tranche 2 · inactive Brokers",
+    block: 53682930,
+    coat: 6_755_744.680851064,
+    recipients: 567,
+    receipts: "https://github.com/dnebayis/brokers/blob/main/indexer/reports/coat-bonus-t2.sent.csv",
+  },
 ];
 export const COAT_DROPPED_TOTAL = COAT_DROPS.reduce((a, d) => a + d.coat, 0);
 
