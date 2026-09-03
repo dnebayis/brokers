@@ -673,6 +673,19 @@ class IndexerMainPreflightTests(unittest.TestCase):
         self.assertTrue(payload["tickers"])
 
 
+class RedactTests(unittest.TestCase):
+    def test_rpc_path_and_full_url_are_masked(self):
+        import importlib, config
+        with patch.dict(os.environ, {"RH_RPC_URL": "https://x.g.alchemy.com/v2/AbCdEfGh1234567890xyzXYZ", "GEMINI_API_KEY": "gm-secret-12345"}):
+            importlib.reload(config)
+            out = config.redact("Max retries exceeded with url: /v2/AbCdEfGh1234567890xyzXYZ; key gm-secret-12345; "
+                                "https://x.g.alchemy.com/v2/AbCdEfGh1234567890xyzXYZ")
+        importlib.reload(config)
+        self.assertNotIn("AbCdEfGh", out)
+        self.assertNotIn("gm-secret", out)
+        self.assertIn("<rpc", out)
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""

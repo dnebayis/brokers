@@ -19,6 +19,8 @@ RETRY_DELAY_S = 2.0
 
 
 def alert(message: str) -> bool:
+    from config import redact
+    message = redact(message)
     url = os.environ.get("OPS_WEBHOOK_URL", "")
     if not url:
         return False

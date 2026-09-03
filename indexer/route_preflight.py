@@ -18,6 +18,7 @@ The simulation is read-only and costs no gas.
 from __future__ import annotations
 
 import os
+from config import redact
 import re
 import time
 
@@ -57,7 +58,7 @@ def is_transport_error(exc: BaseException) -> bool:
         pass
     if isinstance(exc, (TimeoutError, ConnectionError, OSError)):
         return True
-    return bool(_TRANSPORT_RE.search(str(exc)))
+    return bool(_TRANSPORT_RE.search(redact(str(exc))))
 
 
 def is_revert(exc: BaseException) -> bool:
@@ -67,7 +68,7 @@ def is_revert(exc: BaseException) -> bool:
             return True
     except ImportError:  # pragma: no cover
         pass
-    return "revert" in str(exc).lower()
+    return "revert" in redact(str(exc)).lower()
 
 ROUTER_ABI = [
     {"type": "function", "name": "swapExactETHForStock", "stateMutability": "payable",
@@ -130,11 +131,11 @@ def simulate_leg(w3, router_address, booster_address, stock, wei) -> tuple[bool,
         except Exception as exc:
             if is_revert(exc) and not is_transport_error(exc):
                 # The revert is the signal: this route cannot fill at this block.
-                return False, 0, str(exc)[:200]
+                return False, 0, redact(str(exc))[:200]
             if not is_transport_error(exc):
                 # Unknown failure class: refuse to guess. Dropping a leg on a mystery
                 # would be the silent failure this module exists to prevent.
-                raise RouteProbeUnavailable(f"{stock}: unclassified probe failure: {str(exc)[:200]}")
+                raise RouteProbeUnavailable(f"{stock}: unclassified probe failure: {redact(str(exc))[:200]}")
             last = exc
             if attempt < attempts - 1:
                 time.sleep(2 ** attempt)

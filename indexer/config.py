@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 
@@ -209,3 +210,23 @@ def wei_env(name: str, default: str) -> int:
 
 
 BUYBACK_THRESHOLD_WEI = wei_env("BUYBACK_THRESHOLD_WEI", "1000000000000000")
+
+def redact(text) -> str:
+    """Strip provider credentials from a message before it is printed or alerted.
+
+    GitHub masks a secret only when the whole value appears; requests' ConnectionError
+    carries just the path ("Max retries exceeded with url: /v2/<key>"), and the repo and its
+    Action logs are public. Masks the RPC URL, its path, and the Gemini key wherever they occur.
+    """
+    text = str(text)
+    for url in {RPC_URL, os.environ.get("RH_RPC_URL", ""), os.environ.get("RH_UPSTREAM_RPC", "")}:
+        if not url:
+            continue
+        text = text.replace(url, "<rpc>")
+        path = url.split("//", 1)[-1].split("/", 1)[1] if "/" in url.split("//", 1)[-1] else ""
+        if len(path) >= 8:
+            text = text.replace(path, "<rpc-path>")
+    key = os.environ.get("GEMINI_API_KEY", "")
+    if len(key) >= 8:
+        text = text.replace(key, "<gemini-key>")
+    return re.sub(r"/v2/[A-Za-z0-9_-]{16,}", "/v2/<key>", text)

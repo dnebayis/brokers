@@ -20,7 +20,7 @@ from route_preflight import (
     RouteProbeUnavailable, preflight_basket, preflight_enabled, resolve_booster_context,
 )
 from tokens import address_of
-from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, TRAILING_DAYS, wei_env
+from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, TRAILING_DAYS, wei_env, redact
 from health import snapshot_health
 
 
@@ -353,7 +353,7 @@ def main():
             alert(f"⚠️ indexer: {message}")
             if args.out:
                 json.dump({"generatedAt": datetime.now(timezone.utc).isoformat(),
-                           "skipped": "route pre-flight unavailable", "reason": str(exc)},
+                           "skipped": "route pre-flight unavailable", "reason": redact(str(exc))},
                           open(args.out, "w"), indent=2)
             return
         print(f"\nRoute pre-flight at {buffer_wei / 1e18:.4f} ETH buffer via {router_address}: "
@@ -443,7 +443,7 @@ def main():
                     data_url, headers={"User-Agent": "coattail-indexer/1.0"}), timeout=30) as r:
                 previous_note = (json.load(r) or {}).get("commentary")
         except Exception as exc:  # a missing previous note only costs one model call
-            print(f"previous basket note unavailable: {str(exc)[:100]}")
+            print(f"previous basket note unavailable: {redact(str(exc))[:100]}")
     payload["commentary"] = generate(payload, previous_note, key=os.environ.get("GEMINI_API_KEY", ""))
     if payload["commentary"]:
         print(f"Basket note: {payload['commentary']['text'][:160]}…")

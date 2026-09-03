@@ -14,6 +14,7 @@ import time
 from datetime import datetime, timezone
 from typing import Callable, Dict, List
 
+from config import redact  # noqa: E402
 from config import (
     BUYBACK_BURNER_ADDRESS,
     BUYBACK_THRESHOLD_WEI,
@@ -93,7 +94,7 @@ def _diagnose_poke(w3, booster, registry_abi, booster_address, buffer_wei) -> No
                   ", ".join(d["token"] for d in dead) +
                   " — rerun the indexer to repost the basket without them")
     except Exception as exc:
-        print(json.dumps({"action": "poke.diagnosis", "status": "unavailable", "error": str(exc)[:200]}))
+        print(json.dumps({"action": "poke.diagnosis", "status": "unavailable", "error": redact(str(exc))[:200]}))
 
 
 
@@ -154,7 +155,7 @@ def _mc_call(w3, calls, chunk=150):
             # A rate-limited RPC and unreadable data look identical downstream ("unpriced");
             # one line per failed chunk keeps the cause visible.
             print(json.dumps({"action": "multicall", "status": "chunk_failed",
-                              "calls": len(part), "error": str(exc)[:160]}))
+                              "calls": len(part), "error": redact(str(exc))[:160]}))
             out.extend([None] * len(part))
             continue
         for (contract, fn, _args), (ok, data) in zip(part, res):
@@ -305,7 +306,7 @@ def _pb_context(w3, engine, floor_addr):
         # Without this context every playbook order is "unpriced" for the whole pass, so
         # the reason must not be silent.
         print(json.dumps({"action": "playbooks.context", "status": "unavailable",
-                          "error": str(exc)[:160]}))
+                          "error": redact(str(exc))[:160]}))
         return None
 
 
@@ -461,7 +462,7 @@ def _feed_watchdog(w3) -> None:
             print(f"::warning::{message}")
             alert(f"🩺 {message}")
     except Exception as exc:  # the watchdog must never break the keeper it watches
-        print(json.dumps({"action": "feed.watchdog", "status": "skipped", "error": str(exc)[:160]}))
+        print(json.dumps({"action": "feed.watchdog", "status": "skipped", "error": redact(str(exc))[:160]}))
 
 
 
@@ -482,7 +483,7 @@ def simulate_reason(call, sender: str) -> str:
         call.call({"from": sender})
         return ""
     except Exception as exc:  # noqa: BLE001 - the message is the diagnosis
-        return str(exc)
+        return redact(str(exc))
 
 
 def send_signed(w3, account, call, gas_limit: int, label: str, chain_id: int,
@@ -521,13 +522,13 @@ def send_signed(w3, account, call, gas_limit: int, label: str, chain_id: int,
                 try:
                     if w3.eth.get_transaction(local_hash) is not None:
                         print(json.dumps({"action": label, "status": "sent", "tx": local_hash.hex(),
-                                          "nonce": nonce, "note": f"accepted despite send error: {str(exc)[:120]}"}))
+                                          "nonce": nonce, "note": f"accepted despite send error: {redact(str(exc))[:120]}"}))
                         return local_hash
                 except Exception:  # noqa: BLE001 - not found / RPC hiccup: keep looking
                     pass
                 sleep(1)
-            if "nonce" in str(exc).lower() and send_try < tries - 1:
-                print(json.dumps({"action": label, "status": "resend", "nonce": nonce, "error": str(exc)[:160]}))
+            if "nonce" in redact(str(exc)).lower() and send_try < tries - 1:
+                print(json.dumps({"action": label, "status": "resend", "nonce": nonce, "error": redact(str(exc))[:160]}))
                 nonce = max(nonce + 1, w3.eth.get_transaction_count(account.address, "latest"))
                 continue
             raise
@@ -681,9 +682,9 @@ def main() -> None:
         except Exception as exc:
             # Stages are intentionally isolated: a temporarily unavailable buyback
             # TWAP must not prevent fee flushing or stock purchases, and vice versa.
-            print(json.dumps({"action": label, "status": "deferred", "error": str(exc)}))
+            print(json.dumps({"action": label, "status": "deferred", "error": redact(str(exc))}))
             failed_actions.append(label)
-            failed_errors[label] = str(exc)
+            failed_errors[label] = redact(str(exc))
             return False
 
     if "hook.flush" in plan and hook:
@@ -714,9 +715,9 @@ def main() -> None:
             poke_sendable = True
         except Exception as exc:
             print(json.dumps({"action": "booster.poke", "status": "deferred",
-                              "error": f"pre-flight revert: {str(exc)[:200]}"}))
+                              "error": f"pre-flight revert: {redact(str(exc))[:200]}"}))
             failed_actions.append("booster.poke")
-            failed_errors["booster.poke"] = f"pre-flight revert: {str(exc)[:300]}"
+            failed_errors["booster.poke"] = f"pre-flight revert: {redact(str(exc))[:300]}"
             _diagnose_poke(w3, booster, registry_abi, booster_address,
                            min(booster_balance, poke_max_wei))
             poke_sendable = False
@@ -782,7 +783,7 @@ def main() -> None:
                 print(json.dumps({"action": "floor.flush", "status": "skipped",
                                   "feesRaw": fees_raw, "minRaw": flush_min}))
         except Exception as exc:  # never let the venue stage break payroll stages
-            print(json.dumps({"action": "floor.flush", "status": "deferred", "error": str(exc)[:200]}))
+            print(json.dumps({"action": "floor.flush", "status": "deferred", "error": redact(str(exc))[:200]}))
 
     # Playbooks: execute holders' standing orders (auto-claim / sweep / convert). Same
     # env-gating contract as the Floor stage — without PLAYBOOKS_ENGINE set this is inert.
@@ -935,7 +936,7 @@ def main() -> None:
                     healthy_mins.append(guard)
                 except Exception as exc:
                     print(json.dumps({"action": "playbooks.run", "tokenId": token_id,
-                                      "status": "deferred", "reason": str(exc)[:160]}))
+                                      "status": "deferred", "reason": redact(str(exc))[:160]}))
             if healthy_ids:
                 # A big batch needs its whole gas budget up front, and an unaffordable one
                 # used to defer EVERY order in the pass. Send what the relay can carry now:
@@ -951,7 +952,7 @@ def main() -> None:
                         have = int(w3.eth.get_balance(account.address))
                         want = gas_limit * int(w3.eth.gas_price)
                     except Exception as exc:
-                        have, want = _have_want(str(exc))
+                        have, want = _have_want(redact(str(exc)))
                         if have is None:
                             # not an affordability problem: let submit report it the normal way
                             have, want = 1, 1
@@ -970,7 +971,7 @@ def main() -> None:
                 print(json.dumps({"action": "playbooks.run", "status": "skipped",
                                   "enrolled": total, "eligible": len(ids)}))
         except Exception as exc:  # standing orders defer to the next hour, never break payroll
-            print(json.dumps({"action": "playbooks.run", "status": "deferred", "error": str(exc)[:200]}))
+            print(json.dumps({"action": "playbooks.run", "status": "deferred", "error": redact(str(exc))[:200]}))
 
     # Gift vault: one donated NFT to a random ACTIVE Broker every `interval` seconds. The
     # winner comes from a block hash the contract picks; the keeper only opens the round and
@@ -1002,9 +1003,9 @@ def main() -> None:
                             ready = True
                             break
                         except Exception as exc:
-                            if "484e399a" not in str(exc) and "DrawBlockNotReached" not in str(exc):
+                            if "484e399a" not in redact(str(exc)) and "DrawBlockNotReached" not in redact(str(exc)):
                                 print(json.dumps({"action": "gift.settle", "status": "deferred",
-                                                  "error": str(exc)[:160]}))
+                                                  "error": redact(str(exc))[:160]}))
                                 return False
                         time.sleep(15)
                     if not ready:
@@ -1031,7 +1032,7 @@ def main() -> None:
                 print(json.dumps({"action": "gift.open", "status": "skipped", "queued": queued,
                                   "nextDrawAt": (last_gift + gift_interval) if last_gift else 0}))
         except Exception as exc:  # a gift never blocks payroll stages
-            print(json.dumps({"action": "gift.open", "status": "deferred", "error": str(exc)[:200]}))
+            print(json.dumps({"action": "gift.open", "status": "deferred", "error": redact(str(exc))[:200]}))
 
     if failed_actions:
         # Stages are isolated by design: a deferred stage retries next run and never
