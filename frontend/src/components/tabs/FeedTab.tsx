@@ -1,6 +1,7 @@
 "use client";
 
 import { useStoredQuery } from "@/lib/useStoredQuery";
+import { BasketNow } from "@/components/BasketNow";
 
 type FeedItem = {
   chamber: "House" | "Senate";
@@ -40,6 +41,8 @@ export function FeedTab() {
   });
 
   return (
+    <div className="grid gap-5">
+    <BasketNow />
     <div className="card">
       <div className="flex items-center justify-between mb-1">
         <h2 className="pixel-title text-[15px]">Congress disclosures</h2>
@@ -105,6 +108,7 @@ export function FeedTab() {
         Cached in your browser · refreshes hourly and only when the data changes
         {data?.source && data.source !== "none" ? ` · source: ${data.source.replace("_", " ")}` : ""}.
       </p>
+    </div>
     </div>
   );
 }

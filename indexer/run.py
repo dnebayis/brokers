@@ -392,6 +392,10 @@ def main():
         print("\nNo eligible tokenizable tickers in window — nothing to post.")
         return
 
+    # Who is behind each name: the same rows, grouped by member, for the site's feed.
+    from attribution import attribute
+    attribution = attribute(trades, tickers)
+    missed_attribution = attribute(trades, [m["ticker"] for m in (missed_report or [])[:5]])
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "source": source,
@@ -403,8 +407,27 @@ def main():
         "weightsBps": weights,
         "routePreflight": preflight_report,
         "missedCoverage": missed_report,
+        "missedAttribution": missed_attribution,
+        "attribution": attribution,
         "smartShadow": shadow_report,
     }
+    # A model-written note on the facts above, regenerated only when they change. The
+    # previously published note comes from the data branch the site reads, so hourly
+    # passes with an unchanged basket reuse it instead of calling the provider.
+    from commentary import generate
+    previous_note = None
+    data_url = os.environ.get("BASKET_DATA_URL", "").strip()
+    if data_url:
+        try:
+            import urllib.request
+            with urllib.request.urlopen(urllib.request.Request(
+                    data_url, headers={"User-Agent": "coattail-indexer/1.0"}), timeout=30) as r:
+                previous_note = (json.load(r) or {}).get("commentary")
+        except Exception as exc:  # a missing previous note only costs one model call
+            print(f"previous basket note unavailable: {str(exc)[:100]}")
+    payload["commentary"] = generate(payload, previous_note, key=os.environ.get("GEMINI_API_KEY", ""))
+    if payload["commentary"]:
+        print(f"Basket note: {payload['commentary']['text'][:160]}…")
     if args.out:
         json.dump(payload, open(args.out, "w"), indent=2)
         print(f"\nWrote basket -> {args.out}")

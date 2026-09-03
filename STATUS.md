@@ -52,6 +52,15 @@ Owner decision on 2026-09-03: stay on v1.
 - **Earnings card** — every Broker in My Brokers can draw a PNG card (artwork, earned since
   switch-on, holdings) in the browser and post it to X; `/card/<id>` is the public version.
 
+## Basket transparency
+
+Every indexer pass publishes `basket-latest.json` to the repository's `data` branch (machine
+commits, no redeploy): weights, per-name attribution (which members' disclosed buys carry
+the name, amount ranges, traded/filed dates), the largest names left out and why, and a
+model-written note (`indexer/commentary.py`, Gemini via `GEMINI_API_KEY`, regenerated only
+when the facts change, validated against the facts and refused if it names an unknown
+ticker or reads as advice). The site's Feed tab renders it through `/api/basket`.
+
 ## Automation
 
 An hourly GitHub Actions keeper advances, in order: hook flush → splitter flush →

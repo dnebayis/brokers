@@ -9,7 +9,8 @@ name: indexer-schedule-mainnet
 # repo variable) — below it, run.py retains the previous epoch and skips the post as a clean no-op.
 
 permissions:
-  contents: read
+  # write: the run publishes latest-basket.json to the `data` branch for the site
+  contents: write
 
 on:
   workflow_dispatch:
@@ -74,6 +75,12 @@ jobs:
       # this file. Dispatched single-pass runs do not touch it: two runs restoring and
       # re-saving the same cache would overwrite each other's appends.
       SHADOW_HISTORY_FILE: ${{ github.event_name == 'schedule' && 'shadow-history.mainnet.jsonl' || '' }}
+      # Basket note (attribution is always computed; the note needs the model key and is
+      # regenerated only when the facts change). Unset key -> note absent, nothing else changes.
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+      BASKET_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/basket-latest.json
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       # Restore the newest previous shadow history (unique key per run + prefix restore:
@@ -105,6 +112,8 @@ jobs:
             echo "::group::indexer pass ${i}/${passes}"
             if python run.py --post --out latest-basket.json; then
               fail=0
+              # the site reads this file; publish every pass so the feed is at most an hour old
+              bash ../scripts/publish_data.sh latest-basket.json basket-latest.json || echo "::warning::data publish failed"
             else
               fail=1
               echo "::warning::indexer pass ${i}/${passes} failed; the next pass retries"

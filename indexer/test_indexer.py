@@ -629,3 +629,93 @@ class GiftPlanTests(unittest.TestCase):
     def test_cadence_waits_the_full_interval(self):
         self.assertEqual(gift_plan(now=1000 + 259_199, last_gift_at=1000, interval=259_200, queued=3, open_nft=self.ZERO), "idle")
         self.assertEqual(gift_plan(now=1000 + 259_200, last_gift_at=1000, interval=259_200, queued=3, open_nft=self.ZERO), "open")
+
+
+class AttributionTests(unittest.TestCase):
+    ROWS = [
+        {"symbol": "INTC", "who": "Nancy Pelosi", "chamber": "house", "type": "Buy",
+         "amount": "$1,000,001 - $5,000,000", "transactionDate": "2026-07-24", "disclosureDate": "2026-08-24"},
+        {"symbol": "INTC", "who": "Nancy Pelosi", "chamber": "house", "type": "Buy",
+         "amount": "$250,001 - $500,000", "transactionDate": "2026-07-28", "disclosureDate": "2026-08-24"},
+        {"symbol": "INTC", "who": "Kevin Hern", "chamber": "house", "type": "Purchase",
+         "amount": "$1,001 - $15,000", "transactionDate": "2026-08-01", "disclosureDate": "2026-08-10"},
+        {"symbol": "INTC", "who": "Someone Old", "chamber": "senate", "type": "Buy",
+         "amount": "$1,000,001 - $5,000,000", "transactionDate": "2026-01-01", "disclosureDate": "2026-02-01"},
+        {"symbol": "INTC", "who": "A Seller", "chamber": "house", "type": "Sale (Full)",
+         "amount": "$15,001 - $50,000", "transactionDate": "2026-08-02", "disclosureDate": "2026-08-12"},
+        {"symbol": "BE", "who": "Nancy Pelosi", "chamber": "house", "type": "Buy",
+         "amount": "$1,000,001 - $5,000,000", "transactionDate": "2026-07-24", "disclosureDate": "2026-08-24"},
+    ]
+
+    def test_groups_buys_by_member_inside_the_window(self):
+        from attribution import attribute
+        out = attribute(self.ROWS, ["INTC"], now=datetime(2026, 9, 3))
+        intc = out["INTC"]
+        self.assertEqual(intc["buyerCount"], 2)  # the January buy is outside 90 days
+        self.assertEqual(intc["sellCount"], 1)
+        top = intc["buyers"][0]
+        self.assertEqual(top["member"], "Nancy Pelosi")
+        self.assertEqual(top["buys"], 2)
+        self.assertEqual(top["notionalUsd"], 3_000_000.5 + 375_000.5)
+        self.assertEqual(top["latestTraded"], "2026-07-28")
+        self.assertEqual(top["latestFiled"], "2026-08-24")
+        self.assertEqual(top["ranges"][0], "$1,000,001 - $5,000,000")
+        self.assertEqual(intc["buyers"][1]["member"], "Kevin Hern")
+
+    def test_missed_names_get_the_same_treatment(self):
+        from attribution import attribute
+        out = attribute(self.ROWS, ["BE"], now=datetime(2026, 9, 3))
+        self.assertEqual(out["BE"]["buyers"][0]["member"], "Nancy Pelosi")
+
+
+class CommentaryTests(unittest.TestCase):
+    PAYLOAD = {
+        "tickers": ["INTC", "SPCX"], "weightsBps": [5000, 5000], "coverage": 0.196,
+        "attribution": {"INTC": {"buyers": [{"member": "Nancy Pelosi", "chamber": "house", "buys": 2,
+                                             "notionalUsd": 3375001.0, "latestTraded": "2026-07-28",
+                                             "latestFiled": "2026-08-24", "ranges": []}],
+                                 "buyerCount": 2, "sellCount": 1},
+                        "SPCX": {"buyers": [], "buyerCount": 0, "sellCount": 0}},
+        "missedCoverage": [{"ticker": "BE", "netNotional": 3750001.0, "shareOfBuying": 0.573}],
+        "missedAttribution": {"BE": {"buyers": [{"member": "Nancy Pelosi"}], "buyerCount": 1, "sellCount": 0}},
+    }
+    NOTE = ("The basket is split between Intel and SpaceX right now. Intel is there because Nancy Pelosi "
+            "disclosed two buys worth about $3.4M, traded in late July and filed on August 24. The biggest "
+            "name left out is Bloom Energy, about $3.8M of buying, because it is not tokenized on this chain. "
+            "Only a fifth of the disclosed buying in the window could be bought.")
+
+    def test_prompt_carries_only_computed_facts(self):
+        from commentary import build_prompt, input_hash
+        prompt = build_prompt(self.PAYLOAD)
+        self.assertIn('"ticker": "INTC"', prompt)
+        self.assertIn("Nancy Pelosi", prompt)
+        self.assertIn('"$3.4M"', prompt)
+        self.assertIn("Output the note only", prompt)
+        self.assertEqual(len(input_hash(self.PAYLOAD)), 16)
+
+    def test_validation_rejects_unknown_tickers_and_advice(self):
+        from commentary import validate_note
+        self.assertTrue(validate_note(self.NOTE, ["INTC", "SPCX", "BE"])[0])
+        bad_ticker = self.NOTE + " NVDA looks similar."
+        self.assertFalse(validate_note(bad_ticker, ["INTC", "SPCX", "BE"])[0])
+        advice = self.NOTE + " You should buy Intel."
+        self.assertFalse(validate_note(advice, ["INTC", "SPCX", "BE"])[0])
+        self.assertFalse(validate_note("short", ["INTC"])[0])
+
+    def test_generate_reuses_previous_note_when_facts_unchanged(self):
+        from commentary import generate, input_hash
+        prev = {"text": self.NOTE, "model": "x", "generatedAt": "t", "inputHash": input_hash(self.PAYLOAD)}
+        calls = []
+        out = generate(self.PAYLOAD, prev, key="k", call=lambda *a: calls.append(a) or self.NOTE)
+        self.assertEqual(out["text"], self.NOTE)
+        self.assertEqual(calls, [])
+
+    def test_generate_calls_model_and_validates(self):
+        from commentary import generate
+        out = generate(self.PAYLOAD, None, key="k", model="m", call=lambda p, k, m: self.NOTE)
+        self.assertEqual(out["model"], "m")
+        self.assertEqual(out["text"], self.NOTE)
+        # a note that fails validation twice is dropped, never published
+        self.assertIsNone(generate(self.PAYLOAD, None, key="k", call=lambda *a: "You should buy INTC now, guaranteed. " * 5))
+        # no key: no call, no note
+        self.assertIsNone(generate(self.PAYLOAD, None, key=""))
