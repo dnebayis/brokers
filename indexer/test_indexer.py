@@ -858,3 +858,27 @@ class ScorecardBenchmarkTests(unittest.TestCase):
         # 50 * 88/80 + 50 * 90/100 = 55 + 45 = 100 -> 0%
         self.assertEqual(out["smart"]["pnlPct"], 0.0)
         self.assertEqual(out["smart"]["purchases"], 1)
+
+
+class FiledWindowTests(unittest.TestCase):
+    def test_aggregate_can_key_the_window_on_the_filing_date(self):
+        from aggregate import aggregate
+        now = datetime(2026, 9, 3)
+        rows = [
+            # traded 97 days ago, filed 70 days ago: out by trade date, in by filing date
+            {"symbol": "INTC", "type": "Purchase", "amount": "$1,000,001 - $5,000,000", "transactionDate": "2026-05-29", "disclosureDate": "2026-06-24"},
+            {"symbol": "MU", "type": "Purchase", "amount": "$1,001 - $15,000", "transactionDate": "2026-07-10", "disclosureDate": "2026-07-17"},
+        ]
+        by_trade = aggregate(rows, now=now)
+        by_filed = aggregate(rows, date_key="disclosureDate", now=now)
+        self.assertNotIn("INTC", by_trade)
+        self.assertEqual(by_filed["INTC"], 3_000_000.5)
+        self.assertEqual(by_trade["MU"], by_filed["MU"])
+
+    def test_shadow_history_row_carries_the_filed_window(self):
+        from run import shadow_history_row
+        row = json.loads(shadow_history_row(5000, [("INTC", 10000)], [("INTC", 5000), ("SPCX", 5000)], set(), "shadow",
+                                            filed_window={"basket": [("INTC", 7000), ("NVDA", 3000)], "divergenceBps": 2500}))
+        self.assertEqual(row["filedWindow"]["divergenceBps"], 2500)
+        self.assertEqual(row["filedWindow"]["basket"][1], {"ticker": "NVDA", "bps": 3000})
+        self.assertIsNone(json.loads(shadow_history_row(0, [], [], set(), "shadow"))["filedWindow"])

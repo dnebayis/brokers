@@ -85,7 +85,15 @@ def fetch_congress_trades() -> List[Dict]:
     }
     # The API validates transaction_newer_than as a YYYY-MM-DD date, not a unix
     # timestamp (a timestamp returns 422 Unprocessable Entity).
+    # Two cutoffs. The FILED cutoff (TRAILING_DAYS) ends the page walk, because the feed is
+    # ordered by filing. The TRANSACTION cutoff sent to the API is wider (UW_TXN_LOOKBACK_DAYS,
+    # default 150): a filing made inside the window can describe a trade from before it
+    # (members file up to 45 days late, some later), and the old single cutoff dropped those
+    # rows at the source. The live aggregate still keys on the transaction date and its own
+    # 90-day window, so nothing changes on chain; the extra rows feed the filed-window shadow.
     newer_than = (datetime.now(timezone.utc) - timedelta(days=TRAILING_DAYS)).date().isoformat()
+    txn_newer_than = (datetime.now(timezone.utc)
+                      - timedelta(days=int(os.environ.get("UW_TXN_LOOKBACK_DAYS", "150")))).date().isoformat()
     rows: List[Dict] = []
     batch: List = []
     # Every raw row is deduplicated on its full identity, and a page whose content
@@ -103,7 +111,7 @@ def fetch_congress_trades() -> List[Dict]:
         response = _get_with_retry(url, headers, {
             "limit": 500,
             "page": page,
-            "transaction_newer_than": newer_than,
+            "transaction_newer_than": txn_newer_than,
         })
         payload = response.json()
         batch = payload.get("data", []) if isinstance(payload, dict) else []

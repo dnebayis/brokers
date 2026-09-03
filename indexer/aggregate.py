@@ -48,12 +48,17 @@ def _within_window(date_str: str, cutoff: datetime) -> bool:
         return True  # keep undated rows rather than silently dropping
 
 
-def aggregate(trades: List[Dict]) -> Dict[str, float]:
-    """Net (or gross) notional per ticker over the trailing window."""
-    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=TRAILING_DAYS)
+def aggregate(trades: List[Dict], date_key: str = "transactionDate", now: datetime | None = None) -> Dict[str, float]:
+    """Net (or gross) notional per ticker over the trailing window.
+
+    `date_key` picks which date the window applies to: the trade date (live basket) or the
+    filing date ("disclosureDate", the filed-window shadow: a trade stays in play for 90
+    days after Congress told us about it, however late it was filed)."""
+    now = now or datetime.now(timezone.utc).replace(tzinfo=None)
+    cutoff = now - timedelta(days=TRAILING_DAYS)
     net: Dict[str, float] = {}
     for tr in trades:
-        if not _within_window(tr.get("transactionDate", ""), cutoff):
+        if not _within_window(tr.get(date_key, ""), cutoff):
             continue
         amt = parse_amount(tr.get("amount", ""))
         if amt <= 0:
@@ -241,7 +246,7 @@ def to_basket(net: Dict[str, float], buyers: Dict[str, int] | None = None) -> Li
     return [(s, w) for (s, _), w in zip(top, weights)]
 
 
-def buyer_counts(trades: List[Dict]) -> Dict[str, int]:
+def buyer_counts(trades: List[Dict], date_key: str = "transactionDate") -> Dict[str, int]:
     """Distinct members who *bought* each ticker in the trailing window.
 
     This is the conviction signal: a name five members are accumulating is a stronger
@@ -251,7 +256,7 @@ def buyer_counts(trades: List[Dict]) -> Dict[str, int]:
     cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=TRAILING_DAYS)
     buyers: Dict[str, set] = {}
     for tr in trades:
-        if not _within_window(tr.get("transactionDate", ""), cutoff):
+        if not _within_window(tr.get(date_key, ""), cutoff):
             continue
         if not _is_buy(tr.get("type", "")):
             continue

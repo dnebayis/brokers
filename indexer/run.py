@@ -24,7 +24,7 @@ from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, TRAILI
 from health import snapshot_health
 
 
-def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode, now=None):
+def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode, now=None, filed_window=None):
     """One JSONL line of the shadow-vs-live series.
 
     `live` is always the conviction basket and `shadow` the smart one, regardless of
@@ -39,6 +39,11 @@ def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode
         "live": [{"ticker": s, "bps": w} for s, w in conviction_basket],
         "posted": "smart" if mode == "live" else "conviction",
         "vetoed": sorted(vetoed),
+        # second shadow: the 90-day window keyed on the FILING date instead of the trade date
+        "filedWindow": None if filed_window is None else {
+            "basket": [{"ticker": s, "bps": w} for s, w in filed_window["basket"]],
+            "divergenceBps": filed_window["divergenceBps"],
+        },
     }, sort_keys=True)
 
 
@@ -249,6 +254,17 @@ def main():
     buyers = buyer_counts(trades)
     basket = to_basket(net, buyers)
 
+    # Filed-window shadow: the same rule keyed on the filing date. Never posted; logged and
+    # written to the shadow series so the "which date should the window follow" question
+    # is answered with receipts rather than taste.
+    filed_basket = to_basket(aggregate(trades, date_key="disclosureDate"), buyer_counts(trades, date_key="disclosureDate"))
+    _live_w, _filed_w = dict(basket), dict(filed_basket)
+    filed_divergence = sum(abs(_live_w.get(s, 0) - _filed_w.get(s, 0)) for s in set(_live_w) | set(_filed_w)) // 2
+    filed_report = {"basket": filed_basket, "divergenceBps": filed_divergence}
+    print(f"Filed-window basket [SHADOW (not posted)] — divergence from live: {filed_divergence} bps")
+    for s, w in filed_basket:
+        print(f"  {s:<6} {w/BPS*100:5.1f}%  ({w} bps, {'+' if w - _live_w.get(s, 0) >= 0 else ''}{w - _live_w.get(s, 0)} vs live)")
+
     # Smart layer (decay + fast-filer + sell veto), shadow-first: computed and logged on
     # every run so the divergence from the live basket is measurable for weeks before any
     # flip. Only SMART_BASKET=live posts it; shadow changes nothing on chain.
@@ -319,7 +335,7 @@ def main():
 
         w3 = make_web3()
         router_address, poke_threshold = resolve_booster_context(w3, BOOSTER_ADDRESS)
-        buffer_wei = wei_env("ROUTE_PREFLIGHT_BUFFER_WEI", str(poke_threshold))
+        buffer_wei = wei_env("ROUTE_PREFLIGHT_BUFFER_WEI", str(poke_threshold, filed_window=filed_report))
         try:
             basket, dropped = preflight_basket(
                 w3, basket, BOOSTER_ADDRESS, buffer_wei, router_address=router_address
@@ -410,6 +426,8 @@ def main():
         "missedAttribution": missed_attribution,
         "attribution": attribution,
         "smartShadow": shadow_report,
+        "filedWindowShadow": {"basket": [{"ticker": t, "bps": w} for t, w in filed_report["basket"]],
+                              "divergenceBps": filed_report["divergenceBps"]},
     }
     # A model-written note on the facts above, regenerated only when they change. The
     # previously published note comes from the data branch the site reads, so hourly
