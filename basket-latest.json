@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-03T21:30:35.344805+00:00",
+  "generatedAt": "2026-09-03T23:31:18.535007+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 9891,
     "distinctTraders": 134,
-    "latestDisclosure": "2026-09-03",
-    "ageDays": 0,
+    "latestDisclosure": "2026-09-02",
+    "ageDays": 1,
     "errors": []
   },
   "coverage": 0.19682270505476243,
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 53732565,
+    "block": 53804233,
     "dropped": []
   },
   "missedCoverage": [
@@ -118,7 +118,7 @@
           "buys": 2,
           "notionalUsd": 3750001.0,
           "latestTraded": "2026-07-28",
-          "latestFiled": "2026-08-24",
+          "latestFiled": "2026-08-21",
           "ranges": [
             "$1,000,001 - $5,000,000",
             "$500,001 - $1,000,000"
@@ -136,7 +136,7 @@
           "buys": 2,
           "notionalUsd": 40501.0,
           "latestTraded": "2026-07-28",
-          "latestFiled": "2026-08-10",
+          "latestFiled": "2026-08-07",
           "ranges": [
             "$15,001 - $50,000",
             "$1,001 - $15,000"
@@ -159,7 +159,7 @@
           "buys": 1,
           "notionalUsd": 8000.5,
           "latestTraded": "2026-07-30",
-          "latestFiled": "2026-08-17",
+          "latestFiled": "2026-08-14",
           "ranges": [
             "$1,001 - $15,000"
           ]
@@ -176,7 +176,7 @@
           "buys": 5,
           "notionalUsd": 89002.5,
           "latestTraded": "2026-07-31",
-          "latestFiled": "2026-08-04",
+          "latestFiled": "2026-08-03",
           "ranges": [
             "$15,001 - $50,000",
             "$1,001 - $15,000"
@@ -194,7 +194,7 @@
           "buys": 6,
           "notionalUsd": 146003.0,
           "latestTraded": "2026-07-31",
-          "latestFiled": "2026-08-04",
+          "latestFiled": "2026-08-03",
           "ranges": [
             "$15,001 - $50,000",
             "$1,001 - $15,000"
@@ -212,7 +212,7 @@
           "buys": 9,
           "notionalUsd": 121004.5,
           "latestTraded": "2026-07-31",
-          "latestFiled": "2026-08-04",
+          "latestFiled": "2026-08-03",
           "ranges": [
             "$15,001 - $50,000",
             "$1,001 - $15,000"
@@ -232,7 +232,7 @@
           "buys": 2,
           "notionalUsd": 1125001.0,
           "latestTraded": "2026-07-24",
-          "latestFiled": "2026-08-24",
+          "latestFiled": "2026-08-21",
           "ranges": [
             "$500,001 - $1,000,000",
             "$250,001 - $500,000"
@@ -261,7 +261,7 @@
           "buys": 1,
           "notionalUsd": 8000.5,
           "latestTraded": "2026-06-25",
-          "latestFiled": "2026-08-10",
+          "latestFiled": "2026-08-07",
           "ranges": [
             "$1,001 - $15,000"
           ]
@@ -311,7 +311,7 @@
           "buys": 1,
           "notionalUsd": 32500.5,
           "latestTraded": "2026-06-12",
-          "latestFiled": "2026-07-13",
+          "latestFiled": "2026-07-12",
           "ranges": [
             "$15,001 - $50,000"
           ]
@@ -322,7 +322,7 @@
           "buys": 1,
           "notionalUsd": 8000.5,
           "latestTraded": "2026-06-18",
-          "latestFiled": "2026-07-03",
+          "latestFiled": "2026-07-02",
           "ranges": [
             "$1,001 - $15,000"
           ]
@@ -333,7 +333,7 @@
           "buys": 1,
           "notionalUsd": 8000.5,
           "latestTraded": "2026-06-15",
-          "latestFiled": "2026-07-09",
+          "latestFiled": "2026-07-08",
           "ranges": [
             "$1,001 - $15,000"
           ]
@@ -520,10 +520,10 @@
     "divergenceBps": 6891
   },
   "commentary": {
-    "text": "This basket's largest position tracks Nancy Pelosi's $1.1M buy in one name, traded on 2026-07-24 and filed on 2026-08-24. William R. Timmons IV and Dan Meuser are among five members buying into another name. Three members, including Sheldon Whitehouse, bought into a third name. In total, nine members influenced the basket. The largest disclosed buying, a $3.8M position, could not be bought because it is not tokenized or tradable on this chain. This basket represents 19.7% of the disclosed buying dollars.",
+    "text": "Your latest basket is led by a position in INTC, with Nancy Pelosi buying $1.1M across two trades, the latest on 2026-07-24 and filed on 2026-08-21. SPCX is also a significant holding, with William R. Timmons IV buying $75K, and Dan Meuser buying $33K, among five total buyers. MU rounds out the basket, with three buyers including Dan Newhouse. The largest name that could not be bought was BE, with $3.8M in net notional buying, because it is not tokenized or not tradable on this chain. This basket covers 19.7% of disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-03T15:08:42+00:00",
-    "inputHash": "492e6c54999f610f",
+    "generatedAt": "2026-09-03T23:31:18+00:00",
+    "inputHash": "1e3b42e8ba79af22",
     "promptVersion": 2
   }
 }
