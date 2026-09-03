@@ -7,10 +7,11 @@
 // so total = pending + inWallet is the hard floor under the NFT: what you'd hold even if
 // the collectible were worth nothing. All reads; nothing here sends a transaction.
 
-import { formatUnits, parseAbiItem, zeroAddress, type Address } from "viem";
-import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
+import { formatUnits, zeroAddress, type Address } from "viem";
+import { ADDR } from "./config";
 import { boosterAbi, brokerAbi, aggregatorAbi, erc20Abi } from "./abis";
 import { publicClient as client } from "./client";
+import { loadBrokerLogs, readCarryover, writeCarryover } from "./brokerLogs";
 
 
 export type TokenMeta = { token: Address; decimals: number; priceUsd: number };
@@ -92,12 +93,6 @@ export async function brokerBacking(tokenId: bigint, metas: TokenMeta[]): Promis
   return { pendingUsd, inWalletUsd, totalUsd: pendingUsd + inWalletUsd };
 }
 
-const CLAIMED = parseAbiItem(
-  "event Claimed(uint256 indexed tokenId, address indexed to, address token, uint256 amount)",
-);
-const ACTIVATED = parseAbiItem(
-  "event Activated(uint256 indexed tokenId, address indexed owner, uint256 coatBurned)",
-);
 
 /** USD earned per Broker since its CURRENT activation: claims logged at or after the
  *  latest Activated event (a transfer force-deactivates, so the latest activation is
@@ -119,19 +114,10 @@ export async function earnedSinceActivation(
   const out: Record<string, number> = {};
   if (ids.length === 0) return out;
 
-  const [claims, activations, pendings] = await Promise.all([
-    client.getLogs({
-      address: ADDR.booster,
-      event: CLAIMED,
-      args: { tokenId: ids },
-      fromBlock: BROKER_DEPLOYMENT_BLOCK,
-    }),
-    client.getLogs({
-      address: ADDR.broker,
-      event: ACTIVATED,
-      args: { tokenId: ids },
-      fromBlock: BROKER_DEPLOYMENT_BLOCK,
-    }),
+  // Per-id, cached, incremental history (see brokerLogs.ts) instead of two collection-wide
+  // scans that the public RPC refuses.
+  const [logs, pendings] = await Promise.all([
+    loadBrokerLogs(ids),
     Promise.all(
       ids.map((id) =>
         client
@@ -146,12 +132,10 @@ export async function earnedSinceActivation(
   // it without a new Activated event, so the latest activation can belong to the
   // previous owner: that Broker has no streak for the buyer until they switch it on.
   const latest = new Map<string, { block: bigint; by: string }>();
-  for (const l of activations) {
-    if (l.args.tokenId === undefined) continue;
-    const key = l.args.tokenId.toString();
-    const prev = latest.get(key);
-    if (prev === undefined || l.blockNumber! > prev.block) {
-      latest.set(key, { block: l.blockNumber!, by: (l.args.owner as string).toLowerCase() });
+  for (const [key, h] of logs) {
+    for (const a of h.activations) {
+      const prev = latest.get(key);
+      if (prev === undefined || BigInt(a.block) > prev.block) latest.set(key, { block: BigInt(a.block), by: a.by });
     }
   }
   const since = new Map<string, bigint>();
@@ -164,19 +148,17 @@ export async function earnedSinceActivation(
   // subtracted per token and floored at zero without one stock masking another.
   const claimedSince = new Map<string, number>();
   const claimedCount = new Map<string, number>();
-  for (const l of claims) {
-    if (l.args.tokenId === undefined) continue;
-    const key = l.args.tokenId.toString();
+  for (const [key, h] of logs) {
     const start = since.get(key);
-    if (start === undefined || l.blockNumber! < start) continue;
-    claimedCount.set(key, (claimedCount.get(key) ?? 0) + 1);
-    const meta = priceOf(metas, l.args.token as Address);
-    if (!meta) continue;
-    const k = `${key}|${(l.args.token as string).toLowerCase()}`;
-    claimedSince.set(
-      k,
-      (claimedSince.get(k) ?? 0) + Number(formatUnits(l.args.amount as bigint, meta.decimals)) * meta.priceUsd,
-    );
+    if (start === undefined) continue;
+    for (const c of h.claims) {
+      if (BigInt(c.block) < start) continue;
+      claimedCount.set(key, (claimedCount.get(key) ?? 0) + 1);
+      const meta = priceOf(metas, c.token as Address);
+      if (!meta) continue;
+      const k = `${key}|${c.token}`;
+      claimedSince.set(k, (claimedSince.get(k) ?? 0) + Number(formatUnits(BigInt(c.amount), meta.decimals)) * meta.priceUsd);
+    }
   }
 
   // Carryover: what was already claimable the moment this streak began (the previous
@@ -187,6 +169,15 @@ export async function earnedSinceActivation(
       const start = since.get(key);
       if (start === undefined) return null;
       const co = new Map<string, number>();
+      // The snapshot at the activation block is immutable: read it once per (id, block).
+      const cachedCarry = readCarryover(key, Number(start));
+      if (cachedCarry) {
+        for (const [token, raw] of Object.entries(cachedCarry)) {
+          const meta = priceOf(metas, token as Address);
+          if (meta) co.set(token, Number(formatUnits(BigInt(raw), meta.decimals)) * meta.priceUsd);
+        }
+        return co;
+      }
       try {
         const [tokens, amounts] = (await client.readContract({
           address: ADDR.booster,
@@ -195,10 +186,13 @@ export async function earnedSinceActivation(
           args: [id],
           blockNumber: start,
         })) as readonly [readonly Address[], readonly bigint[]];
+        const rawByToken: Record<string, string> = {};
         tokens.forEach((token, j) => {
+          rawByToken[token.toLowerCase()] = amounts[j].toString();
           const meta = priceOf(metas, token);
           if (meta) co.set(token.toLowerCase(), Number(formatUnits(amounts[j], meta.decimals)) * meta.priceUsd);
         });
+        writeCarryover(key, Number(start), rawByToken);
         return co;
       } catch {
         // Archive miss (fallback RPC). While nothing has been claimed this streak, the
