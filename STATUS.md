@@ -38,7 +38,7 @@ Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
   ACTIVE Broker's own wallet. The winner is derived from a block hash the contract picks after
   the round opens, so neither the keeper nor the owner chooses; the cadence (`interval`) is
   enforced on chain. Gifts travel with the Broker and the holder pulls them out from My Brokers.
-  Panels stay hidden until the vault address is set in `frontend/src/lib/gifts.ts`.
+  Live on mainnet at `0xA58B2Cd80E9c08EE6B220Bc63Dd1E4704d78468b` (interval 3 days).
 - **Earnings card** — every Broker in My Brokers can draw a PNG card (artwork, earned since
   switch-on, holdings) in the browser and post it to X; `/card/<id>` is the public version.
 

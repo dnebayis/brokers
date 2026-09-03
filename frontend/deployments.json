@@ -30,6 +30,7 @@
     "router": "0x740baEEF895444a659fD0fc5Dc213BEDe7d1EaaF",
     "buybackBurner": "0xa8547410E681dd43aE43bB828b648e3f303ebe3b",
     "poolId": "0x2d503dda028be83d2e133e5e73a8839f1f202d9f6447e3d863e33ad2c8ebc3d2",
-    "claimSweeper": "0x202a5aF710306834b30B195263842B5b132Bb020"
+    "claimSweeper": "0x202a5aF710306834b30B195263842B5b132Bb020",
+    "giftVault": "0xA58B2Cd80E9c08EE6B220Bc63Dd1E4704d78468b"
   }
 }

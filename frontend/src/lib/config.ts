@@ -21,6 +21,9 @@ type AddrSet = {
   // Ownerless periphery that claims any number of Brokers in one tx (claimBatch caps at 5).
   // Optional: absent (testnet) the UI falls back to chunked claimBatch calls.
   claimSweeper?: Address;
+  // Gift vault: donated NFTs drawn on chain to random active Brokers. Optional: absent, the
+  // gift panels stay hidden.
+  giftVault?: Address;
 };
 
 const TESTNET = deployments.testnet as AddrSet;
@@ -80,6 +83,7 @@ export const CONTRACTS_FOR_DOCS: { name: string; key: keyof AddrSet }[] = [
   { name: "BrokerAccount (6551)", key: "accountImpl" },
   { name: "StockRouter", key: "stockRouter" },
   { name: "ClaimSweeper", key: "claimSweeper" },
+  { name: "GiftVault", key: "giftVault" },
   { name: "Permanent LP Locker", key: "lpLocker" },
   { name: "Buyback Burner", key: "buybackBurner" },
 ];

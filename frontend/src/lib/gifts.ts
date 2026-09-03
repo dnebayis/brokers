@@ -1,13 +1,13 @@
 import type { Address } from "viem";
-import { ACTIVE_NETWORK } from "./chains";
+import { ADDR } from "./config";
 
 // Gift vault config. The vault holds donated NFTs and gifts one, every on-chain interval,
 // to a random ACTIVE Broker's own wallet; the winner is derived from a block hash the
-// contract picks, so nobody chooses who wins. Empty address = the panels stay hidden until
-// the launch commit pastes the deployed vault in here (same pattern as playbooks.ts).
+// contract picks, so nobody chooses who wins. No address for the active network = the
+// panels stay hidden. Mainnet vault deployed at block 53,004,400.
 export const GIFTS: { vault: Address | ""; fromBlock: bigint } = {
-  vault: ACTIVE_NETWORK === "testnet" ? "" : "",
-  fromBlock: 0n,
+  vault: ADDR.giftVault ?? "",
+  fromBlock: 53_004_400n,
 };
 
 export const giftsReady = GIFTS.vault !== "";
