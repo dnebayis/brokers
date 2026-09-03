@@ -84,6 +84,8 @@ jobs:
       BASKET_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/basket-latest.json
       # Scorecard (engine cost vs live price per name), incremental over the published copy.
       SCORECARD_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/basket-scorecard.json
+      # Shadow-vs-live series, published so the scorecard can price the smart basket per hour.
+      SHADOW_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/shadow-history.jsonl
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -120,6 +122,9 @@ jobs:
               bash ../scripts/publish_data.sh latest-basket.json basket-latest.json || echo "::warning::data publish failed"
               bash ../scripts/publish_data.sh feed-30d.json feed-30d.json || echo "::warning::feed publish failed"
               bash ../scripts/publish_data.sh members.json members.json || echo "::warning::members publish failed"
+              if [ -n "${SHADOW_HISTORY_FILE:-}" ] && [ -f "$SHADOW_HISTORY_FILE" ]; then
+                bash ../scripts/publish_data.sh "$SHADOW_HISTORY_FILE" shadow-history.jsonl || echo "::warning::shadow publish failed"
+              fi
               if python scorecard.py --out scorecard.json; then
                 bash ../scripts/publish_data.sh scorecard.json basket-scorecard.json || echo "::warning::scorecard publish failed"
               else

@@ -1,7 +1,7 @@
 import unittest
 import base64
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import Mock, patch
 
 from aggregate import parse_amount, to_basket
@@ -832,3 +832,29 @@ class FeedExportTests(unittest.TestCase):
         self.assertEqual(p["score"]["multiplier"], 1.038)
         self.assertEqual(p["lastFiled"], "2026-08-24")
         self.assertEqual(p["rows"][0]["symbol"], "BE")
+
+
+class ScorecardBenchmarkTests(unittest.TestCase):
+    def test_smart_weights_pick_the_latest_row_at_or_before(self):
+        from scorecard import smart_weights_at
+        hist = [{"at": "2026-08-24T11:00:00+00:00", "shadow": [{"ticker": "INTC", "bps": 5000}, {"ticker": "SPCX", "bps": 5000}]},
+                {"at": "2026-08-30T02:00:00+00:00", "shadow": [{"ticker": "INTC", "bps": 10000}]}]
+        aug25 = int(datetime(2026, 8, 25, tzinfo=timezone.utc).timestamp())
+        sep1 = int(datetime(2026, 9, 1, tzinfo=timezone.utc).timestamp())
+        self.assertEqual(smart_weights_at(hist, aug25)[1]["ticker"], "SPCX")
+        self.assertEqual(smart_weights_at(hist, sep1), [{"ticker": "INTC", "bps": 10000}])
+        self.assertIsNone(smart_weights_at(hist, aug25 - 10 * 86400))
+
+    def test_benchmarks_price_the_same_dollars_at_the_same_hours(self):
+        from scorecard import benchmarks
+        events = [
+            {"usdIn": 100.0, "bench": {"spyPx": 500.0, "smart": [{"symbol": "INTC", "usd": 50.0, "px": 80.0}, {"symbol": "SPCX", "usd": 50.0, "px": 100.0}]}},
+            {"usdIn": 100.0, "bench": {"spyPx": None, "smart": None}},  # before the feed history / no shadow yet
+        ]
+        out = benchmarks(events, {"INTC": 88.0, "SPCX": 90.0}, spy_now=550.0)
+        self.assertEqual(out["spy"]["pnlPct"], 10.0)
+        self.assertEqual(out["spy"]["purchases"], 1)
+        self.assertEqual(out["spy"]["coveragePct"], 50.0)
+        # 50 * 88/80 + 50 * 90/100 = 55 + 45 = 100 -> 0%
+        self.assertEqual(out["smart"]["pnlPct"], 0.0)
+        self.assertEqual(out["smart"]["purchases"], 1)

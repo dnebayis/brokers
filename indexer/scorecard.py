@@ -142,7 +142,66 @@ def aggregate(events: List[Dict], prices: Dict[str, float], meta: Dict[str, Dict
     }
 
 
-def build(w3, booster_address: str, previous: Optional[Dict], from_block: int, chunk: int = 2_500_000) -> Dict:
+def smart_weights_at(history: List[Dict], ts: int) -> Optional[List[Dict]]:
+    """The shadow (smart) basket in force at `ts`: the latest history row at or before it."""
+    best = None
+    for row in history:
+        try:
+            at = int(datetime.fromisoformat(str(row["at"]).replace("Z", "+00:00")).timestamp())
+        except (KeyError, ValueError):
+            continue
+        if at <= ts and (best is None or at > best[0]):
+            best = (at, row.get("shadow") or [])
+    return best[1] if best else None
+
+
+def benchmarks(events: List[Dict], prices_by_symbol: Dict[str, float], spy_now: Optional[float]) -> Dict:
+    """Pure: the same dollars, same hours, put into (a) SPY and (b) the shadow smart basket,
+    marked at today's prices, next to the real basket. Each event may carry
+    `bench = {"spyPx": float|None, "smart": [{"symbol","usd","px"}]|None}` from build()."""
+    out = {}
+    spent = sum(e["usdIn"] for e in events if e.get("usdIn"))
+    # SPY: dollar-cost averaged at the purchase hours
+    spy_spent = spy_value = 0.0
+    n_spy = 0
+    for e in events:
+        b = e.get("bench") or {}
+        if e.get("usdIn") and b.get("spyPx") and spy_now:
+            spy_spent += e["usdIn"]
+            spy_value += e["usdIn"] * spy_now / b["spyPx"]
+            n_spy += 1
+    out["spy"] = {"spent": round(spy_spent, 2), "value": round(spy_value, 2),
+                  "pnlPct": round((spy_value / spy_spent - 1) * 100, 2) if spy_spent else None,
+                  "purchases": n_spy, "coveragePct": round(spy_spent / spent * 100, 1) if spent else None}
+    # smart basket: each purchase split by the shadow weights of that hour
+    sm_spent = sm_value = 0.0
+    n_sm = 0
+    for e in events:
+        b = e.get("bench") or {}
+        legs = b.get("smart")
+        if not legs or not e.get("usdIn"):
+            continue
+        ok = True
+        val = 0.0
+        for leg in legs:
+            now = prices_by_symbol.get(leg["symbol"])
+            if not now or not leg.get("px"):
+                ok = False
+                break
+            val += leg["usd"] * now / leg["px"]
+        if not ok:
+            continue
+        sm_spent += e["usdIn"]
+        sm_value += val
+        n_sm += 1
+    out["smart"] = {"spent": round(sm_spent, 2), "value": round(sm_value, 2),
+                    "pnlPct": round((sm_value / sm_spent - 1) * 100, 2) if sm_spent else None,
+                    "purchases": n_sm, "coveragePct": round(sm_spent / spent * 100, 1) if spent else None}
+    return out
+
+
+def build(w3, booster_address: str, previous: Optional[Dict], from_block: int, chunk: int = 2_500_000,
+          shadow_history: Optional[List[Dict]] = None, spy_token: str = "") -> Dict:
     from web3 import Web3
     booster = w3.eth.contract(address=Web3.to_checksum_address(booster_address), abi=BOOSTER_ABI)
     events: List[Dict] = list((previous or {}).get("events", [])) if (previous or {}).get("stateVersion") == STATE_VERSION else []
@@ -190,7 +249,78 @@ def build(w3, booster_address: str, previous: Optional[Dict], from_block: int, c
             prices[t] = int(fc.functions.latestRoundData().call()[1]) / 10 ** int(fc.functions.decimals().call())
         except Exception:
             continue
+    # Benchmarks per purchase: SPY at that hour, and the shadow smart basket of that hour
+    # priced leg by leg at that hour. Stock feeds keep their round history on chain, so this
+    # is a binary search per (feed, hour); results ride along in the event so a later pass
+    # never recomputes them.
+    feed_index: Dict[str, RoundIndex] = {}
+
+    def _index(token_addr: str) -> Optional[RoundIndex]:
+        key = token_addr.lower()
+        if key in feed_index:
+            return feed_index[key]
+        feed = booster.functions.stockFeed(Web3.to_checksum_address(token_addr)).call()
+        if int(feed, 16) == 0:
+            feed_index[key] = None
+            return None
+        try:
+            feed_index[key] = RoundIndex(w3.eth.contract(address=feed, abi=FEED_ABI))
+        except Exception:
+            feed_index[key] = None
+        return feed_index[key]
+
+    symbol_to_token = {m["symbol"].upper(): m["token"] for m in meta_cache.values()}
+    ready_tokens = {}
+    try:
+        from tokens import ROUTE_READY_ADDRESS
+        ready_tokens = {k.upper(): v for k, v in ROUTE_READY_ADDRESS.items()}
+    except Exception:
+        pass
+    symbol_to_token.update({k: v for k, v in ready_tokens.items() if k not in symbol_to_token})
+    spy_addr = spy_token or symbol_to_token.get("SPY", "")
+    hour_cache: Dict[tuple, Optional[float]] = {}
+
+    def _px_at(symbol: str, ts: int) -> Optional[float]:
+        tok = symbol_to_token.get(symbol.upper())
+        if not tok:
+            return None
+        hour = ts // 3600
+        k = (tok.lower(), hour)
+        if k not in hour_cache:
+            idx = _index(tok)
+            hour_cache[k] = idx.price_at(ts) if idx else None
+        return hour_cache[k]
+
+    for e in events:
+        if e.get("bench") is not None or not e.get("usdIn"):
+            continue
+        bench: Dict = {"spyPx": _px_at("SPY", e["ts"]) if spy_addr else None, "smart": None}
+        weights = smart_weights_at(shadow_history, e["ts"]) if shadow_history else None
+        if weights:
+            legs = []
+            for wgt in weights:
+                px = _px_at(str(wgt["ticker"]), e["ts"])
+                legs.append({"symbol": str(wgt["ticker"]).upper(), "usd": e["usdIn"] * int(wgt["bps"]) / 10_000, "px": px})
+            bench["smart"] = legs
+        e["bench"] = bench
+    prices_by_symbol = {m["symbol"].upper(): prices[t] for t, m in meta_cache.items() if t in prices}
+    spy_now = None
+    if spy_addr:
+        idx = _index(spy_addr)
+        if idx:
+            spy_now = idx.price_at(int(datetime.now(timezone.utc).timestamp()))
+            prices_by_symbol.setdefault("SPY", spy_now)
+    # smart legs may name stocks the engine never bought: price them from their feeds too
+    for e in events:
+        for leg in (e.get("bench") or {}).get("smart") or []:
+            if leg["symbol"] not in prices_by_symbol:
+                idx = _index(symbol_to_token.get(leg["symbol"], "")) if symbol_to_token.get(leg["symbol"]) else None
+                prices_by_symbol[leg["symbol"]] = idx.price_at(int(datetime.now(timezone.utc).timestamp())) if idx else None
     agg = aggregate(events, prices, meta_cache)
+    bench_out = benchmarks(events, {k: v for k, v in prices_by_symbol.items() if v}, spy_now)
+    bench_out["basket"] = {"spent": agg["totals"]["usdSpent"], "value": agg["totals"]["value"], "pnlPct": agg["totals"]["pnlPct"]}
+    bench_out["note"] = ("same dollars at the same hours: SPY buy-and-hold, and the shadow smart basket "
+                         "(decay + fast-filer + sell veto) priced leg by leg, all at today's Chainlink prices")
     return {
         "stateVersion": STATE_VERSION,
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -199,6 +329,7 @@ def build(w3, booster_address: str, previous: Optional[Dict], from_block: int, c
         "tokens": list(meta_cache.values()),
         "names": agg["names"],
         "totals": agg["totals"],
+        "benchmarks": bench_out,
         "note": "engine cost (ETH at the Chainlink ETH/USD round of each purchase) vs today's Chainlink stock price, assuming shares are still held",
         "events": events,
     }
@@ -213,6 +344,8 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--previous-url", default=os.environ.get("SCORECARD_DATA_URL", ""))
     ap.add_argument("--from-block", type=int, default=int(os.environ.get("BROKER_DEPLOYMENT_BLOCK", "39460869")))
+    ap.add_argument("--shadow-url", default=os.environ.get("SHADOW_DATA_URL", ""))
+    ap.add_argument("--shadow-file", default=os.environ.get("SHADOW_HISTORY_FILE", ""))
     args = ap.parse_args()
     from config import make_web3, BOOSTER_ADDRESS
     previous = None
@@ -224,11 +357,31 @@ def main() -> int:
             print(f"previous scorecard unavailable ({str(exc)[:80]}); full rebuild")
     if not BOOSTER_ADDRESS:
         raise SystemExit("set BOOSTER_ADDRESS")
-    sc = build(make_web3(), BOOSTER_ADDRESS, previous, args.from_block)
+    history: List[Dict] = []
+    text = ""
+    if args.shadow_file and os.path.exists(args.shadow_file):
+        text = open(args.shadow_file).read()
+    elif args.shadow_url:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(args.shadow_url, headers={"User-Agent": "coattail-indexer/1.0"}), timeout=30) as r:
+                text = r.read().decode()
+        except Exception as exc:
+            print(f"shadow history unavailable ({str(exc)[:80]}); smart benchmark skipped this pass")
+    for line in text.splitlines():
+        line = line.strip()
+        if line:
+            try:
+                history.append(json.loads(line))
+            except ValueError:
+                pass
+    sc = build(make_web3(), BOOSTER_ADDRESS, previous, args.from_block, shadow_history=history or None)
     json.dump(sc, open(args.out, "w"))
     t = sc["totals"]
     print(f"scorecard: {sc['purchases']} purchases, spent ${t['usdSpent']:,.2f}, value ${t['value']:,.2f}, "
           f"pnl ${t['pnlUsd']:,.2f} ({t['pnlPct']}%) -> {args.out}")
+    b = sc["benchmarks"]
+    print(f"benchmarks: SPY {b['spy']['pnlPct']}% over {b['spy']['purchases']} priced purchases; "
+          f"smart {b['smart']['pnlPct']}% over {b['smart']['purchases']}")
     return 0
 
 

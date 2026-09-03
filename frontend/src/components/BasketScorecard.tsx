@@ -11,10 +11,12 @@ type Name = {
   symbol: string; buys: number; shares: number; usdSpent: number | null; avgCost: number | null;
   price: number | null; value: number | null; pnlUsd: number | null; pnlPct: number | null; firstBuy: number;
 };
+type Bench = { spent: number; value: number; pnlPct: number | null; purchases?: number; coveragePct?: number | null };
 type Scorecard = {
   ok: boolean; generatedAt: string; purchases: number;
   names: Name[];
   totals: { usdSpent: number; value: number; pnlUsd: number; pnlPct: number | null };
+  benchmarks?: { basket: Bench; spy: Bench; smart: Bench; note?: string };
 };
 
 async function fetchScorecard(): Promise<Scorecard> {
@@ -70,6 +72,27 @@ export function BasketScorecard() {
               </div>
             </div>
           </div>
+          {data.benchmarks && (
+            <div className="mb-4 border border-line bg-cream p-3">
+              <div className="label">Same dollars, same hours</div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {([
+                  ["This basket", data.benchmarks.basket, "what the engine actually bought"],
+                  ["SPY instead", data.benchmarks.spy, "every purchase put into SPY that hour"],
+                  ["Smart basket", data.benchmarks.smart, "the shadow layer's picks, priced leg by leg"],
+                ] as const).map(([label, b, sub]) => (
+                  <div key={label}>
+                    <div className="text-[10px] text-ink-soft uppercase tracking-widest">{label}</div>
+                    <div className={`font-pixel text-[14px] mt-1 tabular-nums ${tone(b.pnlPct)}`}>{pct(b.pnlPct)}</div>
+                    <div className="text-[10px] text-ink-soft mt-0.5">{sub}{b.coveragePct !== undefined && b.coveragePct !== null && b.coveragePct < 99.5 ? ` · ${Math.round(b.coveragePct)}% of dollars` : ""}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-ink-soft mt-2">
+                Each purchase is re-priced at its own hour from the Chainlink feeds, then marked at today&rsquo;s price. The smart basket only exists since its shadow series began, so it covers fewer dollars.
+              </p>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm min-w-[620px]">
               <thead>

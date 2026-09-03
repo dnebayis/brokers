@@ -57,7 +57,7 @@ Owner decision on 2026-09-03: stay on v1.
 Every indexer pass publishes `basket-latest.json` to the repository's `data` branch (machine
 commits, no redeploy): weights, per-name attribution (which members' disclosed buys carry
 the name, amount ranges, traded/filed dates), the largest names left out and why, and a
-per-name scorecard (`indexer/scorecard.py`: every engine purchase priced at its Chainlink ETH/USD round against today's stock feed, published as `basket-scorecard.json`), and a
+per-name scorecard (`indexer/scorecard.py`: every engine purchase priced at its Chainlink ETH/USD round against today's stock feed, published as `basket-scorecard.json`, with two benchmarks re-priced at each purchase's hour: SPY buy-and-hold and the shadow smart basket), and a
 model-written note (`indexer/commentary.py`, Gemini via `GEMINI_API_KEY`, regenerated only
 when the facts change, validated against the facts and refused if it names an unknown
 ticker or reads as advice). The site's Feed tab renders it through `/api/basket`. The same pass exports `feed-30d.json` (30 days of
