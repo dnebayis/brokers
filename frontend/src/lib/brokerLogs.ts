@@ -22,7 +22,7 @@ export type BrokerLogs = { scannedTo: number; activations: ActivationLog[]; clai
 const ACTIVATED = parseAbiItem("event Activated(uint256 indexed tokenId, address indexed owner, uint256 coatBurned)");
 const CLAIMED = parseAbiItem("event Claimed(uint256 indexed tokenId, address indexed to, address token, uint256 amount)");
 const KEY = (id: string) => `coattail.logs.v1:${ADDR.broker.toLowerCase()}:${id}`;
-const CONCURRENCY = 4;
+const CONCURRENCY = 2; // the public RPC throttles bursts; two in flight stays under it
 
 function readCache(id: string): BrokerLogs | null {
   if (typeof window === "undefined") return null;
