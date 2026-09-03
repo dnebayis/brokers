@@ -79,6 +79,8 @@ jobs:
       # regenerated only when the facts change). Unset key -> note absent, nothing else changes.
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+      # A note is rewritten at most once per this many hours, and only when the facts changed.
+      NOTE_MIN_HOURS: ${{ vars.NOTE_MIN_HOURS || '5' }}
       BASKET_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/basket-latest.json
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:

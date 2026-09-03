@@ -19,6 +19,9 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+# A note lives at least this long even if the facts move: the basket rebalances hourly by
+# design, and a note that rewrites itself every hour reads as noise, not information.
+NOTE_MIN_HOURS = float(os.environ.get("NOTE_MIN_HOURS", "5"))
 MAX_CHARS = 900
 # Upper-case tokens that are not tickers and may appear in a sentence.
 _NOT_TICKERS = {
@@ -132,16 +135,30 @@ def _gemini(prompt: str, key: str, model: str) -> str:
         raise RuntimeError(f"unexpected Gemini response: {str(payload)[:200]}")
 
 
+def _fresh(previous: Optional[Dict], now: datetime, min_hours: float) -> bool:
+    try:
+        made = datetime.fromisoformat(str(previous["generatedAt"]).replace("Z", "+00:00"))
+    except (KeyError, TypeError, ValueError):
+        return False
+    if made.tzinfo is None:
+        made = made.replace(tzinfo=timezone.utc)
+    return (now - made).total_seconds() < min_hours * 3600
+
+
 def generate(payload: Dict, previous: Optional[Dict] = None, key: str = "",
-             model: str = GEMINI_MODEL, call=_gemini) -> Optional[Dict]:
+             model: str = GEMINI_MODEL, call=_gemini, now: Optional[datetime] = None,
+             min_hours: float = NOTE_MIN_HOURS) -> Optional[Dict]:
     """Return {"text","model","generatedAt","inputHash"} or None.
 
-    Reuses `previous` (the last published note) when the facts have not changed, so the
-    note is stable across hourly passes and the model is called only on real changes.
+    Reuses `previous` (the last published note) when the facts have not changed, and
+    also while it is younger than `min_hours`, so the model is called at most once per
+    that window and only on real changes.
     """
+    now = now or datetime.now(timezone.utc)
     h = input_hash(payload)
-    if previous and previous.get("inputHash") == h and previous.get("text"):
-        return dict(previous)
+    if previous and previous.get("text"):
+        if previous.get("inputHash") == h or _fresh(previous, now, min_hours):
+            return dict(previous)
     if not key:
         return None
     allowed = list(payload.get("tickers", [])) + [m["ticker"] for m in payload.get("missedCoverage") or []]
@@ -157,7 +174,7 @@ def generate(payload: Dict, previous: Optional[Dict] = None, key: str = "",
         if ok:
             return {
                 "text": text, "model": model,
-                "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "generatedAt": now.isoformat(timespec="seconds"),
                 "inputHash": h,
             }
         last = f"rejected: {reason}"

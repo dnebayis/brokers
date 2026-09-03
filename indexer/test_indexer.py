@@ -719,3 +719,20 @@ class CommentaryTests(unittest.TestCase):
         self.assertIsNone(generate(self.PAYLOAD, None, key="k", call=lambda *a: "You should buy INTC now, guaranteed. " * 5))
         # no key: no call, no note
         self.assertIsNone(generate(self.PAYLOAD, None, key=""))
+
+    def test_generate_keeps_a_young_note_even_when_facts_change(self):
+        from commentary import generate
+        from datetime import timezone as _tz
+        made = datetime(2026, 9, 3, 9, 0, tzinfo=_tz.utc)
+        prev = {"text": self.NOTE, "model": "x", "generatedAt": made.isoformat(), "inputHash": "stale"}
+        calls = []
+        # 3 hours later, facts changed (hash differs): still the old note, no model call
+        out = generate(self.PAYLOAD, prev, key="k", call=lambda *a: calls.append(a) or self.NOTE,
+                       now=made.replace(hour=12), min_hours=5)
+        self.assertEqual(out["inputHash"], "stale")
+        self.assertEqual(calls, [])
+        # 6 hours later: regenerated
+        out = generate(self.PAYLOAD, prev, key="k", call=lambda *a: calls.append(a) or self.NOTE,
+                       now=made.replace(hour=15), min_hours=5)
+        self.assertNotEqual(out["inputHash"], "stale")
+        self.assertEqual(len(calls), 1)
