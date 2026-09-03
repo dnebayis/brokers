@@ -716,6 +716,22 @@ export function ActivateTab() {
                 ))}
               </div>
             )}
+            {/* The two bulk buttons people actually reach for, right under the list. */}
+            {brokers.length > 0 && (inactiveOwned > 1 || claimReadyCount > 0) && (
+              <div className="grid sm:grid-cols-2 gap-2 mt-3">
+                {claimReadyCount > 0 && (
+                  <button className="btn btn-accent w-full" onClick={claimAll} disabled={claimTx.busy}>
+                    <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : `CLAIM ALL (${claimReadyCount})`}
+                  </button>
+                )}
+                {inactiveOwned > 1 && (
+                  <button className="btn btn-ghost w-full" onClick={activateAll} disabled={act.busy}>
+                    <Icon name="power" /> ACTIVATE ALL ({inactiveOwned}
+                    {activateAllCost !== undefined ? ` · ${fmt(activateAllCost, 18, 0)} COAT` : ""})
+                  </button>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -861,9 +877,10 @@ export function ActivateTab() {
           )}
 
           {isOwner && holdings.length > 0 && (
-            <details className="mt-3 border-t border-line pt-3">
-              <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
-                Send stock from this Broker to another address…
+            <details className="group mt-3 border-t border-line pt-3">
+              <summary className="btn btn-ghost w-full justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <span><Icon name="arrow-right" /> Send stock from this Broker to another address</span>
+                <span className="transition-transform group-open:rotate-90">▶</span>
               </summary>
               <p className="text-ink-soft text-sm mt-2 mb-2">
                 The Broker NFT stays with you and remains active.
@@ -932,27 +949,13 @@ export function ActivateTab() {
       {/* ── 4. Everything at once + power tools, out of the way ── */}
       {address && (
         <div className="card">
-          <h2 className="pixel-title text-[15px] mb-1">All Brokers at once</h2>
-          <p className="text-ink-soft text-sm mb-3">Conveniences for holders with several Brokers. Nothing here is required.</p>
-          {brokers.length > 0 && (inactiveOwned > 1 || claimReadyCount > 0) && (
-            <div className="grid gap-2 mb-3">
-              {inactiveOwned > 1 && (
-                <button className="btn btn-ghost w-full" onClick={activateAll} disabled={act.busy}>
-                  <Icon name="power" /> ACTIVATE ALL INACTIVE ({inactiveOwned}
-                  {activateAllCost !== undefined ? ` · ${fmt(activateAllCost, 18, 0)} COAT` : ""})
-                </button>
-              )}
-              {claimReadyCount > 0 && (
-                <button className="btn btn-accent w-full" onClick={claimAll} disabled={claimTx.busy}>
-                  <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : `CLAIM ALL (${claimReadyCount})`}
-                </button>
-              )}
-            </div>
-          )}
+          <h2 className="pixel-title text-[15px] mb-1">More tools</h2>
+          <p className="text-ink-soft text-sm mb-3">Nothing here is required. Your stock is already yours inside each Broker.</p>
           {brokers.length > 0 && (
-            <details className="mt-1">
-              <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
-                Withdraw everything to my wallet…
+            <details className="group mt-1">
+              <summary className="btn btn-ghost w-full justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <span><Icon name="wallet" /> Withdraw everything to my wallet</span>
+                <span className="transition-transform group-open:rotate-90">▶</span>
               </summary>
               <div className="mt-2 grid gap-2">
                 <button className="btn btn-ghost w-full" onClick={withdrawAll} disabled={claimTx.busy}>
@@ -970,9 +973,10 @@ export function ActivateTab() {
               </div>
             </details>
           )}
-          <details className="mt-2">
-            <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
-              Look up any Broker by id…
+          <details className="group mt-2">
+            <summary className="btn btn-ghost w-full justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <span><Icon name="search" /> Look up any Broker by id</span>
+              <span className="transition-transform group-open:rotate-90">▶</span>
             </summary>
             <div className="flex gap-2 mt-2">
               <input
