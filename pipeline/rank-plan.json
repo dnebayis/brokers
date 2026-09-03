@@ -1,0 +1,12447 @@
+{
+ "bands": [
+  2,
+  6,
+  22,
+  72,
+  172,
+  372,
+  772,
+  1776
+ ],
+ "keccak256": "0xae0f62998b75550bdef768311c63bfd1d67847c3ad12186d70c45043fd92a017",
+ "tokens": [
+  {
+   "id": 1,
+   "type": "Male",
+   "rank": 1362,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 2,
+   "type": "Female",
+   "rank": 606,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 3,
+   "type": "Male",
+   "rank": 1716,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 4,
+   "type": "Male",
+   "rank": 1528,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 5,
+   "type": "Male",
+   "rank": 1441,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 6,
+   "type": "Female",
+   "rank": 467,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 7,
+   "type": "Zombie",
+   "rank": 18,
+   "band": "7-22",
+   "bits": 5.6134
+  },
+  {
+   "id": 8,
+   "type": "Male",
+   "rank": 1529,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 9,
+   "type": "Male",
+   "rank": 1375,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 10,
+   "type": "Male",
+   "rank": 1442,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 11,
+   "type": "Male",
+   "rank": 1593,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 12,
+   "type": "Female",
+   "rank": 522,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 13,
+   "type": "Female",
+   "rank": 576,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 14,
+   "type": "Male",
+   "rank": 1443,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 15,
+   "type": "Female",
+   "rank": 523,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 16,
+   "type": "Male",
+   "rank": 1444,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 17,
+   "type": "Male",
+   "rank": 1594,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 18,
+   "type": "Female",
+   "rank": 577,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 19,
+   "type": "Male",
+   "rank": 1717,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 20,
+   "type": "Female",
+   "rank": 524,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 21,
+   "type": "Female",
+   "rank": 427,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 22,
+   "type": "Male",
+   "rank": 1445,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 23,
+   "type": "Male",
+   "rank": 1718,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 24,
+   "type": "Female",
+   "rank": 525,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 25,
+   "type": "Male",
+   "rank": 1719,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 26,
+   "type": "Female",
+   "rank": 526,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 27,
+   "type": "Male",
+   "rank": 1595,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 28,
+   "type": "Male",
+   "rank": 1363,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 29,
+   "type": "Male",
+   "rank": 1446,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 30,
+   "type": "Male",
+   "rank": 1720,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 31,
+   "type": "Male",
+   "rank": 1678,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 32,
+   "type": "Male",
+   "rank": 1530,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 33,
+   "type": "Male",
+   "rank": 1447,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 34,
+   "type": "Male",
+   "rank": 1364,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 35,
+   "type": "Male",
+   "rank": 1394,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 36,
+   "type": "Female",
+   "rank": 484,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 37,
+   "type": "Male",
+   "rank": 1448,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 38,
+   "type": "Male",
+   "rank": 1596,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 39,
+   "type": "Female",
+   "rank": 527,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 40,
+   "type": "Male",
+   "rank": 1531,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 41,
+   "type": "Male",
+   "rank": 1532,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 42,
+   "type": "Male",
+   "rank": 1449,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 43,
+   "type": "Female",
+   "rank": 607,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 44,
+   "type": "Male",
+   "rank": 1597,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 45,
+   "type": "Male",
+   "rank": 1376,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 46,
+   "type": "Male",
+   "rank": 854,
+   "band": "773-1776",
+   "bits": 12.6539
+  },
+  {
+   "id": 47,
+   "type": "Male",
+   "rank": 1421,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 48,
+   "type": "Female",
+   "rank": 668,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 49,
+   "type": "Male",
+   "rank": 1721,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 50,
+   "type": "Female",
+   "rank": 528,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 51,
+   "type": "Male",
+   "rank": 1679,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 52,
+   "type": "Male",
+   "rank": 1598,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 53,
+   "type": "Female",
+   "rank": 608,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 54,
+   "type": "Male",
+   "rank": 1395,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 55,
+   "type": "Female",
+   "rank": 609,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 56,
+   "type": "Male",
+   "rank": 975,
+   "band": "773-1776",
+   "bits": 10.6837
+  },
+  {
+   "id": 57,
+   "type": "Male",
+   "rank": 1141,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 58,
+   "type": "Male",
+   "rank": 1091,
+   "band": "773-1776",
+   "bits": 9.5328
+  },
+  {
+   "id": 59,
+   "type": "Zombie",
+   "rank": 13,
+   "band": "7-22",
+   "bits": 10.7273
+  },
+  {
+   "id": 60,
+   "type": "Female",
+   "rank": 325,
+   "band": "173-372",
+   "bits": 8.831
+  },
+  {
+   "id": 61,
+   "type": "Female",
+   "rank": 50,
+   "band": "23-72",
+   "bits": 15.8835
+  },
+  {
+   "id": 62,
+   "type": "Male",
+   "rank": 1422,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 63,
+   "type": "Male",
+   "rank": 1156,
+   "band": "773-1776",
+   "bits": 8.9199
+  },
+  {
+   "id": 64,
+   "type": "Female",
+   "rank": 24,
+   "band": "23-72",
+   "bits": 22.161
+  },
+  {
+   "id": 65,
+   "type": "Male",
+   "rank": 1413,
+   "band": "773-1776",
+   "bits": 5.8918
+  },
+  {
+   "id": 66,
+   "type": "Male",
+   "rank": 1365,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 67,
+   "type": "Male",
+   "rank": 1212,
+   "band": "773-1776",
+   "bits": 8.3673
+  },
+  {
+   "id": 68,
+   "type": "Female",
+   "rank": 333,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 69,
+   "type": "Male",
+   "rank": 1054,
+   "band": "773-1776",
+   "bits": 10.0252
+  },
+  {
+   "id": 70,
+   "type": "Male",
+   "rank": 1450,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 71,
+   "type": "Female",
+   "rank": 610,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 72,
+   "type": "Female",
+   "rank": 578,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 73,
+   "type": "Male",
+   "rank": 788,
+   "band": "773-1776",
+   "bits": 14.7208
+  },
+  {
+   "id": 74,
+   "type": "Male",
+   "rank": 1350,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 75,
+   "type": "Female",
+   "rank": 428,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 76,
+   "type": "Female",
+   "rank": 311,
+   "band": "173-372",
+   "bits": 8.9289
+  },
+  {
+   "id": 77,
+   "type": "Female",
+   "rank": 265,
+   "band": "173-372",
+   "bits": 9.7469
+  },
+  {
+   "id": 78,
+   "type": "Male",
+   "rank": 1018,
+   "band": "773-1776",
+   "bits": 10.3724
+  },
+  {
+   "id": 79,
+   "type": "Male",
+   "rank": 832,
+   "band": "773-1776",
+   "bits": 13.2561
+  },
+  {
+   "id": 80,
+   "type": "Female",
+   "rank": 159,
+   "band": "73-172",
+   "bits": 11.2883
+  },
+  {
+   "id": 81,
+   "type": "Male",
+   "rank": 881,
+   "band": "773-1776",
+   "bits": 12.1484
+  },
+  {
+   "id": 82,
+   "type": "Male",
+   "rank": 1276,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 83,
+   "type": "Male",
+   "rank": 1423,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 84,
+   "type": "Male",
+   "rank": 1451,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 85,
+   "type": "Male",
+   "rank": 855,
+   "band": "773-1776",
+   "bits": 12.6539
+  },
+  {
+   "id": 86,
+   "type": "Female",
+   "rank": 293,
+   "band": "173-372",
+   "bits": 9.2678
+  },
+  {
+   "id": 87,
+   "type": "Male",
+   "rank": 1167,
+   "band": "773-1776",
+   "bits": 8.7821
+  },
+  {
+   "id": 88,
+   "type": "Male",
+   "rank": 1322,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 89,
+   "type": "Female",
+   "rank": 611,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 90,
+   "type": "Male",
+   "rank": 876,
+   "band": "773-1776",
+   "bits": 12.2295
+  },
+  {
+   "id": 91,
+   "type": "Female",
+   "rank": 45,
+   "band": "23-72",
+   "bits": 16.4071
+  },
+  {
+   "id": 92,
+   "type": "Male",
+   "rank": 1452,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 93,
+   "type": "Female",
+   "rank": 71,
+   "band": "23-72",
+   "bits": 14.5506
+  },
+  {
+   "id": 94,
+   "type": "Female",
+   "rank": 391,
+   "band": "373-772",
+   "bits": 7.3184
+  },
+  {
+   "id": 95,
+   "type": "Male",
+   "rank": 853,
+   "band": "773-1776",
+   "bits": 12.7208
+  },
+  {
+   "id": 96,
+   "type": "Female",
+   "rank": 436,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 97,
+   "type": "Female",
+   "rank": 42,
+   "band": "23-72",
+   "bits": 17.1835
+  },
+  {
+   "id": 98,
+   "type": "Male",
+   "rank": 770,
+   "band": "373-772",
+   "bits": 15.4268
+  },
+  {
+   "id": 99,
+   "type": "Male",
+   "rank": 1323,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 100,
+   "type": "Male",
+   "rank": 849,
+   "band": "773-1776",
+   "bits": 12.924
+  },
+  {
+   "id": 101,
+   "type": "Female",
+   "rank": 157,
+   "band": "73-172",
+   "bits": 11.3219
+  },
+  {
+   "id": 102,
+   "type": "Female",
+   "rank": 107,
+   "band": "73-172",
+   "bits": 12.8348
+  },
+  {
+   "id": 103,
+   "type": "Male",
+   "rank": 1424,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 104,
+   "type": "Female",
+   "rank": 468,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 105,
+   "type": "Female",
+   "rank": 133,
+   "band": "73-172",
+   "bits": 11.9342
+  },
+  {
+   "id": 106,
+   "type": "Zombie",
+   "rank": 9,
+   "band": "7-22",
+   "bits": 16.1887
+  },
+  {
+   "id": 107,
+   "type": "Female",
+   "rank": 180,
+   "band": "173-372",
+   "bits": 10.9447
+  },
+  {
+   "id": 108,
+   "type": "Male",
+   "rank": 779,
+   "band": "773-1776",
+   "bits": 15.07
+  },
+  {
+   "id": 109,
+   "type": "Male",
+   "rank": 1266,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 110,
+   "type": "Male",
+   "rank": 870,
+   "band": "773-1776",
+   "bits": 12.3176
+  },
+  {
+   "id": 111,
+   "type": "Female",
+   "rank": 400,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 112,
+   "type": "Male",
+   "rank": 842,
+   "band": "773-1776",
+   "bits": 13.0875
+  },
+  {
+   "id": 113,
+   "type": "Male",
+   "rank": 1016,
+   "band": "773-1776",
+   "bits": 10.4033
+  },
+  {
+   "id": 114,
+   "type": "Female",
+   "rank": 579,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 115,
+   "type": "Female",
+   "rank": 580,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 116,
+   "type": "Male",
+   "rank": 1425,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 117,
+   "type": "Male",
+   "rank": 742,
+   "band": "373-772",
+   "bits": 16.4071
+  },
+  {
+   "id": 118,
+   "type": "Female",
+   "rank": 216,
+   "band": "173-372",
+   "bits": 10.5158
+  },
+  {
+   "id": 119,
+   "type": "Male",
+   "rank": 1599,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 120,
+   "type": "Male",
+   "rank": 932,
+   "band": "773-1776",
+   "bits": 11.3219
+  },
+  {
+   "id": 121,
+   "type": "Male",
+   "rank": 1600,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 122,
+   "type": "Male",
+   "rank": 1533,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 123,
+   "type": "Male",
+   "rank": 934,
+   "band": "773-1776",
+   "bits": 11.2883
+  },
+  {
+   "id": 124,
+   "type": "Female",
+   "rank": 361,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 125,
+   "type": "Female",
+   "rank": 236,
+   "band": "173-372",
+   "bits": 10.1919
+  },
+  {
+   "id": 126,
+   "type": "Female",
+   "rank": 437,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 127,
+   "type": "Female",
+   "rank": 348,
+   "band": "173-372",
+   "bits": 8.4439
+  },
+  {
+   "id": 128,
+   "type": "Female",
+   "rank": 401,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 129,
+   "type": "Male",
+   "rank": 1087,
+   "band": "773-1776",
+   "bits": 9.5664
+  },
+  {
+   "id": 130,
+   "type": "Male",
+   "rank": 918,
+   "band": "773-1776",
+   "bits": 11.5461
+  },
+  {
+   "id": 131,
+   "type": "Male",
+   "rank": 1277,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 132,
+   "type": "Female",
+   "rank": 529,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 133,
+   "type": "Male",
+   "rank": 1129,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 134,
+   "type": "Male",
+   "rank": 1377,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 135,
+   "type": "Female",
+   "rank": 112,
+   "band": "73-172",
+   "bits": 12.6931
+  },
+  {
+   "id": 136,
+   "type": "Male",
+   "rank": 1601,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 137,
+   "type": "Male",
+   "rank": 1396,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 138,
+   "type": "Female",
+   "rank": 355,
+   "band": "173-372",
+   "bits": 8.3673
+  },
+  {
+   "id": 139,
+   "type": "Female",
+   "rank": 669,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 140,
+   "type": "Male",
+   "rank": 1013,
+   "band": "773-1776",
+   "bits": 10.435
+  },
+  {
+   "id": 141,
+   "type": "Female",
+   "rank": 377,
+   "band": "373-772",
+   "bits": 7.7821
+  },
+  {
+   "id": 142,
+   "type": "Male",
+   "rank": 1453,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 143,
+   "type": "Male",
+   "rank": 1085,
+   "band": "773-1776",
+   "bits": 9.6837
+  },
+  {
+   "id": 144,
+   "type": "Male",
+   "rank": 1602,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 145,
+   "type": "Male",
+   "rank": 1267,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 146,
+   "type": "Male",
+   "rank": 1011,
+   "band": "773-1776",
+   "bits": 10.449
+  },
+  {
+   "id": 147,
+   "type": "Female",
+   "rank": 581,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 148,
+   "type": "Male",
+   "rank": 1603,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 149,
+   "type": "Female",
+   "rank": 77,
+   "band": "73-172",
+   "bits": 14.2359
+  },
+  {
+   "id": 150,
+   "type": "Female",
+   "rank": 497,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 151,
+   "type": "Male",
+   "rank": 1202,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 152,
+   "type": "Female",
+   "rank": 66,
+   "band": "23-72",
+   "bits": 14.9724
+  },
+  {
+   "id": 153,
+   "type": "Male",
+   "rank": 821,
+   "band": "773-1776",
+   "bits": 13.5286
+  },
+  {
+   "id": 154,
+   "type": "Male",
+   "rank": 890,
+   "band": "773-1776",
+   "bits": 12.0252
+  },
+  {
+   "id": 155,
+   "type": "Male",
+   "rank": 1213,
+   "band": "773-1776",
+   "bits": 8.3673
+  },
+  {
+   "id": 156,
+   "type": "Male",
+   "rank": 1324,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 157,
+   "type": "Male",
+   "rank": 1130,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 158,
+   "type": "Female",
+   "rank": 213,
+   "band": "173-372",
+   "bits": 10.5502
+  },
+  {
+   "id": 159,
+   "type": "Male",
+   "rank": 1604,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 160,
+   "type": "Male",
+   "rank": 1605,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 161,
+   "type": "Female",
+   "rank": 215,
+   "band": "173-372",
+   "bits": 10.5175
+  },
+  {
+   "id": 162,
+   "type": "Male",
+   "rank": 1454,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 163,
+   "type": "Female",
+   "rank": 294,
+   "band": "173-372",
+   "bits": 9.2678
+  },
+  {
+   "id": 164,
+   "type": "Male",
+   "rank": 1455,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 165,
+   "type": "Male",
+   "rank": 1325,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 166,
+   "type": "Female",
+   "rank": 362,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 167,
+   "type": "Male",
+   "rank": 1039,
+   "band": "773-1776",
+   "bits": 10.1228
+  },
+  {
+   "id": 168,
+   "type": "Female",
+   "rank": 251,
+   "band": "173-372",
+   "bits": 9.9199
+  },
+  {
+   "id": 169,
+   "type": "Male",
+   "rank": 1032,
+   "band": "773-1776",
+   "bits": 10.1919
+  },
+  {
+   "id": 170,
+   "type": "Female",
+   "rank": 670,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 171,
+   "type": "Female",
+   "rank": 671,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 172,
+   "type": "Male",
+   "rank": 757,
+   "band": "373-772",
+   "bits": 15.8119
+  },
+  {
+   "id": 173,
+   "type": "Male",
+   "rank": 1606,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 174,
+   "type": "Male",
+   "rank": 871,
+   "band": "773-1776",
+   "bits": 12.3157
+  },
+  {
+   "id": 175,
+   "type": "Male",
+   "rank": 1278,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 176,
+   "type": "Female",
+   "rank": 222,
+   "band": "173-372",
+   "bits": 10.435
+  },
+  {
+   "id": 177,
+   "type": "Female",
+   "rank": 162,
+   "band": "73-172",
+   "bits": 11.283
+  },
+  {
+   "id": 178,
+   "type": "Ape",
+   "rank": 5,
+   "band": "3-6",
+   "bits": 7.1548
+  },
+  {
+   "id": 179,
+   "type": "Female",
+   "rank": 356,
+   "band": "173-372",
+   "bits": 8.3673
+  },
+  {
+   "id": 180,
+   "type": "Female",
+   "rank": 103,
+   "band": "73-172",
+   "bits": 13.0368
+  },
+  {
+   "id": 181,
+   "type": "Male",
+   "rank": 1120,
+   "band": "773-1776",
+   "bits": 9.2615
+  },
+  {
+   "id": 182,
+   "type": "Male",
+   "rank": 1456,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 183,
+   "type": "Male",
+   "rank": 1534,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 184,
+   "type": "Male",
+   "rank": 1028,
+   "band": "773-1776",
+   "bits": 10.2126
+  },
+  {
+   "id": 185,
+   "type": "Male",
+   "rank": 992,
+   "band": "773-1776",
+   "bits": 10.5502
+  },
+  {
+   "id": 186,
+   "type": "Male",
+   "rank": 1197,
+   "band": "773-1776",
+   "bits": 8.4838
+  },
+  {
+   "id": 187,
+   "type": "Male",
+   "rank": 1203,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 188,
+   "type": "Female",
+   "rank": 582,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 189,
+   "type": "Female",
+   "rank": 312,
+   "band": "173-372",
+   "bits": 8.9289
+  },
+  {
+   "id": 190,
+   "type": "Female",
+   "rank": 342,
+   "band": "173-372",
+   "bits": 8.5597
+  },
+  {
+   "id": 191,
+   "type": "Female",
+   "rank": 417,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 192,
+   "type": "Female",
+   "rank": 402,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 193,
+   "type": "Male",
+   "rank": 1020,
+   "band": "773-1776",
+   "bits": 10.34
+  },
+  {
+   "id": 194,
+   "type": "Female",
+   "rank": 238,
+   "band": "173-372",
+   "bits": 10.1258
+  },
+  {
+   "id": 195,
+   "type": "Female",
+   "rank": 115,
+   "band": "73-172",
+   "bits": 12.5865
+  },
+  {
+   "id": 196,
+   "type": "Male",
+   "rank": 1142,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 197,
+   "type": "Female",
+   "rank": 25,
+   "band": "23-72",
+   "bits": 21.9832
+  },
+  {
+   "id": 198,
+   "type": "Male",
+   "rank": 1607,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 199,
+   "type": "Female",
+   "rank": 530,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 200,
+   "type": "Male",
+   "rank": 895,
+   "band": "773-1776",
+   "bits": 11.8853
+  },
+  {
+   "id": 201,
+   "type": "Male",
+   "rank": 1219,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 202,
+   "type": "Female",
+   "rank": 318,
+   "band": "173-372",
+   "bits": 8.9076
+  },
+  {
+   "id": 203,
+   "type": "Male",
+   "rank": 1256,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 204,
+   "type": "Female",
+   "rank": 35,
+   "band": "23-72",
+   "bits": 17.6586
+  },
+  {
+   "id": 205,
+   "type": "Female",
+   "rank": 64,
+   "band": "23-72",
+   "bits": 15.0705
+  },
+  {
+   "id": 206,
+   "type": "Male",
+   "rank": 751,
+   "band": "373-772",
+   "bits": 16.0207
+  },
+  {
+   "id": 207,
+   "type": "Male",
+   "rank": 776,
+   "band": "773-1776",
+   "bits": 15.1287
+  },
+  {
+   "id": 208,
+   "type": "Female",
+   "rank": 144,
+   "band": "73-172",
+   "bits": 11.5461
+  },
+  {
+   "id": 209,
+   "type": "Female",
+   "rank": 372,
+   "band": "173-372",
+   "bits": 8.096
+  },
+  {
+   "id": 210,
+   "type": "Male",
+   "rank": 929,
+   "band": "773-1776",
+   "bits": 11.3826
+  },
+  {
+   "id": 211,
+   "type": "Female",
+   "rank": 130,
+   "band": "73-172",
+   "bits": 11.993
+  },
+  {
+   "id": 212,
+   "type": "Male",
+   "rank": 937,
+   "band": "773-1776",
+   "bits": 11.1809
+  },
+  {
+   "id": 213,
+   "type": "Male",
+   "rank": 1299,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 214,
+   "type": "Male",
+   "rank": 1036,
+   "band": "773-1776",
+   "bits": 10.1258
+  },
+  {
+   "id": 215,
+   "type": "Male",
+   "rank": 1535,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 216,
+   "type": "Female",
+   "rank": 114,
+   "band": "73-172",
+   "bits": 12.5941
+  },
+  {
+   "id": 217,
+   "type": "Male",
+   "rank": 1414,
+   "band": "773-1776",
+   "bits": 5.8918
+  },
+  {
+   "id": 218,
+   "type": "Male",
+   "rank": 1722,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 219,
+   "type": "Male",
+   "rank": 1300,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 220,
+   "type": "Male",
+   "rank": 1066,
+   "band": "773-1776",
+   "bits": 9.9199
+  },
+  {
+   "id": 221,
+   "type": "Male",
+   "rank": 1040,
+   "band": "773-1776",
+   "bits": 10.1228
+  },
+  {
+   "id": 222,
+   "type": "Male",
+   "rank": 1326,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 223,
+   "type": "Female",
+   "rank": 250,
+   "band": "173-372",
+   "bits": 9.9289
+  },
+  {
+   "id": 224,
+   "type": "Male",
+   "rank": 914,
+   "band": "773-1776",
+   "bits": 11.6183
+  },
+  {
+   "id": 225,
+   "type": "Female",
+   "rank": 119,
+   "band": "73-172",
+   "bits": 12.4677
+  },
+  {
+   "id": 226,
+   "type": "Female",
+   "rank": 396,
+   "band": "373-772",
+   "bits": 7.3068
+  },
+  {
+   "id": 227,
+   "type": "Female",
+   "rank": 214,
+   "band": "173-372",
+   "bits": 10.5289
+  },
+  {
+   "id": 228,
+   "type": "Female",
+   "rank": 612,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 229,
+   "type": "Male",
+   "rank": 1723,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 230,
+   "type": "Female",
+   "rank": 37,
+   "band": "23-72",
+   "bits": 17.5635
+  },
+  {
+   "id": 231,
+   "type": "Male",
+   "rank": 1536,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 232,
+   "type": "Male",
+   "rank": 827,
+   "band": "773-1776",
+   "bits": 13.4703
+  },
+  {
+   "id": 233,
+   "type": "Male",
+   "rank": 741,
+   "band": "373-772",
+   "bits": 16.4081
+  },
+  {
+   "id": 234,
+   "type": "Female",
+   "rank": 583,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 235,
+   "type": "Female",
+   "rank": 613,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 236,
+   "type": "Male",
+   "rank": 1037,
+   "band": "773-1776",
+   "bits": 10.1258
+  },
+  {
+   "id": 237,
+   "type": "Male",
+   "rank": 1268,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 238,
+   "type": "Female",
+   "rank": 614,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 239,
+   "type": "Male",
+   "rank": 1724,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 240,
+   "type": "Male",
+   "rank": 1009,
+   "band": "773-1776",
+   "bits": 10.4522
+  },
+  {
+   "id": 241,
+   "type": "Male",
+   "rank": 1041,
+   "band": "773-1776",
+   "bits": 10.1216
+  },
+  {
+   "id": 242,
+   "type": "Male",
+   "rank": 960,
+   "band": "773-1776",
+   "bits": 10.8528
+  },
+  {
+   "id": 243,
+   "type": "Male",
+   "rank": 879,
+   "band": "773-1776",
+   "bits": 12.1919
+  },
+  {
+   "id": 244,
+   "type": "Female",
+   "rank": 94,
+   "band": "73-172",
+   "bits": 13.4349
+  },
+  {
+   "id": 245,
+   "type": "Female",
+   "rank": 672,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 246,
+   "type": "Male",
+   "rank": 764,
+   "band": "373-772",
+   "bits": 15.5224
+  },
+  {
+   "id": 247,
+   "type": "Male",
+   "rank": 1725,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 248,
+   "type": "Male",
+   "rank": 1059,
+   "band": "773-1776",
+   "bits": 9.9289
+  },
+  {
+   "id": 249,
+   "type": "Female",
+   "rank": 507,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 250,
+   "type": "Male",
+   "rank": 982,
+   "band": "773-1776",
+   "bits": 10.607
+  },
+  {
+   "id": 251,
+   "type": "Male",
+   "rank": 735,
+   "band": "373-772",
+   "bits": 16.7536
+  },
+  {
+   "id": 252,
+   "type": "Male",
+   "rank": 1608,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 253,
+   "type": "Female",
+   "rank": 329,
+   "band": "173-372",
+   "bits": 8.7821
+  },
+  {
+   "id": 254,
+   "type": "Male",
+   "rank": 771,
+   "band": "373-772",
+   "bits": 15.3969
+  },
+  {
+   "id": 255,
+   "type": "Male",
+   "rank": 1060,
+   "band": "773-1776",
+   "bits": 9.9289
+  },
+  {
+   "id": 256,
+   "type": "Male",
+   "rank": 1055,
+   "band": "773-1776",
+   "bits": 9.9853
+  },
+  {
+   "id": 257,
+   "type": "Male",
+   "rank": 1726,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 258,
+   "type": "Male",
+   "rank": 1537,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 259,
+   "type": "Zombie",
+   "rank": 19,
+   "band": "7-22",
+   "bits": 5.6134
+  },
+  {
+   "id": 260,
+   "type": "Male",
+   "rank": 1538,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 261,
+   "type": "Male",
+   "rank": 818,
+   "band": "773-1776",
+   "bits": 13.6478
+  },
+  {
+   "id": 262,
+   "type": "Female",
+   "rank": 225,
+   "band": "173-372",
+   "bits": 10.3724
+  },
+  {
+   "id": 263,
+   "type": "Male",
+   "rank": 1727,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 264,
+   "type": "Male",
+   "rank": 1457,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 265,
+   "type": "Male",
+   "rank": 1327,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 266,
+   "type": "Male",
+   "rank": 1539,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 267,
+   "type": "Male",
+   "rank": 1680,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 268,
+   "type": "Male",
+   "rank": 839,
+   "band": "773-1776",
+   "bits": 13.1589
+  },
+  {
+   "id": 269,
+   "type": "Female",
+   "rank": 309,
+   "band": "173-372",
+   "bits": 9.0451
+  },
+  {
+   "id": 270,
+   "type": "Male",
+   "rank": 1131,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 271,
+   "type": "Male",
+   "rank": 1245,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 272,
+   "type": "Male",
+   "rank": 1328,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 273,
+   "type": "Male",
+   "rank": 1378,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 274,
+   "type": "Female",
+   "rank": 584,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 275,
+   "type": "Male",
+   "rank": 936,
+   "band": "773-1776",
+   "bits": 11.271
+  },
+  {
+   "id": 276,
+   "type": "Female",
+   "rank": 673,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 277,
+   "type": "Male",
+   "rank": 1329,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 278,
+   "type": "Male",
+   "rank": 728,
+   "band": "373-772",
+   "bits": 17.2324
+  },
+  {
+   "id": 279,
+   "type": "Female",
+   "rank": 485,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 280,
+   "type": "Female",
+   "rank": 457,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 281,
+   "type": "Male",
+   "rank": 833,
+   "band": "773-1776",
+   "bits": 13.2561
+  },
+  {
+   "id": 282,
+   "type": "Female",
+   "rank": 531,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 283,
+   "type": "Male",
+   "rank": 1426,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 284,
+   "type": "Female",
+   "rank": 383,
+   "band": "373-772",
+   "bits": 7.4768
+  },
+  {
+   "id": 285,
+   "type": "Male",
+   "rank": 1728,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 286,
+   "type": "Female",
+   "rank": 289,
+   "band": "173-372",
+   "bits": 9.3439
+  },
+  {
+   "id": 287,
+   "type": "Female",
+   "rank": 615,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 288,
+   "type": "Male",
+   "rank": 1240,
+   "band": "773-1776",
+   "bits": 7.6694
+  },
+  {
+   "id": 289,
+   "type": "Male",
+   "rank": 1540,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 290,
+   "type": "Male",
+   "rank": 961,
+   "band": "773-1776",
+   "bits": 10.8528
+  },
+  {
+   "id": 291,
+   "type": "Male",
+   "rank": 1609,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 292,
+   "type": "Male",
+   "rank": 1379,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 293,
+   "type": "Female",
+   "rank": 532,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 294,
+   "type": "Female",
+   "rank": 392,
+   "band": "373-772",
+   "bits": 7.3184
+  },
+  {
+   "id": 295,
+   "type": "Male",
+   "rank": 1194,
+   "band": "773-1776",
+   "bits": 8.5175
+  },
+  {
+   "id": 296,
+   "type": "Female",
+   "rank": 533,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 297,
+   "type": "Male",
+   "rank": 1178,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 298,
+   "type": "Male",
+   "rank": 1232,
+   "band": "773-1776",
+   "bits": 8.096
+  },
+  {
+   "id": 299,
+   "type": "Male",
+   "rank": 1610,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 300,
+   "type": "Male",
+   "rank": 1427,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 301,
+   "type": "Female",
+   "rank": 150,
+   "band": "73-172",
+   "bits": 11.4516
+  },
+  {
+   "id": 302,
+   "type": "Female",
+   "rank": 334,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 303,
+   "type": "Male",
+   "rank": 1611,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 304,
+   "type": "Female",
+   "rank": 266,
+   "band": "173-372",
+   "bits": 9.7469
+  },
+  {
+   "id": 305,
+   "type": "Male",
+   "rank": 1729,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 306,
+   "type": "Male",
+   "rank": 1541,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 307,
+   "type": "Female",
+   "rank": 72,
+   "band": "23-72",
+   "bits": 14.5506
+  },
+  {
+   "id": 308,
+   "type": "Male",
+   "rank": 1175,
+   "band": "773-1776",
+   "bits": 8.7334
+  },
+  {
+   "id": 309,
+   "type": "Male",
+   "rank": 715,
+   "band": "373-772",
+   "bits": 18.714
+  },
+  {
+   "id": 310,
+   "type": "Male",
+   "rank": 1179,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 311,
+   "type": "Ape",
+   "rank": 6,
+   "band": "3-6",
+   "bits": 6.3504
+  },
+  {
+   "id": 312,
+   "type": "Female",
+   "rank": 182,
+   "band": "173-372",
+   "bits": 10.9048
+  },
+  {
+   "id": 313,
+   "type": "Male",
+   "rank": 1022,
+   "band": "773-1776",
+   "bits": 10.3361
+  },
+  {
+   "id": 314,
+   "type": "Male",
+   "rank": 1612,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 315,
+   "type": "Male",
+   "rank": 1279,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 316,
+   "type": "Female",
+   "rank": 106,
+   "band": "73-172",
+   "bits": 12.8667
+  },
+  {
+   "id": 317,
+   "type": "Male",
+   "rank": 1180,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 318,
+   "type": "Female",
+   "rank": 674,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 319,
+   "type": "Male",
+   "rank": 1246,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 320,
+   "type": "Male",
+   "rank": 1730,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 321,
+   "type": "Male",
+   "rank": 1168,
+   "band": "773-1776",
+   "bits": 8.7821
+  },
+  {
+   "id": 322,
+   "type": "Female",
+   "rank": 290,
+   "band": "173-372",
+   "bits": 9.3235
+  },
+  {
+   "id": 323,
+   "type": "Female",
+   "rank": 616,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 324,
+   "type": "Female",
+   "rank": 279,
+   "band": "173-372",
+   "bits": 9.5597
+  },
+  {
+   "id": 325,
+   "type": "Male",
+   "rank": 972,
+   "band": "773-1776",
+   "bits": 10.6981
+  },
+  {
+   "id": 326,
+   "type": "Female",
+   "rank": 186,
+   "band": "173-372",
+   "bits": 10.8559
+  },
+  {
+   "id": 327,
+   "type": "Female",
+   "rank": 49,
+   "band": "23-72",
+   "bits": 16.1099
+  },
+  {
+   "id": 328,
+   "type": "Female",
+   "rank": 534,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 329,
+   "type": "Female",
+   "rank": 535,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 330,
+   "type": "Male",
+   "rank": 1731,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 331,
+   "type": "Male",
+   "rank": 1247,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 332,
+   "type": "Male",
+   "rank": 1034,
+   "band": "773-1776",
+   "bits": 10.1423
+  },
+  {
+   "id": 333,
+   "type": "Female",
+   "rank": 658,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 334,
+   "type": "Male",
+   "rank": 907,
+   "band": "773-1776",
+   "bits": 11.7333
+  },
+  {
+   "id": 335,
+   "type": "Female",
+   "rank": 249,
+   "band": "173-372",
+   "bits": 9.9325
+  },
+  {
+   "id": 336,
+   "type": "Male",
+   "rank": 869,
+   "band": "773-1776",
+   "bits": 12.3734
+  },
+  {
+   "id": 337,
+   "type": "Male",
+   "rank": 1681,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 338,
+   "type": "Male",
+   "rank": 969,
+   "band": "773-1776",
+   "bits": 10.7385
+  },
+  {
+   "id": 339,
+   "type": "Female",
+   "rank": 403,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 340,
+   "type": "Female",
+   "rank": 193,
+   "band": "173-372",
+   "bits": 10.8028
+  },
+  {
+   "id": 341,
+   "type": "Female",
+   "rank": 536,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 342,
+   "type": "Male",
+   "rank": 736,
+   "band": "373-772",
+   "bits": 16.7199
+  },
+  {
+   "id": 343,
+   "type": "Female",
+   "rank": 477,
+   "band": "373-772",
+   "bits": 6.128
+  },
+  {
+   "id": 344,
+   "type": "Female",
+   "rank": 478,
+   "band": "373-772",
+   "bits": 6.128
+  },
+  {
+   "id": 345,
+   "type": "Female",
+   "rank": 675,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 346,
+   "type": "Male",
+   "rank": 1458,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 347,
+   "type": "Male",
+   "rank": 720,
+   "band": "373-772",
+   "bits": 18.0638
+  },
+  {
+   "id": 348,
+   "type": "Male",
+   "rank": 1097,
+   "band": "773-1776",
+   "bits": 9.5175
+  },
+  {
+   "id": 349,
+   "type": "Male",
+   "rank": 1105,
+   "band": "773-1776",
+   "bits": 9.435
+  },
+  {
+   "id": 350,
+   "type": "Female",
+   "rank": 56,
+   "band": "23-72",
+   "bits": 15.5224
+  },
+  {
+   "id": 351,
+   "type": "Male",
+   "rank": 1682,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 352,
+   "type": "Female",
+   "rank": 267,
+   "band": "173-372",
+   "bits": 9.7469
+  },
+  {
+   "id": 353,
+   "type": "Male",
+   "rank": 758,
+   "band": "373-772",
+   "bits": 15.7914
+  },
+  {
+   "id": 354,
+   "type": "Male",
+   "rank": 1269,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 355,
+   "type": "Female",
+   "rank": 429,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 356,
+   "type": "Male",
+   "rank": 762,
+   "band": "373-772",
+   "bits": 15.5449
+  },
+  {
+   "id": 357,
+   "type": "Male",
+   "rank": 1732,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 358,
+   "type": "Male",
+   "rank": 1092,
+   "band": "773-1776",
+   "bits": 9.5328
+  },
+  {
+   "id": 359,
+   "type": "Male",
+   "rank": 734,
+   "band": "373-772",
+   "bits": 16.7723
+  },
+  {
+   "id": 360,
+   "type": "Male",
+   "rank": 1683,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 361,
+   "type": "Male",
+   "rank": 865,
+   "band": "773-1776",
+   "bits": 12.5008
+  },
+  {
+   "id": 362,
+   "type": "Male",
+   "rank": 1169,
+   "band": "773-1776",
+   "bits": 8.7821
+  },
+  {
+   "id": 363,
+   "type": "Male",
+   "rank": 716,
+   "band": "373-772",
+   "bits": 18.4234
+  },
+  {
+   "id": 364,
+   "type": "Male",
+   "rank": 1351,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 365,
+   "type": "Female",
+   "rank": 537,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 366,
+   "type": "Male",
+   "rank": 1280,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 367,
+   "type": "Female",
+   "rank": 81,
+   "band": "73-172",
+   "bits": 13.9156
+  },
+  {
+   "id": 368,
+   "type": "Female",
+   "rank": 430,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 369,
+   "type": "Male",
+   "rank": 1733,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 370,
+   "type": "Female",
+   "rank": 280,
+   "band": "173-372",
+   "bits": 9.5175
+  },
+  {
+   "id": 371,
+   "type": "Female",
+   "rank": 458,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 372,
+   "type": "Female",
+   "rank": 438,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 373,
+   "type": "Male",
+   "rank": 885,
+   "band": "773-1776",
+   "bits": 12.0916
+  },
+  {
+   "id": 374,
+   "type": "Male",
+   "rank": 1415,
+   "band": "773-1776",
+   "bits": 5.8918
+  },
+  {
+   "id": 375,
+   "type": "Female",
+   "rank": 32,
+   "band": "23-72",
+   "bits": 18.1365
+  },
+  {
+   "id": 376,
+   "type": "Female",
+   "rank": 39,
+   "band": "23-72",
+   "bits": 17.4829
+  },
+  {
+   "id": 377,
+   "type": "Male",
+   "rank": 1542,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 378,
+   "type": "Male",
+   "rank": 1734,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 379,
+   "type": "Male",
+   "rank": 739,
+   "band": "373-772",
+   "bits": 16.4932
+  },
+  {
+   "id": 380,
+   "type": "Male",
+   "rank": 1115,
+   "band": "773-1776",
+   "bits": 9.2872
+  },
+  {
+   "id": 381,
+   "type": "Male",
+   "rank": 1352,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 382,
+   "type": "Female",
+   "rank": 439,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 383,
+   "type": "Female",
+   "rank": 177,
+   "band": "173-372",
+   "bits": 10.9467
+  },
+  {
+   "id": 384,
+   "type": "Male",
+   "rank": 1459,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 385,
+   "type": "Female",
+   "rank": 585,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 386,
+   "type": "Male",
+   "rank": 781,
+   "band": "773-1776",
+   "bits": 14.9862
+  },
+  {
+   "id": 387,
+   "type": "Male",
+   "rank": 1735,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 388,
+   "type": "Female",
+   "rank": 167,
+   "band": "73-172",
+   "bits": 11.1216
+  },
+  {
+   "id": 389,
+   "type": "Female",
+   "rank": 274,
+   "band": "173-372",
+   "bits": 9.6094
+  },
+  {
+   "id": 390,
+   "type": "Male",
+   "rank": 1281,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 391,
+   "type": "Male",
+   "rank": 1098,
+   "band": "773-1776",
+   "bits": 9.5175
+  },
+  {
+   "id": 392,
+   "type": "Female",
+   "rank": 321,
+   "band": "173-372",
+   "bits": 8.8598
+  },
+  {
+   "id": 393,
+   "type": "Female",
+   "rank": 187,
+   "band": "173-372",
+   "bits": 10.831
+  },
+  {
+   "id": 394,
+   "type": "Male",
+   "rank": 1428,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 395,
+   "type": "Female",
+   "rank": 586,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 396,
+   "type": "Female",
+   "rank": 676,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 397,
+   "type": "Male",
+   "rank": 1460,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 398,
+   "type": "Male",
+   "rank": 1330,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 399,
+   "type": "Male",
+   "rank": 1163,
+   "band": "773-1776",
+   "bits": 8.8598
+  },
+  {
+   "id": 400,
+   "type": "Male",
+   "rank": 1114,
+   "band": "773-1776",
+   "bits": 9.3184
+  },
+  {
+   "id": 401,
+   "type": "Male",
+   "rank": 819,
+   "band": "773-1776",
+   "bits": 13.6478
+  },
+  {
+   "id": 402,
+   "type": "Male",
+   "rank": 973,
+   "band": "773-1776",
+   "bits": 10.6981
+  },
+  {
+   "id": 403,
+   "type": "Male",
+   "rank": 1181,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 404,
+   "type": "Male",
+   "rank": 877,
+   "band": "773-1776",
+   "bits": 12.2078
+  },
+  {
+   "id": 405,
+   "type": "Alien",
+   "rank": 2,
+   "band": "1-2",
+   "bits": 5.4759
+  },
+  {
+   "id": 406,
+   "type": "Male",
+   "rank": 1429,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 407,
+   "type": "Male",
+   "rank": 1613,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 408,
+   "type": "Male",
+   "rank": 1331,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 409,
+   "type": "Male",
+   "rank": 1301,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 410,
+   "type": "Male",
+   "rank": 1204,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 411,
+   "type": "Male",
+   "rank": 1614,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 412,
+   "type": "Male",
+   "rank": 1736,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 413,
+   "type": "Male",
+   "rank": 1543,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 414,
+   "type": "Male",
+   "rank": 1461,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 415,
+   "type": "Male",
+   "rank": 1118,
+   "band": "773-1776",
+   "bits": 9.2678
+  },
+  {
+   "id": 416,
+   "type": "Male",
+   "rank": 850,
+   "band": "773-1776",
+   "bits": 12.9155
+  },
+  {
+   "id": 417,
+   "type": "Female",
+   "rank": 170,
+   "band": "73-172",
+   "bits": 11.02
+  },
+  {
+   "id": 418,
+   "type": "Male",
+   "rank": 1017,
+   "band": "773-1776",
+   "bits": 10.4033
+  },
+  {
+   "id": 419,
+   "type": "Male",
+   "rank": 887,
+   "band": "773-1776",
+   "bits": 12.0527
+  },
+  {
+   "id": 420,
+   "type": "Female",
+   "rank": 60,
+   "band": "23-72",
+   "bits": 15.196
+  },
+  {
+   "id": 421,
+   "type": "Female",
+   "rank": 55,
+   "band": "23-72",
+   "bits": 15.573
+  },
+  {
+   "id": 422,
+   "type": "Male",
+   "rank": 962,
+   "band": "773-1776",
+   "bits": 10.8528
+  },
+  {
+   "id": 423,
+   "type": "Female",
+   "rank": 538,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 424,
+   "type": "Female",
+   "rank": 440,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 425,
+   "type": "Male",
+   "rank": 1019,
+   "band": "773-1776",
+   "bits": 10.3724
+  },
+  {
+   "id": 426,
+   "type": "Male",
+   "rank": 954,
+   "band": "773-1776",
+   "bits": 10.9447
+  },
+  {
+   "id": 427,
+   "type": "Male",
+   "rank": 1544,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 428,
+   "type": "Male",
+   "rank": 896,
+   "band": "773-1776",
+   "bits": 11.8853
+  },
+  {
+   "id": 429,
+   "type": "Female",
+   "rank": 276,
+   "band": "173-372",
+   "bits": 9.5664
+  },
+  {
+   "id": 430,
+   "type": "Male",
+   "rank": 1230,
+   "band": "773-1776",
+   "bits": 8.1423
+  },
+  {
+   "id": 431,
+   "type": "Male",
+   "rank": 904,
+   "band": "773-1776",
+   "bits": 11.7788
+  },
+  {
+   "id": 432,
+   "type": "Male",
+   "rank": 1282,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 433,
+   "type": "Female",
+   "rank": 539,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 434,
+   "type": "Male",
+   "rank": 1220,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 435,
+   "type": "Female",
+   "rank": 292,
+   "band": "173-372",
+   "bits": 9.2872
+  },
+  {
+   "id": 436,
+   "type": "Male",
+   "rank": 1061,
+   "band": "773-1776",
+   "bits": 9.9289
+  },
+  {
+   "id": 437,
+   "type": "Male",
+   "rank": 707,
+   "band": "373-772",
+   "bits": 21.8729
+  },
+  {
+   "id": 438,
+   "type": "Male",
+   "rank": 1545,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 439,
+   "type": "Female",
+   "rank": 313,
+   "band": "173-372",
+   "bits": 8.9289
+  },
+  {
+   "id": 440,
+   "type": "Male",
+   "rank": 749,
+   "band": "373-772",
+   "bits": 16.0723
+  },
+  {
+   "id": 441,
+   "type": "Male",
+   "rank": 1237,
+   "band": "773-1776",
+   "bits": 7.7821
+  },
+  {
+   "id": 442,
+   "type": "Male",
+   "rank": 985,
+   "band": "773-1776",
+   "bits": 10.5865
+  },
+  {
+   "id": 443,
+   "type": "Male",
+   "rank": 743,
+   "band": "373-772",
+   "bits": 16.3349
+  },
+  {
+   "id": 444,
+   "type": "Female",
+   "rank": 441,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 445,
+   "type": "Male",
+   "rank": 981,
+   "band": "773-1776",
+   "bits": 10.6183
+  },
+  {
+   "id": 446,
+   "type": "Female",
+   "rank": 242,
+   "band": "173-372",
+   "bits": 10.1011
+  },
+  {
+   "id": 447,
+   "type": "Female",
+   "rank": 127,
+   "band": "73-172",
+   "bits": 12.1484
+  },
+  {
+   "id": 448,
+   "type": "Female",
+   "rank": 322,
+   "band": "173-372",
+   "bits": 8.8598
+  },
+  {
+   "id": 449,
+   "type": "Male",
+   "rank": 761,
+   "band": "373-772",
+   "bits": 15.6205
+  },
+  {
+   "id": 450,
+   "type": "Female",
+   "rank": 314,
+   "band": "173-372",
+   "bits": 8.9199
+  },
+  {
+   "id": 451,
+   "type": "Female",
+   "rank": 252,
+   "band": "173-372",
+   "bits": 9.9199
+  },
+  {
+   "id": 452,
+   "type": "Female",
+   "rank": 617,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 453,
+   "type": "Male",
+   "rank": 1088,
+   "band": "773-1776",
+   "bits": 9.5664
+  },
+  {
+   "id": 454,
+   "type": "Male",
+   "rank": 1546,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 455,
+   "type": "Male",
+   "rank": 1302,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 456,
+   "type": "Female",
+   "rank": 229,
+   "band": "173-372",
+   "bits": 10.3235
+  },
+  {
+   "id": 457,
+   "type": "Male",
+   "rank": 1283,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 458,
+   "type": "Male",
+   "rank": 1257,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 459,
+   "type": "Female",
+   "rank": 210,
+   "band": "173-372",
+   "bits": 10.5865
+  },
+  {
+   "id": 460,
+   "type": "Male",
+   "rank": 1462,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 461,
+   "type": "Male",
+   "rank": 1430,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 462,
+   "type": "Female",
+   "rank": 323,
+   "band": "173-372",
+   "bits": 8.8598
+  },
+  {
+   "id": 463,
+   "type": "Male",
+   "rank": 1615,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 464,
+   "type": "Male",
+   "rank": 790,
+   "band": "773-1776",
+   "bits": 14.7044
+  },
+  {
+   "id": 465,
+   "type": "Male",
+   "rank": 1684,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 466,
+   "type": "Female",
+   "rank": 288,
+   "band": "173-372",
+   "bits": 9.4033
+  },
+  {
+   "id": 467,
+   "type": "Female",
+   "rank": 384,
+   "band": "373-772",
+   "bits": 7.4768
+  },
+  {
+   "id": 468,
+   "type": "Female",
+   "rank": 176,
+   "band": "173-372",
+   "bits": 10.9883
+  },
+  {
+   "id": 469,
+   "type": "Female",
+   "rank": 291,
+   "band": "173-372",
+   "bits": 9.2951
+  },
+  {
+   "id": 470,
+   "type": "Female",
+   "rank": 188,
+   "band": "173-372",
+   "bits": 10.831
+  },
+  {
+   "id": 471,
+   "type": "Zombie",
+   "rank": 17,
+   "band": "7-22",
+   "bits": 5.8918
+  },
+  {
+   "id": 472,
+   "type": "Male",
+   "rank": 1463,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 473,
+   "type": "Male",
+   "rank": 711,
+   "band": "373-772",
+   "bits": 19.9417
+  },
+  {
+   "id": 474,
+   "type": "Male",
+   "rank": 1214,
+   "band": "773-1776",
+   "bits": 8.3673
+  },
+  {
+   "id": 475,
+   "type": "Male",
+   "rank": 1014,
+   "band": "773-1776",
+   "bits": 10.435
+  },
+  {
+   "id": 476,
+   "type": "Female",
+   "rank": 295,
+   "band": "173-372",
+   "bits": 9.2678
+  },
+  {
+   "id": 477,
+   "type": "Male",
+   "rank": 1685,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 478,
+   "type": "Female",
+   "rank": 296,
+   "band": "173-372",
+   "bits": 9.2678
+  },
+  {
+   "id": 479,
+   "type": "Male",
+   "rank": 800,
+   "band": "773-1776",
+   "bits": 14.4083
+  },
+  {
+   "id": 480,
+   "type": "Female",
+   "rank": 442,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 481,
+   "type": "Male",
+   "rank": 1464,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 482,
+   "type": "Female",
+   "rank": 540,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 483,
+   "type": "Female",
+   "rank": 189,
+   "band": "173-372",
+   "bits": 10.831
+  },
+  {
+   "id": 484,
+   "type": "Male",
+   "rank": 1465,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 485,
+   "type": "Male",
+   "rank": 1103,
+   "band": "773-1776",
+   "bits": 9.4838
+  },
+  {
+   "id": 486,
+   "type": "Female",
+   "rank": 404,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 487,
+   "type": "Male",
+   "rank": 1737,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 488,
+   "type": "Male",
+   "rank": 847,
+   "band": "773-1776",
+   "bits": 13.02
+  },
+  {
+   "id": 489,
+   "type": "Male",
+   "rank": 802,
+   "band": "773-1776",
+   "bits": 14.2817
+  },
+  {
+   "id": 490,
+   "type": "Male",
+   "rank": 786,
+   "band": "773-1776",
+   "bits": 14.8402
+  },
+  {
+   "id": 491,
+   "type": "Male",
+   "rank": 1270,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 492,
+   "type": "Male",
+   "rank": 1616,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 493,
+   "type": "Male",
+   "rank": 840,
+   "band": "773-1776",
+   "bits": 13.1464
+  },
+  {
+   "id": 494,
+   "type": "Female",
+   "rank": 479,
+   "band": "373-772",
+   "bits": 6.128
+  },
+  {
+   "id": 495,
+   "type": "Female",
+   "rank": 121,
+   "band": "73-172",
+   "bits": 12.3734
+  },
+  {
+   "id": 496,
+   "type": "Male",
+   "rank": 1466,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 497,
+   "type": "Female",
+   "rank": 160,
+   "band": "73-172",
+   "bits": 11.2883
+  },
+  {
+   "id": 498,
+   "type": "Female",
+   "rank": 480,
+   "band": "373-772",
+   "bits": 6.128
+  },
+  {
+   "id": 499,
+   "type": "Male",
+   "rank": 774,
+   "band": "773-1776",
+   "bits": 15.1579
+  },
+  {
+   "id": 500,
+   "type": "Male",
+   "rank": 867,
+   "band": "773-1776",
+   "bits": 12.4703
+  },
+  {
+   "id": 501,
+   "type": "Male",
+   "rank": 1311,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 502,
+   "type": "Male",
+   "rank": 858,
+   "band": "773-1776",
+   "bits": 12.6517
+  },
+  {
+   "id": 503,
+   "type": "Male",
+   "rank": 1467,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 504,
+   "type": "Male",
+   "rank": 1231,
+   "band": "773-1776",
+   "bits": 8.1423
+  },
+  {
+   "id": 505,
+   "type": "Male",
+   "rank": 1397,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 506,
+   "type": "Male",
+   "rank": 1738,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 507,
+   "type": "Male",
+   "rank": 787,
+   "band": "773-1776",
+   "bits": 14.8402
+  },
+  {
+   "id": 508,
+   "type": "Male",
+   "rank": 1617,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 509,
+   "type": "Male",
+   "rank": 826,
+   "band": "773-1776",
+   "bits": 13.4722
+  },
+  {
+   "id": 510,
+   "type": "Male",
+   "rank": 1189,
+   "band": "773-1776",
+   "bits": 8.5597
+  },
+  {
+   "id": 511,
+   "type": "Male",
+   "rank": 1332,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 512,
+   "type": "Female",
+   "rank": 125,
+   "band": "73-172",
+   "bits": 12.2552
+  },
+  {
+   "id": 513,
+   "type": "Female",
+   "rank": 277,
+   "band": "173-372",
+   "bits": 9.5664
+  },
+  {
+   "id": 514,
+   "type": "Male",
+   "rank": 897,
+   "band": "773-1776",
+   "bits": 11.8853
+  },
+  {
+   "id": 515,
+   "type": "Male",
+   "rank": 1241,
+   "band": "773-1776",
+   "bits": 7.6694
+  },
+  {
+   "id": 516,
+   "type": "Male",
+   "rank": 1547,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 517,
+   "type": "Male",
+   "rank": 1160,
+   "band": "773-1776",
+   "bits": 8.9076
+  },
+  {
+   "id": 518,
+   "type": "Male",
+   "rank": 950,
+   "band": "773-1776",
+   "bits": 10.9815
+  },
+  {
+   "id": 519,
+   "type": "Female",
+   "rank": 541,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 520,
+   "type": "Male",
+   "rank": 1468,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 521,
+   "type": "Male",
+   "rank": 1548,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 522,
+   "type": "Male",
+   "rank": 823,
+   "band": "773-1776",
+   "bits": 13.5118
+  },
+  {
+   "id": 523,
+   "type": "Female",
+   "rank": 677,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 524,
+   "type": "Female",
+   "rank": 469,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 525,
+   "type": "Female",
+   "rank": 678,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 526,
+   "type": "Male",
+   "rank": 1618,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 527,
+   "type": "Female",
+   "rank": 212,
+   "band": "173-372",
+   "bits": 10.5597
+  },
+  {
+   "id": 528,
+   "type": "Female",
+   "rank": 587,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 529,
+   "type": "Male",
+   "rank": 1549,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 530,
+   "type": "Female",
+   "rank": 618,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 531,
+   "type": "Female",
+   "rank": 443,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 532,
+   "type": "Male",
+   "rank": 903,
+   "band": "773-1776",
+   "bits": 11.8244
+  },
+  {
+   "id": 533,
+   "type": "Female",
+   "rank": 619,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 534,
+   "type": "Female",
+   "rank": 588,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 535,
+   "type": "Male",
+   "rank": 1123,
+   "band": "773-1776",
+   "bits": 9.1971
+  },
+  {
+   "id": 536,
+   "type": "Male",
+   "rank": 1126,
+   "band": "773-1776",
+   "bits": 9.1912
+  },
+  {
+   "id": 537,
+   "type": "Male",
+   "rank": 1154,
+   "band": "773-1776",
+   "bits": 8.9289
+  },
+  {
+   "id": 538,
+   "type": "Male",
+   "rank": 1619,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 539,
+   "type": "Female",
+   "rank": 363,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 540,
+   "type": "Male",
+   "rank": 1620,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 541,
+   "type": "Male",
+   "rank": 1258,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 542,
+   "type": "Male",
+   "rank": 1198,
+   "band": "773-1776",
+   "bits": 8.4838
+  },
+  {
+   "id": 543,
+   "type": "Male",
+   "rank": 820,
+   "band": "773-1776",
+   "bits": 13.5614
+  },
+  {
+   "id": 544,
+   "type": "Male",
+   "rank": 1161,
+   "band": "773-1776",
+   "bits": 8.9034
+  },
+  {
+   "id": 545,
+   "type": "Female",
+   "rank": 397,
+   "band": "373-772",
+   "bits": 7.3068
+  },
+  {
+   "id": 546,
+   "type": "Female",
+   "rank": 92,
+   "band": "73-172",
+   "bits": 13.4934
+  },
+  {
+   "id": 547,
+   "type": "Male",
+   "rank": 1303,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 548,
+   "type": "Male",
+   "rank": 746,
+   "band": "373-772",
+   "bits": 16.1601
+  },
+  {
+   "id": 549,
+   "type": "Female",
+   "rank": 542,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 550,
+   "type": "Female",
+   "rank": 589,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 551,
+   "type": "Male",
+   "rank": 713,
+   "band": "373-772",
+   "bits": 19.7029
+  },
+  {
+   "id": 552,
+   "type": "Female",
+   "rank": 679,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 553,
+   "type": "Male",
+   "rank": 1052,
+   "band": "773-1776",
+   "bits": 10.0544
+  },
+  {
+   "id": 554,
+   "type": "Male",
+   "rank": 1139,
+   "band": "773-1776",
+   "bits": 9.0769
+  },
+  {
+   "id": 555,
+   "type": "Male",
+   "rank": 1271,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 556,
+   "type": "Female",
+   "rank": 543,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 557,
+   "type": "Female",
+   "rank": 65,
+   "band": "23-72",
+   "bits": 14.9963
+  },
+  {
+   "id": 558,
+   "type": "Female",
+   "rank": 620,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 559,
+   "type": "Female",
+   "rank": 680,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 560,
+   "type": "Male",
+   "rank": 902,
+   "band": "773-1776",
+   "bits": 11.8285
+  },
+  {
+   "id": 561,
+   "type": "Female",
+   "rank": 498,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 562,
+   "type": "Male",
+   "rank": 1143,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 563,
+   "type": "Male",
+   "rank": 1550,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 564,
+   "type": "Female",
+   "rank": 370,
+   "band": "173-372",
+   "bits": 8.1423
+  },
+  {
+   "id": 565,
+   "type": "Male",
+   "rank": 777,
+   "band": "773-1776",
+   "bits": 15.1194
+  },
+  {
+   "id": 566,
+   "type": "Male",
+   "rank": 1621,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 567,
+   "type": "Female",
+   "rank": 259,
+   "band": "173-372",
+   "bits": 9.7805
+  },
+  {
+   "id": 568,
+   "type": "Male",
+   "rank": 1622,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 569,
+   "type": "Female",
+   "rank": 38,
+   "band": "23-72",
+   "bits": 17.5635
+  },
+  {
+   "id": 570,
+   "type": "Female",
+   "rank": 302,
+   "band": "173-372",
+   "bits": 9.1423
+  },
+  {
+   "id": 571,
+   "type": "Female",
+   "rank": 508,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 572,
+   "type": "Female",
+   "rank": 621,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 573,
+   "type": "Male",
+   "rank": 1353,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 574,
+   "type": "Male",
+   "rank": 976,
+   "band": "773-1776",
+   "bits": 10.6664
+  },
+  {
+   "id": 575,
+   "type": "Female",
+   "rank": 245,
+   "band": "173-372",
+   "bits": 10.0252
+  },
+  {
+   "id": 576,
+   "type": "Female",
+   "rank": 335,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 577,
+   "type": "Male",
+   "rank": 1304,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 578,
+   "type": "Male",
+   "rank": 1380,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 579,
+   "type": "Male",
+   "rank": 1398,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 580,
+   "type": "Male",
+   "rank": 797,
+   "band": "773-1776",
+   "bits": 14.4583
+  },
+  {
+   "id": 581,
+   "type": "Male",
+   "rank": 1431,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 582,
+   "type": "Male",
+   "rank": 1272,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 583,
+   "type": "Male",
+   "rank": 1248,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 584,
+   "type": "Male",
+   "rank": 1739,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 585,
+   "type": "Female",
+   "rank": 459,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 586,
+   "type": "Female",
+   "rank": 659,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 587,
+   "type": "Female",
+   "rank": 486,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 588,
+   "type": "Male",
+   "rank": 845,
+   "band": "773-1776",
+   "bits": 13.0534
+  },
+  {
+   "id": 589,
+   "type": "Female",
+   "rank": 161,
+   "band": "73-172",
+   "bits": 11.2883
+  },
+  {
+   "id": 590,
+   "type": "Female",
+   "rank": 364,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 591,
+   "type": "Male",
+   "rank": 835,
+   "band": "773-1776",
+   "bits": 13.1899
+  },
+  {
+   "id": 592,
+   "type": "Female",
+   "rank": 405,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 593,
+   "type": "Female",
+   "rank": 243,
+   "band": "173-372",
+   "bits": 10.0544
+  },
+  {
+   "id": 594,
+   "type": "Male",
+   "rank": 933,
+   "band": "773-1776",
+   "bits": 11.2934
+  },
+  {
+   "id": 595,
+   "type": "Female",
+   "rank": 365,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 596,
+   "type": "Female",
+   "rank": 544,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 597,
+   "type": "Female",
+   "rank": 31,
+   "band": "23-72",
+   "bits": 18.1986
+  },
+  {
+   "id": 598,
+   "type": "Male",
+   "rank": 1099,
+   "band": "773-1776",
+   "bits": 9.5175
+  },
+  {
+   "id": 599,
+   "type": "Male",
+   "rank": 1399,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 600,
+   "type": "Female",
+   "rank": 307,
+   "band": "173-372",
+   "bits": 9.096
+  },
+  {
+   "id": 601,
+   "type": "Male",
+   "rank": 951,
+   "band": "773-1776",
+   "bits": 10.9467
+  },
+  {
+   "id": 602,
+   "type": "Male",
+   "rank": 1205,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 603,
+   "type": "Female",
+   "rank": 681,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 604,
+   "type": "Male",
+   "rank": 1138,
+   "band": "773-1776",
+   "bits": 9.096
+  },
+  {
+   "id": 605,
+   "type": "Male",
+   "rank": 1155,
+   "band": "773-1776",
+   "bits": 8.9289
+  },
+  {
+   "id": 606,
+   "type": "Male",
+   "rank": 1400,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 607,
+   "type": "Male",
+   "rank": 1623,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 608,
+   "type": "Male",
+   "rank": 748,
+   "band": "373-772",
+   "bits": 16.1144
+  },
+  {
+   "id": 609,
+   "type": "Female",
+   "rank": 509,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 610,
+   "type": "Female",
+   "rank": 374,
+   "band": "373-772",
+   "bits": 7.8918
+  },
+  {
+   "id": 611,
+   "type": "Female",
+   "rank": 27,
+   "band": "23-72",
+   "bits": 20.9711
+  },
+  {
+   "id": 612,
+   "type": "Female",
+   "rank": 444,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 613,
+   "type": "Male",
+   "rank": 1686,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 614,
+   "type": "Male",
+   "rank": 809,
+   "band": "773-1776",
+   "bits": 14.0624
+  },
+  {
+   "id": 615,
+   "type": "Male",
+   "rank": 1007,
+   "band": "773-1776",
+   "bits": 10.4695
+  },
+  {
+   "id": 616,
+   "type": "Male",
+   "rank": 898,
+   "band": "773-1776",
+   "bits": 11.868
+  },
+  {
+   "id": 617,
+   "type": "Male",
+   "rank": 1740,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 618,
+   "type": "Male",
+   "rank": 1273,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 619,
+   "type": "Male",
+   "rank": 794,
+   "band": "773-1776",
+   "bits": 14.6119
+  },
+  {
+   "id": 620,
+   "type": "Male",
+   "rank": 862,
+   "band": "773-1776",
+   "bits": 12.5423
+  },
+  {
+   "id": 621,
+   "type": "Male",
+   "rank": 1284,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 622,
+   "type": "Female",
+   "rank": 431,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 623,
+   "type": "Male",
+   "rank": 1008,
+   "band": "773-1776",
+   "bits": 10.4695
+  },
+  {
+   "id": 624,
+   "type": "Female",
+   "rank": 622,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 625,
+   "type": "Female",
+   "rank": 418,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 626,
+   "type": "Female",
+   "rank": 336,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 627,
+   "type": "Female",
+   "rank": 623,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 628,
+   "type": "Male",
+   "rank": 1687,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 629,
+   "type": "Male",
+   "rank": 1741,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 630,
+   "type": "Female",
+   "rank": 171,
+   "band": "73-172",
+   "bits": 11.0194
+  },
+  {
+   "id": 631,
+   "type": "Female",
+   "rank": 198,
+   "band": "173-372",
+   "bits": 10.7762
+  },
+  {
+   "id": 632,
+   "type": "Female",
+   "rank": 624,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 633,
+   "type": "Male",
+   "rank": 822,
+   "band": "773-1776",
+   "bits": 13.5182
+  },
+  {
+   "id": 634,
+   "type": "Male",
+   "rank": 1104,
+   "band": "773-1776",
+   "bits": 9.4838
+  },
+  {
+   "id": 635,
+   "type": "Male",
+   "rank": 1053,
+   "band": "773-1776",
+   "bits": 10.0544
+  },
+  {
+   "id": 636,
+   "type": "Female",
+   "rank": 136,
+   "band": "73-172",
+   "bits": 11.9269
+  },
+  {
+   "id": 637,
+   "type": "Male",
+   "rank": 1742,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 638,
+   "type": "Male",
+   "rank": 1312,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 639,
+   "type": "Female",
+   "rank": 315,
+   "band": "173-372",
+   "bits": 8.9199
+  },
+  {
+   "id": 640,
+   "type": "Male",
+   "rank": 1469,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 641,
+   "type": "Female",
+   "rank": 625,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 642,
+   "type": "Female",
+   "rank": 545,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 643,
+   "type": "Male",
+   "rank": 1206,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 644,
+   "type": "Female",
+   "rank": 419,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 645,
+   "type": "Male",
+   "rank": 1624,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 646,
+   "type": "Male",
+   "rank": 1470,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 647,
+   "type": "Female",
+   "rank": 626,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 648,
+   "type": "Female",
+   "rank": 627,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 649,
+   "type": "Male",
+   "rank": 775,
+   "band": "773-1776",
+   "bits": 15.154
+  },
+  {
+   "id": 650,
+   "type": "Female",
+   "rank": 420,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 651,
+   "type": "Female",
+   "rank": 378,
+   "band": "373-772",
+   "bits": 7.7821
+  },
+  {
+   "id": 652,
+   "type": "Male",
+   "rank": 789,
+   "band": "773-1776",
+   "bits": 14.7208
+  },
+  {
+   "id": 653,
+   "type": "Male",
+   "rank": 1333,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 654,
+   "type": "Male",
+   "rank": 1249,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 655,
+   "type": "Male",
+   "rank": 1625,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 656,
+   "type": "Female",
+   "rank": 260,
+   "band": "173-372",
+   "bits": 9.7805
+  },
+  {
+   "id": 657,
+   "type": "Male",
+   "rank": 1688,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 658,
+   "type": "Male",
+   "rank": 921,
+   "band": "773-1776",
+   "bits": 11.5005
+  },
+  {
+   "id": 659,
+   "type": "Female",
+   "rank": 316,
+   "band": "173-372",
+   "bits": 8.9199
+  },
+  {
+   "id": 660,
+   "type": "Male",
+   "rank": 1199,
+   "band": "773-1776",
+   "bits": 8.4838
+  },
+  {
+   "id": 661,
+   "type": "Male",
+   "rank": 1127,
+   "band": "773-1776",
+   "bits": 9.1912
+  },
+  {
+   "id": 662,
+   "type": "Male",
+   "rank": 1132,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 663,
+   "type": "Male",
+   "rank": 1381,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 664,
+   "type": "Female",
+   "rank": 546,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 665,
+   "type": "Male",
+   "rank": 1285,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 666,
+   "type": "Male",
+   "rank": 1471,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 667,
+   "type": "Male",
+   "rank": 1182,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 668,
+   "type": "Male",
+   "rank": 917,
+   "band": "773-1776",
+   "bits": 11.5647
+  },
+  {
+   "id": 669,
+   "type": "Male",
+   "rank": 1382,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 670,
+   "type": "Female",
+   "rank": 628,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 671,
+   "type": "Male",
+   "rank": 912,
+   "band": "773-1776",
+   "bits": 11.7065
+  },
+  {
+   "id": 672,
+   "type": "Female",
+   "rank": 74,
+   "band": "73-172",
+   "bits": 14.3784
+  },
+  {
+   "id": 673,
+   "type": "Male",
+   "rank": 991,
+   "band": "773-1776",
+   "bits": 10.5597
+  },
+  {
+   "id": 674,
+   "type": "Male",
+   "rank": 1626,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 675,
+   "type": "Male",
+   "rank": 1627,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 676,
+   "type": "Male",
+   "rank": 773,
+   "band": "773-1776",
+   "bits": 15.313
+  },
+  {
+   "id": 677,
+   "type": "Female",
+   "rank": 90,
+   "band": "73-172",
+   "bits": 13.5614
+  },
+  {
+   "id": 678,
+   "type": "Zombie",
+   "rank": 14,
+   "band": "7-22",
+   "bits": 10.534
+  },
+  {
+   "id": 679,
+   "type": "Female",
+   "rank": 349,
+   "band": "173-372",
+   "bits": 8.4439
+  },
+  {
+   "id": 680,
+   "type": "Male",
+   "rank": 1551,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 681,
+   "type": "Female",
+   "rank": 208,
+   "band": "173-372",
+   "bits": 10.607
+  },
+  {
+   "id": 682,
+   "type": "Male",
+   "rank": 1259,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 683,
+   "type": "Female",
+   "rank": 102,
+   "band": "73-172",
+   "bits": 13.0527
+  },
+  {
+   "id": 684,
+   "type": "Female",
+   "rank": 337,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 685,
+   "type": "Male",
+   "rank": 1401,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 686,
+   "type": "Male",
+   "rank": 1416,
+   "band": "773-1776",
+   "bits": 5.8918
+  },
+  {
+   "id": 687,
+   "type": "Female",
+   "rank": 590,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 688,
+   "type": "Male",
+   "rank": 1552,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 689,
+   "type": "Male",
+   "rank": 1743,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 690,
+   "type": "Male",
+   "rank": 1553,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 691,
+   "type": "Female",
+   "rank": 445,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 692,
+   "type": "Male",
+   "rank": 1242,
+   "band": "773-1776",
+   "bits": 7.6694
+  },
+  {
+   "id": 693,
+   "type": "Male",
+   "rank": 1628,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 694,
+   "type": "Male",
+   "rank": 709,
+   "band": "373-772",
+   "bits": 20.5159
+  },
+  {
+   "id": 695,
+   "type": "Male",
+   "rank": 1417,
+   "band": "773-1776",
+   "bits": 5.8918
+  },
+  {
+   "id": 696,
+   "type": "Male",
+   "rank": 1689,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 697,
+   "type": "Female",
+   "rank": 297,
+   "band": "173-372",
+   "bits": 9.2615
+  },
+  {
+   "id": 698,
+   "type": "Female",
+   "rank": 69,
+   "band": "23-72",
+   "bits": 14.6623
+  },
+  {
+   "id": 699,
+   "type": "Female",
+   "rank": 487,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 700,
+   "type": "Female",
+   "rank": 75,
+   "band": "73-172",
+   "bits": 14.2886
+  },
+  {
+   "id": 701,
+   "type": "Male",
+   "rank": 1260,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 702,
+   "type": "Female",
+   "rank": 261,
+   "band": "173-372",
+   "bits": 9.7805
+  },
+  {
+   "id": 703,
+   "type": "Male",
+   "rank": 1046,
+   "band": "773-1776",
+   "bits": 10.0688
+  },
+  {
+   "id": 704,
+   "type": "Female",
+   "rank": 285,
+   "band": "173-372",
+   "bits": 9.4053
+  },
+  {
+   "id": 705,
+   "type": "Male",
+   "rank": 803,
+   "band": "773-1776",
+   "bits": 14.2622
+  },
+  {
+   "id": 706,
+   "type": "Female",
+   "rank": 682,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 707,
+   "type": "Male",
+   "rank": 1744,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 708,
+   "type": "Female",
+   "rank": 152,
+   "band": "73-172",
+   "bits": 11.4409
+  },
+  {
+   "id": 709,
+   "type": "Male",
+   "rank": 1108,
+   "band": "773-1776",
+   "bits": 9.4053
+  },
+  {
+   "id": 710,
+   "type": "Male",
+   "rank": 1243,
+   "band": "773-1776",
+   "bits": 7.6694
+  },
+  {
+   "id": 711,
+   "type": "Female",
+   "rank": 406,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 712,
+   "type": "Male",
+   "rank": 1629,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 713,
+   "type": "Female",
+   "rank": 93,
+   "band": "73-172",
+   "bits": 13.4703
+  },
+  {
+   "id": 714,
+   "type": "Female",
+   "rank": 398,
+   "band": "373-772",
+   "bits": 7.3068
+  },
+  {
+   "id": 715,
+   "type": "Male",
+   "rank": 993,
+   "band": "773-1776",
+   "bits": 10.5502
+  },
+  {
+   "id": 716,
+   "type": "Female",
+   "rank": 111,
+   "band": "73-172",
+   "bits": 12.7305
+  },
+  {
+   "id": 717,
+   "type": "Female",
+   "rank": 499,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 718,
+   "type": "Female",
+   "rank": 446,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 719,
+   "type": "Male",
+   "rank": 1554,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 720,
+   "type": "Male",
+   "rank": 967,
+   "band": "773-1776",
+   "bits": 10.7762
+  },
+  {
+   "id": 721,
+   "type": "Female",
+   "rank": 460,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 722,
+   "type": "Male",
+   "rank": 1690,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 723,
+   "type": "Male",
+   "rank": 1383,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 724,
+   "type": "Male",
+   "rank": 1472,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 725,
+   "type": "Female",
+   "rank": 357,
+   "band": "173-372",
+   "bits": 8.3673
+  },
+  {
+   "id": 726,
+   "type": "Male",
+   "rank": 935,
+   "band": "773-1776",
+   "bits": 11.2883
+  },
+  {
+   "id": 727,
+   "type": "Male",
+   "rank": 1183,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 728,
+   "type": "Male",
+   "rank": 1432,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 729,
+   "type": "Male",
+   "rank": 942,
+   "band": "773-1776",
+   "bits": 11.0741
+  },
+  {
+   "id": 730,
+   "type": "Male",
+   "rank": 732,
+   "band": "373-772",
+   "bits": 17.0041
+  },
+  {
+   "id": 731,
+   "type": "Male",
+   "rank": 1071,
+   "band": "773-1776",
+   "bits": 9.8598
+  },
+  {
+   "id": 732,
+   "type": "Male",
+   "rank": 1555,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 733,
+   "type": "Male",
+   "rank": 1630,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 734,
+   "type": "Female",
+   "rank": 57,
+   "band": "23-72",
+   "bits": 15.4286
+  },
+  {
+   "id": 735,
+   "type": "Female",
+   "rank": 350,
+   "band": "173-372",
+   "bits": 8.4439
+  },
+  {
+   "id": 736,
+   "type": "Female",
+   "rank": 256,
+   "band": "173-372",
+   "bits": 9.8559
+  },
+  {
+   "id": 737,
+   "type": "Male",
+   "rank": 1089,
+   "band": "773-1776",
+   "bits": 9.5664
+  },
+  {
+   "id": 738,
+   "type": "Female",
+   "rank": 40,
+   "band": "23-72",
+   "bits": 17.426
+  },
+  {
+   "id": 739,
+   "type": "Male",
+   "rank": 766,
+   "band": "373-772",
+   "bits": 15.5084
+  },
+  {
+   "id": 740,
+   "type": "Female",
+   "rank": 326,
+   "band": "173-372",
+   "bits": 8.831
+  },
+  {
+   "id": 741,
+   "type": "Male",
+   "rank": 1184,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 742,
+   "type": "Female",
+   "rank": 683,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 743,
+   "type": "Female",
+   "rank": 629,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 744,
+   "type": "Male",
+   "rank": 1233,
+   "band": "773-1776",
+   "bits": 8.096
+  },
+  {
+   "id": 745,
+   "type": "Male",
+   "rank": 1234,
+   "band": "773-1776",
+   "bits": 8.096
+  },
+  {
+   "id": 746,
+   "type": "Male",
+   "rank": 1402,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 747,
+   "type": "Male",
+   "rank": 1745,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 748,
+   "type": "Male",
+   "rank": 1403,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 749,
+   "type": "Male",
+   "rank": 1215,
+   "band": "773-1776",
+   "bits": 8.3673
+  },
+  {
+   "id": 750,
+   "type": "Male",
+   "rank": 943,
+   "band": "773-1776",
+   "bits": 11.0589
+  },
+  {
+   "id": 751,
+   "type": "Male",
+   "rank": 1473,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 752,
+   "type": "Male",
+   "rank": 1433,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 753,
+   "type": "Male",
+   "rank": 994,
+   "band": "773-1776",
+   "bits": 10.5502
+  },
+  {
+   "id": 754,
+   "type": "Male",
+   "rank": 1190,
+   "band": "773-1776",
+   "bits": 8.5597
+  },
+  {
+   "id": 755,
+   "type": "Male",
+   "rank": 1746,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 756,
+   "type": "Zombie",
+   "rank": 20,
+   "band": "7-22",
+   "bits": 5.128
+  },
+  {
+   "id": 757,
+   "type": "Female",
+   "rank": 346,
+   "band": "173-372",
+   "bits": 8.4838
+  },
+  {
+   "id": 758,
+   "type": "Female",
+   "rank": 98,
+   "band": "73-172",
+   "bits": 13.2552
+  },
+  {
+   "id": 759,
+   "type": "Female",
+   "rank": 421,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 760,
+   "type": "Male",
+   "rank": 807,
+   "band": "773-1776",
+   "bits": 14.098
+  },
+  {
+   "id": 761,
+   "type": "Female",
+   "rank": 168,
+   "band": "73-172",
+   "bits": 11.1011
+  },
+  {
+   "id": 762,
+   "type": "Male",
+   "rank": 752,
+   "band": "373-772",
+   "bits": 16.0188
+  },
+  {
+   "id": 763,
+   "type": "Male",
+   "rank": 753,
+   "band": "373-772",
+   "bits": 15.9956
+  },
+  {
+   "id": 764,
+   "type": "Female",
+   "rank": 310,
+   "band": "173-372",
+   "bits": 9.0451
+  },
+  {
+   "id": 765,
+   "type": "Male",
+   "rank": 1027,
+   "band": "773-1776",
+   "bits": 10.2872
+  },
+  {
+   "id": 766,
+   "type": "Female",
+   "rank": 131,
+   "band": "73-172",
+   "bits": 11.9764
+  },
+  {
+   "id": 767,
+   "type": "Female",
+   "rank": 407,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 768,
+   "type": "Female",
+   "rank": 630,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 769,
+   "type": "Male",
+   "rank": 1691,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 770,
+   "type": "Female",
+   "rank": 684,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 771,
+   "type": "Male",
+   "rank": 913,
+   "band": "773-1776",
+   "bits": 11.6672
+  },
+  {
+   "id": 772,
+   "type": "Female",
+   "rank": 220,
+   "band": "173-372",
+   "bits": 10.449
+  },
+  {
+   "id": 773,
+   "type": "Male",
+   "rank": 1556,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 774,
+   "type": "Male",
+   "rank": 1474,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 775,
+   "type": "Male",
+   "rank": 843,
+   "band": "773-1776",
+   "bits": 13.0875
+  },
+  {
+   "id": 776,
+   "type": "Male",
+   "rank": 1250,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 777,
+   "type": "Zombie",
+   "rank": 16,
+   "band": "7-22",
+   "bits": 6.9407
+  },
+  {
+   "id": 778,
+   "type": "Male",
+   "rank": 798,
+   "band": "773-1776",
+   "bits": 14.4542
+  },
+  {
+   "id": 779,
+   "type": "Female",
+   "rank": 631,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 780,
+   "type": "Male",
+   "rank": 705,
+   "band": "373-772",
+   "bits": 24.0269
+  },
+  {
+   "id": 781,
+   "type": "Female",
+   "rank": 632,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 782,
+   "type": "Male",
+   "rank": 874,
+   "band": "773-1776",
+   "bits": 12.2479
+  },
+  {
+   "id": 783,
+   "type": "Female",
+   "rank": 547,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 784,
+   "type": "Male",
+   "rank": 1475,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 785,
+   "type": "Male",
+   "rank": 1631,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 786,
+   "type": "Male",
+   "rank": 1113,
+   "band": "773-1776",
+   "bits": 9.3235
+  },
+  {
+   "id": 787,
+   "type": "Male",
+   "rank": 927,
+   "band": "773-1776",
+   "bits": 11.3959
+  },
+  {
+   "id": 788,
+   "type": "Female",
+   "rank": 422,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 789,
+   "type": "Male",
+   "rank": 1476,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 790,
+   "type": "Male",
+   "rank": 851,
+   "band": "773-1776",
+   "bits": 12.8244
+  },
+  {
+   "id": 791,
+   "type": "Male",
+   "rank": 1221,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 792,
+   "type": "Male",
+   "rank": 1305,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 793,
+   "type": "Female",
+   "rank": 633,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 794,
+   "type": "Female",
+   "rank": 634,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 795,
+   "type": "Female",
+   "rank": 488,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 796,
+   "type": "Female",
+   "rank": 660,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 797,
+   "type": "Male",
+   "rank": 1557,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 798,
+   "type": "Male",
+   "rank": 1747,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 799,
+   "type": "Female",
+   "rank": 500,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 800,
+   "type": "Male",
+   "rank": 1164,
+   "band": "773-1776",
+   "bits": 8.8598
+  },
+  {
+   "id": 801,
+   "type": "Male",
+   "rank": 1170,
+   "band": "773-1776",
+   "bits": 8.7821
+  },
+  {
+   "id": 802,
+   "type": "Female",
+   "rank": 209,
+   "band": "173-372",
+   "bits": 10.607
+  },
+  {
+   "id": 803,
+   "type": "Male",
+   "rank": 836,
+   "band": "773-1776",
+   "bits": 13.1899
+  },
+  {
+   "id": 804,
+   "type": "Female",
+   "rank": 244,
+   "band": "173-372",
+   "bits": 10.0544
+  },
+  {
+   "id": 805,
+   "type": "Male",
+   "rank": 1558,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 806,
+   "type": "Male",
+   "rank": 1100,
+   "band": "773-1776",
+   "bits": 9.5175
+  },
+  {
+   "id": 807,
+   "type": "Female",
+   "rank": 89,
+   "band": "73-172",
+   "bits": 13.602
+  },
+  {
+   "id": 808,
+   "type": "Female",
+   "rank": 241,
+   "band": "173-372",
+   "bits": 10.1216
+  },
+  {
+   "id": 809,
+   "type": "Male",
+   "rank": 1384,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 810,
+   "type": "Female",
+   "rank": 548,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 811,
+   "type": "Female",
+   "rank": 685,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 812,
+   "type": "Female",
+   "rank": 269,
+   "band": "173-372",
+   "bits": 9.7273
+  },
+  {
+   "id": 813,
+   "type": "Male",
+   "rank": 1025,
+   "band": "773-1776",
+   "bits": 10.2951
+  },
+  {
+   "id": 814,
+   "type": "Female",
+   "rank": 393,
+   "band": "373-772",
+   "bits": 7.3184
+  },
+  {
+   "id": 815,
+   "type": "Male",
+   "rank": 1477,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 816,
+   "type": "Male",
+   "rank": 1692,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 817,
+   "type": "Male",
+   "rank": 1056,
+   "band": "773-1776",
+   "bits": 9.9853
+  },
+  {
+   "id": 818,
+   "type": "Male",
+   "rank": 1693,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 819,
+   "type": "Male",
+   "rank": 824,
+   "band": "773-1776",
+   "bits": 13.4855
+  },
+  {
+   "id": 820,
+   "type": "Female",
+   "rank": 303,
+   "band": "173-372",
+   "bits": 9.1423
+  },
+  {
+   "id": 821,
+   "type": "Male",
+   "rank": 1093,
+   "band": "773-1776",
+   "bits": 9.5328
+  },
+  {
+   "id": 822,
+   "type": "Female",
+   "rank": 120,
+   "band": "73-172",
+   "bits": 12.4516
+  },
+  {
+   "id": 823,
+   "type": "Male",
+   "rank": 801,
+   "band": "773-1776",
+   "bits": 14.3254
+  },
+  {
+   "id": 824,
+   "type": "Male",
+   "rank": 1286,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 825,
+   "type": "Male",
+   "rank": 1030,
+   "band": "773-1776",
+   "bits": 10.2025
+  },
+  {
+   "id": 826,
+   "type": "Female",
+   "rank": 59,
+   "band": "23-72",
+   "bits": 15.2005
+  },
+  {
+   "id": 827,
+   "type": "Male",
+   "rank": 1106,
+   "band": "773-1776",
+   "bits": 9.435
+  },
+  {
+   "id": 828,
+   "type": "Female",
+   "rank": 178,
+   "band": "173-372",
+   "bits": 10.9467
+  },
+  {
+   "id": 829,
+   "type": "Male",
+   "rank": 1287,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 830,
+   "type": "Female",
+   "rank": 470,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 831,
+   "type": "Female",
+   "rank": 134,
+   "band": "73-172",
+   "bits": 11.9289
+  },
+  {
+   "id": 832,
+   "type": "Male",
+   "rank": 768,
+   "band": "373-772",
+   "bits": 15.465
+  },
+  {
+   "id": 833,
+   "type": "Male",
+   "rank": 1144,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 834,
+   "type": "Male",
+   "rank": 722,
+   "band": "373-772",
+   "bits": 17.8049
+  },
+  {
+   "id": 835,
+   "type": "Male",
+   "rank": 1124,
+   "band": "773-1776",
+   "bits": 9.1971
+  },
+  {
+   "id": 836,
+   "type": "Male",
+   "rank": 1632,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 837,
+   "type": "Male",
+   "rank": 1559,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 838,
+   "type": "Male",
+   "rank": 939,
+   "band": "773-1776",
+   "bits": 11.1508
+  },
+  {
+   "id": 839,
+   "type": "Female",
+   "rank": 591,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 840,
+   "type": "Female",
+   "rank": 351,
+   "band": "173-372",
+   "bits": 8.4439
+  },
+  {
+   "id": 841,
+   "type": "Male",
+   "rank": 810,
+   "band": "773-1776",
+   "bits": 13.9922
+  },
+  {
+   "id": 842,
+   "type": "Male",
+   "rank": 1145,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 843,
+   "type": "Female",
+   "rank": 549,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 844,
+   "type": "Female",
+   "rank": 447,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 845,
+   "type": "Female",
+   "rank": 408,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 846,
+   "type": "Male",
+   "rank": 1216,
+   "band": "773-1776",
+   "bits": 8.3673
+  },
+  {
+   "id": 847,
+   "type": "Female",
+   "rank": 234,
+   "band": "173-372",
+   "bits": 10.2615
+  },
+  {
+   "id": 848,
+   "type": "Female",
+   "rank": 47,
+   "band": "23-72",
+   "bits": 16.2862
+  },
+  {
+   "id": 849,
+   "type": "Female",
+   "rank": 117,
+   "band": "73-172",
+   "bits": 12.5344
+  },
+  {
+   "id": 850,
+   "type": "Male",
+   "rank": 1176,
+   "band": "773-1776",
+   "bits": 8.7334
+  },
+  {
+   "id": 851,
+   "type": "Male",
+   "rank": 1217,
+   "band": "773-1776",
+   "bits": 8.3673
+  },
+  {
+   "id": 852,
+   "type": "Male",
+   "rank": 852,
+   "band": "773-1776",
+   "bits": 12.7223
+  },
+  {
+   "id": 853,
+   "type": "Female",
+   "rank": 686,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 854,
+   "type": "Male",
+   "rank": 1478,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 855,
+   "type": "Male",
+   "rank": 1434,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 856,
+   "type": "Male",
+   "rank": 1748,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 857,
+   "type": "Male",
+   "rank": 1404,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 858,
+   "type": "Female",
+   "rank": 192,
+   "band": "173-372",
+   "bits": 10.8053
+  },
+  {
+   "id": 859,
+   "type": "Male",
+   "rank": 1633,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 860,
+   "type": "Male",
+   "rank": 1405,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 861,
+   "type": "Male",
+   "rank": 989,
+   "band": "773-1776",
+   "bits": 10.5606
+  },
+  {
+   "id": 862,
+   "type": "Female",
+   "rank": 448,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 863,
+   "type": "Male",
+   "rank": 1479,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 864,
+   "type": "Male",
+   "rank": 1694,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 865,
+   "type": "Male",
+   "rank": 986,
+   "band": "773-1776",
+   "bits": 10.5865
+  },
+  {
+   "id": 866,
+   "type": "Male",
+   "rank": 1121,
+   "band": "773-1776",
+   "bits": 9.2615
+  },
+  {
+   "id": 867,
+   "type": "Male",
+   "rank": 1634,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 868,
+   "type": "Male",
+   "rank": 1146,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 869,
+   "type": "Female",
+   "rank": 268,
+   "band": "173-372",
+   "bits": 9.7469
+  },
+  {
+   "id": 870,
+   "type": "Female",
+   "rank": 343,
+   "band": "173-372",
+   "bits": 8.5175
+  },
+  {
+   "id": 871,
+   "type": "Male",
+   "rank": 1635,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 872,
+   "type": "Female",
+   "rank": 204,
+   "band": "173-372",
+   "bits": 10.6981
+  },
+  {
+   "id": 873,
+   "type": "Male",
+   "rank": 1560,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 874,
+   "type": "Female",
+   "rank": 385,
+   "band": "373-772",
+   "bits": 7.4768
+  },
+  {
+   "id": 875,
+   "type": "Female",
+   "rank": 73,
+   "band": "73-172",
+   "bits": 14.4344
+  },
+  {
+   "id": 876,
+   "type": "Male",
+   "rank": 1636,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 877,
+   "type": "Male",
+   "rank": 1480,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 878,
+   "type": "Male",
+   "rank": 1162,
+   "band": "773-1776",
+   "bits": 8.9034
+  },
+  {
+   "id": 879,
+   "type": "Female",
+   "rank": 128,
+   "band": "73-172",
+   "bits": 12.0702
+  },
+  {
+   "id": 880,
+   "type": "Male",
+   "rank": 1637,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 881,
+   "type": "Female",
+   "rank": 327,
+   "band": "173-372",
+   "bits": 8.831
+  },
+  {
+   "id": 882,
+   "type": "Male",
+   "rank": 1385,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 883,
+   "type": "Male",
+   "rank": 1561,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 884,
+   "type": "Female",
+   "rank": 132,
+   "band": "73-172",
+   "bits": 11.9541
+  },
+  {
+   "id": 885,
+   "type": "Male",
+   "rank": 1695,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 886,
+   "type": "Female",
+   "rank": 550,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 887,
+   "type": "Male",
+   "rank": 805,
+   "band": "773-1776",
+   "bits": 14.1848
+  },
+  {
+   "id": 888,
+   "type": "Male",
+   "rank": 964,
+   "band": "773-1776",
+   "bits": 10.8092
+  },
+  {
+   "id": 889,
+   "type": "Male",
+   "rank": 1562,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 890,
+   "type": "Male",
+   "rank": 1481,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 891,
+   "type": "Male",
+   "rank": 1749,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 892,
+   "type": "Male",
+   "rank": 1638,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 893,
+   "type": "Male",
+   "rank": 1482,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 894,
+   "type": "Female",
+   "rank": 409,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 895,
+   "type": "Female",
+   "rank": 410,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 896,
+   "type": "Female",
+   "rank": 146,
+   "band": "73-172",
+   "bits": 11.5049
+  },
+  {
+   "id": 897,
+   "type": "Male",
+   "rank": 1435,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 898,
+   "type": "Male",
+   "rank": 1483,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 899,
+   "type": "Female",
+   "rank": 206,
+   "band": "173-372",
+   "bits": 10.6837
+  },
+  {
+   "id": 900,
+   "type": "Male",
+   "rank": 1133,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 901,
+   "type": "Male",
+   "rank": 1003,
+   "band": "773-1776",
+   "bits": 10.4838
+  },
+  {
+   "id": 902,
+   "type": "Male",
+   "rank": 995,
+   "band": "773-1776",
+   "bits": 10.5502
+  },
+  {
+   "id": 903,
+   "type": "Male",
+   "rank": 1639,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 904,
+   "type": "Male",
+   "rank": 1354,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 905,
+   "type": "Male",
+   "rank": 765,
+   "band": "373-772",
+   "bits": 15.5224
+  },
+  {
+   "id": 906,
+   "type": "Female",
+   "rank": 471,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 907,
+   "type": "Male",
+   "rank": 1334,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 908,
+   "type": "Female",
+   "rank": 237,
+   "band": "173-372",
+   "bits": 10.1919
+  },
+  {
+   "id": 909,
+   "type": "Male",
+   "rank": 815,
+   "band": "773-1776",
+   "bits": 13.7208
+  },
+  {
+   "id": 910,
+   "type": "Male",
+   "rank": 1026,
+   "band": "773-1776",
+   "bits": 10.2951
+  },
+  {
+   "id": 911,
+   "type": "Male",
+   "rank": 1484,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 912,
+   "type": "Male",
+   "rank": 1050,
+   "band": "773-1776",
+   "bits": 10.0589
+  },
+  {
+   "id": 913,
+   "type": "Male",
+   "rank": 987,
+   "band": "773-1776",
+   "bits": 10.5865
+  },
+  {
+   "id": 914,
+   "type": "Female",
+   "rank": 87,
+   "band": "73-172",
+   "bits": 13.6344
+  },
+  {
+   "id": 915,
+   "type": "Male",
+   "rank": 859,
+   "band": "773-1776",
+   "bits": 12.605
+  },
+  {
+   "id": 916,
+   "type": "Female",
+   "rank": 286,
+   "band": "173-372",
+   "bits": 9.4053
+  },
+  {
+   "id": 917,
+   "type": "Female",
+   "rank": 91,
+   "band": "73-172",
+   "bits": 13.502
+  },
+  {
+   "id": 918,
+   "type": "Male",
+   "rank": 747,
+   "band": "373-772",
+   "bits": 16.1299
+  },
+  {
+   "id": 919,
+   "type": "Female",
+   "rank": 472,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 920,
+   "type": "Male",
+   "rank": 740,
+   "band": "373-772",
+   "bits": 16.4375
+  },
+  {
+   "id": 921,
+   "type": "Male",
+   "rank": 1750,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 922,
+   "type": "Male",
+   "rank": 1751,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 923,
+   "type": "Male",
+   "rank": 710,
+   "band": "373-772",
+   "bits": 20.3053
+  },
+  {
+   "id": 924,
+   "type": "Male",
+   "rank": 1563,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 925,
+   "type": "Male",
+   "rank": 791,
+   "band": "773-1776",
+   "bits": 14.6827
+  },
+  {
+   "id": 926,
+   "type": "Male",
+   "rank": 712,
+   "band": "373-772",
+   "bits": 19.8643
+  },
+  {
+   "id": 927,
+   "type": "Male",
+   "rank": 1386,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 928,
+   "type": "Male",
+   "rank": 1335,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 929,
+   "type": "Male",
+   "rank": 1355,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 930,
+   "type": "Female",
+   "rank": 386,
+   "band": "373-772",
+   "bits": 7.4768
+  },
+  {
+   "id": 931,
+   "type": "Male",
+   "rank": 724,
+   "band": "373-772",
+   "bits": 17.6837
+  },
+  {
+   "id": 932,
+   "type": "Male",
+   "rank": 1157,
+   "band": "773-1776",
+   "bits": 8.9199
+  },
+  {
+   "id": 933,
+   "type": "Male",
+   "rank": 1306,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 934,
+   "type": "Female",
+   "rank": 138,
+   "band": "73-172",
+   "bits": 11.868
+  },
+  {
+   "id": 935,
+   "type": "Male",
+   "rank": 968,
+   "band": "773-1776",
+   "bits": 10.759
+  },
+  {
+   "id": 936,
+   "type": "Male",
+   "rank": 1047,
+   "band": "773-1776",
+   "bits": 10.0648
+  },
+  {
+   "id": 937,
+   "type": "Male",
+   "rank": 760,
+   "band": "373-772",
+   "bits": 15.6795
+  },
+  {
+   "id": 938,
+   "type": "Male",
+   "rank": 1640,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 939,
+   "type": "Male",
+   "rank": 1406,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 940,
+   "type": "Male",
+   "rank": 1015,
+   "band": "773-1776",
+   "bits": 10.4127
+  },
+  {
+   "id": 941,
+   "type": "Female",
+   "rank": 70,
+   "band": "23-72",
+   "bits": 14.6591
+  },
+  {
+   "id": 942,
+   "type": "Female",
+   "rank": 592,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 943,
+   "type": "Male",
+   "rank": 900,
+   "band": "773-1776",
+   "bits": 11.8559
+  },
+  {
+   "id": 944,
+   "type": "Female",
+   "rank": 51,
+   "band": "23-72",
+   "bits": 15.8835
+  },
+  {
+   "id": 945,
+   "type": "Male",
+   "rank": 1010,
+   "band": "773-1776",
+   "bits": 10.4522
+  },
+  {
+   "id": 946,
+   "type": "Male",
+   "rank": 894,
+   "band": "773-1776",
+   "bits": 11.9289
+  },
+  {
+   "id": 947,
+   "type": "Female",
+   "rank": 319,
+   "band": "173-372",
+   "bits": 8.9076
+  },
+  {
+   "id": 948,
+   "type": "Male",
+   "rank": 1336,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 949,
+   "type": "Female",
+   "rank": 551,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 950,
+   "type": "Male",
+   "rank": 1012,
+   "band": "773-1776",
+   "bits": 10.449
+  },
+  {
+   "id": 951,
+   "type": "Male",
+   "rank": 1641,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 952,
+   "type": "Male",
+   "rank": 1109,
+   "band": "773-1776",
+   "bits": 9.4053
+  },
+  {
+   "id": 953,
+   "type": "Male",
+   "rank": 1752,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 954,
+   "type": "Female",
+   "rank": 687,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 955,
+   "type": "Female",
+   "rank": 510,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 956,
+   "type": "Male",
+   "rank": 1366,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 957,
+   "type": "Male",
+   "rank": 1485,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 958,
+   "type": "Female",
+   "rank": 226,
+   "band": "173-372",
+   "bits": 10.34
+  },
+  {
+   "id": 959,
+   "type": "Male",
+   "rank": 966,
+   "band": "773-1776",
+   "bits": 10.7821
+  },
+  {
+   "id": 960,
+   "type": "Female",
+   "rank": 473,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 961,
+   "type": "Female",
+   "rank": 224,
+   "band": "173-372",
+   "bits": 10.3929
+  },
+  {
+   "id": 962,
+   "type": "Male",
+   "rank": 892,
+   "band": "773-1776",
+   "bits": 11.9764
+  },
+  {
+   "id": 963,
+   "type": "Female",
+   "rank": 135,
+   "band": "73-172",
+   "bits": 11.9289
+  },
+  {
+   "id": 964,
+   "type": "Male",
+   "rank": 988,
+   "band": "773-1776",
+   "bits": 10.5865
+  },
+  {
+   "id": 965,
+   "type": "Female",
+   "rank": 184,
+   "band": "173-372",
+   "bits": 10.8853
+  },
+  {
+   "id": 966,
+   "type": "Male",
+   "rank": 817,
+   "band": "773-1776",
+   "bits": 13.6517
+  },
+  {
+   "id": 967,
+   "type": "Female",
+   "rank": 489,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 968,
+   "type": "Male",
+   "rank": 1642,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 969,
+   "type": "Male",
+   "rank": 1274,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 970,
+   "type": "Male",
+   "rank": 893,
+   "band": "773-1776",
+   "bits": 11.9447
+  },
+  {
+   "id": 971,
+   "type": "Male",
+   "rank": 718,
+   "band": "373-772",
+   "bits": 18.2484
+  },
+  {
+   "id": 972,
+   "type": "Male",
+   "rank": 806,
+   "band": "773-1776",
+   "bits": 14.1154
+  },
+  {
+   "id": 973,
+   "type": "Male",
+   "rank": 1643,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 974,
+   "type": "Male",
+   "rank": 1110,
+   "band": "773-1776",
+   "bits": 9.4053
+  },
+  {
+   "id": 975,
+   "type": "Male",
+   "rank": 1367,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 976,
+   "type": "Female",
+   "rank": 43,
+   "band": "23-72",
+   "bits": 16.6216
+  },
+  {
+   "id": 977,
+   "type": "Female",
+   "rank": 461,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 978,
+   "type": "Male",
+   "rank": 999,
+   "band": "773-1776",
+   "bits": 10.5158
+  },
+  {
+   "id": 979,
+   "type": "Male",
+   "rank": 1696,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 980,
+   "type": "Female",
+   "rank": 338,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 981,
+   "type": "Female",
+   "rank": 118,
+   "band": "73-172",
+   "bits": 12.4934
+  },
+  {
+   "id": 982,
+   "type": "Female",
+   "rank": 501,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 983,
+   "type": "Female",
+   "rank": 54,
+   "band": "23-72",
+   "bits": 15.5742
+  },
+  {
+   "id": 984,
+   "type": "Male",
+   "rank": 863,
+   "band": "773-1776",
+   "bits": 12.5086
+  },
+  {
+   "id": 985,
+   "type": "Male",
+   "rank": 1107,
+   "band": "773-1776",
+   "bits": 9.435
+  },
+  {
+   "id": 986,
+   "type": "Male",
+   "rank": 1486,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 987,
+   "type": "Male",
+   "rank": 1753,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 988,
+   "type": "Female",
+   "rank": 270,
+   "band": "173-372",
+   "bits": 9.7273
+  },
+  {
+   "id": 989,
+   "type": "Female",
+   "rank": 271,
+   "band": "173-372",
+   "bits": 9.7273
+  },
+  {
+   "id": 990,
+   "type": "Female",
+   "rank": 154,
+   "band": "73-172",
+   "bits": 11.3414
+  },
+  {
+   "id": 991,
+   "type": "Female",
+   "rank": 394,
+   "band": "373-772",
+   "bits": 7.3184
+  },
+  {
+   "id": 992,
+   "type": "Female",
+   "rank": 593,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 993,
+   "type": "Male",
+   "rank": 1644,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 994,
+   "type": "Female",
+   "rank": 137,
+   "band": "73-172",
+   "bits": 11.8853
+  },
+  {
+   "id": 995,
+   "type": "Female",
+   "rank": 423,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 996,
+   "type": "Male",
+   "rank": 1171,
+   "band": "773-1776",
+   "bits": 8.7821
+  },
+  {
+   "id": 997,
+   "type": "Female",
+   "rank": 511,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 998,
+   "type": "Male",
+   "rank": 1207,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 999,
+   "type": "Female",
+   "rank": 502,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 1000,
+   "type": "Male",
+   "rank": 1754,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1001,
+   "type": "Female",
+   "rank": 552,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1002,
+   "type": "Female",
+   "rank": 688,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1003,
+   "type": "Male",
+   "rank": 1487,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1004,
+   "type": "Male",
+   "rank": 1275,
+   "band": "773-1776",
+   "bits": 7.3068
+  },
+  {
+   "id": 1005,
+   "type": "Male",
+   "rank": 1222,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 1006,
+   "type": "Male",
+   "rank": 977,
+   "band": "773-1776",
+   "bits": 10.6664
+  },
+  {
+   "id": 1007,
+   "type": "Male",
+   "rank": 1488,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1008,
+   "type": "Male",
+   "rank": 1002,
+   "band": "773-1776",
+   "bits": 10.4839
+  },
+  {
+   "id": 1009,
+   "type": "Male",
+   "rank": 1387,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 1010,
+   "type": "Male",
+   "rank": 979,
+   "band": "773-1776",
+   "bits": 10.6335
+  },
+  {
+   "id": 1011,
+   "type": "Male",
+   "rank": 1044,
+   "band": "773-1776",
+   "bits": 10.0769
+  },
+  {
+   "id": 1012,
+   "type": "Female",
+   "rank": 462,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 1013,
+   "type": "Male",
+   "rank": 1388,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 1014,
+   "type": "Female",
+   "rank": 194,
+   "band": "173-372",
+   "bits": 10.7821
+  },
+  {
+   "id": 1015,
+   "type": "Female",
+   "rank": 689,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1016,
+   "type": "Male",
+   "rank": 1489,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1017,
+   "type": "Male",
+   "rank": 1407,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 1018,
+   "type": "Male",
+   "rank": 1564,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1019,
+   "type": "Female",
+   "rank": 97,
+   "band": "73-172",
+   "bits": 13.3041
+  },
+  {
+   "id": 1020,
+   "type": "Male",
+   "rank": 1185,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 1021,
+   "type": "Male",
+   "rank": 1565,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1022,
+   "type": "Female",
+   "rank": 490,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 1023,
+   "type": "Male",
+   "rank": 1122,
+   "band": "773-1776",
+   "bits": 9.2615
+  },
+  {
+   "id": 1024,
+   "type": "Male",
+   "rank": 1490,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1025,
+   "type": "Female",
+   "rank": 373,
+   "band": "373-772",
+   "bits": 8.096
+  },
+  {
+   "id": 1026,
+   "type": "Female",
+   "rank": 432,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 1027,
+   "type": "Female",
+   "rank": 358,
+   "band": "173-372",
+   "bits": 8.3673
+  },
+  {
+   "id": 1028,
+   "type": "Male",
+   "rank": 813,
+   "band": "773-1776",
+   "bits": 13.7706
+  },
+  {
+   "id": 1029,
+   "type": "Male",
+   "rank": 1491,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1030,
+   "type": "Male",
+   "rank": 906,
+   "band": "773-1776",
+   "bits": 11.7564
+  },
+  {
+   "id": 1031,
+   "type": "Male",
+   "rank": 719,
+   "band": "373-772",
+   "bits": 18.2234
+  },
+  {
+   "id": 1032,
+   "type": "Male",
+   "rank": 1436,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 1033,
+   "type": "Male",
+   "rank": 945,
+   "band": "773-1776",
+   "bits": 11.0252
+  },
+  {
+   "id": 1034,
+   "type": "Female",
+   "rank": 129,
+   "band": "73-172",
+   "bits": 12.0252
+  },
+  {
+   "id": 1035,
+   "type": "Male",
+   "rank": 1244,
+   "band": "773-1776",
+   "bits": 7.6694
+  },
+  {
+   "id": 1036,
+   "type": "Male",
+   "rank": 1033,
+   "band": "773-1776",
+   "bits": 10.1919
+  },
+  {
+   "id": 1037,
+   "type": "Male",
+   "rank": 1755,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1038,
+   "type": "Male",
+   "rank": 1756,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1039,
+   "type": "Female",
+   "rank": 661,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 1040,
+   "type": "Male",
+   "rank": 1645,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1041,
+   "type": "Male",
+   "rank": 1646,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1042,
+   "type": "Male",
+   "rank": 984,
+   "band": "773-1776",
+   "bits": 10.605
+  },
+  {
+   "id": 1043,
+   "type": "Male",
+   "rank": 1492,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1044,
+   "type": "Male",
+   "rank": 1368,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 1045,
+   "type": "Male",
+   "rank": 911,
+   "band": "773-1776",
+   "bits": 11.7147
+  },
+  {
+   "id": 1046,
+   "type": "Male",
+   "rank": 1313,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1047,
+   "type": "Male",
+   "rank": 1437,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 1048,
+   "type": "Female",
+   "rank": 512,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1049,
+   "type": "Male",
+   "rank": 1062,
+   "band": "773-1776",
+   "bits": 9.9289
+  },
+  {
+   "id": 1050,
+   "type": "Female",
+   "rank": 33,
+   "band": "23-72",
+   "bits": 17.9387
+  },
+  {
+   "id": 1051,
+   "type": "Male",
+   "rank": 1697,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1052,
+   "type": "Male",
+   "rank": 1647,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1053,
+   "type": "Female",
+   "rank": 158,
+   "band": "73-172",
+   "bits": 11.3122
+  },
+  {
+   "id": 1054,
+   "type": "Female",
+   "rank": 221,
+   "band": "173-372",
+   "bits": 10.449
+  },
+  {
+   "id": 1055,
+   "type": "Female",
+   "rank": 101,
+   "band": "73-172",
+   "bits": 13.0791
+  },
+  {
+   "id": 1056,
+   "type": "Female",
+   "rank": 284,
+   "band": "173-372",
+   "bits": 9.435
+  },
+  {
+   "id": 1057,
+   "type": "Female",
+   "rank": 257,
+   "band": "173-372",
+   "bits": 9.8559
+  },
+  {
+   "id": 1058,
+   "type": "Male",
+   "rank": 1648,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1059,
+   "type": "Female",
+   "rank": 308,
+   "band": "173-372",
+   "bits": 9.0769
+  },
+  {
+   "id": 1060,
+   "type": "Female",
+   "rank": 424,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 1061,
+   "type": "Zombie",
+   "rank": 15,
+   "band": "7-22",
+   "bits": 9.1423
+  },
+  {
+   "id": 1062,
+   "type": "Female",
+   "rank": 76,
+   "band": "73-172",
+   "bits": 14.2614
+  },
+  {
+   "id": 1063,
+   "type": "Male",
+   "rank": 915,
+   "band": "773-1776",
+   "bits": 11.6183
+  },
+  {
+   "id": 1064,
+   "type": "Female",
+   "rank": 116,
+   "band": "73-172",
+   "bits": 12.5865
+  },
+  {
+   "id": 1065,
+   "type": "Female",
+   "rank": 387,
+   "band": "373-772",
+   "bits": 7.4768
+  },
+  {
+   "id": 1066,
+   "type": "Male",
+   "rank": 1698,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1067,
+   "type": "Female",
+   "rank": 690,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1068,
+   "type": "Female",
+   "rank": 228,
+   "band": "173-372",
+   "bits": 10.3361
+  },
+  {
+   "id": 1069,
+   "type": "Female",
+   "rank": 635,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1070,
+   "type": "Female",
+   "rank": 513,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1071,
+   "type": "Female",
+   "rank": 100,
+   "band": "73-172",
+   "bits": 13.1464
+  },
+  {
+   "id": 1072,
+   "type": "Female",
+   "rank": 366,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 1073,
+   "type": "Female",
+   "rank": 48,
+   "band": "23-72",
+   "bits": 16.1589
+  },
+  {
+   "id": 1074,
+   "type": "Female",
+   "rank": 52,
+   "band": "23-72",
+   "bits": 15.8463
+  },
+  {
+   "id": 1075,
+   "type": "Male",
+   "rank": 938,
+   "band": "773-1776",
+   "bits": 11.1714
+  },
+  {
+   "id": 1076,
+   "type": "Male",
+   "rank": 889,
+   "band": "773-1776",
+   "bits": 12.0334
+  },
+  {
+   "id": 1077,
+   "type": "Female",
+   "rank": 662,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 1078,
+   "type": "Male",
+   "rank": 1235,
+   "band": "773-1776",
+   "bits": 8.096
+  },
+  {
+   "id": 1079,
+   "type": "Female",
+   "rank": 691,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1080,
+   "type": "Male",
+   "rank": 756,
+   "band": "373-772",
+   "bits": 15.83
+  },
+  {
+   "id": 1081,
+   "type": "Male",
+   "rank": 725,
+   "band": "373-772",
+   "bits": 17.5867
+  },
+  {
+   "id": 1082,
+   "type": "Male",
+   "rank": 1566,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1083,
+   "type": "Male",
+   "rank": 860,
+   "band": "773-1776",
+   "bits": 12.5865
+  },
+  {
+   "id": 1084,
+   "type": "Male",
+   "rank": 1493,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1085,
+   "type": "Male",
+   "rank": 1567,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1086,
+   "type": "Male",
+   "rank": 1140,
+   "band": "773-1776",
+   "bits": 9.0769
+  },
+  {
+   "id": 1087,
+   "type": "Male",
+   "rank": 1649,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1088,
+   "type": "Male",
+   "rank": 1494,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1089,
+   "type": "Male",
+   "rank": 1094,
+   "band": "773-1776",
+   "bits": 9.5328
+  },
+  {
+   "id": 1090,
+   "type": "Female",
+   "rank": 594,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1091,
+   "type": "Female",
+   "rank": 553,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1092,
+   "type": "Female",
+   "rank": 503,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 1093,
+   "type": "Female",
+   "rank": 514,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1094,
+   "type": "Female",
+   "rank": 141,
+   "band": "73-172",
+   "bits": 11.6539
+  },
+  {
+   "id": 1095,
+   "type": "Male",
+   "rank": 1389,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 1096,
+   "type": "Female",
+   "rank": 449,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 1097,
+   "type": "Female",
+   "rank": 339,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 1098,
+   "type": "Female",
+   "rank": 235,
+   "band": "173-372",
+   "bits": 10.2615
+  },
+  {
+   "id": 1099,
+   "type": "Male",
+   "rank": 1757,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1100,
+   "type": "Female",
+   "rank": 663,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 1101,
+   "type": "Male",
+   "rank": 1650,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1102,
+   "type": "Female",
+   "rank": 636,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1103,
+   "type": "Male",
+   "rank": 970,
+   "band": "773-1776",
+   "bits": 10.7273
+  },
+  {
+   "id": 1104,
+   "type": "Female",
+   "rank": 324,
+   "band": "173-372",
+   "bits": 8.8598
+  },
+  {
+   "id": 1105,
+   "type": "Male",
+   "rank": 767,
+   "band": "373-772",
+   "bits": 15.4906
+  },
+  {
+   "id": 1106,
+   "type": "Male",
+   "rank": 956,
+   "band": "773-1776",
+   "bits": 10.8819
+  },
+  {
+   "id": 1107,
+   "type": "Female",
+   "rank": 84,
+   "band": "73-172",
+   "bits": 13.7188
+  },
+  {
+   "id": 1108,
+   "type": "Male",
+   "rank": 899,
+   "band": "773-1776",
+   "bits": 11.868
+  },
+  {
+   "id": 1109,
+   "type": "Male",
+   "rank": 1337,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1110,
+   "type": "Male",
+   "rank": 1079,
+   "band": "773-1776",
+   "bits": 9.7564
+  },
+  {
+   "id": 1111,
+   "type": "Male",
+   "rank": 1369,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 1112,
+   "type": "Male",
+   "rank": 1651,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1113,
+   "type": "Female",
+   "rank": 463,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 1114,
+   "type": "Female",
+   "rank": 450,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 1115,
+   "type": "Female",
+   "rank": 53,
+   "band": "23-72",
+   "bits": 15.7244
+  },
+  {
+   "id": 1116,
+   "type": "Male",
+   "rank": 958,
+   "band": "773-1776",
+   "bits": 10.8559
+  },
+  {
+   "id": 1117,
+   "type": "Male",
+   "rank": 772,
+   "band": "373-772",
+   "bits": 15.3929
+  },
+  {
+   "id": 1118,
+   "type": "Male",
+   "rank": 1338,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1119,
+   "type": "Male",
+   "rank": 796,
+   "band": "773-1776",
+   "bits": 14.5058
+  },
+  {
+   "id": 1120,
+   "type": "Female",
+   "rank": 388,
+   "band": "373-772",
+   "bits": 7.4768
+  },
+  {
+   "id": 1121,
+   "type": "Male",
+   "rank": 1261,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 1122,
+   "type": "Male",
+   "rank": 978,
+   "band": "773-1776",
+   "bits": 10.6664
+  },
+  {
+   "id": 1123,
+   "type": "Male",
+   "rank": 931,
+   "band": "773-1776",
+   "bits": 11.3319
+  },
+  {
+   "id": 1124,
+   "type": "Male",
+   "rank": 1495,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1125,
+   "type": "Male",
+   "rank": 1307,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 1126,
+   "type": "Male",
+   "rank": 1308,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 1127,
+   "type": "Zombie",
+   "rank": 7,
+   "band": "7-22",
+   "bits": 17.2807
+  },
+  {
+   "id": 1128,
+   "type": "Male",
+   "rank": 1339,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1129,
+   "type": "Male",
+   "rank": 1568,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1130,
+   "type": "Male",
+   "rank": 846,
+   "band": "773-1776",
+   "bits": 13.0419
+  },
+  {
+   "id": 1131,
+   "type": "Female",
+   "rank": 595,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1132,
+   "type": "Female",
+   "rank": 554,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1133,
+   "type": "Male",
+   "rank": 1314,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1134,
+   "type": "Female",
+   "rank": 596,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1135,
+   "type": "Male",
+   "rank": 1438,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 1136,
+   "type": "Male",
+   "rank": 1758,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1137,
+   "type": "Female",
+   "rank": 108,
+   "band": "73-172",
+   "bits": 12.7485
+  },
+  {
+   "id": 1138,
+   "type": "Female",
+   "rank": 195,
+   "band": "173-372",
+   "bits": 10.7821
+  },
+  {
+   "id": 1139,
+   "type": "Female",
+   "rank": 637,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1140,
+   "type": "Female",
+   "rank": 555,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1141,
+   "type": "Female",
+   "rank": 556,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1142,
+   "type": "Female",
+   "rank": 638,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1143,
+   "type": "Male",
+   "rank": 1191,
+   "band": "773-1776",
+   "bits": 8.5597
+  },
+  {
+   "id": 1144,
+   "type": "Male",
+   "rank": 1759,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1145,
+   "type": "Female",
+   "rank": 451,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 1146,
+   "type": "Male",
+   "rank": 837,
+   "band": "773-1776",
+   "bits": 13.1899
+  },
+  {
+   "id": 1147,
+   "type": "Male",
+   "rank": 1418,
+   "band": "773-1776",
+   "bits": 5.8918
+  },
+  {
+   "id": 1148,
+   "type": "Male",
+   "rank": 811,
+   "band": "773-1776",
+   "bits": 13.9874
+  },
+  {
+   "id": 1149,
+   "type": "Male",
+   "rank": 1496,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1150,
+   "type": "Female",
+   "rank": 126,
+   "band": "73-172",
+   "bits": 12.2395
+  },
+  {
+   "id": 1151,
+   "type": "Male",
+   "rank": 1760,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1152,
+   "type": "Female",
+   "rank": 639,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1153,
+   "type": "Female",
+   "rank": 379,
+   "band": "373-772",
+   "bits": 7.7821
+  },
+  {
+   "id": 1154,
+   "type": "Male",
+   "rank": 1218,
+   "band": "773-1776",
+   "bits": 8.3673
+  },
+  {
+   "id": 1155,
+   "type": "Female",
+   "rank": 67,
+   "band": "23-72",
+   "bits": 14.8667
+  },
+  {
+   "id": 1156,
+   "type": "Female",
+   "rank": 481,
+   "band": "373-772",
+   "bits": 6.128
+  },
+  {
+   "id": 1157,
+   "type": "Female",
+   "rank": 474,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 1158,
+   "type": "Male",
+   "rank": 928,
+   "band": "773-1776",
+   "bits": 11.3959
+  },
+  {
+   "id": 1159,
+   "type": "Male",
+   "rank": 1134,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 1160,
+   "type": "Male",
+   "rank": 1004,
+   "band": "773-1776",
+   "bits": 10.4838
+  },
+  {
+   "id": 1161,
+   "type": "Male",
+   "rank": 1340,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1162,
+   "type": "Male",
+   "rank": 1699,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1163,
+   "type": "Female",
+   "rank": 247,
+   "band": "173-372",
+   "bits": 9.9778
+  },
+  {
+   "id": 1164,
+   "type": "Male",
+   "rank": 1569,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1165,
+   "type": "Female",
+   "rank": 173,
+   "band": "173-372",
+   "bits": 10.9903
+  },
+  {
+   "id": 1166,
+   "type": "Male",
+   "rank": 828,
+   "band": "773-1776",
+   "bits": 13.3202
+  },
+  {
+   "id": 1167,
+   "type": "Male",
+   "rank": 1497,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1168,
+   "type": "Male",
+   "rank": 1700,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1169,
+   "type": "Male",
+   "rank": 1498,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1170,
+   "type": "Male",
+   "rank": 1499,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1171,
+   "type": "Male",
+   "rank": 878,
+   "band": "773-1776",
+   "bits": 12.2078
+  },
+  {
+   "id": 1172,
+   "type": "Male",
+   "rank": 1045,
+   "band": "773-1776",
+   "bits": 10.0769
+  },
+  {
+   "id": 1173,
+   "type": "Male",
+   "rank": 1288,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1174,
+   "type": "Male",
+   "rank": 883,
+   "band": "773-1776",
+   "bits": 12.102
+  },
+  {
+   "id": 1175,
+   "type": "Female",
+   "rank": 640,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1176,
+   "type": "Alien",
+   "rank": 1,
+   "band": "1-2",
+   "bits": 5.6134
+  },
+  {
+   "id": 1177,
+   "type": "Male",
+   "rank": 955,
+   "band": "773-1776",
+   "bits": 10.9076
+  },
+  {
+   "id": 1178,
+   "type": "Female",
+   "rank": 34,
+   "band": "23-72",
+   "bits": 17.7852
+  },
+  {
+   "id": 1179,
+   "type": "Male",
+   "rank": 1701,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1180,
+   "type": "Male",
+   "rank": 1200,
+   "band": "773-1776",
+   "bits": 8.4838
+  },
+  {
+   "id": 1181,
+   "type": "Female",
+   "rank": 692,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1182,
+   "type": "Male",
+   "rank": 816,
+   "band": "773-1776",
+   "bits": 13.6661
+  },
+  {
+   "id": 1183,
+   "type": "Zombie",
+   "rank": 10,
+   "band": "7-22",
+   "bits": 11.9764
+  },
+  {
+   "id": 1184,
+   "type": "Male",
+   "rank": 717,
+   "band": "373-772",
+   "bits": 18.2932
+  },
+  {
+   "id": 1185,
+   "type": "Male",
+   "rank": 1315,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1186,
+   "type": "Male",
+   "rank": 1063,
+   "band": "773-1776",
+   "bits": 9.9289
+  },
+  {
+   "id": 1187,
+   "type": "Male",
+   "rank": 1500,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1188,
+   "type": "Male",
+   "rank": 1761,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1189,
+   "type": "Female",
+   "rank": 63,
+   "band": "23-72",
+   "bits": 15.073
+  },
+  {
+   "id": 1190,
+   "type": "Male",
+   "rank": 1238,
+   "band": "773-1776",
+   "bits": 7.7821
+  },
+  {
+   "id": 1191,
+   "type": "Male",
+   "rank": 866,
+   "band": "773-1776",
+   "bits": 12.5008
+  },
+  {
+   "id": 1192,
+   "type": "Male",
+   "rank": 1501,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1193,
+   "type": "Male",
+   "rank": 1064,
+   "band": "773-1776",
+   "bits": 9.9289
+  },
+  {
+   "id": 1194,
+   "type": "Female",
+   "rank": 597,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1195,
+   "type": "Female",
+   "rank": 41,
+   "band": "23-72",
+   "bits": 17.2311
+  },
+  {
+   "id": 1196,
+   "type": "Female",
+   "rank": 641,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1197,
+   "type": "Male",
+   "rank": 1067,
+   "band": "773-1776",
+   "bits": 9.9199
+  },
+  {
+   "id": 1198,
+   "type": "Female",
+   "rank": 515,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1199,
+   "type": "Female",
+   "rank": 557,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1200,
+   "type": "Female",
+   "rank": 218,
+   "band": "173-372",
+   "bits": 10.492
+  },
+  {
+   "id": 1201,
+   "type": "Male",
+   "rank": 1166,
+   "band": "773-1776",
+   "bits": 8.831
+  },
+  {
+   "id": 1202,
+   "type": "Male",
+   "rank": 1177,
+   "band": "773-1776",
+   "bits": 8.7334
+  },
+  {
+   "id": 1203,
+   "type": "Male",
+   "rank": 888,
+   "band": "773-1776",
+   "bits": 12.0527
+  },
+  {
+   "id": 1204,
+   "type": "Male",
+   "rank": 750,
+   "band": "373-772",
+   "bits": 16.0723
+  },
+  {
+   "id": 1205,
+   "type": "Female",
+   "rank": 78,
+   "band": "73-172",
+   "bits": 14.1319
+  },
+  {
+   "id": 1206,
+   "type": "Female",
+   "rank": 411,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 1207,
+   "type": "Male",
+   "rank": 996,
+   "band": "773-1776",
+   "bits": 10.5502
+  },
+  {
+   "id": 1208,
+   "type": "Male",
+   "rank": 1762,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1209,
+   "type": "Male",
+   "rank": 1082,
+   "band": "773-1776",
+   "bits": 9.7273
+  },
+  {
+   "id": 1210,
+   "type": "Male",
+   "rank": 726,
+   "band": "373-772",
+   "bits": 17.4525
+  },
+  {
+   "id": 1211,
+   "type": "Male",
+   "rank": 814,
+   "band": "773-1776",
+   "bits": 13.7333
+  },
+  {
+   "id": 1212,
+   "type": "Male",
+   "rank": 925,
+   "band": "773-1776",
+   "bits": 11.4516
+  },
+  {
+   "id": 1213,
+   "type": "Male",
+   "rank": 1119,
+   "band": "773-1776",
+   "bits": 9.2678
+  },
+  {
+   "id": 1214,
+   "type": "Female",
+   "rank": 278,
+   "band": "173-372",
+   "bits": 9.5664
+  },
+  {
+   "id": 1215,
+   "type": "Male",
+   "rank": 1262,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 1216,
+   "type": "Male",
+   "rank": 1652,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1217,
+   "type": "Female",
+   "rank": 281,
+   "band": "173-372",
+   "bits": 9.5175
+  },
+  {
+   "id": 1218,
+   "type": "Male",
+   "rank": 1147,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 1219,
+   "type": "Male",
+   "rank": 1316,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1220,
+   "type": "Female",
+   "rank": 482,
+   "band": "373-772",
+   "bits": 6.128
+  },
+  {
+   "id": 1221,
+   "type": "Male",
+   "rank": 908,
+   "band": "773-1776",
+   "bits": 11.7305
+  },
+  {
+   "id": 1222,
+   "type": "Male",
+   "rank": 1289,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1223,
+   "type": "Female",
+   "rank": 95,
+   "band": "73-172",
+   "bits": 13.4013
+  },
+  {
+   "id": 1224,
+   "type": "Male",
+   "rank": 744,
+   "band": "373-772",
+   "bits": 16.2845
+  },
+  {
+   "id": 1225,
+   "type": "Female",
+   "rank": 412,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 1226,
+   "type": "Female",
+   "rank": 598,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1227,
+   "type": "Male",
+   "rank": 1024,
+   "band": "773-1776",
+   "bits": 10.3235
+  },
+  {
+   "id": 1228,
+   "type": "Female",
+   "rank": 558,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1229,
+   "type": "Female",
+   "rank": 36,
+   "band": "23-72",
+   "bits": 17.5985
+  },
+  {
+   "id": 1230,
+   "type": "Female",
+   "rank": 191,
+   "band": "173-372",
+   "bits": 10.8285
+  },
+  {
+   "id": 1231,
+   "type": "Male",
+   "rank": 754,
+   "band": "373-772",
+   "bits": 15.8949
+  },
+  {
+   "id": 1232,
+   "type": "Male",
+   "rank": 1125,
+   "band": "773-1776",
+   "bits": 9.1971
+  },
+  {
+   "id": 1233,
+   "type": "Male",
+   "rank": 1502,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1234,
+   "type": "Male",
+   "rank": 952,
+   "band": "773-1776",
+   "bits": 10.9467
+  },
+  {
+   "id": 1235,
+   "type": "Male",
+   "rank": 1702,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1236,
+   "type": "Male",
+   "rank": 997,
+   "band": "773-1776",
+   "bits": 10.5502
+  },
+  {
+   "id": 1237,
+   "type": "Female",
+   "rank": 352,
+   "band": "173-372",
+   "bits": 8.4439
+  },
+  {
+   "id": 1238,
+   "type": "Female",
+   "rank": 367,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 1239,
+   "type": "Female",
+   "rank": 559,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1240,
+   "type": "Female",
+   "rank": 413,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 1241,
+   "type": "Male",
+   "rank": 1408,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 1242,
+   "type": "Female",
+   "rank": 86,
+   "band": "73-172",
+   "bits": 13.6661
+  },
+  {
+   "id": 1243,
+   "type": "Male",
+   "rank": 1653,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1244,
+   "type": "Female",
+   "rank": 62,
+   "band": "23-72",
+   "bits": 15.0855
+  },
+  {
+   "id": 1245,
+   "type": "Male",
+   "rank": 947,
+   "band": "773-1776",
+   "bits": 11.0194
+  },
+  {
+   "id": 1246,
+   "type": "Male",
+   "rank": 795,
+   "band": "773-1776",
+   "bits": 14.5685
+  },
+  {
+   "id": 1247,
+   "type": "Male",
+   "rank": 1654,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1248,
+   "type": "Female",
+   "rank": 196,
+   "band": "173-372",
+   "bits": 10.7821
+  },
+  {
+   "id": 1249,
+   "type": "Female",
+   "rank": 475,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 1250,
+   "type": "Female",
+   "rank": 172,
+   "band": "73-172",
+   "bits": 11.0194
+  },
+  {
+   "id": 1251,
+   "type": "Female",
+   "rank": 642,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1252,
+   "type": "Female",
+   "rank": 643,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1253,
+   "type": "Male",
+   "rank": 1072,
+   "band": "773-1776",
+   "bits": 9.8598
+  },
+  {
+   "id": 1254,
+   "type": "Male",
+   "rank": 1763,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1255,
+   "type": "Female",
+   "rank": 227,
+   "band": "173-372",
+   "bits": 10.34
+  },
+  {
+   "id": 1256,
+   "type": "Male",
+   "rank": 1309,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 1257,
+   "type": "Male",
+   "rank": 1764,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1258,
+   "type": "Female",
+   "rank": 190,
+   "band": "173-372",
+   "bits": 10.831
+  },
+  {
+   "id": 1259,
+   "type": "Female",
+   "rank": 287,
+   "band": "173-372",
+   "bits": 9.4053
+  },
+  {
+   "id": 1260,
+   "type": "Male",
+   "rank": 793,
+   "band": "773-1776",
+   "bits": 14.6126
+  },
+  {
+   "id": 1261,
+   "type": "Male",
+   "rank": 1317,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1262,
+   "type": "Female",
+   "rank": 282,
+   "band": "173-372",
+   "bits": 9.5175
+  },
+  {
+   "id": 1263,
+   "type": "Male",
+   "rank": 1048,
+   "band": "773-1776",
+   "bits": 10.0648
+  },
+  {
+   "id": 1264,
+   "type": "Female",
+   "rank": 433,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 1265,
+   "type": "Male",
+   "rank": 1765,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1266,
+   "type": "Male",
+   "rank": 1341,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1267,
+   "type": "Male",
+   "rank": 1703,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1268,
+   "type": "Zombie",
+   "rank": 11,
+   "band": "7-22",
+   "bits": 11.5049
+  },
+  {
+   "id": 1269,
+   "type": "Male",
+   "rank": 1080,
+   "band": "773-1776",
+   "bits": 9.7469
+  },
+  {
+   "id": 1270,
+   "type": "Male",
+   "rank": 1570,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1271,
+   "type": "Female",
+   "rank": 217,
+   "band": "173-372",
+   "bits": 10.5139
+  },
+  {
+   "id": 1272,
+   "type": "Female",
+   "rank": 340,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 1273,
+   "type": "Female",
+   "rank": 246,
+   "band": "173-372",
+   "bits": 9.9853
+  },
+  {
+   "id": 1274,
+   "type": "Female",
+   "rank": 375,
+   "band": "373-772",
+   "bits": 7.8918
+  },
+  {
+   "id": 1275,
+   "type": "Male",
+   "rank": 1409,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 1276,
+   "type": "Male",
+   "rank": 763,
+   "band": "373-772",
+   "bits": 15.5252
+  },
+  {
+   "id": 1277,
+   "type": "Male",
+   "rank": 1356,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 1278,
+   "type": "Male",
+   "rank": 1655,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1279,
+   "type": "Male",
+   "rank": 1503,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1280,
+   "type": "Female",
+   "rank": 560,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1281,
+   "type": "Male",
+   "rank": 1504,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1282,
+   "type": "Female",
+   "rank": 320,
+   "band": "173-372",
+   "bits": 8.9076
+  },
+  {
+   "id": 1283,
+   "type": "Male",
+   "rank": 1021,
+   "band": "773-1776",
+   "bits": 10.34
+  },
+  {
+   "id": 1284,
+   "type": "Female",
+   "rank": 516,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1285,
+   "type": "Male",
+   "rank": 1439,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 1286,
+   "type": "Male",
+   "rank": 759,
+   "band": "373-772",
+   "bits": 15.722
+  },
+  {
+   "id": 1287,
+   "type": "Female",
+   "rank": 179,
+   "band": "173-372",
+   "bits": 10.9467
+  },
+  {
+   "id": 1288,
+   "type": "Male",
+   "rank": 831,
+   "band": "773-1776",
+   "bits": 13.271
+  },
+  {
+   "id": 1289,
+   "type": "Male",
+   "rank": 868,
+   "band": "773-1776",
+   "bits": 12.3959
+  },
+  {
+   "id": 1290,
+   "type": "Male",
+   "rank": 1148,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 1291,
+   "type": "Male",
+   "rank": 825,
+   "band": "773-1776",
+   "bits": 13.4774
+  },
+  {
+   "id": 1292,
+   "type": "Female",
+   "rank": 425,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 1293,
+   "type": "Female",
+   "rank": 561,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1294,
+   "type": "Female",
+   "rank": 644,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1295,
+   "type": "Female",
+   "rank": 142,
+   "band": "73-172",
+   "bits": 11.6439
+  },
+  {
+   "id": 1296,
+   "type": "Male",
+   "rank": 1290,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1297,
+   "type": "Male",
+   "rank": 1135,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 1298,
+   "type": "Female",
+   "rank": 693,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1299,
+   "type": "Male",
+   "rank": 910,
+   "band": "773-1776",
+   "bits": 11.7223
+  },
+  {
+   "id": 1300,
+   "type": "Male",
+   "rank": 1263,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 1301,
+   "type": "Female",
+   "rank": 434,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 1302,
+   "type": "Male",
+   "rank": 905,
+   "band": "773-1776",
+   "bits": 11.7788
+  },
+  {
+   "id": 1303,
+   "type": "Male",
+   "rank": 1051,
+   "band": "773-1776",
+   "bits": 10.0589
+  },
+  {
+   "id": 1304,
+   "type": "Male",
+   "rank": 1656,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1305,
+   "type": "Male",
+   "rank": 706,
+   "band": "373-772",
+   "bits": 21.9278
+  },
+  {
+   "id": 1306,
+   "type": "Male",
+   "rank": 1505,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1307,
+   "type": "Male",
+   "rank": 1192,
+   "band": "773-1776",
+   "bits": 8.5597
+  },
+  {
+   "id": 1308,
+   "type": "Male",
+   "rank": 1291,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1309,
+   "type": "Male",
+   "rank": 1239,
+   "band": "773-1776",
+   "bits": 7.7821
+  },
+  {
+   "id": 1310,
+   "type": "Male",
+   "rank": 1318,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1311,
+   "type": "Male",
+   "rank": 1657,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1312,
+   "type": "Male",
+   "rank": 1704,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1313,
+   "type": "Female",
+   "rank": 197,
+   "band": "173-372",
+   "bits": 10.7821
+  },
+  {
+   "id": 1314,
+   "type": "Female",
+   "rank": 376,
+   "band": "373-772",
+   "bits": 7.8918
+  },
+  {
+   "id": 1315,
+   "type": "Female",
+   "rank": 201,
+   "band": "173-372",
+   "bits": 10.7385
+  },
+  {
+   "id": 1316,
+   "type": "Female",
+   "rank": 124,
+   "band": "73-172",
+   "bits": 12.2687
+  },
+  {
+   "id": 1317,
+   "type": "Male",
+   "rank": 1571,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1318,
+   "type": "Male",
+   "rank": 1658,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1319,
+   "type": "Female",
+   "rank": 99,
+   "band": "73-172",
+   "bits": 13.2122
+  },
+  {
+   "id": 1320,
+   "type": "Female",
+   "rank": 149,
+   "band": "73-172",
+   "bits": 11.4703
+  },
+  {
+   "id": 1321,
+   "type": "Female",
+   "rank": 414,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 1322,
+   "type": "Male",
+   "rank": 1342,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1323,
+   "type": "Male",
+   "rank": 1766,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1324,
+   "type": "Male",
+   "rank": 882,
+   "band": "773-1776",
+   "bits": 12.1484
+  },
+  {
+   "id": 1325,
+   "type": "Male",
+   "rank": 1659,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1326,
+   "type": "Male",
+   "rank": 844,
+   "band": "773-1776",
+   "bits": 13.0572
+  },
+  {
+   "id": 1327,
+   "type": "Female",
+   "rank": 464,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 1328,
+   "type": "Male",
+   "rank": 745,
+   "band": "373-772",
+   "bits": 16.1881
+  },
+  {
+   "id": 1329,
+   "type": "Male",
+   "rank": 1767,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1330,
+   "type": "Male",
+   "rank": 1506,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1331,
+   "type": "Female",
+   "rank": 85,
+   "band": "73-172",
+   "bits": 13.6953
+  },
+  {
+   "id": 1332,
+   "type": "Male",
+   "rank": 1572,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1333,
+   "type": "Female",
+   "rank": 219,
+   "band": "173-372",
+   "bits": 10.4838
+  },
+  {
+   "id": 1334,
+   "type": "Male",
+   "rank": 704,
+   "band": "373-772",
+   "bits": 26.1061
+  },
+  {
+   "id": 1335,
+   "type": "Female",
+   "rank": 61,
+   "band": "23-72",
+   "bits": 15.1923
+  },
+  {
+   "id": 1336,
+   "type": "Female",
+   "rank": 645,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1337,
+   "type": "Male",
+   "rank": 1201,
+   "band": "773-1776",
+   "bits": 8.4838
+  },
+  {
+   "id": 1338,
+   "type": "Male",
+   "rank": 948,
+   "band": "773-1776",
+   "bits": 10.9903
+  },
+  {
+   "id": 1339,
+   "type": "Female",
+   "rank": 562,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1340,
+   "type": "Female",
+   "rank": 563,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1341,
+   "type": "Female",
+   "rank": 564,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1342,
+   "type": "Male",
+   "rank": 1768,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1343,
+   "type": "Male",
+   "rank": 1343,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1344,
+   "type": "Male",
+   "rank": 1507,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1345,
+   "type": "Male",
+   "rank": 953,
+   "band": "773-1776",
+   "bits": 10.9467
+  },
+  {
+   "id": 1346,
+   "type": "Female",
+   "rank": 232,
+   "band": "173-372",
+   "bits": 10.2872
+  },
+  {
+   "id": 1347,
+   "type": "Female",
+   "rank": 565,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1348,
+   "type": "Male",
+   "rank": 780,
+   "band": "773-1776",
+   "bits": 15.05
+  },
+  {
+   "id": 1349,
+   "type": "Male",
+   "rank": 974,
+   "band": "773-1776",
+   "bits": 10.6981
+  },
+  {
+   "id": 1350,
+   "type": "Female",
+   "rank": 646,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1351,
+   "type": "Female",
+   "rank": 664,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 1352,
+   "type": "Female",
+   "rank": 491,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 1353,
+   "type": "Male",
+   "rank": 1410,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 1354,
+   "type": "Female",
+   "rank": 328,
+   "band": "173-372",
+   "bits": 8.831
+  },
+  {
+   "id": 1355,
+   "type": "Male",
+   "rank": 1042,
+   "band": "773-1776",
+   "bits": 10.1025
+  },
+  {
+   "id": 1356,
+   "type": "Male",
+   "rank": 1223,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 1357,
+   "type": "Female",
+   "rank": 199,
+   "band": "173-372",
+   "bits": 10.7564
+  },
+  {
+   "id": 1358,
+   "type": "Female",
+   "rank": 275,
+   "band": "173-372",
+   "bits": 9.6094
+  },
+  {
+   "id": 1359,
+   "type": "Female",
+   "rank": 181,
+   "band": "173-372",
+   "bits": 10.9289
+  },
+  {
+   "id": 1360,
+   "type": "Female",
+   "rank": 517,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1361,
+   "type": "Male",
+   "rank": 916,
+   "band": "773-1776",
+   "bits": 11.605
+  },
+  {
+   "id": 1362,
+   "type": "Male",
+   "rank": 971,
+   "band": "773-1776",
+   "bits": 10.7273
+  },
+  {
+   "id": 1363,
+   "type": "Male",
+   "rank": 848,
+   "band": "773-1776",
+   "bits": 12.993
+  },
+  {
+   "id": 1364,
+   "type": "Male",
+   "rank": 1292,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1365,
+   "type": "Female",
+   "rank": 123,
+   "band": "73-172",
+   "bits": 12.3157
+  },
+  {
+   "id": 1366,
+   "type": "Male",
+   "rank": 1344,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1367,
+   "type": "Female",
+   "rank": 415,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 1368,
+   "type": "Female",
+   "rank": 240,
+   "band": "173-372",
+   "bits": 10.1228
+  },
+  {
+   "id": 1369,
+   "type": "Male",
+   "rank": 1573,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1370,
+   "type": "Female",
+   "rank": 599,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1371,
+   "type": "Male",
+   "rank": 1574,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1372,
+   "type": "Male",
+   "rank": 1058,
+   "band": "773-1776",
+   "bits": 9.9325
+  },
+  {
+   "id": 1373,
+   "type": "Female",
+   "rank": 452,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 1374,
+   "type": "Male",
+   "rank": 1236,
+   "band": "773-1776",
+   "bits": 7.8918
+  },
+  {
+   "id": 1375,
+   "type": "Female",
+   "rank": 465,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 1376,
+   "type": "Female",
+   "rank": 299,
+   "band": "173-372",
+   "bits": 9.1912
+  },
+  {
+   "id": 1377,
+   "type": "Female",
+   "rank": 647,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1378,
+   "type": "Male",
+   "rank": 708,
+   "band": "373-772",
+   "bits": 20.7115
+  },
+  {
+   "id": 1379,
+   "type": "Male",
+   "rank": 1769,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1380,
+   "type": "Female",
+   "rank": 23,
+   "band": "23-72",
+   "bits": 22.7771
+  },
+  {
+   "id": 1381,
+   "type": "Female",
+   "rank": 648,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1382,
+   "type": "Female",
+   "rank": 344,
+   "band": "173-372",
+   "bits": 8.5175
+  },
+  {
+   "id": 1383,
+   "type": "Male",
+   "rank": 1575,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1384,
+   "type": "Male",
+   "rank": 1149,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 1385,
+   "type": "Female",
+   "rank": 300,
+   "band": "173-372",
+   "bits": 9.1912
+  },
+  {
+   "id": 1386,
+   "type": "Male",
+   "rank": 1150,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 1387,
+   "type": "Female",
+   "rank": 600,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1388,
+   "type": "Male",
+   "rank": 731,
+   "band": "373-772",
+   "bits": 17.0542
+  },
+  {
+   "id": 1389,
+   "type": "Male",
+   "rank": 1172,
+   "band": "773-1776",
+   "bits": 8.7821
+  },
+  {
+   "id": 1390,
+   "type": "Female",
+   "rank": 109,
+   "band": "73-172",
+   "bits": 12.7485
+  },
+  {
+   "id": 1391,
+   "type": "Male",
+   "rank": 861,
+   "band": "773-1776",
+   "bits": 12.5865
+  },
+  {
+   "id": 1392,
+   "type": "Male",
+   "rank": 838,
+   "band": "773-1776",
+   "bits": 13.1899
+  },
+  {
+   "id": 1393,
+   "type": "Male",
+   "rank": 1576,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1394,
+   "type": "Male",
+   "rank": 1345,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1395,
+   "type": "Female",
+   "rank": 416,
+   "band": "373-772",
+   "bits": 7.1548
+  },
+  {
+   "id": 1396,
+   "type": "Male",
+   "rank": 1508,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1397,
+   "type": "Male",
+   "rank": 1577,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1398,
+   "type": "Female",
+   "rank": 46,
+   "band": "23-72",
+   "bits": 16.3573
+  },
+  {
+   "id": 1399,
+   "type": "Male",
+   "rank": 1086,
+   "band": "773-1776",
+   "bits": 9.643
+  },
+  {
+   "id": 1400,
+   "type": "Male",
+   "rank": 1370,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 1401,
+   "type": "Male",
+   "rank": 1660,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1402,
+   "type": "Female",
+   "rank": 694,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1403,
+   "type": "Female",
+   "rank": 113,
+   "band": "73-172",
+   "bits": 12.605
+  },
+  {
+   "id": 1404,
+   "type": "Female",
+   "rank": 566,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1405,
+   "type": "Male",
+   "rank": 1770,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1406,
+   "type": "Female",
+   "rank": 200,
+   "band": "173-372",
+   "bits": 10.7564
+  },
+  {
+   "id": 1407,
+   "type": "Female",
+   "rank": 665,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 1408,
+   "type": "Female",
+   "rank": 223,
+   "band": "173-372",
+   "bits": 10.4127
+  },
+  {
+   "id": 1409,
+   "type": "Female",
+   "rank": 231,
+   "band": "173-372",
+   "bits": 10.2951
+  },
+  {
+   "id": 1410,
+   "type": "Male",
+   "rank": 1095,
+   "band": "773-1776",
+   "bits": 9.5328
+  },
+  {
+   "id": 1411,
+   "type": "Male",
+   "rank": 830,
+   "band": "773-1776",
+   "bits": 13.2876
+  },
+  {
+   "id": 1412,
+   "type": "Female",
+   "rank": 426,
+   "band": "373-772",
+   "bits": 7.0173
+  },
+  {
+   "id": 1413,
+   "type": "Female",
+   "rank": 381,
+   "band": "373-772",
+   "bits": 7.6694
+  },
+  {
+   "id": 1414,
+   "type": "Male",
+   "rank": 1661,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1415,
+   "type": "Male",
+   "rank": 1076,
+   "band": "773-1776",
+   "bits": 9.7805
+  },
+  {
+   "id": 1416,
+   "type": "Female",
+   "rank": 156,
+   "band": "73-172",
+   "bits": 11.3235
+  },
+  {
+   "id": 1417,
+   "type": "Female",
+   "rank": 453,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 1418,
+   "type": "Female",
+   "rank": 330,
+   "band": "173-372",
+   "bits": 8.7821
+  },
+  {
+   "id": 1419,
+   "type": "Female",
+   "rank": 435,
+   "band": "373-772",
+   "bits": 6.9407
+  },
+  {
+   "id": 1420,
+   "type": "Female",
+   "rank": 695,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1421,
+   "type": "Male",
+   "rank": 1251,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 1422,
+   "type": "Male",
+   "rank": 1578,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1423,
+   "type": "Female",
+   "rank": 518,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1424,
+   "type": "Male",
+   "rank": 1662,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1425,
+   "type": "Female",
+   "rank": 298,
+   "band": "173-372",
+   "bits": 9.2615
+  },
+  {
+   "id": 1426,
+   "type": "Female",
+   "rank": 696,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1427,
+   "type": "Female",
+   "rank": 697,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1428,
+   "type": "Male",
+   "rank": 1005,
+   "band": "773-1776",
+   "bits": 10.4838
+  },
+  {
+   "id": 1429,
+   "type": "Male",
+   "rank": 1509,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1430,
+   "type": "Male",
+   "rank": 980,
+   "band": "773-1776",
+   "bits": 10.6335
+  },
+  {
+   "id": 1431,
+   "type": "Male",
+   "rank": 1031,
+   "band": "773-1776",
+   "bits": 10.2025
+  },
+  {
+   "id": 1432,
+   "type": "Male",
+   "rank": 1705,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1433,
+   "type": "Male",
+   "rank": 873,
+   "band": "773-1776",
+   "bits": 12.2758
+  },
+  {
+   "id": 1434,
+   "type": "Female",
+   "rank": 698,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1435,
+   "type": "Female",
+   "rank": 601,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1436,
+   "type": "Female",
+   "rank": 649,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1437,
+   "type": "Female",
+   "rank": 492,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 1438,
+   "type": "Female",
+   "rank": 29,
+   "band": "23-72",
+   "bits": 18.8648
+  },
+  {
+   "id": 1439,
+   "type": "Female",
+   "rank": 519,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1440,
+   "type": "Male",
+   "rank": 1579,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1441,
+   "type": "Male",
+   "rank": 1057,
+   "band": "773-1776",
+   "bits": 9.9853
+  },
+  {
+   "id": 1442,
+   "type": "Female",
+   "rank": 493,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 1443,
+   "type": "Female",
+   "rank": 104,
+   "band": "73-172",
+   "bits": 12.9932
+  },
+  {
+   "id": 1444,
+   "type": "Male",
+   "rank": 1070,
+   "band": "773-1776",
+   "bits": 9.8989
+  },
+  {
+   "id": 1445,
+   "type": "Female",
+   "rank": 520,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1446,
+   "type": "Female",
+   "rank": 395,
+   "band": "373-772",
+   "bits": 7.3184
+  },
+  {
+   "id": 1447,
+   "type": "Female",
+   "rank": 205,
+   "band": "173-372",
+   "bits": 10.6981
+  },
+  {
+   "id": 1448,
+   "type": "Male",
+   "rank": 922,
+   "band": "773-1776",
+   "bits": 11.4703
+  },
+  {
+   "id": 1449,
+   "type": "Male",
+   "rank": 1158,
+   "band": "773-1776",
+   "bits": 8.9199
+  },
+  {
+   "id": 1450,
+   "type": "Female",
+   "rank": 494,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 1451,
+   "type": "Female",
+   "rank": 79,
+   "band": "73-172",
+   "bits": 14.1297
+  },
+  {
+   "id": 1452,
+   "type": "Female",
+   "rank": 345,
+   "band": "173-372",
+   "bits": 8.5175
+  },
+  {
+   "id": 1453,
+   "type": "Male",
+   "rank": 1224,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 1454,
+   "type": "Male",
+   "rank": 1510,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1455,
+   "type": "Male",
+   "rank": 1663,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1456,
+   "type": "Male",
+   "rank": 923,
+   "band": "773-1776",
+   "bits": 11.4703
+  },
+  {
+   "id": 1457,
+   "type": "Male",
+   "rank": 1065,
+   "band": "773-1776",
+   "bits": 9.9289
+  },
+  {
+   "id": 1458,
+   "type": "Male",
+   "rank": 1580,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1459,
+   "type": "Male",
+   "rank": 1390,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 1460,
+   "type": "Male",
+   "rank": 944,
+   "band": "773-1776",
+   "bits": 11.0589
+  },
+  {
+   "id": 1461,
+   "type": "Male",
+   "rank": 1511,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1462,
+   "type": "Male",
+   "rank": 1581,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1463,
+   "type": "Female",
+   "rank": 183,
+   "band": "173-372",
+   "bits": 10.9048
+  },
+  {
+   "id": 1464,
+   "type": "Male",
+   "rank": 1116,
+   "band": "773-1776",
+   "bits": 9.2872
+  },
+  {
+   "id": 1465,
+   "type": "Female",
+   "rank": 371,
+   "band": "173-372",
+   "bits": 8.1423
+  },
+  {
+   "id": 1466,
+   "type": "Male",
+   "rank": 1512,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1467,
+   "type": "Female",
+   "rank": 253,
+   "band": "173-372",
+   "bits": 9.9199
+  },
+  {
+   "id": 1468,
+   "type": "Female",
+   "rank": 699,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1469,
+   "type": "Male",
+   "rank": 1513,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1470,
+   "type": "Male",
+   "rank": 1514,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1471,
+   "type": "Female",
+   "rank": 380,
+   "band": "373-772",
+   "bits": 7.7821
+  },
+  {
+   "id": 1472,
+   "type": "Female",
+   "rank": 495,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 1473,
+   "type": "Female",
+   "rank": 28,
+   "band": "23-72",
+   "bits": 18.9075
+  },
+  {
+   "id": 1474,
+   "type": "Male",
+   "rank": 1515,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1475,
+   "type": "Male",
+   "rank": 1411,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 1476,
+   "type": "Male",
+   "rank": 1151,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 1477,
+   "type": "Male",
+   "rank": 856,
+   "band": "773-1776",
+   "bits": 12.6539
+  },
+  {
+   "id": 1478,
+   "type": "Male",
+   "rank": 1771,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1479,
+   "type": "Female",
+   "rank": 105,
+   "band": "73-172",
+   "bits": 12.9492
+  },
+  {
+   "id": 1480,
+   "type": "Male",
+   "rank": 1371,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 1481,
+   "type": "Male",
+   "rank": 1293,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1482,
+   "type": "Male",
+   "rank": 782,
+   "band": "773-1776",
+   "bits": 14.8898
+  },
+  {
+   "id": 1483,
+   "type": "Female",
+   "rank": 239,
+   "band": "173-372",
+   "bits": 10.1258
+  },
+  {
+   "id": 1484,
+   "type": "Female",
+   "rank": 368,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 1485,
+   "type": "Female",
+   "rank": 203,
+   "band": "173-372",
+   "bits": 10.7022
+  },
+  {
+   "id": 1486,
+   "type": "Female",
+   "rank": 454,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 1487,
+   "type": "Female",
+   "rank": 341,
+   "band": "173-372",
+   "bits": 8.5814
+  },
+  {
+   "id": 1488,
+   "type": "Male",
+   "rank": 880,
+   "band": "773-1776",
+   "bits": 12.1919
+  },
+  {
+   "id": 1489,
+   "type": "Male",
+   "rank": 1193,
+   "band": "773-1776",
+   "bits": 8.5597
+  },
+  {
+   "id": 1490,
+   "type": "Male",
+   "rank": 1372,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 1491,
+   "type": "Female",
+   "rank": 164,
+   "band": "73-172",
+   "bits": 11.271
+  },
+  {
+   "id": 1492,
+   "type": "Male",
+   "rank": 1412,
+   "band": "773-1776",
+   "bits": 5.9354
+  },
+  {
+   "id": 1493,
+   "type": "Male",
+   "rank": 1038,
+   "band": "773-1776",
+   "bits": 10.1258
+  },
+  {
+   "id": 1494,
+   "type": "Male",
+   "rank": 1101,
+   "band": "773-1776",
+   "bits": 9.5175
+  },
+  {
+   "id": 1495,
+   "type": "Female",
+   "rank": 567,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1496,
+   "type": "Male",
+   "rank": 1357,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 1497,
+   "type": "Male",
+   "rank": 1373,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 1498,
+   "type": "Male",
+   "rank": 886,
+   "band": "773-1776",
+   "bits": 12.0589
+  },
+  {
+   "id": 1499,
+   "type": "Female",
+   "rank": 273,
+   "band": "173-372",
+   "bits": 9.6374
+  },
+  {
+   "id": 1500,
+   "type": "Male",
+   "rank": 727,
+   "band": "373-772",
+   "bits": 17.2997
+  },
+  {
+   "id": 1501,
+   "type": "Male",
+   "rank": 1664,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1502,
+   "type": "Female",
+   "rank": 82,
+   "band": "73-172",
+   "bits": 13.8839
+  },
+  {
+   "id": 1503,
+   "type": "Male",
+   "rank": 1516,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1504,
+   "type": "Female",
+   "rank": 174,
+   "band": "173-372",
+   "bits": 10.9903
+  },
+  {
+   "id": 1505,
+   "type": "Zombie",
+   "rank": 21,
+   "band": "7-22",
+   "bits": 4.3504
+  },
+  {
+   "id": 1506,
+   "type": "Male",
+   "rank": 1102,
+   "band": "773-1776",
+   "bits": 9.5175
+  },
+  {
+   "id": 1507,
+   "type": "Male",
+   "rank": 1077,
+   "band": "773-1776",
+   "bits": 9.7805
+  },
+  {
+   "id": 1508,
+   "type": "Male",
+   "rank": 1252,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 1509,
+   "type": "Male",
+   "rank": 1706,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1510,
+   "type": "Male",
+   "rank": 872,
+   "band": "773-1776",
+   "bits": 12.2934
+  },
+  {
+   "id": 1511,
+   "type": "Male",
+   "rank": 1391,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 1512,
+   "type": "Female",
+   "rank": 30,
+   "band": "23-72",
+   "bits": 18.2204
+  },
+  {
+   "id": 1513,
+   "type": "Female",
+   "rank": 389,
+   "band": "373-772",
+   "bits": 7.4768
+  },
+  {
+   "id": 1514,
+   "type": "Male",
+   "rank": 721,
+   "band": "373-772",
+   "bits": 17.9939
+  },
+  {
+   "id": 1515,
+   "type": "Male",
+   "rank": 1665,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1516,
+   "type": "Female",
+   "rank": 666,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 1517,
+   "type": "Male",
+   "rank": 1772,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1518,
+   "type": "Female",
+   "rank": 700,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1519,
+   "type": "Male",
+   "rank": 1582,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1520,
+   "type": "Male",
+   "rank": 875,
+   "band": "773-1776",
+   "bits": 12.2395
+  },
+  {
+   "id": 1521,
+   "type": "Female",
+   "rank": 359,
+   "band": "173-372",
+   "bits": 8.3673
+  },
+  {
+   "id": 1522,
+   "type": "Female",
+   "rank": 301,
+   "band": "173-372",
+   "bits": 9.1912
+  },
+  {
+   "id": 1523,
+   "type": "Female",
+   "rank": 504,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 1524,
+   "type": "Male",
+   "rank": 949,
+   "band": "773-1776",
+   "bits": 10.9903
+  },
+  {
+   "id": 1525,
+   "type": "Female",
+   "rank": 80,
+   "band": "73-172",
+   "bits": 13.9819
+  },
+  {
+   "id": 1526,
+   "type": "Male",
+   "rank": 784,
+   "band": "773-1776",
+   "bits": 14.8508
+  },
+  {
+   "id": 1527,
+   "type": "Female",
+   "rank": 701,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1528,
+   "type": "Male",
+   "rank": 1186,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 1529,
+   "type": "Male",
+   "rank": 1225,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 1530,
+   "type": "Male",
+   "rank": 1000,
+   "band": "773-1776",
+   "bits": 10.5158
+  },
+  {
+   "id": 1531,
+   "type": "Female",
+   "rank": 331,
+   "band": "173-372",
+   "bits": 8.7821
+  },
+  {
+   "id": 1532,
+   "type": "Male",
+   "rank": 1128,
+   "band": "773-1776",
+   "bits": 9.1912
+  },
+  {
+   "id": 1533,
+   "type": "Zombie",
+   "rank": 12,
+   "band": "7-22",
+   "bits": 10.8092
+  },
+  {
+   "id": 1534,
+   "type": "Female",
+   "rank": 88,
+   "band": "73-172",
+   "bits": 13.605
+  },
+  {
+   "id": 1535,
+   "type": "Male",
+   "rank": 769,
+   "band": "373-772",
+   "bits": 15.4313
+  },
+  {
+   "id": 1536,
+   "type": "Male",
+   "rank": 1264,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 1537,
+   "type": "Male",
+   "rank": 941,
+   "band": "773-1776",
+   "bits": 11.0987
+  },
+  {
+   "id": 1538,
+   "type": "Male",
+   "rank": 812,
+   "band": "773-1776",
+   "bits": 13.9563
+  },
+  {
+   "id": 1539,
+   "type": "Female",
+   "rank": 455,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 1540,
+   "type": "Female",
+   "rank": 139,
+   "band": "73-172",
+   "bits": 11.7821
+  },
+  {
+   "id": 1541,
+   "type": "Female",
+   "rank": 202,
+   "band": "173-372",
+   "bits": 10.7326
+  },
+  {
+   "id": 1542,
+   "type": "Male",
+   "rank": 1374,
+   "band": "773-1776",
+   "bits": 6.3504
+  },
+  {
+   "id": 1543,
+   "type": "Male",
+   "rank": 808,
+   "band": "773-1776",
+   "bits": 14.0705
+  },
+  {
+   "id": 1544,
+   "type": "Female",
+   "rank": 248,
+   "band": "173-372",
+   "bits": 9.9778
+  },
+  {
+   "id": 1545,
+   "type": "Male",
+   "rank": 1773,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1546,
+   "type": "Female",
+   "rank": 390,
+   "band": "373-772",
+   "bits": 7.4768
+  },
+  {
+   "id": 1547,
+   "type": "Male",
+   "rank": 891,
+   "band": "773-1776",
+   "bits": 11.9936
+  },
+  {
+   "id": 1548,
+   "type": "Male",
+   "rank": 1666,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1549,
+   "type": "Male",
+   "rank": 714,
+   "band": "373-772",
+   "bits": 19.0429
+  },
+  {
+   "id": 1550,
+   "type": "Male",
+   "rank": 1208,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 1551,
+   "type": "Female",
+   "rank": 602,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1552,
+   "type": "Male",
+   "rank": 1517,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1553,
+   "type": "Male",
+   "rank": 1583,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1554,
+   "type": "Male",
+   "rank": 1392,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 1555,
+   "type": "Male",
+   "rank": 998,
+   "band": "773-1776",
+   "bits": 10.5502
+  },
+  {
+   "id": 1556,
+   "type": "Male",
+   "rank": 1667,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1557,
+   "type": "Female",
+   "rank": 466,
+   "band": "373-772",
+   "bits": 6.6694
+  },
+  {
+   "id": 1558,
+   "type": "Female",
+   "rank": 568,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1559,
+   "type": "Female",
+   "rank": 369,
+   "band": "173-372",
+   "bits": 8.3184
+  },
+  {
+   "id": 1560,
+   "type": "Female",
+   "rank": 272,
+   "band": "173-372",
+   "bits": 9.643
+  },
+  {
+   "id": 1561,
+   "type": "Male",
+   "rank": 1707,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1562,
+   "type": "Female",
+   "rank": 650,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1563,
+   "type": "Female",
+   "rank": 262,
+   "band": "173-372",
+   "bits": 9.7805
+  },
+  {
+   "id": 1564,
+   "type": "Male",
+   "rank": 1346,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1565,
+   "type": "Male",
+   "rank": 829,
+   "band": "773-1776",
+   "bits": 13.308
+  },
+  {
+   "id": 1566,
+   "type": "Male",
+   "rank": 1035,
+   "band": "773-1776",
+   "bits": 10.1423
+  },
+  {
+   "id": 1567,
+   "type": "Male",
+   "rank": 924,
+   "band": "773-1776",
+   "bits": 11.4703
+  },
+  {
+   "id": 1568,
+   "type": "Male",
+   "rank": 959,
+   "band": "773-1776",
+   "bits": 10.8559
+  },
+  {
+   "id": 1569,
+   "type": "Male",
+   "rank": 729,
+   "band": "373-772",
+   "bits": 17.2202
+  },
+  {
+   "id": 1570,
+   "type": "Female",
+   "rank": 651,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1571,
+   "type": "Male",
+   "rank": 957,
+   "band": "773-1776",
+   "bits": 10.8819
+  },
+  {
+   "id": 1572,
+   "type": "Female",
+   "rank": 255,
+   "band": "173-372",
+   "bits": 9.8598
+  },
+  {
+   "id": 1573,
+   "type": "Female",
+   "rank": 353,
+   "band": "173-372",
+   "bits": 8.4439
+  },
+  {
+   "id": 1574,
+   "type": "Female",
+   "rank": 166,
+   "band": "73-172",
+   "bits": 11.1844
+  },
+  {
+   "id": 1575,
+   "type": "Male",
+   "rank": 1265,
+   "band": "773-1776",
+   "bits": 7.3184
+  },
+  {
+   "id": 1576,
+   "type": "Female",
+   "rank": 304,
+   "band": "173-372",
+   "bits": 9.1423
+  },
+  {
+   "id": 1577,
+   "type": "Male",
+   "rank": 919,
+   "band": "773-1776",
+   "bits": 11.5461
+  },
+  {
+   "id": 1578,
+   "type": "Female",
+   "rank": 382,
+   "band": "373-772",
+   "bits": 7.6694
+  },
+  {
+   "id": 1579,
+   "type": "Female",
+   "rank": 652,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1580,
+   "type": "Male",
+   "rank": 804,
+   "band": "773-1776",
+   "bits": 14.1879
+  },
+  {
+   "id": 1581,
+   "type": "Male",
+   "rank": 1708,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1582,
+   "type": "Female",
+   "rank": 254,
+   "band": "173-372",
+   "bits": 9.8989
+  },
+  {
+   "id": 1583,
+   "type": "Male",
+   "rank": 1709,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1584,
+   "type": "Male",
+   "rank": 901,
+   "band": "773-1776",
+   "bits": 11.8365
+  },
+  {
+   "id": 1585,
+   "type": "Male",
+   "rank": 1584,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1586,
+   "type": "Male",
+   "rank": 733,
+   "band": "373-772",
+   "bits": 16.7924
+  },
+  {
+   "id": 1587,
+   "type": "Male",
+   "rank": 737,
+   "band": "373-772",
+   "bits": 16.7188
+  },
+  {
+   "id": 1588,
+   "type": "Female",
+   "rank": 140,
+   "band": "73-172",
+   "bits": 11.7147
+  },
+  {
+   "id": 1589,
+   "type": "Male",
+   "rank": 1165,
+   "band": "773-1776",
+   "bits": 8.8598
+  },
+  {
+   "id": 1590,
+   "type": "Female",
+   "rank": 68,
+   "band": "23-72",
+   "bits": 14.681
+  },
+  {
+   "id": 1591,
+   "type": "Male",
+   "rank": 1668,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1592,
+   "type": "Male",
+   "rank": 1440,
+   "band": "773-1776",
+   "bits": 5.7654
+  },
+  {
+   "id": 1593,
+   "type": "Male",
+   "rank": 1710,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1594,
+   "type": "Male",
+   "rank": 884,
+   "band": "773-1776",
+   "bits": 12.1011
+  },
+  {
+   "id": 1595,
+   "type": "Male",
+   "rank": 1319,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1596,
+   "type": "Male",
+   "rank": 1669,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1597,
+   "type": "Male",
+   "rank": 1074,
+   "band": "773-1776",
+   "bits": 9.8545
+  },
+  {
+   "id": 1598,
+   "type": "Female",
+   "rank": 505,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 1599,
+   "type": "Male",
+   "rank": 778,
+   "band": "773-1776",
+   "bits": 15.1125
+  },
+  {
+   "id": 1600,
+   "type": "Female",
+   "rank": 110,
+   "band": "73-172",
+   "bits": 12.7485
+  },
+  {
+   "id": 1601,
+   "type": "Male",
+   "rank": 1518,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1602,
+   "type": "Male",
+   "rank": 1585,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1603,
+   "type": "Male",
+   "rank": 1586,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1604,
+   "type": "Female",
+   "rank": 506,
+   "band": "373-772",
+   "bits": 5.8918
+  },
+  {
+   "id": 1605,
+   "type": "Female",
+   "rank": 667,
+   "band": "373-772",
+   "bits": 5.128
+  },
+  {
+   "id": 1606,
+   "type": "Male",
+   "rank": 1083,
+   "band": "773-1776",
+   "bits": 9.7273
+  },
+  {
+   "id": 1607,
+   "type": "Male",
+   "rank": 1226,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 1608,
+   "type": "Female",
+   "rank": 169,
+   "band": "73-172",
+   "bits": 11.0527
+  },
+  {
+   "id": 1609,
+   "type": "Female",
+   "rank": 145,
+   "band": "73-172",
+   "bits": 11.5192
+  },
+  {
+   "id": 1610,
+   "type": "Female",
+   "rank": 230,
+   "band": "173-372",
+   "bits": 10.3235
+  },
+  {
+   "id": 1611,
+   "type": "Male",
+   "rank": 1419,
+   "band": "773-1776",
+   "bits": 5.8918
+  },
+  {
+   "id": 1612,
+   "type": "Male",
+   "rank": 1075,
+   "band": "773-1776",
+   "bits": 9.7821
+  },
+  {
+   "id": 1613,
+   "type": "Female",
+   "rank": 347,
+   "band": "173-372",
+   "bits": 8.4838
+  },
+  {
+   "id": 1614,
+   "type": "Male",
+   "rank": 1081,
+   "band": "773-1776",
+   "bits": 9.7469
+  },
+  {
+   "id": 1615,
+   "type": "Female",
+   "rank": 96,
+   "band": "73-172",
+   "bits": 13.3826
+  },
+  {
+   "id": 1616,
+   "type": "Female",
+   "rank": 148,
+   "band": "73-172",
+   "bits": 11.5005
+  },
+  {
+   "id": 1617,
+   "type": "Male",
+   "rank": 1029,
+   "band": "773-1776",
+   "bits": 10.2126
+  },
+  {
+   "id": 1618,
+   "type": "Male",
+   "rank": 1519,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1619,
+   "type": "Male",
+   "rank": 799,
+   "band": "773-1776",
+   "bits": 14.4196
+  },
+  {
+   "id": 1620,
+   "type": "Male",
+   "rank": 1001,
+   "band": "773-1776",
+   "bits": 10.5158
+  },
+  {
+   "id": 1621,
+   "type": "Male",
+   "rank": 1209,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 1622,
+   "type": "Female",
+   "rank": 143,
+   "band": "73-172",
+   "bits": 11.5772
+  },
+  {
+   "id": 1623,
+   "type": "Female",
+   "rank": 569,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1624,
+   "type": "Male",
+   "rank": 1294,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1625,
+   "type": "Male",
+   "rank": 755,
+   "band": "373-772",
+   "bits": 15.8481
+  },
+  {
+   "id": 1626,
+   "type": "Male",
+   "rank": 1096,
+   "band": "773-1776",
+   "bits": 9.5328
+  },
+  {
+   "id": 1627,
+   "type": "Female",
+   "rank": 185,
+   "band": "173-372",
+   "bits": 10.8819
+  },
+  {
+   "id": 1628,
+   "type": "Male",
+   "rank": 1253,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 1629,
+   "type": "Male",
+   "rank": 1393,
+   "band": "773-1776",
+   "bits": 6.128
+  },
+  {
+   "id": 1630,
+   "type": "Male",
+   "rank": 1587,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1631,
+   "type": "Female",
+   "rank": 570,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1632,
+   "type": "Female",
+   "rank": 653,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1633,
+   "type": "Female",
+   "rank": 332,
+   "band": "173-372",
+   "bits": 8.7821
+  },
+  {
+   "id": 1634,
+   "type": "Male",
+   "rank": 1043,
+   "band": "773-1776",
+   "bits": 10.1011
+  },
+  {
+   "id": 1635,
+   "type": "Male",
+   "rank": 1254,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 1636,
+   "type": "Male",
+   "rank": 1136,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 1637,
+   "type": "Male",
+   "rank": 930,
+   "band": "773-1776",
+   "bits": 11.3439
+  },
+  {
+   "id": 1638,
+   "type": "Female",
+   "rank": 207,
+   "band": "173-372",
+   "bits": 10.6837
+  },
+  {
+   "id": 1639,
+   "type": "Female",
+   "rank": 702,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1640,
+   "type": "Male",
+   "rank": 1588,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1641,
+   "type": "Male",
+   "rank": 1420,
+   "band": "773-1776",
+   "bits": 5.8918
+  },
+  {
+   "id": 1642,
+   "type": "Female",
+   "rank": 317,
+   "band": "173-372",
+   "bits": 8.9199
+  },
+  {
+   "id": 1643,
+   "type": "Male",
+   "rank": 1137,
+   "band": "773-1776",
+   "bits": 9.1423
+  },
+  {
+   "id": 1644,
+   "type": "Female",
+   "rank": 654,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1645,
+   "type": "Male",
+   "rank": 1347,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1646,
+   "type": "Female",
+   "rank": 603,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1647,
+   "type": "Male",
+   "rank": 841,
+   "band": "773-1776",
+   "bits": 13.1464
+  },
+  {
+   "id": 1648,
+   "type": "Ape",
+   "rank": 4,
+   "band": "3-6",
+   "bits": 9.2951
+  },
+  {
+   "id": 1649,
+   "type": "Male",
+   "rank": 1159,
+   "band": "773-1776",
+   "bits": 8.9199
+  },
+  {
+   "id": 1650,
+   "type": "Male",
+   "rank": 1711,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1651,
+   "type": "Male",
+   "rank": 946,
+   "band": "773-1776",
+   "bits": 11.0252
+  },
+  {
+   "id": 1652,
+   "type": "Male",
+   "rank": 1068,
+   "band": "773-1776",
+   "bits": 9.9199
+  },
+  {
+   "id": 1653,
+   "type": "Female",
+   "rank": 305,
+   "band": "173-372",
+   "bits": 9.1423
+  },
+  {
+   "id": 1654,
+   "type": "Male",
+   "rank": 1670,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1655,
+   "type": "Female",
+   "rank": 604,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1656,
+   "type": "Male",
+   "rank": 1520,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1657,
+   "type": "Male",
+   "rank": 1069,
+   "band": "773-1776",
+   "bits": 9.9087
+  },
+  {
+   "id": 1658,
+   "type": "Male",
+   "rank": 1227,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 1659,
+   "type": "Male",
+   "rank": 940,
+   "band": "773-1776",
+   "bits": 11.119
+  },
+  {
+   "id": 1660,
+   "type": "Male",
+   "rank": 1358,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 1661,
+   "type": "Male",
+   "rank": 1084,
+   "band": "773-1776",
+   "bits": 9.7273
+  },
+  {
+   "id": 1662,
+   "type": "Male",
+   "rank": 1671,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1663,
+   "type": "Male",
+   "rank": 963,
+   "band": "773-1776",
+   "bits": 10.8501
+  },
+  {
+   "id": 1664,
+   "type": "Male",
+   "rank": 1111,
+   "band": "773-1776",
+   "bits": 9.4053
+  },
+  {
+   "id": 1665,
+   "type": "Female",
+   "rank": 571,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1666,
+   "type": "Male",
+   "rank": 1712,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1667,
+   "type": "Male",
+   "rank": 1023,
+   "band": "773-1776",
+   "bits": 10.3361
+  },
+  {
+   "id": 1668,
+   "type": "Female",
+   "rank": 147,
+   "band": "73-172",
+   "bits": 11.5049
+  },
+  {
+   "id": 1669,
+   "type": "Male",
+   "rank": 909,
+   "band": "773-1776",
+   "bits": 11.7273
+  },
+  {
+   "id": 1670,
+   "type": "Male",
+   "rank": 1173,
+   "band": "773-1776",
+   "bits": 8.7821
+  },
+  {
+   "id": 1671,
+   "type": "Male",
+   "rank": 1228,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 1672,
+   "type": "Male",
+   "rank": 1521,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1673,
+   "type": "Male",
+   "rank": 785,
+   "band": "773-1776",
+   "bits": 14.8494
+  },
+  {
+   "id": 1674,
+   "type": "Female",
+   "rank": 151,
+   "band": "73-172",
+   "bits": 11.4516
+  },
+  {
+   "id": 1675,
+   "type": "Female",
+   "rank": 26,
+   "band": "23-72",
+   "bits": 21.6354
+  },
+  {
+   "id": 1676,
+   "type": "Male",
+   "rank": 1295,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1677,
+   "type": "Female",
+   "rank": 175,
+   "band": "173-372",
+   "bits": 10.9903
+  },
+  {
+   "id": 1678,
+   "type": "Female",
+   "rank": 155,
+   "band": "73-172",
+   "bits": 11.3414
+  },
+  {
+   "id": 1679,
+   "type": "Male",
+   "rank": 1713,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1680,
+   "type": "Male",
+   "rank": 1296,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1681,
+   "type": "Zombie",
+   "rank": 22,
+   "band": "7-22",
+   "bits": 4.3504
+  },
+  {
+   "id": 1682,
+   "type": "Male",
+   "rank": 1774,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1683,
+   "type": "Male",
+   "rank": 1348,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1684,
+   "type": "Ape",
+   "rank": 3,
+   "band": "3-6",
+   "bits": 16.0337
+  },
+  {
+   "id": 1685,
+   "type": "Female",
+   "rank": 165,
+   "band": "73-172",
+   "bits": 11.2479
+  },
+  {
+   "id": 1686,
+   "type": "Male",
+   "rank": 1073,
+   "band": "773-1776",
+   "bits": 9.8598
+  },
+  {
+   "id": 1687,
+   "type": "Male",
+   "rank": 1187,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 1688,
+   "type": "Male",
+   "rank": 965,
+   "band": "773-1776",
+   "bits": 10.8092
+  },
+  {
+   "id": 1689,
+   "type": "Female",
+   "rank": 605,
+   "band": "373-772",
+   "bits": 5.4759
+  },
+  {
+   "id": 1690,
+   "type": "Male",
+   "rank": 1672,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1691,
+   "type": "Male",
+   "rank": 1297,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1692,
+   "type": "Male",
+   "rank": 1310,
+   "band": "773-1776",
+   "bits": 7.0173
+  },
+  {
+   "id": 1693,
+   "type": "Male",
+   "rank": 1673,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1694,
+   "type": "Female",
+   "rank": 655,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1695,
+   "type": "Female",
+   "rank": 263,
+   "band": "173-372",
+   "bits": 9.7805
+  },
+  {
+   "id": 1696,
+   "type": "Female",
+   "rank": 354,
+   "band": "173-372",
+   "bits": 8.4439
+  },
+  {
+   "id": 1697,
+   "type": "Male",
+   "rank": 1522,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1698,
+   "type": "Female",
+   "rank": 572,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1699,
+   "type": "Male",
+   "rank": 1674,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1700,
+   "type": "Female",
+   "rank": 283,
+   "band": "173-372",
+   "bits": 9.5175
+  },
+  {
+   "id": 1701,
+   "type": "Female",
+   "rank": 264,
+   "band": "173-372",
+   "bits": 9.7805
+  },
+  {
+   "id": 1702,
+   "type": "Male",
+   "rank": 1714,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1703,
+   "type": "Male",
+   "rank": 1359,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 1704,
+   "type": "Male",
+   "rank": 1523,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1705,
+   "type": "Male",
+   "rank": 1524,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1706,
+   "type": "Female",
+   "rank": 360,
+   "band": "173-372",
+   "bits": 8.3673
+  },
+  {
+   "id": 1707,
+   "type": "Male",
+   "rank": 1006,
+   "band": "773-1776",
+   "bits": 10.4703
+  },
+  {
+   "id": 1708,
+   "type": "Male",
+   "rank": 990,
+   "band": "773-1776",
+   "bits": 10.5606
+  },
+  {
+   "id": 1709,
+   "type": "Male",
+   "rank": 1715,
+   "band": "773-1776",
+   "bits": 5.128
+  },
+  {
+   "id": 1710,
+   "type": "Female",
+   "rank": 44,
+   "band": "23-72",
+   "bits": 16.5304
+  },
+  {
+   "id": 1711,
+   "type": "Male",
+   "rank": 1589,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1712,
+   "type": "Male",
+   "rank": 1229,
+   "band": "773-1776",
+   "bits": 8.3184
+  },
+  {
+   "id": 1713,
+   "type": "Male",
+   "rank": 1360,
+   "band": "773-1776",
+   "bits": 6.6694
+  },
+  {
+   "id": 1714,
+   "type": "Female",
+   "rank": 122,
+   "band": "73-172",
+   "bits": 12.3516
+  },
+  {
+   "id": 1715,
+   "type": "Male",
+   "rank": 1675,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1716,
+   "type": "Male",
+   "rank": 920,
+   "band": "773-1776",
+   "bits": 11.5461
+  },
+  {
+   "id": 1717,
+   "type": "Male",
+   "rank": 1152,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 1718,
+   "type": "Female",
+   "rank": 656,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1719,
+   "type": "Female",
+   "rank": 211,
+   "band": "173-372",
+   "bits": 10.5865
+  },
+  {
+   "id": 1720,
+   "type": "Male",
+   "rank": 1188,
+   "band": "773-1776",
+   "bits": 8.5814
+  },
+  {
+   "id": 1721,
+   "type": "Male",
+   "rank": 783,
+   "band": "773-1776",
+   "bits": 14.8693
+  },
+  {
+   "id": 1722,
+   "type": "Male",
+   "rank": 1298,
+   "band": "773-1776",
+   "bits": 7.1548
+  },
+  {
+   "id": 1723,
+   "type": "Female",
+   "rank": 83,
+   "band": "73-172",
+   "bits": 13.8571
+  },
+  {
+   "id": 1724,
+   "type": "Female",
+   "rank": 573,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1725,
+   "type": "Male",
+   "rank": 1590,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1726,
+   "type": "Male",
+   "rank": 1591,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1727,
+   "type": "Male",
+   "rank": 926,
+   "band": "773-1776",
+   "bits": 11.4516
+  },
+  {
+   "id": 1728,
+   "type": "Male",
+   "rank": 1320,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1729,
+   "type": "Male",
+   "rank": 738,
+   "band": "373-772",
+   "bits": 16.5578
+  },
+  {
+   "id": 1730,
+   "type": "Female",
+   "rank": 456,
+   "band": "373-772",
+   "bits": 6.8918
+  },
+  {
+   "id": 1731,
+   "type": "Female",
+   "rank": 476,
+   "band": "373-772",
+   "bits": 6.3504
+  },
+  {
+   "id": 1732,
+   "type": "Female",
+   "rank": 657,
+   "band": "373-772",
+   "bits": 5.3504
+  },
+  {
+   "id": 1733,
+   "type": "Male",
+   "rank": 1349,
+   "band": "773-1776",
+   "bits": 6.8918
+  },
+  {
+   "id": 1734,
+   "type": "Male",
+   "rank": 864,
+   "band": "773-1776",
+   "bits": 12.5086
+  },
+  {
+   "id": 1735,
+   "type": "Female",
+   "rank": 574,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1736,
+   "type": "Male",
+   "rank": 792,
+   "band": "773-1776",
+   "bits": 14.6284
+  },
+  {
+   "id": 1737,
+   "type": "Male",
+   "rank": 1525,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1738,
+   "type": "Female",
+   "rank": 163,
+   "band": "73-172",
+   "bits": 11.283
+  },
+  {
+   "id": 1739,
+   "type": "Female",
+   "rank": 496,
+   "band": "373-772",
+   "bits": 5.9354
+  },
+  {
+   "id": 1740,
+   "type": "Male",
+   "rank": 1195,
+   "band": "773-1776",
+   "bits": 8.5175
+  },
+  {
+   "id": 1741,
+   "type": "Male",
+   "rank": 1775,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1742,
+   "type": "Male",
+   "rank": 723,
+   "band": "373-772",
+   "bits": 17.7217
+  },
+  {
+   "id": 1743,
+   "type": "Male",
+   "rank": 1526,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1744,
+   "type": "Zombie",
+   "rank": 8,
+   "band": "7-22",
+   "bits": 16.6988
+  },
+  {
+   "id": 1745,
+   "type": "Male",
+   "rank": 1527,
+   "band": "773-1776",
+   "bits": 5.6134
+  },
+  {
+   "id": 1746,
+   "type": "Female",
+   "rank": 58,
+   "band": "23-72",
+   "bits": 15.313
+  },
+  {
+   "id": 1747,
+   "type": "Male",
+   "rank": 1117,
+   "band": "773-1776",
+   "bits": 9.2872
+  },
+  {
+   "id": 1748,
+   "type": "Male",
+   "rank": 1078,
+   "band": "773-1776",
+   "bits": 9.7805
+  },
+  {
+   "id": 1749,
+   "type": "Male",
+   "rank": 730,
+   "band": "373-772",
+   "bits": 17.0834
+  },
+  {
+   "id": 1750,
+   "type": "Male",
+   "rank": 1592,
+   "band": "773-1776",
+   "bits": 5.4759
+  },
+  {
+   "id": 1751,
+   "type": "Female",
+   "rank": 521,
+   "band": "373-772",
+   "bits": 5.7654
+  },
+  {
+   "id": 1752,
+   "type": "Male",
+   "rank": 1090,
+   "band": "773-1776",
+   "bits": 9.5597
+  },
+  {
+   "id": 1753,
+   "type": "Female",
+   "rank": 258,
+   "band": "173-372",
+   "bits": 9.8545
+  },
+  {
+   "id": 1754,
+   "type": "Male",
+   "rank": 1153,
+   "band": "773-1776",
+   "bits": 9.0451
+  },
+  {
+   "id": 1755,
+   "type": "Female",
+   "rank": 153,
+   "band": "73-172",
+   "bits": 11.4033
+  },
+  {
+   "id": 1756,
+   "type": "Male",
+   "rank": 1210,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 1757,
+   "type": "Female",
+   "rank": 483,
+   "band": "373-772",
+   "bits": 6.128
+  },
+  {
+   "id": 1758,
+   "type": "Female",
+   "rank": 575,
+   "band": "373-772",
+   "bits": 5.6134
+  },
+  {
+   "id": 1759,
+   "type": "Male",
+   "rank": 834,
+   "band": "773-1776",
+   "bits": 13.2552
+  },
+  {
+   "id": 1760,
+   "type": "Male",
+   "rank": 1112,
+   "band": "773-1776",
+   "bits": 9.4053
+  },
+  {
+   "id": 1761,
+   "type": "Male",
+   "rank": 1676,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1762,
+   "type": "Male",
+   "rank": 1255,
+   "band": "773-1776",
+   "bits": 7.4768
+  },
+  {
+   "id": 1763,
+   "type": "Male",
+   "rank": 1321,
+   "band": "773-1776",
+   "bits": 6.9407
+  },
+  {
+   "id": 1764,
+   "type": "Female",
+   "rank": 703,
+   "band": "373-772",
+   "bits": 4.3504
+  },
+  {
+   "id": 1765,
+   "type": "Male",
+   "rank": 1776,
+   "band": "773-1776",
+   "bits": 4.3504
+  },
+  {
+   "id": 1766,
+   "type": "Male",
+   "rank": 1174,
+   "band": "773-1776",
+   "bits": 8.7821
+  },
+  {
+   "id": 1767,
+   "type": "Female",
+   "rank": 306,
+   "band": "173-372",
+   "bits": 9.1423
+  },
+  {
+   "id": 1768,
+   "type": "Male",
+   "rank": 1211,
+   "band": "773-1776",
+   "bits": 8.4439
+  },
+  {
+   "id": 1769,
+   "type": "Female",
+   "rank": 399,
+   "band": "373-772",
+   "bits": 7.3068
+  },
+  {
+   "id": 1770,
+   "type": "Male",
+   "rank": 1196,
+   "band": "773-1776",
+   "bits": 8.5175
+  },
+  {
+   "id": 1771,
+   "type": "Female",
+   "rank": 233,
+   "band": "173-372",
+   "bits": 10.2748
+  },
+  {
+   "id": 1772,
+   "type": "Male",
+   "rank": 983,
+   "band": "773-1776",
+   "bits": 10.607
+  },
+  {
+   "id": 1773,
+   "type": "Male",
+   "rank": 857,
+   "band": "773-1776",
+   "bits": 12.6539
+  },
+  {
+   "id": 1774,
+   "type": "Male",
+   "rank": 1677,
+   "band": "773-1776",
+   "bits": 5.3504
+  },
+  {
+   "id": 1775,
+   "type": "Male",
+   "rank": 1049,
+   "band": "773-1776",
+   "bits": 10.0648
+  },
+  {
+   "id": 1776,
+   "type": "Male",
+   "rank": 1361,
+   "band": "773-1776",
+   "bits": 6.6694
+  }
+ ]
+}

@@ -204,6 +204,29 @@ marketplaces never score. Same v1 art passthrough, same byte-identical SVG.
    `RENDERER_V3=<v3> python3 indexer/renderer_v2_audit.py [--all]`; then re-run
    `scripts/opensea_refresh.py`.
 
+## Renderer v4 (curated rank: Type first)
+
+Under v3's pure seven-trait scoring OpenSea ranked accessorised Males above the two bare
+Aliens (information content is a flat sum over slots). v4 keeps the same art and publishes
+exactly two scored attributes, `Type` and `Rank band`, where the band follows the
+collection's own rule: Type first (Alien, Ape, Zombie, Female, Male), then accessory rarity
+inside the type. Bands grow (2, 4, 16, 50, 100, 200, 400, 1004 tokens) so an information score
+orders them exactly as the plan does. The seven art traits stay in the description ("Traits:
+…") and in a `traits` object; `rank` (1..1776) and the v3 `live` object are published too.
+
+1. `python3 pipeline/rank_plan.py` writes `pipeline/rank-plan.json` and `contracts/ranks-v4.hex`
+   (3552 bytes, one uint16 per token) and prints the plan's keccak256.
+2. `forge test --match-contract RendererV4Test` and
+   `forge test --match-contract ForkRendererV4 --fork-url <mainnet rpc>` must pass.
+3. Deploy: `RENDERER_V1=<v1> BROKER_ADDRESS=<broker> COAT_ADDRESS=<coat> forge script
+   script/DeployRendererV4.s.sol --rpc-url <rpc> --private-key <owner> --broadcast` (deploys,
+   mirrors v1's wiring, loads the plan in four chunks, locks it; the log prints the hash).
+4. Owner switch (reversible): `CoattailBroker.setRenderer(<v4>)`; audit with
+   `RENDERER_V4=<v4> python3 indexer/renderer_v2_audit.py [--all]`; then re-run
+   `scripts/opensea_refresh.py 1 1776`.
+5. Rollback: `setRenderer(<v3>)`. The plan cannot be edited after `lockRanks`; a corrected plan
+   means a new deployment.
+
 ## Gift vault (NFT drops to random active Brokers)
 
 `GiftVault` is additive periphery: it holds NFTs sent to it with `safeTransferFrom` and, once

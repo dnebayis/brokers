@@ -21,6 +21,9 @@ V1 = "0xB1b64E0CE411135DfaB728a482b21981B07fAd31"
 V2 = os.environ.get("RENDERER_V2", "0x5b9F2Ee635a05Ee7a3fe245DF80AA37d6865057F")
 # v3 = pure attributes (fixed traits only) + `live` object. Set RENDERER_V3 to audit that shape.
 V3 = os.environ.get("RENDERER_V3", "")
+# v4 = attributes are exactly Type + "Rank band"; the fixed traits move to a `traits` object and
+# a `rank` (1..1776) is published. Set RENDERER_V4 to audit that shape.
+V4 = os.environ.get("RENDERER_V4", "")
 FIXED = ("Type", "Headwear", "Eyes", "Mouth", "Jewelry", "Face", "Accessory")
 
 
@@ -51,10 +54,10 @@ def main():
         ids += random.sample(range(1, 1777), 20)
     ids = sorted(set(ids))
 
-    target = V3 or V2
-    pure = bool(V3)
+    target = V4 or V3 or V2
+    pure = bool(V3) and not V4
     live_renderer = call(BROKER, "renderer()(address)")
-    tag = "V3" if pure else "V2"
+    tag = "V4" if V4 else ("V3" if pure else "V2")
     print(f"collection renderer = {live_renderer}  ({tag if live_renderer.lower()==target.lower() else 'NOT '+tag})")
     bad = 0
     for tid in ids:
@@ -68,6 +71,21 @@ def main():
         if j["image"] != v1_json["image"]:
             print(f"#{tid}: image differs from v1"); bad += 1
         fixed_v1 = [(a["trait_type"], a["value"]) for a in v1_json["attributes"] if a["trait_type"] in FIXED]
+        if V4:
+            kinds = [a["trait_type"] for a in j["attributes"]]
+            if kinds != ["Type", "Rank band"]:
+                print(f"#{tid}: attributes must be exactly Type + Rank band, got {kinds}"); bad += 1
+            if j["attributes"][0]["value"] != fixed_v1[0][1]:
+                print(f"#{tid}: Type differs from v1"); bad += 1
+            traits = j.get("traits", {})
+            if [(k, v) for k, v in traits.items()] != fixed_v1:
+                print(f"#{tid}: traits object differs from v1 fixed traits {fixed_v1} vs {traits}"); bad += 1
+            rank = j.get("rank", 0)
+            if not (isinstance(rank, int) and 1 <= rank <= 1776):
+                print(f"#{tid}: rank missing or out of range: {rank}"); bad += 1
+            if "live" not in j or "status" not in j["live"]: print(f"#{tid}: live object missing"); bad += 1
+            time.sleep(0.4)
+            continue
         fixed_v2 = [(a["trait_type"], a["value"]) for a in j["attributes"] if a["trait_type"] in FIXED]
         if fixed_v1 != fixed_v2:
             print(f"#{tid}: fixed traits differ {fixed_v1} vs {fixed_v2}"); bad += 1
