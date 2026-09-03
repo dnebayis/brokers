@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
 import { formatEther, formatUnits, parseAbiItem, decodeEventLog, zeroAddress } from "viem";
 import { ADDR } from "@/lib/config";
 import { boosterAbi, aggregatorAbi } from "@/lib/abis";
-import { env, serverClient, kvGet, kvSet } from "@/lib/discordVerify";
+import { env, serverClient, kvGet, kvSet } from "@/lib/discordSales";
 
 const TRANSFER = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)");
 const ORDER_FULFILLED = parseAbiItem(
@@ -163,7 +163,7 @@ export async function GET(request: Request) {
   // without a real Discord state. Bearer-protected like everything else here.
   const bioTest = new URL(request.url).searchParams.get("bioTest");
   if (bioTest) {
-    const { openseaBio } = await import("@/lib/discordVerify");
+    const { openseaBio } = await import("@/lib/discordSales");
     const bio = await openseaBio(bioTest);
     return NextResponse.json({ ok: true, bioTest, hasKey: !!osKey(), bio: bio === null ? "NULL (fetch failed)" : bio });
   }
