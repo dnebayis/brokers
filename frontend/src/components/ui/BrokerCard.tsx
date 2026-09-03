@@ -20,6 +20,7 @@ export function BrokerCard({
   earnedUsd,
   wallet,
   coatInside,
+  giftCount,
 }: {
   id: bigint;
   active: boolean | null;
@@ -31,6 +32,8 @@ export function BrokerCard({
   wallet?: string;
   /** $COAT held inside that wallet (18 decimals); shown only when non-zero. */
   coatInside?: bigint;
+  /** NFT gifts from the vault still inside that wallet. */
+  giftCount?: number;
 }) {
   const [copied, setCopied] = useState(false);
   const money = (n: number) =>
@@ -79,6 +82,11 @@ export function BrokerCard({
             {coatInside !== undefined && coatInside > 0n && (
               <span className="ml-2 font-pixel text-[9px] text-accent border border-accent px-1 py-0.5 align-middle">
                 +{Math.floor(Number(coatInside) / 1e18).toLocaleString("en-US")} $COAT inside
+              </span>
+            )}
+            {giftCount !== undefined && giftCount > 0 && (
+              <span className="ml-2 font-pixel text-[9px] text-accent border border-accent px-1 py-0.5 align-middle">
+                +{giftCount} NFT gift{giftCount > 1 ? "s" : ""} inside
               </span>
             )}
           </div>

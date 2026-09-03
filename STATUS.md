@@ -34,12 +34,20 @@ Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
   *after* the claim: send the stocks to an address, or convert them to USDG through The Floor
   and deliver that. Owner-installed, pausable, revocable, and void the moment the Broker changes
   hands. No fee of its own.
+- **Gift drops** (`contracts/src/GiftVault.sol`) — donated NFTs, one at a time, to a random
+  ACTIVE Broker's own wallet. The winner is derived from a block hash the contract picks after
+  the round opens, so neither the keeper nor the owner chooses; the cadence (`interval`) is
+  enforced on chain. Gifts travel with the Broker and the holder pulls them out from My Brokers.
+  Panels stay hidden until the vault address is set in `frontend/src/lib/gifts.ts`.
+- **Earnings card** — every Broker in My Brokers can draw a PNG card (artwork, earned since
+  switch-on, holdings) in the browser and post it to X; `/card/<id>` is the public version.
 
 ## Automation
 
 An hourly GitHub Actions keeper advances, in order: hook flush → splitter flush →
 threshold-eligible `poke` (the basket purchase) → TWAP-eligible buyback → Floor fee flush →
-Playbooks execution. Every stage is isolated: a deferred stage retries next hour and never
+Playbooks execution → gift draw (open a round when the interval has passed, settle it seconds
+later). Every stage is isolated: a deferred stage retries next hour and never
 strands funds. The Congress indexer republishes the basket hourly; an invalid snapshot can
 never replace the last valid basket. All the value-moving entry points are permissionless —
 if our automation stops, anyone can call them.

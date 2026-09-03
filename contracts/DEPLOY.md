@@ -203,3 +203,22 @@ marketplaces never score. Same v1 art passthrough, same byte-identical SVG.
 3. Owner switch (reversible): `CoattailBroker.setRenderer(<v3>)`; audit with
    `RENDERER_V3=<v3> python3 indexer/renderer_v2_audit.py [--all]`; then re-run
    `scripts/opensea_refresh.py`.
+
+## Gift vault (NFT drops to random active Brokers)
+
+`GiftVault` is additive periphery: it holds NFTs sent to it with `safeTransferFrom` and, once
+per `interval`, opens a round whose winner is derived from the hash of a block `DRAW_DELAY`
+(20) blocks ahead. Anyone may `settle()` once that block exists; the NFT goes to the winning
+Broker's ERC-6551 wallet via `accountOf`. Only `booster.isActive` Brokers can win. A stale
+hash (older than 256 blocks, ~25s on this chain) or a run of inactive picks re-rolls the round
+instead of settling on a zero hash.
+
+1. `forge test --match-contract GiftVaultTest` must pass.
+2. Deploy: `GIFT_INTERVAL=259200 forge script script/DeployGiftVault.s.sol --rpc-url <rpc>
+   --private-key <owner> --broadcast` (keeper = the relay, owner = deployer).
+3. Fund: `cast send <nft> "safeTransferFrom(address,address,uint256)" <owner> <vault> <id>` for
+   each NFT (the treasury's swept Brokers qualify; a plain `transferFrom` bypasses the queue).
+4. Arm: repository secret `GIFT_VAULT=<vault>` (keeper stage is inert while empty); paste the
+   address and its deploy block into `frontend/src/lib/gifts.ts` to show the panels.
+5. Escape hatches: `rescue(nft,id,to)` for a queued NFT, `cancelRound()` for an open round,
+   `setInterval` / `setKeeper`.

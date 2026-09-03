@@ -80,6 +80,9 @@ jobs:
       # counting toward the threshold. Double the per-pass batch until that backlog
       # clears, then drop this back to the default 25.
       PLAYBOOKS_MAX_BATCH: "50"
+      # Gift vault draws (inert while empty): one queued NFT to a random active Broker
+      # per on-chain interval; the keeper opens the round and settles it seconds later.
+      GIFT_VAULT: ${{ secrets.GIFT_VAULT }}
       # Optional Discord channel webhook for operator alerts (low relay gas, fatal
       # stage deferrals). Unset -> alerts are silent no-ops.
       OPS_WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL }}

@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from aggregate import parse_amount, to_basket
 from health import snapshot_health
-from keeper import is_poke_eligible, planned_actions
+from keeper import gift_plan, is_poke_eligible, planned_actions
 from claim_distributor import circular_ids, select_claim_batch
 from renderer_uploader import decode_uri
 
@@ -613,3 +613,19 @@ class PlaybookBatchSizingTests(unittest.TestCase):
         self.assertEqual(_have_want("insufficient funds for gas * price + value: address 0xabc have 26988874357459337 want 32647453000000000"),
                          (26988874357459337, 32647453000000000))
         self.assertEqual(_have_want("execution reverted"), (None, None))
+
+
+class GiftPlanTests(unittest.TestCase):
+    ZERO = "0x0000000000000000000000000000000000000000"
+    NFT = "0x1122dB21998707F8c2eD8182734356C947fA5e98"
+
+    def test_open_round_is_settled_before_anything_else(self):
+        self.assertEqual(gift_plan(now=100, last_gift_at=90, interval=1000, queued=0, open_nft=self.NFT), "settle")
+
+    def test_first_gift_opens_as_soon_as_something_is_queued(self):
+        self.assertEqual(gift_plan(now=100, last_gift_at=0, interval=1000, queued=1, open_nft=self.ZERO), "open")
+        self.assertEqual(gift_plan(now=100, last_gift_at=0, interval=1000, queued=0, open_nft=self.ZERO), "idle")
+
+    def test_cadence_waits_the_full_interval(self):
+        self.assertEqual(gift_plan(now=1000 + 259_199, last_gift_at=1000, interval=259_200, queued=3, open_nft=self.ZERO), "idle")
+        self.assertEqual(gift_plan(now=1000 + 259_200, last_gift_at=1000, interval=259_200, queued=3, open_nft=self.ZERO), "open")

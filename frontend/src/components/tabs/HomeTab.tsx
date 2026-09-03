@@ -4,6 +4,7 @@ import type { TabId } from "@/components/Tabs";
 import { HomeMetrics } from "@/components/HomeMetrics";
 import { ActivationMath } from "@/components/ActivationMath";
 import { ProofPanel } from "@/components/ProofPanel";
+import { GiftsPanel } from "@/components/GiftsPanel";
 import { OPENSEA_URL } from "@/lib/config";
 
 // Featured rare Brokers (fully on-chain 1-bit art; served from /public/gallery).
@@ -124,6 +125,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
 
       {/* Shell vs working Broker — the live activation math */}
       <ActivationMath onNavigate={onNavigate} />
+
+      {/* Gift drops — hidden until the vault address is configured */}
+      <GiftsPanel />
 
       {/* Rare gallery */}
       <section className="card">

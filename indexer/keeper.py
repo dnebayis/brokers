@@ -367,6 +367,39 @@ def _coat_min_out(ctx, token_id):
         return None
 
 
+
+GIFT_VAULT_ABI = [
+    {"type": "function", "name": "open", "stateMutability": "view", "inputs": [], "outputs": [
+        {"name": "nft", "type": "address"}, {"name": "id", "type": "uint256"},
+        {"name": "drawBlock", "type": "uint64"}, {"name": "openedAt", "type": "uint64"}]},
+    {"type": "function", "name": "lastGiftAt", "stateMutability": "view", "inputs": [],
+     "outputs": [{"name": "", "type": "uint64"}]},
+    {"type": "function", "name": "interval", "stateMutability": "view", "inputs": [],
+     "outputs": [{"name": "", "type": "uint64"}]},
+    {"type": "function", "name": "queuedCount", "stateMutability": "view", "inputs": [],
+     "outputs": [{"name": "", "type": "uint256"}]},
+    {"type": "function", "name": "openRound", "stateMutability": "nonpayable", "inputs": [], "outputs": []},
+    {"type": "function", "name": "settle", "stateMutability": "nonpayable", "inputs": [], "outputs": []},
+]
+
+
+def gift_plan(now: int, last_gift_at: int, interval: int, queued: int, open_nft: str) -> str:
+    """What the gift stage should do this pass: 'settle' an open round, 'open' the next one,
+    or stay 'idle'. Pure so the cadence logic is testable without a chain.
+
+    A round that is already open always comes first (its NFT is out of the queue and waits
+    for nothing but the draw block). A new round needs something queued and the announced
+    interval to have elapsed since the last gift; the contract enforces both as well, this
+    only avoids paying for a guaranteed revert.
+    """
+    if open_nft and int(open_nft, 16) != 0:
+        return "settle"
+    if queued <= 0:
+        return "idle"
+    if last_gift_at and now < last_gift_at + interval:
+        return "idle"
+    return "open"
+
 def _feed_watchdog(w3) -> None:
     """Alert when a stock feed misses an update it should have made.
 
@@ -881,6 +914,51 @@ def main() -> None:
         except Exception as exc:  # standing orders defer to the next hour, never break payroll
             print(json.dumps({"action": "playbooks.run", "status": "deferred", "error": str(exc)[:200]}))
 
+    # Gift vault: one donated NFT to a random ACTIVE Broker every `interval` seconds. The
+    # winner comes from a block hash the contract picks; the keeper only opens the round and
+    # settles it once that block exists. Same env-gating as the other periphery stages.
+    gift_addr = os.environ.get("GIFT_VAULT", "").strip()
+    if gift_addr:
+        try:
+            vault = w3.eth.contract(address=Web3.to_checksum_address(gift_addr), abi=GIFT_VAULT_ABI)
+
+            def _open_round():
+                return vault.functions.open().call()
+
+            def _settle_round() -> bool:
+                # The draw block is ~2s ahead and its hash stays readable for ~25s on this
+                # chain (0.1s blocks), so settle right after it lands. A miss re-rolls the
+                # round to a fresh draw block on chain; give that two more tries this pass.
+                for _attempt in range(3):
+                    r = _open_round()
+                    if int(r[0], 16) == 0:
+                        return True
+                    draw_block = int(r[2])
+                    deadline = time.time() + 60
+                    while int(w3.eth.block_number) <= draw_block and time.time() < deadline:
+                        time.sleep(1)
+                    if not submit("gift.settle", lambda: vault.functions.settle(), min_gas=400_000):
+                        return False
+                r = _open_round()
+                return int(r[0], 16) == 0
+
+            now_ts = int(datetime.now(timezone.utc).timestamp())
+            last_gift = int(vault.functions.lastGiftAt().call())
+            gift_interval = int(vault.functions.interval().call())
+            queued = int(vault.functions.queuedCount().call())
+            current = _open_round()
+            action = gift_plan(now_ts, last_gift, gift_interval, queued, current[0])
+            if action == "settle":
+                _settle_round()
+            elif action == "open":
+                if submit("gift.open", lambda: vault.functions.openRound(), min_gas=300_000):
+                    _settle_round()
+            else:
+                print(json.dumps({"action": "gift.open", "status": "skipped", "queued": queued,
+                                  "nextDrawAt": (last_gift + gift_interval) if last_gift else 0}))
+        except Exception as exc:  # a gift never blocks payroll stages
+            print(json.dumps({"action": "gift.open", "status": "deferred", "error": str(exc)[:200]}))
+
     if failed_actions:
         # Stages are isolated by design: a deferred stage retries next run and never
         # strands funds. `buyback.execute` legitimately defers early (SpotTooFarFromTwap
@@ -889,7 +967,8 @@ def main() -> None:
         # stock the poke just bought would never reach the broker TBAs. Only flush/poke
         # deferrals (which do strand value / block distribution) are fatal under strict.
         message = "keeper stages deferred: " + ", ".join(failed_actions)
-        fatal = [a for a in failed_actions if a not in ("buyback.execute", "floor.flush", "playbooks.run")]
+        fatal = [a for a in failed_actions
+                 if a not in ("buyback.execute", "floor.flush", "playbooks.run", "gift.open", "gift.settle")]
         # NOTE: there used to be a weekend exemption here that downgraded a BadFeed
         # (0xb0171a5d) poke deferral to a warning, because the 24h staleness guard
         # tripped every weekend by design. The guard is 96h now (owner txs, community

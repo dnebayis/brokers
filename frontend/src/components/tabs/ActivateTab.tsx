@@ -22,6 +22,9 @@ import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
 import { StepFlow, type StepState } from "@/components/ui/StepFlow";
 import { BrokerCard } from "@/components/ui/BrokerCard";
+import { ShareOnX } from "@/components/ShareOnX";
+import { useBrokerGifts } from "@/lib/useGifts";
+import { nftAbi } from "@/lib/gifts";
 
 type Info = { id: bigint; active: boolean; owner: `0x${string}`; wallet: `0x${string}` } | null;
 type Holding = { token: Address; sym: string; bal: bigint; decimals: number; priceUsd?: number };
@@ -102,6 +105,12 @@ export function ActivateTab() {
   );
   const [coatReload, setCoatReload] = useState(0);
   const brokerCoat = useBrokerCoat(walletsById, coatReload);
+  // NFT gifts drawn to these Brokers that are still inside their wallets (gift vault).
+  const heldGifts = useBrokerGifts(brokers.map((b) => ({ id: b.id, wallet: walletsById[b.id.toString()] })), coatReload);
+  const giftCountById = heldGifts.reduce<Record<string, number>>((acc, g) => {
+    acc[g.brokerId] = (acc[g.brokerId] ?? 0) + 1;
+    return acc;
+  }, {});
   const holdingUsd = (h: { bal: bigint; decimals: number; priceUsd?: number }) =>
     h.priceUsd === undefined ? undefined : Number(formatUnits(h.bal, h.decimals)) * h.priceUsd;
   useEffect(() => {
@@ -607,6 +616,23 @@ export function ActivateTab() {
       refetch();
     });
 
+  // A gifted NFT sits in the Broker wallet like everything else; the owner moves it out
+  // with one execute call (safeTransferFrom signed by the wallet itself).
+  const withdrawGift = (nft: Address, id: string) =>
+    claimTx.run(async () => {
+      if (!info) throw new Error("Check a Broker first.");
+      if (!address || !isOwner) throw new Error("You don't own this Broker.");
+      claimTx.setStatus(`Moving the gift out of Broker #${info.id} to your wallet…`);
+      const call = encodeFunctionData({ abi: nftAbi, functionName: "safeTransferFrom", args: [info.wallet, address, BigInt(id)] });
+      const h = await writeContractAsync({
+        address: info.wallet, abi: brokerAccountAbi, functionName: "execute",
+        args: [nft, 0n, call, 0], chainId: activeChain.id,
+      });
+      await waitForSuccessfulReceipt(h);
+      claimTx.setStatus("The gift is in your wallet.", "ok");
+      setCoatReload((n) => n + 1);
+    });
+
   const selectedHolding = holdings.find((holding) => holding.token === selectedStock);
 
   const transferStock = () =>
@@ -676,7 +702,7 @@ export function ActivateTab() {
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
             {brokers.map((b) => (
-              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} wallet={walletsById[b.id.toString()]} coatInside={brokerCoat.byId[b.id.toString()]} />
+              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} wallet={walletsById[b.id.toString()]} coatInside={brokerCoat.byId[b.id.toString()]} giftCount={giftCountById[b.id.toString()]} />
             ))}
           </div>
         )}
@@ -792,6 +818,18 @@ export function ActivateTab() {
           <p className="text-ink-soft text-[12px] mb-3">
             Earned stock auto-claims into this wallet about once an hour and moves with the NFT.
           </p>
+          {isOwner && (
+            <ShareOnX data={{
+              id: info.id.toString(),
+              active: info.active,
+              earnedUsd: backing.earnedById[info.id.toString()],
+              backingUsd: backing.byId[info.id.toString()],
+              coatInside: brokerCoat.byId[info.id.toString()],
+              coatUsd: price.coatWeiToUsd(brokerCoat.byId[info.id.toString()]),
+              symbols: holdings.map((h) => h.sym),
+              gifts: giftCountById[info.id.toString()],
+            }} />
+          )}
           {holdings.length ? (
             <div className="grid gap-1.5">
               {holdings.map((h) => (
@@ -818,6 +856,25 @@ export function ActivateTab() {
                   {claimTx.busy ? "WORKING…" : "Withdraw $COAT to my wallet"}
                 </button>
               )}
+            </div>
+          )}
+          {heldGifts.some((g) => g.brokerId === info.id.toString()) && (
+            <div className="mt-3 border-t border-line pt-3">
+              <div className="label">NFT gifts inside this Broker</div>
+              {heldGifts.filter((g) => g.brokerId === info.id.toString()).map((g) => (
+                <div key={`${g.nft}:${g.id}`} className="flex items-center gap-3 mt-1.5">
+                  {g.nft.toLowerCase() === ADDR.broker.toLowerCase() && (
+                    <div className="border border-line bg-cream shrink-0"><BrokerArtwork tokenId={BigInt(g.id)} size={40} /></div>
+                  )}
+                  <span className="badge border-accent text-accent">{g.name} #{g.id}</span>
+                  <span className="text-[11px] text-ink-soft">won in a gift draw · moves with the NFT</span>
+                  {isOwner && (
+                    <button className="btn btn-ghost text-[10px] px-2 py-1.5 ml-auto" onClick={() => withdrawGift(g.nft, g.id)} disabled={claimTx.busy} type="button">
+                      Withdraw
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
           {pending.length > 0 && (
