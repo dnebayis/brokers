@@ -559,6 +559,27 @@ class CoatBonusAllocationTests(unittest.TestCase):
         rows, _ = allocate([(1, True, "0xA", "0xW1"), (2, False, "0xB", "0xW2")], 100, 1, 0)
         self.assertEqual(rows, {"0xW1": 100})
 
+    def test_inactive_only_tranche_lands_in_the_brokers_own_wallets(self):
+        """Tranche 2: every wei of the sender's balance to the inactive Brokers' 6551 wallets."""
+        from coat_bonus_snapshot import allocate
+        entries = [(1, True, "0xOwnerA", "0xW1"), (2, False, "0xOwnerA", "0xW2"), (3, False, "0xOwnerB", "0xW3")]
+        total = 14_214_816_270_000_000_000_000_001  # an odd wei count, not divisible by 2
+        rows, per_share = allocate(entries, total, active_weight=0, inactive_weight=1, inactive_to="wallet")
+        self.assertEqual(set(rows), {"0xW2", "0xW3"})           # no active wallet, no owner EOA
+        self.assertEqual(sum(rows.values()), total)               # exact, remainder included
+        self.assertEqual(rows["0xW2"], per_share + 1)
+        self.assertEqual(rows["0xW3"], per_share)
+        with self.assertRaises(ValueError):
+            allocate(entries, total, 0, 1, inactive_to="eoa")
+
+    def test_csv_amounts_are_exact_wei(self):
+        from decimal import Decimal
+        from coat_bonus_snapshot import coat_str, WEI
+        for wei in (0, 1, WEI, 25196353702188192983158, 14286332549140704644429547 // 567 + 1):
+            self.assertEqual(int(Decimal(coat_str(wei)) * WEI), wei)
+        self.assertEqual(coat_str(WEI), "1")
+        self.assertEqual(coat_str(1), "0.000000000000000001")
+
 
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);

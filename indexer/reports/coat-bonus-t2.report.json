@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-03T19:54:28+00:00",
+  "block": 53675618,
+  "brokers": 1776,
+  "active": 1209,
+  "inactive": 567,
+  "weights": {
+    "active": 0,
+    "inactive": 1
+  },
+  "inactiveTo": "wallet",
+  "sender": "0x9e643731dc9D8795573Aa34C410664407FfDC440",
+  "totalWei": "14286332549140704644429547",
+  "totalCoat": 14286332.549140705,
+  "perShareCoat": 25196.353702188193,
+  "activeBrokerCoat": 0.0,
+  "inactiveBrokerCoat": 25196.353702188193,
+  "recipients": 567,
+  "sumCoat": 14286332.549140705
+}
