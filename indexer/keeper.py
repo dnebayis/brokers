@@ -926,17 +926,33 @@ def main() -> None:
                 return vault.functions.open().call()
 
             def _settle_round() -> bool:
-                # The draw block is ~2s ahead and its hash stays readable for ~25s on this
-                # chain (0.1s blocks), so settle right after it lands. A miss re-rolls the
-                # round to a fresh draw block on chain; give that two more tries this pass.
+                # `block.number` inside the EVM on this chain is the L1 (Ethereum) block
+                # number, not the L2 height the RPC reports, so the draw block is ~20 L1
+                # blocks (~4 min) ahead and its hash stays readable for ~256 L1 blocks
+                # (~50 min). Comparing the RPC's L2 height against it is meaningless: the
+                # only reliable readiness check is simulating settle() until it stops
+                # reverting. A stale hash re-rolls the round on chain; allow two more tries.
                 for _attempt in range(3):
                     r = _open_round()
                     if int(r[0], 16) == 0:
                         return True
-                    draw_block = int(r[2])
-                    deadline = time.time() + 60
-                    while int(w3.eth.block_number) <= draw_block and time.time() < deadline:
-                        time.sleep(1)
+                    deadline = time.time() + 8 * 60
+                    ready = False
+                    while time.time() < deadline:
+                        try:
+                            vault.functions.settle().call({"from": account.address})
+                            ready = True
+                            break
+                        except Exception as exc:
+                            if "484e399a" not in str(exc) and "DrawBlockNotReached" not in str(exc):
+                                print(json.dumps({"action": "gift.settle", "status": "deferred",
+                                                  "error": str(exc)[:160]}))
+                                return False
+                        time.sleep(15)
+                    if not ready:
+                        print(json.dumps({"action": "gift.settle", "status": "deferred",
+                                          "error": "draw block not reached within 8 min"}))
+                        return False
                     if not submit("gift.settle", lambda: vault.functions.settle(), min_gas=400_000):
                         return False
                 r = _open_round()

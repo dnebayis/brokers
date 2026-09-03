@@ -210,8 +210,11 @@ marketplaces never score. Same v1 art passthrough, same byte-identical SVG.
 per `interval`, opens a round whose winner is derived from the hash of a block `DRAW_DELAY`
 (20) blocks ahead. Anyone may `settle()` once that block exists; the NFT goes to the winning
 Broker's ERC-6551 wallet via `accountOf`. Only `booster.isActive` Brokers can win. A stale
-hash (older than 256 blocks, ~25s on this chain) or a run of inactive picks re-rolls the round
-instead of settling on a zero hash.
+hash (older than 256 blocks) or a run of inactive picks re-rolls the round instead of settling
+on a zero hash. Chain quirk, verified on mainnet: `block.number` (and therefore `blockhash`)
+is the **L1 Ethereum block number**, not the L2 height the RPC reports, so the draw lands
+~4 minutes after the round opens and the hash stays readable for ~50 minutes. The keeper
+waits by simulating `settle()`; do not compare the RPC block height against `drawBlock`.
 
 1. `forge test --match-contract GiftVaultTest` must pass.
 2. Deploy: `GIFT_INTERVAL=259200 forge script script/DeployGiftVault.s.sol --rpc-url <rpc>
