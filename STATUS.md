@@ -13,7 +13,7 @@ pre-launch remaining-work list; the historical deploy-day sequence is preserved 
 | Engine | buys the disclosed-Congress basket hourly; StrategyRegistry at epoch 50 |
 | Active Brokers | ~1,034 switched on and earning (live figure on the site) |
 | $COAT burned | ~138.7M, 13.9% of supply, permanently removed |
-| Stock universe | 7 route-ready names wired into the Booster; expandable by owner op, no redeploy |
+| Stock universe | 29 route-ready names (26 on funded Uniswap v3 USDG pools since 2026-09-03; COIN, CRWV, ORCL still on halted Rialto pools); expandable by owner op, no redeploy |
 | Weekend trading | OPEN since 2026-08-31 (community vote): both staleness windows widened 24h → 96h by owner txs, so weekends trade at Friday's close; an off-chain keeper watchdog replaces the tripwire the wide window loosened |
 | Fee routing | 100% of hook fees and 100% of Floor fees now reach the Booster: FeeSplitter's treasury and buyback sinks both point at the Booster (owner ops, reversible), Floor split set to 100/0 |
 | Verification | every contract source-verified on `https://robinhoodchain.blockscout.com` |

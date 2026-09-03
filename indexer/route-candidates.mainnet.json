@@ -143,11 +143,13 @@
    "rialtoLiquid": true,
    "stockPool": null,
    "feed": "0x874cF94aa8eC88Fd9560094dD065f2fB3E41Fc2F",
-   "probeOk": false,
-   "ready_for_probe": false,
+   "probeOk": true,
+   "ready_for_probe": true,
    "missing": [
     "pool"
-   ]
+   ],
+   "promoted": true,
+   "note": "promoted 2026-09-03 via V3 pool (Rialto halted)"
   },
   {
    "symbol": "ASML",
@@ -156,11 +158,13 @@
    "rialtoLiquid": true,
    "stockPool": null,
    "feed": "0xB4106147E8cce40b7d46124090d373A71b70f87D",
-   "probeOk": false,
-   "ready_for_probe": false,
+   "probeOk": true,
+   "ready_for_probe": true,
    "missing": [
     "pool"
-   ]
+   ],
+   "promoted": true,
+   "note": "promoted 2026-09-03 via V3 pool (Rialto halted)"
   },
   {
    "symbol": "MSTR",
@@ -169,11 +173,13 @@
    "rialtoLiquid": true,
    "stockPool": null,
    "feed": "0x396118bdFB181e6240E74D243F266B061c0edc3D",
-   "probeOk": false,
-   "ready_for_probe": false,
+   "probeOk": true,
+   "ready_for_probe": true,
    "missing": [
     "pool"
-   ]
+   ],
+   "promoted": true,
+   "note": "promoted 2026-09-03 via V3 pool (Rialto halted)"
   },
   {
    "symbol": "COST",
@@ -422,5 +428,5 @@
  ],
  "ethUsdFeed": "0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9",
  "poolDeployer": "0x8DbF0D37CAd30B2510D5C74E0f87A210CB298086",
- "promotedNote": "All 18 ready_for_probe candidates PASSED the mainnet-fork route probe (CI run 32066225360, chain 4663). Each bought stock with a real 0.001 ETH swap on its live Rialto route at that route's pool last-update block, with a valid official guard feed. Promoted into route-ready.mainnet.json. Wiring (StockRouter.setRoute + Booster.setStockFeed) is a mainnet post-deploy owner op."
+ "promotedNote": "All 18 ready_for_probe candidates PASSED the mainnet-fork route probe (CI run 32066225360, chain 4663). Each bought stock with a real 0.001 ETH swap on its live Rialto route at that route's pool last-update block, with a valid official guard feed. Promoted into route-ready.mainnet.json. Wiring (StockRouter.setRoute + Booster.setStockFeed) is a mainnet post-deploy owner op. 2026-09-03: universe rewired to Uniswap v3 USDG pools (Rialto ACF since 2026-08-25); ASML, BABA, MSTR, TSM added; see reports/route-v3-universe-plan.json."
 }
