@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T21:06:18.701470+00:00",
+  "generatedAt": "2026-09-03T21:30:35.344805+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 53718139,
+    "block": 53732565,
     "dropped": []
   },
   "missedCoverage": [
@@ -481,6 +481,43 @@
       "XOM"
     ],
     "divergenceBps": 5000
+  },
+  "filedWindowShadow": {
+    "basket": [
+      {
+        "ticker": "AAPL",
+        "bps": 3556
+      },
+      {
+        "ticker": "AMZN",
+        "bps": 2999
+      },
+      {
+        "ticker": "INTC",
+        "bps": 2888
+      },
+      {
+        "ticker": "PLTR",
+        "bps": 256
+      },
+      {
+        "ticker": "SPCX",
+        "bps": 221
+      },
+      {
+        "ticker": "ASML",
+        "bps": 39
+      },
+      {
+        "ticker": "COIN",
+        "bps": 30
+      },
+      {
+        "ticker": "TSM",
+        "bps": 11
+      }
+    ],
+    "divergenceBps": 6891
   },
   "commentary": {
     "text": "This basket's largest position tracks Nancy Pelosi's $1.1M buy in one name, traded on 2026-07-24 and filed on 2026-08-24. William R. Timmons IV and Dan Meuser are among five members buying into another name. Three members, including Sheldon Whitehouse, bought into a third name. In total, nine members influenced the basket. The largest disclosed buying, a $3.8M position, could not be bought because it is not tokenized or tradable on this chain. This basket represents 19.7% of the disclosed buying dollars.",
