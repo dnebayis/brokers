@@ -1,0 +1,486 @@
+{
+  "generatedAt": "2026-09-03T09:48:37.039129+00:00",
+  "source": "unusual_whales",
+  "health": {
+    "ok": true,
+    "rows": 9891,
+    "distinctTraders": 134,
+    "latestDisclosure": "2026-09-02",
+    "ageDays": 1,
+    "errors": []
+  },
+  "coverage": 0.19584032315246716,
+  "strategyId": 0,
+  "tickers": [
+    "INTC",
+    "SPCX",
+    "MU"
+  ],
+  "tokens": [
+    "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681",
+    "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa",
+    "0xfF080c8ce2E5feadaCa0Da81314Ae59D232d4afD"
+  ],
+  "weightsBps": [
+    5000,
+    4535,
+    465
+  ],
+  "routePreflight": {
+    "bufferWei": 10000000000000000,
+    "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
+    "block": 53323610,
+    "dropped": []
+  },
+  "missedCoverage": [
+    {
+      "ticker": "BE",
+      "netNotional": 3750001.0,
+      "shareOfBuying": 0.5733016402079112
+    },
+    {
+      "ticker": "FWONK",
+      "netNotional": 146003.0,
+      "shareOfBuying": 0.022320996547807764
+    },
+    {
+      "ticker": "LTH",
+      "netNotional": 121004.5,
+      "shareOfBuying": 0.01849921595288593
+    },
+    {
+      "ticker": "CHRW",
+      "netNotional": 89002.5,
+      "shareOfBuying": 0.013606737500231232
+    },
+    {
+      "ticker": "BRK.B",
+      "netNotional": 81002.0,
+      "shareOfBuying": 0.012383617887067556
+    },
+    {
+      "ticker": "LLY",
+      "netNotional": 58999.5,
+      "shareOfBuying": 0.009019866960421253
+    },
+    {
+      "ticker": "HUBB",
+      "netNotional": 56502.0,
+      "shareOfBuying": 0.008638048169861128
+    },
+    {
+      "ticker": "BWXT",
+      "netNotional": 48501.5,
+      "shareOfBuying": 0.007414928556697453
+    },
+    {
+      "ticker": "MLM",
+      "netNotional": 48501.5,
+      "shareOfBuying": 0.007414928556697453
+    },
+    {
+      "ticker": "SGI",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.004968689330370104
+    },
+    {
+      "ticker": "CB",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.004968689330370104
+    },
+    {
+      "ticker": "AGX",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.004968689330370104
+    },
+    {
+      "ticker": "COHR",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.004968689330370104
+    },
+    {
+      "ticker": "VOYG",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.004968689330370104
+    },
+    {
+      "ticker": "MTN",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.004968689330370104
+    }
+  ],
+  "missedAttribution": {
+    "BE": {
+      "buyers": [
+        {
+          "member": "Nancy Pelosi",
+          "chamber": "house",
+          "buys": 2,
+          "notionalUsd": 3750001.0,
+          "latestTraded": "2026-07-28",
+          "latestFiled": "2026-08-24",
+          "ranges": [
+            "$1,000,001 - $5,000,000",
+            "$500,001 - $1,000,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 0
+    },
+    "BRK.B": {
+      "buyers": [
+        {
+          "member": "Maria Elvira",
+          "chamber": "house",
+          "buys": 2,
+          "notionalUsd": 40501.0,
+          "latestTraded": "2026-07-28",
+          "latestFiled": "2026-08-10",
+          "ranges": [
+            "$15,001 - $50,000",
+            "$1,001 - $15,000"
+          ]
+        },
+        {
+          "member": "Jerry Moran",
+          "chamber": "senate",
+          "buys": 1,
+          "notionalUsd": 32500.5,
+          "latestTraded": "2026-06-23",
+          "latestFiled": "2026-07-21",
+          "ranges": [
+            "$15,001 - $50,000"
+          ]
+        },
+        {
+          "member": "Rich McCormick",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-07-30",
+          "latestFiled": "2026-08-17",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        }
+      ],
+      "buyerCount": 3,
+      "sellCount": 0
+    },
+    "CHRW": {
+      "buyers": [
+        {
+          "member": "April Delaney",
+          "chamber": "house",
+          "buys": 5,
+          "notionalUsd": 89002.5,
+          "latestTraded": "2026-07-31",
+          "latestFiled": "2026-08-04",
+          "ranges": [
+            "$15,001 - $50,000",
+            "$1,001 - $15,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 0
+    },
+    "FWONK": {
+      "buyers": [
+        {
+          "member": "April Delaney",
+          "chamber": "house",
+          "buys": 6,
+          "notionalUsd": 146003.0,
+          "latestTraded": "2026-07-31",
+          "latestFiled": "2026-08-04",
+          "ranges": [
+            "$15,001 - $50,000",
+            "$1,001 - $15,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 0
+    },
+    "LTH": {
+      "buyers": [
+        {
+          "member": "April Delaney",
+          "chamber": "house",
+          "buys": 9,
+          "notionalUsd": 121004.5,
+          "latestTraded": "2026-07-31",
+          "latestFiled": "2026-08-04",
+          "ranges": [
+            "$15,001 - $50,000",
+            "$1,001 - $15,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 0
+    }
+  },
+  "attribution": {
+    "INTC": {
+      "buyers": [
+        {
+          "member": "Nancy Pelosi",
+          "chamber": "house",
+          "buys": 2,
+          "notionalUsd": 1125001.0,
+          "latestTraded": "2026-07-24",
+          "latestFiled": "2026-08-24",
+          "ranges": [
+            "$500,001 - $1,000,000",
+            "$250,001 - $500,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 3
+    },
+    "MU": {
+      "buyers": [
+        {
+          "member": "Dan Newhouse",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-07-10",
+          "latestFiled": "2026-07-17",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        },
+        {
+          "member": "Michael Rulli",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-06-25",
+          "latestFiled": "2026-08-10",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        },
+        {
+          "member": "Sheldon Whitehouse",
+          "chamber": "senate",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-06-25",
+          "latestFiled": "2026-07-08",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        }
+      ],
+      "buyerCount": 3,
+      "sellCount": 0
+    },
+    "SPCX": {
+      "buyers": [
+        {
+          "member": "William R. Timmons IV",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 75000.5,
+          "latestTraded": "2026-06-15",
+          "latestFiled": "2026-07-19",
+          "ranges": [
+            "$50,001 - $100,000"
+          ]
+        },
+        {
+          "member": "Dan Meuser",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 32500.5,
+          "latestTraded": "2026-06-15",
+          "latestFiled": "2026-07-02",
+          "ranges": [
+            "$15,001 - $50,000"
+          ]
+        },
+        {
+          "member": "John James",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 32500.5,
+          "latestTraded": "2026-06-12",
+          "latestFiled": "2026-07-13",
+          "ranges": [
+            "$15,001 - $50,000"
+          ]
+        },
+        {
+          "member": "Gilbert Cisneros",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-06-18",
+          "latestFiled": "2026-07-03",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        },
+        {
+          "member": "John McGuire",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-06-15",
+          "latestFiled": "2026-07-09",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        }
+      ],
+      "buyerCount": 5,
+      "sellCount": 0
+    }
+  },
+  "smartShadow": {
+    "mode": "shadow",
+    "basket": [
+      {
+        "ticker": "INTC",
+        "bps": 10000
+      }
+    ],
+    "vetoed": [
+      "AAPL",
+      "ABT",
+      "ACN",
+      "ADBE",
+      "ADI",
+      "ADP",
+      "AJINF",
+      "ALC",
+      "AMGN",
+      "APD",
+      "ARCC",
+      "ARLP",
+      "ATO",
+      "AWK",
+      "BA",
+      "BAC",
+      "BIIB",
+      "BLK",
+      "BRCM",
+      "BUD",
+      "C",
+      "CAG",
+      "CARR",
+      "CBOE",
+      "CBZ",
+      "CCI",
+      "CLH",
+      "CMCSA",
+      "CME",
+      "CNM",
+      "COIN",
+      "COST",
+      "CPAY",
+      "CRDO",
+      "CSCO",
+      "CSX",
+      "DASH",
+      "DE",
+      "DEO",
+      "DIS",
+      "DUK",
+      "EFC",
+      "EMR",
+      "FITB",
+      "FLL",
+      "FMC",
+      "FN",
+      "FOX",
+      "FTGC",
+      "FTNT",
+      "GD",
+      "GDDY",
+      "GE",
+      "GEV",
+      "GIL",
+      "GOOGL",
+      "GTLS",
+      "GWW",
+      "HD",
+      "HRL",
+      "HSY",
+      "IBM",
+      "ICE",
+      "ICHR",
+      "ICLR",
+      "IEF",
+      "IMCB",
+      "INSM",
+      "INTU",
+      "ITW",
+      "JNJ",
+      "JPM",
+      "KMB",
+      "KVUE",
+      "LHX",
+      "LMT",
+      "LOW",
+      "LRCX",
+      "LUV",
+      "LYV",
+      "MA",
+      "MBGL",
+      "MCD",
+      "MDT",
+      "MGA",
+      "MGK",
+      "MIDD",
+      "MKL",
+      "MPC",
+      "MSFT",
+      "NEE",
+      "NOK",
+      "NTDOY",
+      "NVDA",
+      "O",
+      "OGN",
+      "PANW",
+      "PEP",
+      "PFE",
+      "PG",
+      "PINS",
+      "RBC",
+      "SCI",
+      "SFTBF",
+      "SMTC",
+      "SOLS",
+      "SPGI",
+      "SPOT",
+      "SPSM",
+      "STE",
+      "STRL",
+      "SYK",
+      "T",
+      "TMO",
+      "TPR",
+      "TPYP",
+      "TRV",
+      "TSCO",
+      "TTD",
+      "UNH",
+      "UPS",
+      "V",
+      "VIK",
+      "WAB",
+      "WMB",
+      "WMT",
+      "XOM"
+    ],
+    "divergenceBps": 5000
+  },
+  "commentary": null
+}
