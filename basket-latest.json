@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T15:03:14.032620+00:00",
+  "generatedAt": "2026-09-03T15:08:42.193821+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -9,7 +9,7 @@
     "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.19560107963560885,
+  "coverage": 0.19682270505476243,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 53506837,
+    "block": 53509997,
     "dropped": []
   },
   "missedCoverage": [
@@ -483,10 +483,10 @@
     "divergenceBps": 5000
   },
   "commentary": {
-    "text": "Your basket's largest position is Intel, weighted at 50%, based on Nancy Pelosi's purchases of $1.1M, traded on 2026-07-24 and filed on 2026-08-24. SPCX, at 45.4%, reflects buys from William R. Timmons IV, Dan Meuser, and three other members. Micron, at 4.7%, includes buys from Dan Newhouse, Michael Rulli, Sheldon Whitehouse, and two others. The largest disclosed buying, $3.8M in BE from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 19.6% of disclosed buying dollars.",
+    "text": "This basket's largest position tracks Nancy Pelosi's $1.1M buy in one name, traded on 2026-07-24 and filed on 2026-08-24. William R. Timmons IV and Dan Meuser are among five members buying into another name. Three members, including Sheldon Whitehouse, bought into a third name. In total, nine members influenced the basket. The largest disclosed buying, a $3.8M position, could not be bought because it is not tokenized or tradable on this chain. This basket represents 19.7% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-03T10:00:29+00:00",
-    "inputHash": "6e99e876a9aed407",
+    "generatedAt": "2026-09-03T15:08:42+00:00",
+    "inputHash": "492e6c54999f610f",
     "promptVersion": 2
   }
 }
