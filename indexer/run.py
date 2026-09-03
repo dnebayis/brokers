@@ -20,7 +20,7 @@ from route_preflight import (
     RouteProbeUnavailable, preflight_basket, preflight_enabled, resolve_booster_context,
 )
 from tokens import address_of
-from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, wei_env
+from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, TRAILING_DAYS, wei_env
 from health import snapshot_health
 
 
@@ -428,6 +428,22 @@ def main():
     payload["commentary"] = generate(payload, previous_note, key=os.environ.get("GEMINI_API_KEY", ""))
     if payload["commentary"]:
         print(f"Basket note: {payload['commentary']['text'][:160]}…")
+    # Site feed exports (30 days of filings, one record per member), from these same rows.
+    if args.out:
+        from feed_export import feed_rows, members
+        from tokens import ROUTE_READY_ADDRESS
+        try:
+            scores_raw = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "member-scores.json")))
+            scores = scores_raw.get("members", scores_raw) if isinstance(scores_raw, dict) else {}
+        except Exception:
+            scores = {}
+        stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        base = os.path.dirname(os.path.abspath(args.out)) or "."
+        rows = feed_rows(trades, ROUTE_READY_ADDRESS.keys(), tickers)
+        json.dump({"generatedAt": stamp, "days": 30, "source": source, "rows": rows}, open(os.path.join(base, "feed-30d.json"), "w"))
+        mem = members(trades, ROUTE_READY_ADDRESS.keys(), tickers, scores, days=TRAILING_DAYS)
+        json.dump({"generatedAt": stamp, "windowDays": TRAILING_DAYS, "members": mem}, open(os.path.join(base, "members.json"), "w"))
+        print(f"Feed export: {len(rows)} filings in 30 days, {len(mem)} members in the window")
     if args.out:
         json.dump(payload, open(args.out, "w"), indent=2)
         print(f"\nWrote basket -> {args.out}")

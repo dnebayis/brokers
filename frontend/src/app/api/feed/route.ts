@@ -1,29 +1,34 @@
 import { NextResponse } from "next/server";
 
-// Server-only Congress disclosure feed. Prefer Unusual Whales' normalized
-// Congress endpoint; retain FMP as a fallback. Never silently replace an
-// upstream failure with fake rows—the UI must distinguish live from unavailable.
-//
-// Cached for one hour. This response is what every visitor's Feed tab reads, and the
-// upstream Unusual Whales call only fires when this cache is stale — so the TTL, not
-// visitor traffic, sets how often we spend the API quota. Disclosures update slowly
-// (members file with a ~45-day lag), so hourly is fresh enough and keeps the key cheap.
-export const revalidate = 3600;
+// The Feed tab's rows. Primary source: the indexer's 30-day export on the repository's
+// data branch (the same filings the basket is built from, with member slugs and
+// buyable / in-basket flags). Fallback when that file is unreachable: the provider's
+// first page (Unusual Whales, then FMP), which is what this route served before.
+// Cached for ten minutes; the export refreshes every indexer pass.
+export const revalidate = 600;
 
-type FeedItem = {
+const FEED_URL = process.env.FEED_DATA_URL || "https://raw.githubusercontent.com/dnebayis/brokers/data/feed-30d.json";
+
+export type FeedItem = {
   chamber: "House" | "Senate";
   member: string;
+  slug?: string;
   symbol: string;
   type: "buy" | "sell" | "other";
   amount: string;
   transactionDate: string;
   disclosureDate: string;
+  lagDays?: number | null;
+  buyable?: boolean;
+  inBasket?: boolean;
 };
 
 type FeedResponse = {
   live: boolean;
-  source: "unusual_whales" | "fmp" | "none";
+  source: "indexer" | "unusual_whales" | "fmp" | "none";
   status: "ok" | "unconfigured" | "upstream_error" | "empty";
+  days?: number;
+  generatedAt?: string;
   items: FeedItem[];
 };
 
@@ -35,18 +40,30 @@ function normType(value: unknown): FeedItem["type"] {
 }
 
 function normChamber(value: unknown, fallback: FeedItem["chamber"]): FeedItem["chamber"] {
-  return String(value ?? "").toLowerCase().includes("senate") ? "Senate" : fallback;
+  return String(value ?? "").toLowerCase().includes("senat") ? "Senate" : fallback;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+function mapExport(rows: any[]): FeedItem[] {
+  return rows.map((r) => ({
+    chamber: normChamber(r.chamber, "House"),
+    member: String(r.member || "Unknown member"),
+    slug: String(r.slug || ""),
+    symbol: String(r.symbol || "").toUpperCase(),
+    type: (r.type === "buy" || r.type === "sell" ? r.type : "other") as FeedItem["type"],
+    amount: String(r.amount || ""),
+    transactionDate: String(r.traded || "").slice(0, 10),
+    disclosureDate: String(r.filed || "").slice(0, 10),
+    lagDays: typeof r.lagDays === "number" ? r.lagDays : null,
+    buyable: !!r.buyable,
+    inBasket: !!r.inBasket,
+  }));
+}
+
 function mapFmp(rows: any[], chamber: FeedItem["chamber"]): FeedItem[] {
   return rows.map((row) => ({
     chamber,
-    member:
-      row.representative ||
-      row.office ||
-      [row.firstName, row.lastName].filter(Boolean).join(" ") ||
-      "Unknown member",
+    member: row.representative || row.office || [row.firstName, row.lastName].filter(Boolean).join(" ") || "Unknown member",
     symbol: String(row.symbol || row.ticker || "").toUpperCase(),
     type: normType(row.type),
     amount: String(row.amount || ""),
@@ -73,22 +90,25 @@ async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
   return response.json();
 }
 
-function finish(source: FeedResponse["source"], items: FeedItem[]): FeedResponse {
-  const clean = items
-    .filter((item) => item.symbol)
-    .sort((a, b) => b.disclosureDate.localeCompare(a.disclosureDate))
-    .slice(0, 100);
-  return { live: clean.length > 0, source, status: clean.length ? "ok" : "empty", items: clean };
+function finish(source: FeedResponse["source"], items: FeedItem[], extra: Partial<FeedResponse> = {}): FeedResponse {
+  const clean = items.filter((item) => item.symbol).sort((a, b) => b.disclosureDate.localeCompare(a.disclosureDate));
+  return { live: clean.length > 0, source, status: clean.length ? "ok" : "empty", items: clean, ...extra };
 }
 
 export async function GET() {
+  try {
+    const exp = (await fetchJson(FEED_URL, { headers: { "User-Agent": "coattail-site/1.0" } })) as { rows?: any[]; days?: number; generatedAt?: string };
+    if (Array.isArray(exp.rows) && exp.rows.length > 0) {
+      return NextResponse.json(finish("indexer", mapExport(exp.rows), { days: exp.days ?? 30, generatedAt: exp.generatedAt }));
+    }
+  } catch (err) {
+    console.warn("feed: indexer export unavailable, falling back to provider:", String(err));
+  }
+
   const unusualWhalesKey = process.env.UNUSUAL_WHALES_API_KEY;
   const fmpKey = process.env.FMP_API_KEY;
-
   try {
     if (unusualWhalesKey) {
-      // A dead UW key (rotation, quota) must not black out the tab while a working
-      // FMP fallback sits right below — fall through instead of throwing out.
       try {
         const payload = (await fetchJson(
           "https://api.unusualwhales.com/api/politician-portfolios/recent_trades?limit=100&page=1",
@@ -100,28 +120,18 @@ export async function GET() {
         console.warn("feed: unusual_whales failed, falling back to fmp:", String(err));
       }
     }
-
     if (fmpKey) {
       const base = "https://financialmodelingprep.com/stable";
-      // FMP's free tier rejects limit > 25 with a 402 — 25 per chamber is the ceiling.
       const [house, senate] = await Promise.all([
         fetchJson(`${base}/house-latest?page=0&limit=25&apikey=${encodeURIComponent(fmpKey)}`),
         fetchJson(`${base}/senate-latest?page=0&limit=25&apikey=${encodeURIComponent(fmpKey)}`),
       ]);
-      return NextResponse.json(
-        finish("fmp", [
-          ...mapFmp(Array.isArray(house) ? house : [], "House"),
-          ...mapFmp(Array.isArray(senate) ? senate : [], "Senate"),
-        ]),
-      );
+      return NextResponse.json(finish("fmp", [
+        ...mapFmp(Array.isArray(house) ? house : [], "House"),
+        ...mapFmp(Array.isArray(senate) ? senate : [], "Senate"),
+      ]));
     }
-
-    return NextResponse.json<FeedResponse>({
-      live: false,
-      source: "none",
-      status: "unconfigured",
-      items: [],
-    });
+    return NextResponse.json<FeedResponse>({ live: false, source: "none", status: "unconfigured", items: [] });
   } catch (err) {
     console.warn("feed: upstream failed:", String(err));
     return NextResponse.json<FeedResponse>(

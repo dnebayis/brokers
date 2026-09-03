@@ -794,3 +794,41 @@ class ScorecardTests(unittest.TestCase):
         self.assertEqual(aaa["avgCost"], 100.0)
         self.assertEqual(aaa["unpricedBuys"], 1)
         self.assertEqual(aaa["pnlUsd"], 0.0)
+
+
+class FeedExportTests(unittest.TestCase):
+    ROWS = [
+        {"symbol": "INTC", "who": "Nancy Pelosi", "chamber": "house", "type": "Buy", "amount": "$1,000,001 - $5,000,000",
+         "transactionDate": "2026-07-24", "disclosureDate": "2026-08-24"},
+        {"symbol": "BE", "who": "Nancy Pelosi", "chamber": "house", "type": "Buy", "amount": "$500,001 - $1,000,000",
+         "transactionDate": "2026-07-28", "disclosureDate": "2026-08-24"},
+        {"symbol": "AAPL", "who": "Nancy Pelosi", "chamber": "house", "type": "Sale (Partial)", "amount": "$250,001 - $500,000",
+         "transactionDate": "2026-06-01", "disclosureDate": "2026-06-20"},
+        {"symbol": "MU", "who": "Dan Newhouse", "chamber": "house", "type": "Purchase", "amount": "$1,001 - $15,000",
+         "transactionDate": "2026-07-10", "disclosureDate": "2026-07-17"},
+        {"symbol": "", "who": "Nobody", "chamber": "house", "type": "Buy", "amount": "$1,001 - $15,000",
+         "transactionDate": "2026-07-10", "disclosureDate": "2026-08-30"},
+    ]
+
+    def test_feed_rows_cover_30_days_of_filings_newest_first(self):
+        from feed_export import feed_rows
+        rows = feed_rows(self.ROWS, ["INTC", "MU"], ["INTC"], now=datetime(2026, 9, 3))
+        self.assertEqual([r["symbol"] for r in rows], ["BE", "INTC"])  # AAPL (June) and MU (Jul 17) are older than 30 days
+        intc = rows[1]
+        self.assertEqual(intc["slug"], "nancy-pelosi")
+        self.assertEqual(intc["lagDays"], 31)
+        self.assertTrue(intc["buyable"] and intc["inBasket"])
+        self.assertFalse(rows[0]["buyable"])
+
+    def test_member_records_aggregate_the_window(self):
+        from feed_export import members
+        mem = members(self.ROWS, ["INTC", "MU"], ["INTC"], {"nancy pelosi": {"multiplier": 1.038, "avgExcess30d": 0.0079, "trades": 215}}, now=datetime(2026, 9, 3))
+        self.assertEqual([m["slug"] for m in mem], ["nancy-pelosi", "dan-newhouse"])
+        p = mem[0]
+        self.assertEqual((p["trades"], p["buys"], p["sells"]), (2, 2, 0))  # the June sale is outside the 90-day window
+        self.assertEqual(p["buyNotional"], 3_750_001.0)
+        self.assertEqual(p["buyableShare"], 0.8)
+        self.assertEqual(p["topTickers"][0]["symbol"], "INTC")
+        self.assertEqual(p["score"]["multiplier"], 1.038)
+        self.assertEqual(p["lastFiled"], "2026-08-24")
+        self.assertEqual(p["rows"][0]["symbol"], "BE")

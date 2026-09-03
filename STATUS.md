@@ -60,7 +60,10 @@ the name, amount ranges, traded/filed dates), the largest names left out and why
 per-name scorecard (`indexer/scorecard.py`: every engine purchase priced at its Chainlink ETH/USD round against today's stock feed, published as `basket-scorecard.json`), and a
 model-written note (`indexer/commentary.py`, Gemini via `GEMINI_API_KEY`, regenerated only
 when the facts change, validated against the facts and refused if it names an unknown
-ticker or reads as advice). The site's Feed tab renders it through `/api/basket`.
+ticker or reads as advice). The site's Feed tab renders it through `/api/basket`. The same pass exports `feed-30d.json` (30 days of
+filings with member slugs and buyable / in-basket flags; the Feed tab's table, searchable) and
+`members.json` (one record per member in the window: buying, buyable share, filing lag, top names,
+track-record multiplier; `/member/<slug>` pages).
 
 ## Automation
 
