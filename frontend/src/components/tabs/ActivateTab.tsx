@@ -431,13 +431,7 @@ export function ActivateTab() {
         }))),
       ];
 
-      if (calls.length > 1 && (await atomicSupported())) {
-        claimTx.setStatus(`Bundling ${calls.length} steps into one confirmation…`);
-        const { id } = await sendCalls(wagmiConfig, { calls, chainId: activeChain.id });
-        claimTx.setStatus("Waiting for the bundle to confirm…");
-        const result = await waitForCallsStatus(wagmiConfig, { id });
-        if (result.status !== "success") throw new Error("The batch did not complete — nothing partial was left behind.");
-      } else {
+      const runSequential = async () => {
         const total = claimChunks.length + jobs.reduce((sum, j) => sum + j.transfers.length, 0);
         claimTx.setStatus(`This will take ${total} signature${total > 1 ? "s" : ""}`
           + (dustSkipped > 0 ? ` (${dustSkipped} dust balance${dustSkipped > 1 ? "s" : ""} under $${DUST_USD} skipped)` : "")
@@ -468,7 +462,39 @@ export function ActivateTab() {
             await waitForSuccessfulReceipt(h);
           }
         }
+      };
+
+      // Wallets cap one EIP-5792 bundle (seen in the wild: "The call bundle is too large for
+      // the Wallet to process"). Send in bundles of BUNDLE calls, halve the bundle on a size
+      // error, and if the wallet refuses even the first single-call bundle, sign one by one.
+      const BUNDLE = 12;
+      let sentAll = false;
+      if (calls.length > 1 && (await atomicSupported())) {
+        let size = Math.min(BUNDLE, calls.length);
+        let i = 0;
+        let bundles = 0;
+        while (i < calls.length) {
+          const chunk = calls.slice(i, i + size);
+          try {
+            claimTx.setStatus(`Bundle ${bundles + 1}: ${chunk.length} step${chunk.length > 1 ? "s" : ""} in one confirmation (${calls.length - i} left)…`);
+            const { id } = await sendCalls(wagmiConfig, { calls: chunk, chainId: activeChain.id });
+            claimTx.setStatus("Waiting for the bundle to confirm…");
+            const result = await waitForCallsStatus(wagmiConfig, { id });
+            if (result.status !== "success") throw new Error("The batch did not complete — nothing partial was left behind.");
+            i += chunk.length;
+            bundles += 1;
+          } catch (e) {
+            const msg = String((e as { shortMessage?: string; message?: string })?.shortMessage
+              || (e as { message?: string })?.message || e);
+            const tooLarge = /too large|bundle|batch/i.test(msg) && !/rejected|denied/i.test(msg);
+            if (tooLarge && size > 1) { size = Math.max(1, Math.floor(size / 2)); continue; }
+            if (tooLarge && i === 0) break; // this wallet cannot bundle at all: sign one by one
+            throw e;
+          }
+        }
+        sentAll = i >= calls.length;
       }
+      if (!sentAll) await runSequential();
       claimTx.setStatus(`Done — stock from ${jobs.length} Broker${jobs.length > 1 ? "s" : ""} is in your wallet`
         + (dustSkipped > 0 ? ` (${dustSkipped} sub-$${DUST_USD} dust balance${dustSkipped > 1 ? "s" : ""} left behind on purpose).` : "."), "ok");
       refetch();
