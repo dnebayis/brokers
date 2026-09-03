@@ -21,6 +21,16 @@ pre-launch remaining-work list; the historical deploy-day sequence is preserved 
 Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
 `robinhoodchain.blockscout.com`; `rh-scan.com` is a lookalike domain and is not ours.
 
+## Metadata
+
+The collection renders through `BrokerRendererV4` (`0x8e818035Cab44c3bD22426dC28Cdd57d59657E88`,
+art read from the frozen v1 renderer). Scored attributes are exactly `Type` and `Rank band`;
+the rank plan (Type first, then accessory rarity inside the type) is derived from the on-chain
+traits by `pipeline/rank_plan.py` and hash-locked in the contract. The seven art traits, the
+exact rank and live state (status, holdings, COAT inside) are published in the description and
+in `traits` / `rank` / `live` objects, none of which move a marketplace rank. Rollback is one
+owner call, `setRenderer(v3)`.
+
 ## Products
 
 - **Brokers** — the base collection. Activating one burns `36,750 COAT` and adds an equal
