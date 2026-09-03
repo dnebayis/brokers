@@ -214,8 +214,9 @@ export function PlaybookPanel({
   }, [needsApproval, stocks, brokersKey, walletsKey, reloadKey]);
 
   const dest = (): Address => {
-    if (destKind === "broker" && plan === "usdg") return zeroAddress;
-    if (destKind === "broker") return address!; // sweeping to itself is a no-op — use the owner
+    // Engine reads dest == 0 as "this Broker's own wallet" for any plan. Only the sweep plan
+    // (move stock as-is) cannot target itself, so that one falls back to the owner.
+    if (destKind === "broker") return plan === "sweep" ? address! : zeroAddress;
     if (destKind === "me") return address!;
     return customDest as Address;
   };

@@ -336,7 +336,10 @@ def _coat_min_out(ctx, token_id):
     if ctx is None:
         return None
     try:
-        floor_usdg = _holdings_floor_usdg(ctx, token_id)
+        # Same measure as the run gate: wallet stock AND what the Booster still owes (the
+        # engine claims first, so the swap moves both). Pricing the wallet alone let a mostly
+        # claimable order pass the gate with a minOut sized for a fraction of what it swaps.
+        floor_usdg = _holdings_floor_usdg_many(ctx, [token_id]).get(token_id)
         if not floor_usdg:
             return None
         net = floor_usdg * (10_000 - ctx["fee_bps"]) // 10_000
@@ -635,7 +638,10 @@ def main() -> None:
                        f"(floor {gas_floor / 1e18:.5f} ETH) — top up the relay wallet")
         print(f"::warning::{gas_message}")
         alert(f"⛽ {gas_message}")
-    if not args.execute or not plan:
+    # An empty fee plan (no swap this hour) is not a reason to stop: the Floor flush, Playbooks
+    # and the gift draw below are gated on their own state, and skipping them here made a due
+    # gift draw or a runnable order wait for the next hour that happened to have a $COAT swap.
+    if not args.execute:
         return
     if not KEEPER_PRIVATE_KEY:
         raise RuntimeError("KEEPER_PRIVATE_KEY not set for keeper relay")

@@ -40,14 +40,20 @@ export async function openseaBio(address: string): Promise<string | null> {
 }
 
 // ── KV (Upstash REST protocol) ──────────────────────────────────────────────
+export function kvConfigured(): boolean {
+  return Boolean(env.kvUrl() && env.kvToken());
+}
+
+// Throws when KV is configured but unreachable (expired token, outage): a caller that keeps a
+// cursor there must not mistake that for "no cursor yet" and replay history.
 async function kv(cmd: (string | number)[]): Promise<{ result?: unknown } | null> {
-  if (!env.kvUrl() || !env.kvToken()) return null;
+  if (!kvConfigured()) return null;
   const res = await fetch(env.kvUrl(), {
     method: "POST",
     headers: { Authorization: `Bearer ${env.kvToken()}`, "Content-Type": "application/json" },
     body: JSON.stringify(cmd),
   });
-  if (!res.ok) return null;
+  if (!res.ok) throw new Error(`kv ${cmd[0]} failed: ${res.status}`);
   return res.json();
 }
 

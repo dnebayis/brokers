@@ -71,10 +71,10 @@ while IFS=, read -r addr amount _rest; do
   errlog=$(mktemp)
   if [ -n "$TOKEN" ]; then
     tx=$(cast send "$TOKEN" 'transfer(address,uint256)' "$addr" "$raw" \
-         --rpc-url "$ETH_RPC_URL" $CAST_FLAGS --json 2>"$errlog" | python3 -c "import json,sys; print(json.load(sys.stdin)['transactionHash'])" 2>/dev/null || true)
+         --rpc-url "$ETH_RPC_URL" $CAST_FLAGS --json 2>"$errlog" | python3 -c "import json,sys; r=json.load(sys.stdin); assert str(r.get('status')) in ('0x1','1'), 'reverted'; print(r['transactionHash'])" 2>/dev/null || true)
   else
     tx=$(cast send "$addr" --value "$raw" \
-         --rpc-url "$ETH_RPC_URL" $CAST_FLAGS --json 2>"$errlog" | python3 -c "import json,sys; print(json.load(sys.stdin)['transactionHash'])" 2>/dev/null || true)
+         --rpc-url "$ETH_RPC_URL" $CAST_FLAGS --json 2>"$errlog" | python3 -c "import json,sys; r=json.load(sys.stdin); assert str(r.get('status')) in ('0x1','1'), 'reverted'; print(r['transactionHash'])" 2>/dev/null || true)
   fi
 
   if [ -n "$tx" ]; then

@@ -31,7 +31,7 @@ const FACTS: { k: string; v: string; sub: string; href: string }[] = [
   {
     k: "Buyback & burn",
     v: "On-chain",
-    sub: "10% of fees buy $COAT and burn it. Supply only ever shrinks.",
+    sub: "Burner is live; by holder vote its fee slice now buys stock instead, so every $COAT trade fee is payroll. Buys still burn 1% in $COAT through the hook. Supply only ever shrinks.",
     href: explorerAddress(ADDR.buybackBurner),
   },
 ];

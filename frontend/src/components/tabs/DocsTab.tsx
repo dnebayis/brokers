@@ -255,7 +255,7 @@ function TokenomicsCharts() {
   return (
     <div className="grid sm:grid-cols-2 gap-3 my-5" aria-label="Tokenomics charts">
       <Chart title="Initial COAT allocation" rows={[["Permanent LP", 100, "1B"], ["Team / reserve", 0, "0"]]} />
-      <Chart title="Sell-side fee flow (post-vote)" rows={[["Stock rewards", 90, "90%"], ["Treasury", 10, "10%"]]} />
+      <Chart title="Sell-side fee flow (post-vote)" rows={[["Stock rewards", 100, "100%"], ["Treasury", 0, "0%"]]} />
       <div className="border border-line bg-cream-2 p-3 sm:col-span-2">
         <div className="font-pixel text-[11px] mb-3">Supply so far — burns only ever remove</div>
         <svg viewBox="0 0 600 150" className="w-full" role="img"

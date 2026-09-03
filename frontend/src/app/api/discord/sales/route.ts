@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
 import { formatEther, formatUnits, parseAbiItem, decodeEventLog, zeroAddress } from "viem";
 import { ADDR } from "@/lib/config";
 import { boosterAbi, aggregatorAbi } from "@/lib/abis";
-import { env, serverClient, kvGet, kvSet } from "@/lib/discordSales";
+import { env, serverClient, kvGet, kvSet, kvConfigured } from "@/lib/discordSales";
 
 const TRANSFER = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)");
 const ORDER_FULFILLED = parseAbiItem(
@@ -54,7 +54,7 @@ async function osFetch(path: string): Promise<Record<string, unknown> | null> {
 async function brokerImage(id: string): Promise<string | null> {
   if (!osKey()) return null;
   const cacheKey = `os:image:v4:${id}`;
-  const cached = await kvGet(cacheKey);
+  const cached = await kvGet(cacheKey).catch(() => null); // cache only: a KV blip just costs a refetch
   if (cached) return cached === "none" ? null : cached;
   const data = await osFetch(`/chain/${OS_CHAIN}/contract/${ADDR.broker}/nfts/${id}`);
   if (data === null) return null; // request failed — retry on a later sweep
@@ -70,7 +70,7 @@ async function brokerImage(id: string): Promise<string | null> {
     const svg = candidates.find((u) => u.toLowerCase().endsWith(".svg"));
     if (svg) url = `https://wsrv.nl/?url=${encodeURIComponent(svg)}&output=png&w=512`;
   }
-  await kvSet(cacheKey, url ?? "none");
+  await kvSet(cacheKey, url ?? "none").catch(() => undefined);
   return url;
 }
 
@@ -190,8 +190,19 @@ export async function GET(request: Request) {
     });
   }
 
+  // The cursor is what keeps sales from being posted twice. Without KV (unconfigured or down)
+  // "no cursor" would be indistinguishable from "first run", and every sweep would re-post the
+  // last 40k blocks, so refuse to post at all instead.
+  if (!kvConfigured()) {
+    return NextResponse.json({ ok: false, error: "KV not configured; refusing to post without a cursor" }, { status: 500 });
+  }
+  let stored: string | null;
+  try {
+    stored = await kvGet(CURSOR_KEY);
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: `cursor unavailable: ${(e as Error).message}` }, { status: 502 });
+  }
   const latest = await serverClient.getBlockNumber();
-  const stored = await kvGet(CURSOR_KEY);
   // First run starts shallow (~1h of blocks) instead of replaying history.
   let from = stored ? BigInt(stored) + 1n : latest - 40_000n;
   if (latest - from > MAX_RANGE) from = latest - MAX_RANGE;
@@ -266,6 +277,11 @@ export async function GET(request: Request) {
       }
     }
   }
-  await kvSet(CURSOR_KEY, latest.toString());
+  try {
+    await kvSet(CURSOR_KEY, latest.toString());
+  } catch (e) {
+    // Posts already went out; say so loudly rather than pretend the cursor advanced.
+    return NextResponse.json({ ok: false, error: `posted ${sales} but cursor not saved: ${(e as Error).message}`, sales }, { status: 502 });
+  }
   return NextResponse.json({ ok: true, sales, fromBlock: from.toString(), toBlock: latest.toString() });
 }
