@@ -736,3 +736,13 @@ class CommentaryTests(unittest.TestCase):
                        now=made.replace(hour=15), min_hours=5)
         self.assertNotEqual(out["inputHash"], "stale")
         self.assertEqual(len(calls), 1)
+
+    def test_member_name_suffixes_and_fact_words_are_not_tickers(self):
+        from commentary import generate, validate_note
+        note = self.NOTE.replace("Nancy Pelosi", "William R. Timmons IV")
+        self.assertTrue(validate_note(note, ["INTC", "SPCX", "BE"])[0])
+        payload = json.loads(json.dumps(self.PAYLOAD))
+        payload["attribution"]["INTC"]["buyers"][0]["member"] = "Ana DE LA Cruz"
+        note2 = self.NOTE.replace("Nancy Pelosi", "Ana DE LA Cruz")
+        out = generate(payload, None, key="k", call=lambda *a: note2)
+        self.assertIsNotNone(out)

@@ -16,7 +16,7 @@ import re
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 # A note lives at least this long even if the facts move: the basket rebalances hourly by
@@ -27,6 +27,7 @@ MAX_CHARS = 900
 _NOT_TICKERS = {
     "USD", "US", "AI", "ETF", "NFT", "COAT", "SPY", "ETH", "CEO", "IPO", "SEC", "GDP", "Q1", "Q2",
     "Q3", "Q4", "STOCK", "ACT", "HOUSE", "SENATE", "OK", "AM", "PM", "UTC", "LLC", "LP", "INC",
+    "II", "III", "IV", "JR", "SR",  # name suffixes ("William R. Timmons IV")
 }
 _ADVICE = re.compile(
     r"\b(you should|should buy|should sell|buy now|sell now|guaranteed|will (?:rise|go up|fall|drop|moon)"
@@ -99,7 +100,9 @@ def build_prompt(payload: Dict) -> str:
     )
 
 
-def validate_note(text: str, allowed_tickers: List[str]) -> Tuple[bool, str]:
+def validate_note(text: str, allowed_tickers: List[str], allowed_words: Iterable[str] = ()) -> Tuple[bool, str]:
+    """`allowed_words`: upper-case tokens that legitimately occur in the facts (parts of
+    member names, for instance), so a name never trips the unknown-ticker check."""
     text = (text or "").strip()
     if len(text) < 120:
         return False, "too short"
@@ -107,7 +110,7 @@ def validate_note(text: str, allowed_tickers: List[str]) -> Tuple[bool, str]:
         return False, "too long"
     if _ADVICE.search(text):
         return False, "reads as advice"
-    allowed = {t.upper() for t in allowed_tickers}
+    allowed = {t.upper() for t in allowed_tickers} | {w.upper() for w in allowed_words}
     for tok in set(_TICKERISH.findall(text)):
         if tok in _NOT_TICKERS or tok in allowed:
             continue
@@ -170,6 +173,8 @@ def generate(payload: Dict, previous: Optional[Dict] = None, key: str = "",
         return None
     allowed = list(payload.get("tickers", [])) + [m["ticker"] for m in payload.get("missedCoverage") or []]
     prompt = build_prompt(payload)
+    # every upper-case token the facts themselves contain is fair game in the note
+    fact_words = set(_TICKERISH.findall(json.dumps(facts(payload))))
     last = ""
     for _attempt in range(2):
         try:
@@ -177,7 +182,7 @@ def generate(payload: Dict, previous: Optional[Dict] = None, key: str = "",
         except (urllib.error.URLError, RuntimeError, TimeoutError, OSError) as exc:
             last = f"provider error: {str(exc)[:120]}"
             continue
-        ok, reason = validate_note(text, allowed)
+        ok, reason = validate_note(text, allowed, fact_words)
         if not ok:
             print(f"basket note attempt rejected ({reason}; {len(text)} chars): {text[:200]!r}")
         if ok:
