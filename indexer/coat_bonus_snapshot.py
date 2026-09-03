@@ -9,8 +9,9 @@ its owner's wallet (`--inactive-to owner`, so it can fund the activation burn, w
 pulls from the owner) or to the Broker's own wallet (`--inactive-to wallet`, so the
 COAT travels with the NFT exactly like the active tranche).
 
-The total is either `--total-coat` (human units) or `--balance-of <sender>`: the
-sender's exact COAT balance at the snapshot block, every wei of it allocated.
+The total is `--total-coat` (human units), `--balance-of <sender>` (the sender's exact
+COAT balance at the snapshot block, every wei of it allocated) or `--per-share <coat>`
+(a fixed amount per share, e.g. the same figure an earlier tranche paid).
 
 Outputs a recipients CSV for `scripts/distribute.sh` (address,amount; one row per
 address, amounts summed) and a JSON report with the block, the counts and the per-share
@@ -124,6 +125,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--total-coat", type=float, help="COAT to distribute, human units")
     ap.add_argument("--balance-of", help="distribute this address's whole COAT balance at the snapshot block")
+    ap.add_argument("--per-share", help="fixed COAT per share (exact decimal string); total = per share x shares")
     ap.add_argument("--active-weight", type=int, default=2)
     ap.add_argument("--inactive-weight", type=int, default=1)
     ap.add_argument("--inactive-to", choices=("owner", "wallet"), default="owner",
@@ -136,8 +138,8 @@ def main() -> int:
     if not broker_address or not BOOSTER_ADDRESS:
         raise SystemExit("set BROKER_ADDRESS and BOOSTER_ADDRESS")
 
-    if (args.total_coat is None) == (args.balance_of is None):
-        raise SystemExit("give exactly one of --total-coat or --balance-of")
+    if sum(x is not None for x in (args.total_coat, args.balance_of, args.per_share)) != 1:
+        raise SystemExit("give exactly one of --total-coat, --balance-of or --per-share")
 
     w3 = make_web3()
     block = w3.eth.block_number
@@ -149,6 +151,10 @@ def main() -> int:
         coat = w3.eth.contract(address=broker.functions.coat().call(), abi=ERC20_ABI)
         sender = Web3.to_checksum_address(args.balance_of)
         total_wei = int(coat.functions.balanceOf(sender).call(block_identifier=block))
+    elif args.per_share is not None:
+        from decimal import Decimal
+        shares = sum((args.active_weight if e[1] else args.inactive_weight) for e in entries)
+        total_wei = int(Decimal(args.per_share) * WEI) * shares
     else:
         total_wei = int(round(args.total_coat * WEI))
     rows, per_share = allocate(entries, total_wei, args.active_weight, args.inactive_weight, args.inactive_to)
