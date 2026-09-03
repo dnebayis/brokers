@@ -461,6 +461,76 @@ def _feed_watchdog(w3) -> None:
         print(json.dumps({"action": "feed.watchdog", "status": "skipped", "error": str(exc)[:160]}))
 
 
+
+# Selector of Booster.BelowThreshold(uint256 have, uint256 need): the buffer is below the poke
+# threshold. After a poke that reverted on chain it means an earlier poke (ours or anyone's,
+# poke() is permissionless) already spent the buffer, so nothing is stuck and nothing was lost.
+BELOW_THRESHOLD_SELECTOR = "0x8b05c814"
+
+
+def is_below_threshold(reason: str) -> bool:
+    text = (reason or "").lower()
+    return BELOW_THRESHOLD_SELECTOR in text or "belowthreshold" in text
+
+
+def simulate_reason(call, sender: str) -> str:
+    """Replay a contract call as eth_call and return its revert text ("" if it passes now)."""
+    try:
+        call.call({"from": sender})
+        return ""
+    except Exception as exc:  # noqa: BLE001 - the message is the diagnosis
+        return str(exc)
+
+
+def send_signed(w3, account, call, gas_limit: int, label: str, chain_id: int,
+                sleep: Callable[[float], None] = time.sleep, tries: int = 4):
+    """Broadcast `call` from `account` and return the hash of the transaction in flight.
+
+    RH's proxied RPC can serve a stale nonce and can answer a broadcast with an error after
+    the transaction was in fact accepted. A naive "bump the nonce and resend" then sends the
+    same action twice: the first lands, the copy reverts (seen twice on 2026-09-03 as
+    booster.poke pairs at nonces 5196/5197 and 5207/5208, the copy reverting BelowThreshold
+    and failing the keeper pass). The hash of a signed transaction is known before broadcast,
+    so on a send error this looks for that hash on the node first and only bumps the nonce
+    when the transaction is truly absent. Every broadcast attempt is logged with its hash.
+    """
+    nonce = max(
+        w3.eth.get_transaction_count(account.address, "pending"),
+        w3.eth.get_transaction_count(account.address, "latest"),
+    )
+    for send_try in range(tries):
+        tx = call.build_transaction({
+            "from": account.address,
+            "nonce": nonce,
+            "chainId": chain_id,
+            "gas": gas_limit,
+        })
+        signed = account.sign_transaction(tx)
+        raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
+        local_hash = getattr(signed, "hash", None) or w3.keccak(raw)
+        try:
+            tx_hash = w3.eth.send_raw_transaction(raw)
+            print(json.dumps({"action": label, "status": "sent", "tx": tx_hash.hex(), "nonce": nonce}))
+            return tx_hash
+        except Exception as exc:
+            # Accepted despite the error? Then that IS our transaction; never send a copy.
+            for _ in range(3):
+                try:
+                    if w3.eth.get_transaction(local_hash) is not None:
+                        print(json.dumps({"action": label, "status": "sent", "tx": local_hash.hex(),
+                                          "nonce": nonce, "note": f"accepted despite send error: {str(exc)[:120]}"}))
+                        return local_hash
+                except Exception:  # noqa: BLE001 - not found / RPC hiccup: keep looking
+                    pass
+                sleep(1)
+            if "nonce" in str(exc).lower() and send_try < tries - 1:
+                print(json.dumps({"action": label, "status": "resend", "nonce": nonce, "error": str(exc)[:160]}))
+                nonce = max(nonce + 1, w3.eth.get_transaction_count(account.address, "latest"))
+                continue
+            raise
+    raise RuntimeError(f"{label}: could not broadcast after {tries} attempts")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Coattail Booster keeper")
     parser.add_argument("--execute", action="store_true", help="send poke when eligible")
@@ -586,38 +656,20 @@ def main() -> None:
             call = fn()
             estimate = call.estimate_gas({"from": account.address})
             gas_limit = max(int(estimate * 2), min_gas)
-            # The same proxied-RPC lag can serve a stale get_transaction_count right after a preceding
-            # stage's tx is mined — "pending" can even trail the confirmed "latest" count — so a naive
-            # read collides ("nonce too low"). Seed from max(pending, latest) and, on a nonce error,
-            # advance to max(nonce+1, latest) so a lagging read can never pin the send too low.
-            nonce = max(
-                w3.eth.get_transaction_count(account.address, "pending"),
-                w3.eth.get_transaction_count(account.address, "latest"),
-            )
-            tx_hash = None
-            for send_try in range(4):
-                tx = call.build_transaction({
-                    "from": account.address,
-                    "nonce": nonce,
-                    "chainId": CHAIN_ID,
-                    "gas": gas_limit,
-                })
-                signed = account.sign_transaction(tx)
-                raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
-                try:
-                    tx_hash = w3.eth.send_raw_transaction(raw)
-                    # Logged before the receipt wait: a cancelled run or a timed-out
-                    # receipt must not leave a gas-spending transaction unrecorded.
-                    print(json.dumps({"action": label, "status": "sent", "tx": tx_hash.hex()}))
-                    break
-                except Exception as exc:
-                    if "nonce" in str(exc).lower() and send_try < 3:
-                        nonce = max(nonce + 1, w3.eth.get_transaction_count(account.address, "latest"))
-                        continue
-                    raise
+            # Nonce recovery without duplicate sends lives in send_signed (see its docstring).
+            tx_hash = send_signed(w3, account, call, gas_limit, label, CHAIN_ID)
             receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
             if receipt.status != 1:
-                raise RuntimeError(f"receipt status {receipt.status}")
+                # Name the reason instead of a bare "status 0"; and a poke that lost the race to an
+                # earlier poke (ours or anyone's) spent nothing but the reverted tx's gas: the buffer
+                # is already stock. That is not a deferral, the next pass has nothing to retry.
+                reason = simulate_reason(call, account.address)
+                if label == "booster.poke" and is_below_threshold(reason):
+                    print(json.dumps({"action": label, "status": "raced", "tx": tx_hash.hex(),
+                                      "note": "buffer already spent by an earlier poke"}))
+                    return True
+                raise RuntimeError(f"receipt status {receipt.status}: {reason[:200]}" if reason
+                                   else f"receipt status {receipt.status}")
             print(json.dumps({"action": label, "status": "success", "tx": tx_hash.hex()}))
             return True
         except Exception as exc:

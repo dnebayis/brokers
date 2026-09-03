@@ -581,6 +581,64 @@ class CoatBonusAllocationTests(unittest.TestCase):
         self.assertEqual(coat_str(1), "0.000000000000000001")
 
 
+class SendSignedTests(unittest.TestCase):
+    """send_signed never broadcasts the same action twice: a send error whose transaction was in
+    fact accepted is recognised by its pre-computed hash; only a truly absent tx bumps the nonce.
+    A poke that reverted BelowThreshold lost a race, it is not a deferral."""
+
+    def _rig(self, send_side_effects, found_after_error):
+        from hexbytes import HexBytes
+        w3 = Mock()
+        w3.eth.get_transaction_count.side_effect = lambda addr, tag: {"pending": 10, "latest": 10}[tag]
+        w3.eth.send_raw_transaction.side_effect = send_side_effects
+        w3.eth.get_transaction.side_effect = found_after_error
+        account = Mock(); account.address = "0x" + "aa" * 20
+        signed_hashes = []
+        def sign(tx):
+            signed = Mock()
+            signed.raw_transaction = b"raw%d" % tx["nonce"]
+            signed.hash = HexBytes(bytes([tx["nonce"]]) * 32)
+            signed_hashes.append(signed.hash)
+            return signed
+        account.sign_transaction.side_effect = sign
+        call = Mock(); call.build_transaction.side_effect = lambda params: dict(params)
+        return w3, account, call, signed_hashes
+
+    def test_error_after_accepted_send_returns_the_original_hash_and_sends_once(self):
+        from keeper import send_signed
+        w3, account, call, hashes = self._rig([Exception("nonce too low")], lambda h: {"hash": h})
+        h = send_signed(w3, account, call, 300_000, "booster.poke", 4663, sleep=lambda s: None)
+        self.assertEqual(h, hashes[0])
+        self.assertEqual(w3.eth.send_raw_transaction.call_count, 1)   # no duplicate poke
+
+    def test_truly_absent_tx_bumps_the_nonce_once(self):
+        from hexbytes import HexBytes
+        from keeper import send_signed
+        w3, account, call, hashes = self._rig([Exception("nonce too low"), HexBytes(b"\x01" * 32)], lambda h: None)
+        h = send_signed(w3, account, call, 300_000, "hook.flush", 4663, sleep=lambda s: None)
+        self.assertEqual(w3.eth.send_raw_transaction.call_count, 2)
+        nonces = [c.args[0]["nonce"] for c in account.sign_transaction.call_args_list]
+        self.assertEqual(nonces, [10, 11])
+        self.assertEqual(h, HexBytes(b"\x01" * 32))
+
+    def test_non_nonce_error_with_absent_tx_raises(self):
+        from keeper import send_signed
+        w3, account, call, _ = self._rig([Exception("insufficient funds")], lambda h: None)
+        with self.assertRaises(Exception):
+            send_signed(w3, account, call, 300_000, "hook.flush", 4663, sleep=lambda s: None)
+        self.assertEqual(w3.eth.send_raw_transaction.call_count, 1)
+
+    def test_below_threshold_is_recognised_by_selector_or_name(self):
+        from keeper import is_below_threshold, simulate_reason
+        self.assertTrue(is_below_threshold('execution reverted, data: "0x8b05c8140000...0001"'))
+        self.assertTrue(is_below_threshold("BelowThreshold(1, 10000000000000000)"))
+        self.assertFalse(is_below_threshold("BadFeed()"))
+        ok = Mock(); ok.call.return_value = b""
+        self.assertEqual(simulate_reason(ok, "0x1"), "")
+        bad = Mock(); bad.call.side_effect = Exception("execution reverted: 0x8b05c814")
+        self.assertIn("0x8b05c814", simulate_reason(bad, "0x1"))
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""
