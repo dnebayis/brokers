@@ -76,10 +76,10 @@ jobs:
       # order runs on the first hourly pass after it clears the threshold instead of
       # waiting for a 200-wide window to rotate around to it.
       PLAYBOOKS_MAX_SCAN: "2000"
-      # Temporary: ~250 orders became runnable at once when claimable earnings started
-      # counting toward the threshold. Double the per-pass batch until that backlog
-      # clears, then drop this back to the default 25.
-      PLAYBOOKS_MAX_BATCH: "50"
+      # Per-pass batch of runnable Playbook orders. Was doubled to 50 while the ~250-order
+      # backlog from counting claimable earnings cleared (2026-09-01..03); back at the
+      # default 25 now that a pass finds no runnable orders.
+      PLAYBOOKS_MAX_BATCH: "25"
       # Gift vault draws (inert while empty): one queued NFT to a random active Broker
       # per on-chain interval; the keeper opens the round and settles it seconds later.
       GIFT_VAULT: ${{ secrets.GIFT_VAULT }}

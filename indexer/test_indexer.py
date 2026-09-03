@@ -729,6 +729,26 @@ class RedactTests(unittest.TestCase):
         self.assertIn("<rpc", out)
 
 
+class FeedDirectoryTests(unittest.TestCase):
+    DIR = [{"name": "Robinhood SGOV-USD", "proxyAddress": "0x" + "a1" * 20},
+           {"name": "Robinhood BE-USD", "proxyAddress": "0x" + "b2" * 20},
+           {"name": "ETH / USD", "proxyAddress": "0x" + "c3" * 20},
+           {"name": "Robinhood BRK.B-USD", "proxyAddress": None, "contractAddress": "0x" + "d4" * 20}]
+
+    def test_matches_only_wanted_robinhood_feeds(self):
+        from feed_directory import match_feeds
+        found = match_feeds(self.DIR, ["BE", "FWONK", "brk.b"])
+        self.assertEqual(found, {"BE": "0x" + "b2" * 20, "brk.b": "0x" + "d4" * 20})
+        self.assertEqual(match_feeds({"feeds": self.DIR}, ["SGOV"]), {"SGOV": "0x" + "a1" * 20})
+
+    def test_directory_failure_is_silent(self):
+        from feed_directory import newly_listed
+        def boom(): raise TimeoutError("slow")
+        self.assertEqual(newly_listed(["BE"], fetch=boom), {})
+        self.assertEqual(newly_listed([], fetch=boom), {})
+        self.assertEqual(newly_listed(["BE"], fetch=lambda: self.DIR), {"BE": "0x" + "b2" * 20})
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""

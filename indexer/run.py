@@ -394,6 +394,16 @@ def main():
         print("Biggest names we cannot route (share of all net buying):")
         for m in missed_report[:8]:
             print(f"  {m['ticker']:<6} {m['shareOfBuying']*100:5.1f}%")
+        # A missed name that Chainlink now prices is one owner tx away from the basket
+        # (Booster.setStockFeed + StockRouter.setRoute); say so the first pass it shows up.
+        from feed_directory import newly_listed
+        listed = newly_listed([m["ticker"] for m in missed_report])
+        for tkr, proxy in listed.items():
+            share = next((m["shareOfBuying"] for m in missed_report if m["ticker"] == tkr), 0.0)
+            message = (f"Chainlink now lists a Robinhood {tkr}-USD feed ({proxy}); {tkr} is "
+                       f"{share*100:.1f}% of net buying. Wire it: Booster.setStockFeed + StockRouter.setRoute.")
+            print(f"::warning::{message}")
+            alert("🟢 " + message)
     print(f"Basket ({len(basket)} tickers, weights in bps, sum={sum(w for _,w in basket)}):")
     tickers, weights, addrs = [], [], []
     for tkr, bps in basket:
