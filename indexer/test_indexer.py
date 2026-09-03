@@ -252,6 +252,7 @@ class RoutePreflightTests(unittest.TestCase):
             return (False, 0, "execution reverted") if stock == "0xdead" else (True, 1, "")
 
         with patch.object(route_preflight, "simulate_leg", fake_simulate), \
+             patch.object(route_preflight, "feed_guard", lambda *a, **k: (0, "")), \
              patch("tokens.address_of", lambda t: "0xdead" if t == "DEAD" else "0x" + t.lower()):
             live, dropped = route_preflight.preflight_basket(
                 None, basket, "0xb00", 10**16, router_address="0xr")
@@ -267,16 +268,58 @@ class RoutePreflightTests(unittest.TestCase):
             raise AssertionError("a zero slice must not be simulated")
 
         with patch.object(route_preflight, "simulate_leg", explode), \
+             patch.object(route_preflight, "feed_guard", lambda *a, **k: (0, "")), \
              patch("tokens.address_of", lambda t: "0x" + t.lower()):
             live, dropped = route_preflight.preflight_basket(
                 None, [("TINY", 1)], "0xb00", 100, router_address="0xr")
         self.assertEqual(live, [("TINY", 10_000)])
         self.assertEqual(dropped, [])
 
+    def test_preflight_drops_a_leg_whose_feed_guard_reverts_or_is_not_cleared(self):
+        """A stale Chainlink feed reverts minOut on chain and would revert the whole poke;
+        a route that fills below the guard reverts the same way. Both are caught here."""
+        import route_preflight
+        basket = [("AAPL", 5000), ("STALE", 3000), ("THIN", 2000)]
+
+        def fake_simulate(w3, router, booster, stock, wei):
+            return (True, 100, "")
+
+        def fake_guard(w3, booster, stock, wei):
+            if stock == "0xstale":
+                return None, "feed guard reverts: BadFeed()"
+            if stock == "0xthin":
+                return 150, ""       # route gives 100, guard demands 150
+            return 90, ""
+        with patch.object(route_preflight, "simulate_leg", fake_simulate), \
+             patch.object(route_preflight, "feed_guard", fake_guard), \
+             patch("tokens.address_of", lambda t: "0x" + t.lower()):
+            live, dropped = route_preflight.preflight_basket(None, basket, "0xb00", 10**16, router_address="0xr")
+        self.assertEqual(live, [("AAPL", 10_000)])
+        reasons = {t: r for t, _b, r in dropped}
+        self.assertIn("BadFeed", reasons["STALE"])
+        self.assertIn("below the Chainlink guard", reasons["THIN"])
+
+    def test_feed_guard_classifies_revert_vs_transport(self):
+        import route_preflight
+        from web3.exceptions import ContractLogicError
+        w3 = Mock()
+        fn = w3.eth.contract.return_value.functions.minOut
+        fn.return_value.call.side_effect = ContractLogicError("execution reverted: BadFeed()")
+        with patch.object(route_preflight, "PROBE_ATTEMPTS", 1):
+            min_out, reason = route_preflight.feed_guard(w3, "0x" + "b0" * 20, "0x" + "aa" * 20, 10**15)
+        self.assertIsNone(min_out); self.assertIn("BadFeed", reason)
+        fn.return_value.call.side_effect = None; fn.return_value.call.return_value = 4242
+        self.assertEqual(route_preflight.feed_guard(w3, "0x" + "b0" * 20, "0x" + "aa" * 20, 10**15), (4242, ""))
+        fn.return_value.call.side_effect = TimeoutError("read timed out")
+        with patch.object(route_preflight, "PROBE_ATTEMPTS", 1), patch("time.sleep", lambda s: None):
+            with self.assertRaises(route_preflight.RouteProbeUnavailable):
+                route_preflight.feed_guard(w3, "0x" + "b0" * 20, "0x" + "aa" * 20, 10**15)
+
     def test_preflight_drops_a_ticker_with_no_onchain_address(self):
         import route_preflight
         with patch("tokens.address_of", lambda t: None if t == "NOADDR" else "0x" + t.lower()), \
-             patch.object(route_preflight, "simulate_leg", lambda *a, **k: (True, 1, "")):
+             patch.object(route_preflight, "simulate_leg", lambda *a, **k: (True, 1, "")), \
+             patch.object(route_preflight, "feed_guard", lambda *a, **k: (0, "")):
             live, dropped = route_preflight.preflight_basket(
                 None, [("AAPL", 9000), ("NOADDR", 1000)], "0xb00", 10**16, router_address="0xr")
         self.assertEqual(live, [("AAPL", 10_000)])

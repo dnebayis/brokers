@@ -82,6 +82,9 @@ BOOSTER_ABI = [
      "outputs": [{"name": "", "type": "address"}]},
     {"type": "function", "name": "pokeThreshold", "stateMutability": "view", "inputs": [],
      "outputs": [{"name": "", "type": "uint256"}]},
+    {"type": "function", "name": "minOut", "stateMutability": "view",
+     "inputs": [{"name": "tokenOut", "type": "address"}, {"name": "ethIn", "type": "uint256"}],
+     "outputs": [{"name": "", "type": "uint256"}]},
 ]
 
 
@@ -144,6 +147,34 @@ def simulate_leg(w3, router_address, booster_address, stock, wei) -> tuple[bool,
     )
 
 
+def feed_guard(w3, booster_address, stock, wei) -> tuple[int | None, str]:
+    """eth_call Booster.minOut(stock, wei): the Chainlink-derived floor `_swap` will demand.
+
+    Returns (min_out, "") or (None, reason) when the guard itself reverts: BadFeed (stale
+    stock or ETH feed), GuardMissing (no feed set), NoEthPrice. A leg whose guard reverts
+    reverts the whole poke on chain, and the route simulation alone (minOut = 0) never sees
+    it; until now that was only discovered when the buffer sat unspent.
+    """
+    from web3 import Web3
+
+    booster = w3.eth.contract(address=Web3.to_checksum_address(booster_address), abi=BOOSTER_ABI)
+    stock = Web3.to_checksum_address(stock)
+    attempts = max(PROBE_ATTEMPTS, 1)
+    last: BaseException | None = None
+    for attempt in range(attempts):
+        try:
+            return int(booster.functions.minOut(stock, int(wei)).call()), ""
+        except Exception as exc:
+            if is_revert(exc) and not is_transport_error(exc):
+                return None, "feed guard reverts: " + redact(str(exc))[:160]
+            if not is_transport_error(exc):
+                raise RouteProbeUnavailable(f"{stock}: unclassified minOut failure: {redact(str(exc))[:200]}")
+            last = exc
+            if attempt < attempts - 1:
+                time.sleep(2 ** attempt)
+    raise RouteProbeUnavailable(f"{stock}: RPC unavailable after {attempts} attempts: {redact(str(last))[:200]}")
+
+
 def preflight_basket(w3, basket, booster_address, buffer_wei, router_address=None):
     """Drop basket legs that cannot execute at the current block and renormalise.
 
@@ -169,11 +200,18 @@ def preflight_basket(w3, basket, booster_address, buffer_wei, router_address=Non
             # it simply buys nothing this round and rounds up on a larger buffer later.
             live.append((ticker, bps))
             continue
-        ok, _out, reason = simulate_leg(w3, router_address, booster_address, token, slice_wei)
-        if ok:
-            live.append((ticker, bps))
-        else:
+        ok, out, reason = simulate_leg(w3, router_address, booster_address, token, slice_wei)
+        if not ok:
             dropped.append((ticker, bps, reason))
+            continue
+        # Same check `_swap` makes on chain: the route's fill must clear the feed-derived floor.
+        min_out, guard_reason = feed_guard(w3, booster_address, token, slice_wei)
+        if min_out is None:
+            dropped.append((ticker, bps, guard_reason))
+        elif out < min_out:
+            dropped.append((ticker, bps, f"fills below the Chainlink guard ({out} < minOut {min_out})"))
+        else:
+            live.append((ticker, bps))
     return renormalise(live), dropped
 
 
