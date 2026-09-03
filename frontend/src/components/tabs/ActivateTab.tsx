@@ -661,143 +661,79 @@ export function ActivateTab() {
 
   const hasClaimable = pending.length > 0;
 
+  const selectedGifts = info ? heldGifts.filter((g) => g.brokerId === info.id.toString()) : [];
+  const selectedCoat = info ? (brokerCoat.byId[info.id.toString()] ?? 0n) : 0n;
+  const offOwned = brokers.length - activeOwned;
+
   return (
     <div className="grid gap-5">
-      {/* ── The portfolio: one card that answers "what do I own and what should I do" ── */}
+      {/* ── 1. The portfolio: the numbers that matter, then the list. Nothing else here. ── */}
       <div className="card">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="pixel-title text-[15px]">Your Brokers</h2>
+          <h2 className="pixel-title text-[15px]">My Brokers</h2>
           {address && (
             <button className="text-ink-soft hover:text-accent" onClick={reloadBrokers} aria-label="refresh">
               <Icon name="search" className="w-4 h-4" />
             </button>
           )}
         </div>
-        <p className="text-ink-soft text-sm mb-4">
-          {backing.totalUsd !== null && brokers.length > 0
-            ? <>
-                Backed by <b className="text-ink-strong">{usd(backing.totalUsd)}</b> of real tokenized stock
-                {backing.totalEarnedUsd !== null && backing.totalEarnedUsd > 0 && (
-                  <> · earned <b className="text-good">{usd(backing.totalEarnedUsd)}</b> since switch-on</>
-                )}.
-                {brokerCoat.total > 0n && (
-                  <> · <b className="text-accent">{fmt(brokerCoat.total, 18, 0)} $COAT</b> ({usdLabel(price.coatWeiToUsd(brokerCoat.total))}) sitting inside your Brokers</>
-                )}
-                {" "}Tap a Broker to open it.
-              </>
-            : "Every active Broker holds real stock in its own wallet."}
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
-          <Stat k="Owned" v={brokers.length.toString()} />
-          <Stat k="Active" v={activeOwned.toString()} />
-          <Stat k="Claim-ready" v={claimReadyCount.toString()} />
-          <Stat k="Your $COAT" v={fmt(coatBal as bigint | undefined, 18, 0)} sub={usdLabel(price.coatWeiToUsd(coatBal as bigint | undefined))} />
-        </div>
         {!address ? (
           <p className="text-ink-soft text-sm">Connect your wallet to see your Brokers.</p>
-        ) : brokersLoading ? (
-          <p className="text-ink-soft text-sm">Loading…</p>
-        ) : brokers.length === 0 ? (
-          <p className="text-ink-soft text-sm">No Brokers in this wallet — get one on OpenSea first.</p>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
-            {brokers.map((b) => (
-              <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} wallet={walletsById[b.id.toString()]} coatInside={brokerCoat.byId[b.id.toString()]} giftCount={giftCountById[b.id.toString()]} />
-            ))}
-          </div>
-        )}
-
-        {/* Selecting an inactive Broker surfaces its activate button right here. */}
-        {info && isOwner && !info.active && (
           <>
-            <button className="btn btn-accent w-full mt-4" onClick={activate} disabled={act.busy || !canActivate}>
-              <Icon name="power" /> {act.busy ? "WORKING…" : `ACTIVATE #${info.id.toString()} — burn ${burnLabel} $COAT${price.ready ? ` (≈ ${burnUsdLabel})` : ""}`}
-            </button>
-            {activateReason && <p className="text-accent text-sm mt-2">{activateReason}</p>}
-            <StepFlow steps={[{ label: "approve COAT", state: steps[0] }, { label: "activate", state: steps[1] }]} />
+            <p className="text-ink-soft text-sm mb-4">
+              Every active Broker earns real tokenized stock into its own wallet, about once an hour,
+              with nothing for you to do. Tap a Broker to open it.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
+              <Stat
+                k="Earned since switch-on"
+                v={backing.totalEarnedUsd !== null && backing.totalEarnedUsd > 0 ? usd(backing.totalEarnedUsd) : "—"}
+                sub="never shrinks when you withdraw"
+              />
+              <Stat
+                k="Stock inside"
+                v={backing.totalUsd !== null && brokers.length > 0 ? usd(backing.totalUsd) : "—"}
+                sub="in Broker wallets + claimable"
+              />
+              <Stat k="Brokers" v={brokers.length ? `${activeOwned} on · ${offOwned} off` : "0"} sub={claimReadyCount > 0 ? `${claimReadyCount} ready to claim` : undefined} />
+              <Stat k="Your $COAT" v={fmt(coatBal as bigint | undefined, 18, 0)} sub={usdLabel(price.coatWeiToUsd(coatBal as bigint | undefined))} />
+            </div>
+            {brokerCoat.total > 0n && (
+              <p className="text-[12px] text-ink-soft mb-3">
+                <b className="text-accent">{fmt(brokerCoat.total, 18, 0)} $COAT</b> ({usdLabel(price.coatWeiToUsd(brokerCoat.total))}) is
+                sitting inside your Brokers. Open one to withdraw it.
+              </p>
+            )}
+            {brokersLoading ? (
+              <p className="text-ink-soft text-sm">Loading…</p>
+            ) : brokers.length === 0 ? (
+              <p className="text-ink-soft text-sm">No Brokers in this wallet — get one on OpenSea first.</p>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
+                {brokers.map((b) => (
+                  <BrokerCard key={b.id.toString()} id={b.id} active={b.active} selected={tokenId === b.id.toString()} onSelect={() => selectBroker(b.id)} backingUsd={backing.byId[b.id.toString()]} earnedUsd={backing.earnedById[b.id.toString()]} wallet={walletsById[b.id.toString()]} coatInside={brokerCoat.byId[b.id.toString()]} giftCount={giftCountById[b.id.toString()]} />
+                ))}
+              </div>
+            )}
           </>
         )}
-        <StatusLine msg={act.msg} kind={act.kind} />
-
-        {/* Bulk actions, tucked under one divider — conveniences, never the only path. */}
-        {address && brokers.length > 0 && (inactiveOwned > 1 || claimReadyCount > 0) && (
-          <div className="mt-4 border-t border-line pt-3 grid gap-2">
-            <span className="label mb-0">Everything at once</span>
-            {inactiveOwned > 1 && (
-              <button className="btn btn-ghost w-full" onClick={activateAll} disabled={act.busy}>
-                <Icon name="power" /> ACTIVATE ALL INACTIVE ({inactiveOwned}
-                {activateAllCost !== undefined ? ` · ${fmt(activateAllCost, 18, 0)} COAT` : ""})
-              </button>
-            )}
-            {claimReadyCount > 0 && (
-              <button className="btn btn-accent w-full" onClick={claimAll} disabled={claimTx.busy}>
-                <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : `CLAIM ALL (${claimReadyCount})`}
-              </button>
-            )}
-          </div>
-        )}
-        {address && brokers.length > 0 && (
-          <details className="mt-3">
-            <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
-              Withdraw everything to my wallet…
-            </summary>
-            <div className="mt-2 grid gap-2">
-              <button className="btn btn-ghost w-full" onClick={withdrawAll} disabled={claimTx.busy}>
-                <Icon name="wallet" /> {claimTx.busy ? "WORKING…" : "WITHDRAW EVERYTHING TO MY WALLET"}
-              </button>
-              <label className="flex items-center gap-2 text-[12px] text-ink-soft cursor-pointer select-none">
-                <input type="checkbox" checked={skipDust} onChange={(e) => setSkipDust(e.target.checked)}
-                  className="accent-[var(--c-accent)]" />
-                Skip balances under $0.50 (fewer signatures — they stay in the Broker wallet, still yours)
-              </label>
-              <p className="text-[11px] text-ink-soft">
-                Claims every Broker, then moves all stock into your connected wallet — you see the
-                total signature count before the first prompt. Batching wallets sign once.
-              </p>
-            </div>
-          </details>
-        )}
-        {!info && <StatusLine msg={claimTx.msg} kind={claimTx.kind} />}
-
-        {/* Power users: inspect any Broker in the collection, owned or not. */}
-        <details className="mt-3">
-          <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
-            Look up any Broker by id…
-          </summary>
-          <div className="flex gap-2 mt-2">
-            <input
-              className="fld"
-              inputMode="numeric"
-              placeholder="e.g. 1"
-              value={tokenId}
-              onChange={(e) => setTokenId(e.target.value.replace(/\D/g, ""))}
-            />
-            <button className="btn btn-ghost shadow-pixel-sm" onClick={() => check()}>
-              <Icon name="search" /> CHECK
-            </button>
-          </div>
-        </details>
       </div>
 
-      {/* ── Playbooks: standing orders the hourly engine executes per Broker ── */}
-      <PlaybookPanel
-        brokers={playbookBrokers}
-        walletsById={walletsById as Record<string, `0x${string}` | undefined>}
-      />
-
-      {/* ── The selected Broker: everything about ONE Broker, only when one is open ── */}
+      {/* ── 2. The open Broker: one card, top to bottom = switch on → what's inside → claim → extras ── */}
       {info && (
-        <div className="card">
-          <div className="flex items-center gap-3 mb-1">
+        <div className="card border-l-[3px] border-l-accent">
+          <div className="flex items-center gap-3 mb-3">
             <div className="border border-line bg-cream shrink-0">
               <BrokerArtwork tokenId={info.id} size={72} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-pixel text-sm text-ink-strong">Broker #{info.id.toString()}</span>
                 <span className={`badge ${info.active ? "border-good text-good" : "border-ink-soft text-ink-soft"}`}>
                   {info.active ? "ACTIVE" : "INACTIVE"}
                 </span>
+                {!isOwner && <span className="badge border-ink-soft text-ink-soft">not yours</span>}
               </div>
               <div className="flex items-center gap-2 text-sm mt-1">
                 <span className="text-ink-soft">wallet:</span>
@@ -813,95 +749,119 @@ export function ActivateTab() {
                   copy ⧉
                 </button>
               </div>
-            </div>
-          </div>
-          <p className="text-ink-soft text-[12px] mb-3">
-            Earned stock auto-claims into this wallet about once an hour and moves with the NFT.
-          </p>
-          {isOwner && (
-            <ShareOnX data={{
-              id: info.id.toString(),
-              active: info.active,
-              earnedUsd: backing.earnedById[info.id.toString()],
-              backingUsd: backing.byId[info.id.toString()],
-              coatInside: brokerCoat.byId[info.id.toString()],
-              coatUsd: price.coatWeiToUsd(brokerCoat.byId[info.id.toString()]),
-              symbols: holdings.map((h) => h.sym),
-              gifts: giftCountById[info.id.toString()],
-            }} />
-          )}
-          {holdings.length ? (
-            <div className="grid gap-1.5">
-              {holdings.map((h) => (
-                <div key={h.token} className="flex items-center gap-3">
-                  <span className="badge">{h.sym}</span>
-                  <span className="font-pixel text-sm">{fmt(h.bal, h.decimals, 7)}</span>
-                  <span className="text-[12px] text-ink-soft tabular-nums">{usdLabel(holdingUsd(h))}</span>
+              {backing.earnedById[info.id.toString()] !== undefined && (
+                <div className="text-[12px] text-ink-soft mt-1">
+                  Earned <b className="text-good">{usd(backing.earnedById[info.id.toString()])}</b> since you switched it on.
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-ink-soft text-sm">No claimed stock in this wallet yet.</p>
-          )}
-          {(brokerCoat.byId[info.id.toString()] ?? 0n) > 0n && (
-            <div className="mt-3 border-t border-line pt-3">
-              <div className="flex items-center gap-3">
-                <span className="badge border-accent text-accent">$COAT</span>
-                <span className="font-pixel text-sm">{fmt(brokerCoat.byId[info.id.toString()], 18, 0)}</span>
-                <span className="text-[12px] text-ink-soft tabular-nums">{usdLabel(price.coatWeiToUsd(brokerCoat.byId[info.id.toString()]))}</span>
-                <span className="text-[11px] text-ink-soft">inside this Broker · moves with the NFT</span>
-              </div>
-              {isOwner && (
-                <button className="btn btn-ghost w-full mt-2" onClick={withdrawCoat} disabled={claimTx.busy}>
-                  {claimTx.busy ? "WORKING…" : "Withdraw $COAT to my wallet"}
-                </button>
               )}
             </div>
-          )}
-          {heldGifts.some((g) => g.brokerId === info.id.toString()) && (
-            <div className="mt-3 border-t border-line pt-3">
-              <div className="label">NFT gifts inside this Broker</div>
-              {heldGifts.filter((g) => g.brokerId === info.id.toString()).map((g) => (
-                <div key={`${g.nft}:${g.id}`} className="flex items-center gap-3 mt-1.5">
-                  {g.nft.toLowerCase() === ADDR.broker.toLowerCase() && (
-                    <div className="border border-line bg-cream shrink-0"><BrokerArtwork tokenId={BigInt(g.id)} size={40} /></div>
-                  )}
-                  <span className="badge border-accent text-accent">{g.name} #{g.id}</span>
-                  <span className="text-[11px] text-ink-soft">won in a gift draw · moves with the NFT</span>
-                  {isOwner && (
-                    <button className="btn btn-ghost text-[10px] px-2 py-1.5 ml-auto" onClick={() => withdrawGift(g.nft, g.id)} disabled={claimTx.busy} type="button">
-                      Withdraw
-                    </button>
-                  )}
-                </div>
-              ))}
+          </div>
+
+          {/* Switch on — the only thing an inactive Broker needs */}
+          {isOwner && !info.active && (
+            <div className="border-t border-line pt-3 mb-3">
+              <p className="text-ink-soft text-sm mb-2">
+                This Broker is switched off, so it earns nothing yet. Activating burns {burnLabel} $COAT
+                {price.ready ? ` (≈ ${burnUsdLabel})` : ""} once; from then on it earns a share of every purchase.
+              </p>
+              <button className="btn btn-accent w-full" onClick={activate} disabled={act.busy || !canActivate}>
+                <Icon name="power" /> {act.busy ? "WORKING…" : `ACTIVATE #${info.id.toString()}`}
+              </button>
+              {activateReason && <p className="text-accent text-sm mt-2">{activateReason}</p>}
+              <StepFlow steps={[{ label: "approve COAT", state: steps[0] }, { label: "activate", state: steps[1] }]} />
+              <StatusLine msg={act.msg} kind={act.kind} />
             </div>
           )}
+
+          {/* What's inside the wallet right now */}
+          <div className="border-t border-line pt-3">
+            <div className="label">Inside this Broker&rsquo;s wallet</div>
+            {holdings.length === 0 && selectedCoat === 0n && selectedGifts.length === 0 && (
+              <p className="text-ink-soft text-sm">
+                {info.active ? "Nothing claimed yet — earned stock lands here about once an hour." : "Empty. Switch it on to start earning."}
+              </p>
+            )}
+            {holdings.length > 0 && (
+              <div className="grid gap-1.5">
+                {holdings.map((h) => (
+                  <div key={h.token} className="flex items-center gap-3">
+                    <span className="badge">{h.sym}</span>
+                    <span className="font-pixel text-sm">{fmt(h.bal, h.decimals, 7)}</span>
+                    <span className="text-[12px] text-ink-soft tabular-nums">{usdLabel(holdingUsd(h))}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {selectedCoat > 0n && (
+              <div className="flex items-center gap-3 mt-2">
+                <span className="badge border-accent text-accent">$COAT</span>
+                <span className="font-pixel text-sm">{fmt(selectedCoat, 18, 0)}</span>
+                <span className="text-[12px] text-ink-soft tabular-nums">{usdLabel(price.coatWeiToUsd(selectedCoat))}</span>
+                {isOwner && (
+                  <button className="btn btn-ghost text-[10px] px-2 py-1.5 ml-auto" onClick={withdrawCoat} disabled={claimTx.busy} type="button">
+                    Withdraw
+                  </button>
+                )}
+              </div>
+            )}
+            {selectedGifts.map((g) => (
+              <div key={`${g.nft}:${g.id}`} className="flex items-center gap-3 mt-2">
+                {g.nft.toLowerCase() === ADDR.broker.toLowerCase() && (
+                  <div className="border border-line bg-cream shrink-0"><BrokerArtwork tokenId={BigInt(g.id)} size={32} /></div>
+                )}
+                <span className="badge border-accent text-accent">{g.name} #{g.id}</span>
+                <span className="text-[11px] text-ink-soft">gift draw win</span>
+                {isOwner && (
+                  <button className="btn btn-ghost text-[10px] px-2 py-1.5 ml-auto" onClick={() => withdrawGift(g.nft, g.id)} disabled={claimTx.busy} type="button">
+                    Withdraw
+                  </button>
+                )}
+              </div>
+            ))}
+            <p className="text-[11px] text-ink-soft mt-2">Everything here travels with the NFT if you sell it.</p>
+          </div>
+
+          {/* Still accruing in the engine */}
           {pending.length > 0 && (
-            <div className="mt-4 border-t border-line pt-3">
-              <div className="label">Accruing — auto-claimed to this wallet hourly</div>
+            <div className="border-t border-line pt-3 mt-3">
+              <div className="label">Earned, not claimed yet</div>
               {pending.map((h) => (
                 <div key={h.sym} className="text-sm">
                   {h.sym}: {fmt(h.bal, h.decimals, 4)}
                   <span className="text-ink-soft text-[12px] ml-2 tabular-nums">{usdLabel(holdingUsd(h))}</span>
                 </div>
               ))}
+              <p className="text-[11px] text-ink-soft mt-1">Claims itself about once an hour. Claim now if you don&rsquo;t want to wait.</p>
+              {isOwner && (
+                <button className="btn btn-accent w-full mt-2" onClick={claimOnly} disabled={claimTx.busy}>
+                  <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM NOW"}
+                </button>
+              )}
             </div>
           )}
-          {isOwner && hasClaimable && (
-            <button className="btn btn-accent w-full mt-4" onClick={claimOnly} disabled={claimTx.busy}>
-              <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : "CLAIM NOW → BROKER WALLET"}
-            </button>
-          )}
+
+          {/* Take it out / show it off */}
           {isOwner && (holdings.length > 0 || hasClaimable) && (
-            <button className="btn btn-ghost w-full mt-2" onClick={withdraw} disabled={claimTx.busy}>
-              {claimTx.busy ? "WITHDRAWING…" : "Withdraw to my wallet (optional)"}
+            <button className="btn btn-ghost w-full mt-3" onClick={withdraw} disabled={claimTx.busy}>
+              <Icon name="wallet" /> {claimTx.busy ? "WITHDRAWING…" : "Withdraw stock to my wallet"}
             </button>
           )}
           <StatusLine msg={claimTx.msg} kind={claimTx.kind} />
+          {isOwner && (
+            <ShareOnX data={{
+              id: info.id.toString(),
+              active: info.active,
+              earnedUsd: backing.earnedById[info.id.toString()],
+              backingUsd: backing.byId[info.id.toString()],
+              coatInside: selectedCoat,
+              coatUsd: price.coatWeiToUsd(selectedCoat),
+              symbols: holdings.map((h) => h.sym),
+              gifts: giftCountById[info.id.toString()],
+            }} />
+          )}
 
           {isOwner && holdings.length > 0 && (
-            <details className="mt-4 border-t border-line pt-3">
+            <details className="mt-3 border-t border-line pt-3">
               <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
                 Send stock from this Broker to another address…
               </summary>
@@ -960,10 +920,78 @@ export function ActivateTab() {
           )}
         </div>
       )}
+      {!info && <StatusLine msg={act.msg} kind={act.kind} />}
+      {!info && <StatusLine msg={claimTx.msg} kind={claimTx.kind} />}
+
+      {/* ── 3. Playbooks: standing orders the hourly engine executes per Broker ── */}
+      <PlaybookPanel
+        brokers={playbookBrokers}
+        walletsById={walletsById as Record<string, `0x${string}` | undefined>}
+      />
+
+      {/* ── 4. Everything at once + power tools, out of the way ── */}
+      {address && (
+        <div className="card">
+          <h2 className="pixel-title text-[15px] mb-1">All Brokers at once</h2>
+          <p className="text-ink-soft text-sm mb-3">Conveniences for holders with several Brokers. Nothing here is required.</p>
+          {brokers.length > 0 && (inactiveOwned > 1 || claimReadyCount > 0) && (
+            <div className="grid gap-2 mb-3">
+              {inactiveOwned > 1 && (
+                <button className="btn btn-ghost w-full" onClick={activateAll} disabled={act.busy}>
+                  <Icon name="power" /> ACTIVATE ALL INACTIVE ({inactiveOwned}
+                  {activateAllCost !== undefined ? ` · ${fmt(activateAllCost, 18, 0)} COAT` : ""})
+                </button>
+              )}
+              {claimReadyCount > 0 && (
+                <button className="btn btn-accent w-full" onClick={claimAll} disabled={claimTx.busy}>
+                  <Icon name="download" /> {claimTx.busy ? "CLAIMING…" : `CLAIM ALL (${claimReadyCount})`}
+                </button>
+              )}
+            </div>
+          )}
+          {brokers.length > 0 && (
+            <details className="mt-1">
+              <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
+                Withdraw everything to my wallet…
+              </summary>
+              <div className="mt-2 grid gap-2">
+                <button className="btn btn-ghost w-full" onClick={withdrawAll} disabled={claimTx.busy}>
+                  <Icon name="wallet" /> {claimTx.busy ? "WORKING…" : "WITHDRAW EVERYTHING TO MY WALLET"}
+                </button>
+                <label className="flex items-center gap-2 text-[12px] text-ink-soft cursor-pointer select-none">
+                  <input type="checkbox" checked={skipDust} onChange={(e) => setSkipDust(e.target.checked)}
+                    className="accent-[var(--c-accent)]" />
+                  Skip balances under $0.50 (fewer signatures — they stay in the Broker wallet, still yours)
+                </label>
+                <p className="text-[11px] text-ink-soft">
+                  Claims every Broker, then moves all stock into your connected wallet — you see the
+                  total signature count before the first prompt. Batching wallets sign once.
+                </p>
+              </div>
+            </details>
+          )}
+          <details className="mt-2">
+            <summary className="cursor-pointer text-[12px] text-ink-soft hover:text-ink-strong select-none">
+              Look up any Broker by id…
+            </summary>
+            <div className="flex gap-2 mt-2">
+              <input
+                className="fld"
+                inputMode="numeric"
+                placeholder="e.g. 1"
+                value={tokenId}
+                onChange={(e) => setTokenId(e.target.value.replace(/\D/g, ""))}
+              />
+              <button className="btn btn-ghost shadow-pixel-sm" onClick={() => check()}>
+                <Icon name="search" /> CHECK
+              </button>
+            </div>
+          </details>
+        </div>
+      )}
     </div>
   );
 }
-
 
 function Stat({ k, v, sub }: { k: string; v: string; sub?: string }) {
   return (
