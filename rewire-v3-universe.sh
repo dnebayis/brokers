@@ -39,9 +39,12 @@ ENTRIES=(
 )
 echo "== pre-check: each pool pairs the stock with USDG"
 for e in "${ENTRIES[@]}"; do set -- $e
-  T0=$(cast call $3 "token0()(address)" --rpc-url $RPC); T1=$(cast call $3 "token1()(address)" --rpc-url $RPC)
-  [[ "${T0,,}" == "${2,,}" || "${T1,,}" == "${2,,}" ]] || { echo "$1: pool does not contain the stock"; exit 1; }
-  [[ "${T0,,}" == "${USDG,,}" || "${T1,,}" == "${USDG,,}" ]] || { echo "$1: pool does not contain USDG"; exit 1; }
+  # macOS ships bash 3.2 (no ${var,,}): lower-case through tr
+  lc() { echo "$1" | tr '[:upper:]' '[:lower:]'; }
+  T0=$(lc "$(cast call $3 "token0()(address)" --rpc-url $RPC)"); T1=$(lc "$(cast call $3 "token1()(address)" --rpc-url $RPC)")
+  S=$(lc "$2"); U=$(lc "$USDG")
+  [ "$T0" = "$S" ] || [ "$T1" = "$S" ] || { echo "$1: pool does not contain the stock"; exit 1; }
+  [ "$T0" = "$U" ] || [ "$T1" = "$U" ] || { echo "$1: pool does not contain USDG"; exit 1; }
   echo "  $1 ok"
 done
 echo "== feeds for new names (setStockFeed), then setRoute for every entry (PoolKind.V3 = 1)"
