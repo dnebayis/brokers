@@ -15,10 +15,16 @@ if ! git clone --quiet --depth 1 --branch data "$REMOTE" "$TMP" 2>/dev/null; the
   git -C "$TMP" checkout -q --orphan data
 fi
 cp "$FILE" "$TMP/$DEST"
+# Vercel would otherwise try (and fail) to build this data-only branch on every push:
+# tell it, from the branch itself, that `data` never deploys. Both locations, so the
+# project's root-directory setting does not matter.
+mkdir -p "$TMP/frontend"
+printf '{ "git": { "deploymentEnabled": { "data": false } } }\n' > "$TMP/vercel.json"
+cp "$TMP/vercel.json" "$TMP/frontend/vercel.json"
 cd "$TMP"
 git config user.name "coattail-keeper"
 git config user.email "keeper@coattail.cash"
-git add "$DEST"
+git add "$DEST" vercel.json frontend/vercel.json
 if git diff --cached --quiet; then
   echo "publish_data: $DEST unchanged"
   exit 0

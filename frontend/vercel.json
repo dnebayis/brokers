@@ -6,7 +6,8 @@
       "claude/coattail-brokers-context-361d3e": false,
       "claude/coattail-brokers-continuation-e7cd9f": false,
       "claude/vigorous-spence-8373da": false,
-      "claude/yeni-sohbet-619c85": false
+      "claude/yeni-sohbet-619c85": false,
+      "data": false
     }
   }
 }
