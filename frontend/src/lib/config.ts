@@ -45,7 +45,7 @@ export const OPENSEA_URL = "https://opensea.io/collection/coattailbrokers";
 export const LINKS = {
   opensea: OPENSEA_URL,
   coatOnOpenSea: `https://opensea.io/token/robinhood/${ADDR.coat.toLowerCase()}?timeframe=seven_days`,
-  x: "https://x.com/Brokersart",
+  x: "https://x.com/CoattailBrokers",
   discord: "https://discord.gg/kTjj2V9r2D",
 } as const;
 
