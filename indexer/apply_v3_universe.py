@@ -36,14 +36,14 @@ def main() -> int:
     for row in plan:
         onchain = router.functions.routes(Web3.to_checksum_address(row["token"])).call()
         wired = onchain[2].lower() == row["pool"].lower() and onchain[3] == 1
-        print(f"{row['symbol']:5s} chain={'V3 ok' if wired else 'NOT YET'} probe={probe.get(row['symbol'], {}).get('devBps', '?')} bps")
+        print(f"{row["sym"]:5s} chain={'V3 ok' if wired else 'NOT YET'} probe={probe.get(row["sym"], {}).get('devBps', '?')} bps")
         if not wired:
             bad += 1
             continue
-        entry = manifest["entries"].get(row["symbol"]) or {"token": row["token"], "midPool": MID_POOL, "midToken": USDG, "feed": row["feed"]}
+        entry = manifest["entries"].get(row["sym"]) or {"token": row["token"], "midPool": MID_POOL, "midToken": USDG, "feed": row["feed"]}
         entry.update({"stockPool": row["pool"], "poolKind": "V3", "probeOk": True,
-                      "probeBlock": probe.get(row["symbol"], {}).get("block", 0), "feed": row["feed"]})
-        manifest["entries"][row["symbol"]] = entry
+                      "probeBlock": probe.get(row["sym"], {}).get("block", 0), "feed": row["feed"]})
+        manifest["entries"][row["sym"]] = entry
     if bad:
         print(f"{bad} name(s) not wired on chain yet; manifest untouched")
         return 1
