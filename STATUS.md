@@ -23,13 +23,13 @@ Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
 
 ## Metadata
 
-The collection renders through `BrokerRendererV4` (`0x8e818035Cab44c3bD22426dC28Cdd57d59657E88`,
-art read from the frozen v1 renderer). Scored attributes are exactly `Type` and `Rank band`;
-the rank plan (Type first, then accessory rarity inside the type) is derived from the on-chain
-traits by `pipeline/rank_plan.py` and hash-locked in the contract. The seven art traits, the
-exact rank and live state (status, holdings, COAT inside) are published in the description and
-in `traits` / `rank` / `live` objects, none of which move a marketplace rank. Rollback is one
-owner call, `setRenderer(v3)`.
+The collection renders through the original `BrokerRenderer` v1
+(`0xB1b64E0CE411135DfaB728a482b21981B07fAd31`): the seven art traits plus live state
+(Status, per-stock holdings) as attributes, so marketplace rarity moves with balances. Two
+alternatives are deployed and one owner call away (`setRenderer`): v3
+(`0x18906f1Cd34DAadB79946A7afb3E1fFb3569FA29`, the seven art traits only) and v4
+(`0x8e818035Cab44c3bD22426dC28Cdd57d59657E88`, Type + a hash-locked Type-first rank band).
+Owner decision on 2026-09-03: stay on v1.
 
 ## Products
 
