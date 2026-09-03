@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { loadMembers, MEMBERS_REVALIDATE } from "@/lib/members";
+import { loadMembers } from "@/lib/members";
 
 // One member's record: summary plus every filing of theirs in the basket window.
-export const revalidate = MEMBERS_REVALIDATE;
+export const revalidate = 600; // must be a literal for Next; keep in step with MEMBERS_REVALIDATE
 
 export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params;

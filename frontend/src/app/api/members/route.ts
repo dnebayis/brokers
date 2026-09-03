@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { loadMembers, MEMBERS_REVALIDATE } from "@/lib/members";
+import { loadMembers } from "@/lib/members";
 
 // Member index: every member with filings in the basket window, summary only (no rows),
 // sorted by disclosed buying.
-export const revalidate = MEMBERS_REVALIDATE;
+export const revalidate = 600; // must be a literal for Next; keep in step with MEMBERS_REVALIDATE
 
 export async function GET(req: Request) {
   const top = Number(new URL(req.url).searchParams.get("top") || "0");
