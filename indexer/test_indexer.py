@@ -704,7 +704,9 @@ class CommentaryTests(unittest.TestCase):
 
     def test_generate_reuses_previous_note_when_facts_unchanged(self):
         from commentary import generate, input_hash
-        prev = {"text": self.NOTE, "model": "x", "generatedAt": "t", "inputHash": input_hash(self.PAYLOAD)}
+        from commentary import PROMPT_VERSION
+        prev = {"text": self.NOTE, "model": "x", "generatedAt": "t", "inputHash": input_hash(self.PAYLOAD),
+                "promptVersion": PROMPT_VERSION}
         calls = []
         out = generate(self.PAYLOAD, prev, key="k", call=lambda *a: calls.append(a) or self.NOTE)
         self.assertEqual(out["text"], self.NOTE)
@@ -724,7 +726,9 @@ class CommentaryTests(unittest.TestCase):
         from commentary import generate
         from datetime import timezone as _tz
         made = datetime(2026, 9, 3, 9, 0, tzinfo=_tz.utc)
-        prev = {"text": self.NOTE, "model": "x", "generatedAt": made.isoformat(), "inputHash": "stale"}
+        from commentary import PROMPT_VERSION
+        prev = {"text": self.NOTE, "model": "x", "generatedAt": made.isoformat(), "inputHash": "stale",
+                "promptVersion": PROMPT_VERSION}
         calls = []
         # 3 hours later, facts changed (hash differs): still the old note, no model call
         out = generate(self.PAYLOAD, prev, key="k", call=lambda *a: calls.append(a) or self.NOTE,
@@ -746,3 +750,14 @@ class CommentaryTests(unittest.TestCase):
         note2 = self.NOTE.replace("Nancy Pelosi", "Ana DE LA Cruz")
         out = generate(payload, None, key="k", call=lambda *a: note2)
         self.assertIsNotNone(out)
+
+    def test_an_older_prompt_version_is_replaced_regardless_of_age(self):
+        from commentary import generate, input_hash
+        from datetime import timezone as _tz
+        now = datetime(2026, 9, 3, 9, 0, tzinfo=_tz.utc)
+        prev = {"text": self.NOTE, "model": "x", "generatedAt": now.isoformat(),
+                "inputHash": input_hash(self.PAYLOAD), "promptVersion": 1}
+        calls = []
+        out = generate(self.PAYLOAD, prev, key="k", call=lambda *a: calls.append(a) or self.NOTE, now=now)
+        self.assertEqual(len(calls), 1)
+        self.assertGreater(out["promptVersion"], 1)

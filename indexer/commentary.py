@@ -22,6 +22,9 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 # A note lives at least this long even if the facts move: the basket rebalances hourly by
 # design, and a note that rewrites itself every hour reads as noise, not information.
 NOTE_MIN_HOURS = float(os.environ.get("NOTE_MIN_HOURS", "5"))
+# Bump when the prompt changes: a note written by an older prompt is replaced on the next
+# pass regardless of its age.
+PROMPT_VERSION = 2
 MAX_CHARS = 900
 # Upper-case tokens that are not tickers and may appear in a sentence.
 _NOT_TICKERS = {
@@ -90,11 +93,15 @@ def build_prompt(payload: Dict) -> str:
     return (
         "You write a short note for holders of Coattail Brokers, NFTs whose wallets automatically buy a "
         "basket of tokenized stocks built from US Congress stock-trade disclosures.\n"
-        "Write 70 to 110 words of plain English about the basket below. Rules:\n"
+        "Write 70 to 110 words of plain English about the basket below, the way a sharp newsletter "
+        "would brief a reader in one paragraph. Rules:\n"
         "- Use ONLY the facts in the JSON. Never add tickers, people, prices, dates or numbers that are not there.\n"
-        "- Say which names carry the basket and which members' disclosed buys put them there (name at most three members).\n"
-        "- Mention the largest name that could not be bought and the reason, in one sentence.\n"
-        "- Describe, never advise: no recommendations, no predictions, no 'should'.\n"
+        "- Lead with the position that matters most and the member behind it, with their amount range "
+        "(notional) and the traded and filed dates.\n"
+        "- Name at most three members in the whole note; summarize the rest as a count.\n"
+        "- One sentence on the largest name that could not be bought (leftOut) and why.\n"
+        "- One sentence with coveragePct: the share of disclosed buying dollars the basket could actually buy.\n"
+        "- Describe, never advise: no recommendations, no predictions, no 'should'. Do not open with a list of tickers.\n"
         "- No headings, no bullet points, no emoji, no preamble. Output the note only.\n\n"
         f"FACTS:\n{json.dumps(f, indent=1)}"
     )
@@ -166,7 +173,7 @@ def generate(payload: Dict, previous: Optional[Dict] = None, key: str = "",
     """
     now = now or datetime.now(timezone.utc)
     h = input_hash(payload)
-    if previous and previous.get("text"):
+    if previous and previous.get("text") and previous.get("promptVersion", 1) == PROMPT_VERSION:
         if previous.get("inputHash") == h or _fresh(previous, now, min_hours):
             return dict(previous)
     if not key:
@@ -190,6 +197,7 @@ def generate(payload: Dict, previous: Optional[Dict] = None, key: str = "",
                 "text": text, "model": model,
                 "generatedAt": now.isoformat(timespec="seconds"),
                 "inputHash": h,
+                "promptVersion": PROMPT_VERSION,
             }
         last = f"rejected: {reason}"
     print(f"::warning::basket note not generated ({last})")
