@@ -112,6 +112,10 @@ jobs:
           set -uo pipefail
           passes=5
           [ "${{ github.event_name }}" = "schedule" ] || passes=1
+          # A cache miss must not shrink the series: union the restored file with the published copy.
+          if [ -n "${SHADOW_HISTORY_FILE:-}" ]; then
+            python shadow_merge.py "$SHADOW_HISTORY_FILE" "$SHADOW_DATA_URL" || echo "::warning::shadow merge skipped"
+          fi
           fail=0
           for i in $(seq 1 "$passes"); do
             if [ "$i" -gt 1 ]; then sleep 3600; fi

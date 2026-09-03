@@ -749,6 +749,18 @@ class FeedDirectoryTests(unittest.TestCase):
         self.assertEqual(newly_listed(["BE"], fetch=lambda: self.DIR), {"BE": "0x" + "b2" * 20})
 
 
+class ShadowMergeTests(unittest.TestCase):
+    def test_union_keeps_every_hour_and_prefers_the_local_row_on_ties(self):
+        from shadow_merge import merge, parse, dump
+        published = parse('{"at":"2026-08-24T11:00:00+00:00","posted":"conviction"}\n{"at":"2026-09-01T00:00:00+00:00","posted":"conviction"}\n')
+        local = parse('{"at":"2026-09-01T00:00:00+00:00","posted":"conviction","filedWindow":null}\nnot json\n{"at":"2026-09-03T21:00:00+00:00"}\n')
+        merged = merge(published, local)
+        self.assertEqual([r["at"] for r in merged], ["2026-08-24T11:00:00+00:00", "2026-09-01T00:00:00+00:00", "2026-09-03T21:00:00+00:00"])
+        self.assertIn("filedWindow", merged[1])                       # local wins the tie
+        self.assertEqual(len(parse(dump(merged))), 3)                # round-trips
+        self.assertEqual(merge([], []), [])
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""
