@@ -13,13 +13,17 @@ export const CAMPAIGN: {
   weeks: number;
   brokerCount: number; // sponsored Brokers expected in the wallet
 } = {
-  live: false,
-  partnerName: "",
+  // Live at /campaign but deliberately unlisted: no tab, no nav entry, no link from any
+  // other page, so it is reachable by whoever has the URL and invisible to everyone else.
+  // The roster and every count come from the chain via the open Broker API, so nothing here
+  // needs updating week to week; startDate is the day the desk received its Brokers.
+  live: true,
+  partnerName: "Geez",
   partnerUrl: "",
-  wallet: "",
-  startDate: "",
+  wallet: "0xA7f6e3cBd848a89086d06F507675843F891DB904",
+  startDate: "2026-09-04",
   weeks: 4,
-  brokerCount: 0,
+  brokerCount: 110,
 };
 
 // One row per executed weekly distribution, appended from the batch sender's
