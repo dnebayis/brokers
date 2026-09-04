@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { RoutingNotice } from "@/components/trade/RoutingNotice";
-import { ADDR, CONTRACTS_FOR_DOCS } from "@/lib/config";
+import { ADDR, CONTRACTS_FOR_DOCS, PARAMS } from "@/lib/config";
 import { activeChain } from "@/lib/chains";
 import { publicClient as client } from "@/lib/client";
 import { coatAbi } from "@/lib/abis";
@@ -217,6 +217,27 @@ export function DocsTab() {
         Example: <Code>curl https://www.coattail.cash/api/broker/311</Code> — both endpoints also return the
         chain id and core contract addresses so integrations never hardcode them.
       </p>
+
+      <H>Getting a Broker as a prize or a reward</H>
+      <P>
+        A Broker that arrives from someone else&apos;s wallet, whether won, gifted or airdropped, is
+        yours in full: the NFT, whatever tokenized stock already sits in its ERC-6551 wallet, any
+        $COAT inside it, and every future payout it earns. Four things are worth knowing.
+      </P>
+      <ul className="list-disc ml-5 space-y-1.5 text-ink my-2.5">
+        <li><b>It arrives switched off.</b> A transfer deactivates a Broker by design, so a prize
+          always lands OFF whatever state the sender had it in. It earns nothing until you switch
+          it on, which burns {PARAMS.activationBurn.toLocaleString()} $COAT from your own wallet.</li>
+        <li><b>Look inside before anything else.</b> Open My Brokers: the card shows the stock and
+          the $COAT already held in that Broker&apos;s wallet. Prize Brokers often arrive carrying
+          both, and it is yours whether or not you ever activate.</li>
+        <li><b>Three ways out, all yours.</b> Withdraw the assets to your own wallet one token at a
+          time, sell the NFT with everything still inside it (assets follow the NFT, which is what
+          a buyer is paying for), or hold it switched on and let it keep earning.</li>
+        <li><b>Nothing expires.</b> Unclaimed salary stays recorded in the Booster against the token
+          id, not against a wallet or a deadline, so a Broker you ignore for a month has lost
+          nothing when you come back to it.</li>
+      </ul>
 
       <H>Security &amp; trust</H>
       <ul className="list-disc ml-5 space-y-1.5 text-ink my-2.5">
