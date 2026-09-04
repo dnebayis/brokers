@@ -136,19 +136,6 @@ def main() -> None:
     if args.execute and account is None:
         raise RuntimeError("KEEPER_PRIVATE_KEY is required with --execute")
 
-    # Seed the nonce once and track it locally. RH's proxied RPC lags both ways on
-    # get_transaction_count: "pending" can trail the confirmed "latest" count (it returned 1381 while
-    # state was already 1382 right after the poke step's txs), so re-querying "pending" alone stays
-    # stale and every claimBatch collides ("nonce too low"). Seed from max(pending, latest) and,
-    # on a nonce error, advance to max(nonce+1, latest) so a lagging read can never pin us too low.
-    def _best_nonce() -> int:
-        return max(
-            w3.eth.get_transaction_count(account.address, "pending"),
-            w3.eth.get_transaction_count(account.address, "latest"),
-        )
-
-    nonce = _best_nonce() if account else 0
-
     for _ in range(args.max_batches):
         batch, next_cursor = select_claim_batch(int(state["nextTokenId"]), is_minted, has_claim,
                                                 max_batch=batch_size)
@@ -169,25 +156,11 @@ def main() -> None:
                 else booster.functions.claimBatch(batch))
         estimate = call.estimate_gas({"from": account.address})
         gas_limit = max(int(estimate * 2), 6_000_000 if sweeper is not None else 2_500_000)
-        tx_hash = None
-        for send_try in range(4):
-            tx = call.build_transaction({
-                "from": account.address,
-                "nonce": nonce,
-                "chainId": CHAIN_ID,
-                "gas": gas_limit,
-            })
-            signed = account.sign_transaction(tx)
-            raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
-            try:
-                tx_hash = w3.eth.send_raw_transaction(raw)
-                break
-            except Exception as exc:
-                if "nonce" in str(exc).lower() and send_try < 3:
-                    nonce = max(nonce + 1, _best_nonce())
-                    continue
-                raise
-        nonce += 1
+        # Shared relay key with the keeper, and the same trap: RH's RPC can answer a
+        # broadcast with an error after accepting it, so a naive nonce bump re-sent the same
+        # claim. send_signed looks for the signed hash on the node before bumping.
+        from keeper import send_signed
+        tx_hash = send_signed(w3, account, call, gas_limit, "claim.batch", CHAIN_ID)
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
         if receipt.status != 1:
             raise RuntimeError(f"claimBatch receipt status {receipt.status}: {tx_hash.hex()}")

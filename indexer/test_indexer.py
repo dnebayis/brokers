@@ -761,6 +761,32 @@ class ShadowMergeTests(unittest.TestCase):
         self.assertEqual(merge([], []), [])
 
 
+class SkipDoesNotOverwriteBasketTests(unittest.TestCase):
+    """A pre-flight RPC blip used to write {"skipped": ...} to --out, which the workflow
+    publishes: the site then served a basket with no tickers, attribution or note for an
+    hour. The stub goes to a sibling file and --out keeps the last good pass."""
+
+    def test_out_keeps_the_previous_basket_and_the_skip_is_recorded_beside_it(self):
+        import run, config
+        from route_preflight import RouteProbeUnavailable
+        out = os.path.join(tempfile.mkdtemp(), "basket.json")
+        with open(out, "w") as fh:
+            json.dump({"generatedAt": "previous-pass", "tickers": [{"ticker": "INTC"}]}, fh)
+        real_load = run._load_trades
+        w3 = Mock(); w3.eth.block_number = 1
+        with patch.object(sys, "argv", ["run.py", "--out", out]), \
+             patch.object(run, "_load_trades", lambda sample: real_load(True)), \
+             patch.object(run, "preflight_enabled", lambda: True), \
+             patch.object(run, "BOOSTER_ADDRESS", "0x" + "11" * 20), \
+             patch.object(config, "make_web3", lambda: w3), \
+             patch.object(run, "resolve_booster_context", lambda w3, b: ("0x" + "22" * 20, 10**16)), \
+             patch.object(run, "preflight_basket", Mock(side_effect=RouteProbeUnavailable("rpc down"))), \
+             patch("ops_alerts.alert", lambda m: True):
+            run.main()
+        self.assertEqual(json.load(open(out))["generatedAt"], "previous-pass")
+        self.assertEqual(json.load(open(out + ".skipped.json"))["skipped"], "route pre-flight unavailable")
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""

@@ -16,6 +16,7 @@ from typing import Callable, Dict, List
 
 from config import redact  # noqa: E402
 from config import (
+    BROKER_ADDRESS,
     BUYBACK_BURNER_ADDRESS,
     BUYBACK_THRESHOLD_WEI,
     CHAIN_ID,
@@ -1004,8 +1005,15 @@ def main() -> None:
                             break
                         except Exception as exc:
                             if "484e399a" not in redact(str(exc)) and "DrawBlockNotReached" not in redact(str(exc)):
+                                reason = redact(str(exc))[:160]
                                 print(json.dumps({"action": "gift.settle", "status": "deferred",
-                                                  "error": redact(str(exc))[:160]}))
+                                                  "error": reason}))
+                                # Not a timing revert: this round cannot be settled at all. The
+                                # vault takes any ERC-721, so an item whose transfer reverts jams
+                                # the draw until the owner cancels or rescues it, and the queue
+                                # keeps its place. Say so instead of deferring quietly every hour.
+                                from ops_alerts import alert as _alert
+                                _alert(f"🎁 gift round stuck (nft {r[0]} #{int(r[1])}): {reason}")
                                 return False
                         time.sleep(15)
                     if not ready:
@@ -1022,6 +1030,17 @@ def main() -> None:
             gift_interval = int(vault.functions.interval().call())
             queued = int(vault.functions.queuedCount().call())
             current = _open_round()
+            # The queue accepts any collection. A round holding something other than a Broker
+            # is either a gift someone sent us or an attempt to jam the draw; either way the
+            # owner should hear about it the first pass it is open.
+            expected_nft = str(BROKER_ADDRESS or "")
+            if current[0] and int(current[0], 16) != 0 and expected_nft \
+                    and current[0].lower() != expected_nft.lower():
+                from ops_alerts import alert as _alert
+                print(json.dumps({"action": "gift.open", "status": "foreign-nft",
+                                  "nft": current[0], "id": int(current[1])}))
+                _alert(f"🎁 gift round holds a non-Broker NFT: {current[0]} #{int(current[1])} "
+                       "(cancelRound puts it back at the tail; rescue removes it)")
             action = gift_plan(now_ts, last_gift, gift_interval, queued, current[0])
             if action == "settle":
                 _settle_round()

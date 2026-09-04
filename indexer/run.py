@@ -352,9 +352,14 @@ def main():
             from ops_alerts import alert
             alert(f"⚠️ indexer: {message}")
             if args.out:
+                # NOT to --out: the workflow publishes that file to the site, so writing a
+                # stub here replaced a live basket (tickers, attribution, note) with
+                # {"skipped": ...} for an hour over one RPC blip. Leave --out as the last
+                # good pass wrote it (publishing an unchanged file is a no-op) and record
+                # the skip beside it.
                 json.dump({"generatedAt": datetime.now(timezone.utc).isoformat(),
                            "skipped": "route pre-flight unavailable", "reason": redact(str(exc))},
-                          open(args.out, "w"), indent=2)
+                          open(args.out + ".skipped.json", "w"), indent=2)
             return
         print(f"\nRoute pre-flight at {buffer_wei / 1e18:.4f} ETH buffer via {router_address}: "
               f"{len(basket)} executable, {len(dropped)} dropped")
@@ -417,6 +422,10 @@ def main():
 
     if not basket:
         print("\nNo eligible tokenizable tickers in window — nothing to post.")
+        if args.out:
+            json.dump({"generatedAt": datetime.now(timezone.utc).isoformat(),
+                       "skipped": "no eligible tickers in window"},
+                      open(args.out + ".skipped.json", "w"), indent=2)
         return
 
     # Who is behind each name: the same rows, grouped by member, for the site's feed.
