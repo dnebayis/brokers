@@ -16,7 +16,7 @@ type Scorecard = {
   ok: boolean; generatedAt: string; purchases: number;
   names: Name[];
   totals: { usdSpent: number; value: number; pnlUsd: number; pnlPct: number | null };
-  benchmarks?: { basket: Bench; spy: Bench; smart: Bench; note?: string };
+  benchmarks?: { basket: Bench; spy: Bench; smart: Bench; smartCapped?: Bench; note?: string };
 };
 
 async function fetchScorecard(): Promise<Scorecard> {
@@ -75,11 +75,14 @@ export function BasketScorecard() {
           {data.benchmarks && (
             <div className="mb-4 border border-line bg-cream p-3">
               <div className="label">Same dollars, same hours</div>
-              <div className="grid grid-cols-3 gap-2 text-center">
+              <div className={`grid gap-2 text-center ${data.benchmarks.smartCapped ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>
                 {([
                   ["This basket", data.benchmarks.basket, "what the engine actually bought"],
                   ["SPY instead", data.benchmarks.spy, "every purchase put into SPY that hour"],
                   ["Smart basket", data.benchmarks.smart, "the shadow layer's picks, priced leg by leg"],
+                  ...(data.benchmarks.smartCapped
+                    ? ([["Smart, capped", data.benchmarks.smartCapped, "no name above half, the rest to the live names"]] as const)
+                    : []),
                 ] as const).map(([label, b, sub]) => (
                   <div key={label}>
                     <div className="text-[10px] text-ink-soft uppercase tracking-widest">{label}</div>

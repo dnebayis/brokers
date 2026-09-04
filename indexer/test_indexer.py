@@ -860,6 +860,54 @@ class UnusualWhalesDedupeTests(unittest.TestCase):
         self.assertEqual(len(fetch_congress_trades()), 2)
 
 
+class CapWithSpilloverTests(unittest.TestCase):
+    """The smart basket with the single-name cap actually enforced: a lone survivor is held
+    at the cap and the rest goes to the live basket's other names, proportional and unvetoed."""
+
+    def test_single_name_spills_into_live_names_by_weight(self):
+        from aggregate import cap_with_spillover, BPS
+        out = cap_with_spillover([("INTC", 10000)], [("INTC", 5000), ("SPCX", 4535), ("MU", 465)], set(), 5000)
+        self.assertEqual(dict(out)["INTC"], 5000)
+        self.assertEqual(sum(w for _, w in out), BPS)
+        self.assertEqual([t for t, _ in out], ["INTC", "SPCX", "MU"])
+        self.assertAlmostEqual(dict(out)["SPCX"] / dict(out)["MU"], 4535 / 465, places=1)
+
+    def test_vetoed_and_already_present_live_names_are_skipped(self):
+        from aggregate import cap_with_spillover
+        out = cap_with_spillover([("INTC", 10000)], [("INTC", 5000), ("SPCX", 4535), ("MU", 465)], {"SPCX"}, 5000)
+        self.assertEqual(dict(out), {"INTC": 5000, "MU": 5000})
+
+    def test_nothing_to_spill_into_returns_the_pure_basket(self):
+        from aggregate import cap_with_spillover
+        smart = [("INTC", 10000)]
+        self.assertEqual(cap_with_spillover(smart, [("INTC", 10000)], set(), 5000), smart)
+        self.assertEqual(cap_with_spillover(smart, [("INTC", 5000), ("SPCX", 5000)], {"SPCX"}, 5000), smart)
+        self.assertEqual(cap_with_spillover([], [("INTC", 10000)], set(), 5000), [])
+
+    def test_a_basket_already_under_the_cap_is_untouched(self):
+        from aggregate import cap_with_spillover
+        smart = [("INTC", 5000), ("SPCX", 5000)]
+        self.assertEqual(cap_with_spillover(smart, [("MU", 10000)], set(), 5000), smart)
+
+    def test_history_row_and_scorecard_carry_the_capped_series(self):
+        from run import shadow_history_row
+        from scorecard import with_capped, smart_weights_at, benchmarks
+        row = json.loads(shadow_history_row(5000, [("INTC", 10000)], [("INTC", 5000), ("SPCX", 5000)], set(), "shadow",
+                                            capped=[("INTC", 5000), ("SPCX", 5000)]))
+        self.assertEqual(row["shadowCapped"], [{"ticker": "INTC", "bps": 5000}, {"ticker": "SPCX", "bps": 5000}])
+        old = {"at": "2026-08-30T00:00:00+00:00", "shadow": [{"ticker": "INTC", "bps": 10000}],
+               "live": [{"ticker": "INTC", "bps": 5000}, {"ticker": "SPCX", "bps": 5000}], "vetoed": []}
+        derived = with_capped([old], cap_bps=5000)[0]["shadowCapped"]
+        self.assertEqual(derived, [{"ticker": "INTC", "bps": 5000}, {"ticker": "SPCX", "bps": 5000}])
+        self.assertEqual(smart_weights_at(with_capped([old], 5000), 10**10, "shadowCapped"), derived)
+        events = [{"usdIn": 100.0, "bench": {"spyPx": None,
+                   "smart": [{"symbol": "INTC", "usd": 100.0, "px": 10.0}],
+                   "smartCapped": [{"symbol": "INTC", "usd": 50.0, "px": 10.0}, {"symbol": "SPCX", "usd": 50.0, "px": 20.0}]}}]
+        b = benchmarks(events, {"INTC": 11.0, "SPCX": 20.0}, None)
+        self.assertEqual(b["smart"]["pnlPct"], 10.0)
+        self.assertEqual(b["smartCapped"]["pnlPct"], 5.0)
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""

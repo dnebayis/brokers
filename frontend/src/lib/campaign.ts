@@ -1,38 +1,61 @@
 import type { Address } from "viem";
 
-// Sponsored-campaign config. Deliberately empty until the joint announcement:
-// this file ships in the public bundle, so partner names, dollar amounts and the
-// campaign wallet stay out of the repo until launch day. Fill in and flip `live`
-// in the launch commit.
-export const CAMPAIGN: {
-  live: boolean;
-  partnerName: string; // e.g. the partner collection's public name
-  partnerUrl: string;
-  wallet: Address | ""; // the campaign wallet holding the sponsored Brokers
-  startDate: string; // ISO date, first campaign day
-  weeks: number;
-  brokerCount: number; // sponsored Brokers expected in the wallet
-} = {
-  // Live at /campaign but deliberately unlisted: no tab, no nav entry, no link from any
-  // other page, so it is reachable by whoever has the URL and invisible to everyone else.
-  // The roster and every count come from the chain via the open Broker API, so nothing here
-  // needs updating week to week; startDate is the day the desk received its Brokers.
-  live: true,
-  partnerName: "Geez",
-  partnerUrl: "",
-  wallet: "0xA7f6e3cBd848a89086d06F507675843F891DB904",
-  startDate: "2026-09-04",
-  weeks: 4,
-  brokerCount: 110,
+// Sponsored-campaign config, read from build-time env rather than committed here.
+// The repo is public, so a partner's name, wallet and calendar would be readable the moment
+// they landed in a commit. Keeping them in Vercel env means the page goes live by setting
+// variables and nothing partner-specific sits in git.
+//
+// Set on the Vercel project (Production), then redeploy:
+//   NEXT_PUBLIC_CAMPAIGN_LIVE=1
+//   NEXT_PUBLIC_CAMPAIGN_PARTNER="Partner name"
+//   NEXT_PUBLIC_CAMPAIGN_PARTNER_URL=https://x.com/partner   (optional)
+//   NEXT_PUBLIC_CAMPAIGN_WALLET=0x...            (the wallet holding the sponsored Brokers)
+//   NEXT_PUBLIC_CAMPAIGN_START=2026-01-01        (ISO date, first campaign day)
+//   NEXT_PUBLIC_CAMPAIGN_WEEKS=4
+//   NEXT_PUBLIC_CAMPAIGN_BROKERS=100
+//
+// Next inlines only literal `process.env.X` reads, so each one is spelled out.
+const partner = (process.env.NEXT_PUBLIC_CAMPAIGN_PARTNER ?? "").trim();
+const partnerUrl = (process.env.NEXT_PUBLIC_CAMPAIGN_PARTNER_URL ?? "").trim();
+const walletEnv = (process.env.NEXT_PUBLIC_CAMPAIGN_WALLET ?? "").trim();
+const startDate = (process.env.NEXT_PUBLIC_CAMPAIGN_START ?? "").trim();
+const weeksEnv = (process.env.NEXT_PUBLIC_CAMPAIGN_WEEKS ?? "").trim();
+const brokersEnv = (process.env.NEXT_PUBLIC_CAMPAIGN_BROKERS ?? "").trim();
+const liveEnv = (process.env.NEXT_PUBLIC_CAMPAIGN_LIVE ?? "").trim();
+
+// A half-set config must not half-render the page: live needs the flag AND a usable wallet,
+// since every number on the page is derived from that wallet's roster.
+const wallet = /^0x[0-9a-fA-F]{40}$/.test(walletEnv) ? (walletEnv as Address) : "";
+const positive = (text: string, fallback: number) => {
+  const n = Number(text);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 };
 
-// One row per executed weekly distribution, appended from the batch sender's
-// receipts (*.sent.csv). Tx links give the public audit trail.
+export const CAMPAIGN: {
+  live: boolean;
+  partnerName: string;
+  partnerUrl: string;
+  wallet: Address | "";
+  startDate: string;
+  weeks: number;
+  brokerCount: number;
+} = {
+  live: liveEnv === "1" && wallet !== "",
+  partnerName: partner,
+  partnerUrl,
+  wallet,
+  startDate,
+  weeks: positive(weeksEnv, 4),
+  brokerCount: positive(brokersEnv, 0),
+};
+
+// One row per executed weekly distribution, appended from the batch sender's receipts
+// (*.sent.csv) once a drip has run and is public. Tx links give the audit trail.
 export type Distribution = {
   week: number;
   date: string; // ISO date the drip ran
   recipients: number;
-  totalLabel: string; // human label, e.g. "$625 in PNUTZ"
+  totalLabel: string; // human label, e.g. "week one drip"
   receiptsNote?: string; // where the full receipts live (explorer link, csv hash)
 };
 

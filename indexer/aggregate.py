@@ -246,6 +246,37 @@ def to_basket(net: Dict[str, float], buyers: Dict[str, int] | None = None) -> Li
     return [(s, w) for (s, _), w in zip(top, weights)]
 
 
+def cap_with_spillover(smart, live, vetoed, cap_bps: int):
+    """The smart basket with the single-name cap actually enforced.
+
+    `cap_weights` cannot hold a cap when the basket has fewer names than the cap needs (one
+    surviving name is 100% by construction), which is exactly the state the smart layer has
+    sat in since 2026-08-30: the decay half-life eroded every other name and the whole
+    basket became INTC. This variant pins each smart name at `cap_bps` and hands the weight
+    that no longer fits to the conviction basket's other names, proportional to their live
+    weights, skipping anything vetoed. If nothing is safe to spill into, the pure smart
+    basket is returned unchanged rather than inventing a name. Sums to exactly BPS.
+    """
+    smart = [(str(s), int(w)) for s, w in (smart or []) if int(w) > 0]
+    if not smart:
+        return []
+    vet = {str(s).upper() for s in (vetoed or [])}
+    capped = [(s, min(w, cap_bps)) for s, w in smart]
+    excess = BPS - sum(w for _, w in capped)
+    if excess <= 0:
+        return list(smart)
+    in_smart = {s for s, _ in smart}
+    cands = [(str(s), int(w)) for s, w in (live or [])
+             if str(s) not in in_smart and str(s).upper() not in vet and int(w) > 0]
+    if not cands:
+        return list(smart)
+    total = sum(w for _, w in cands)
+    spill = [(s, excess * w // total) for s, w in cands]
+    drift = excess - sum(w for _, w in spill)
+    spill[0] = (spill[0][0], spill[0][1] + drift)  # rounding remainder onto the largest live name
+    return capped + [(s, w) for s, w in spill if w > 0]
+
+
 def buyer_counts(trades: List[Dict], date_key: str = "transactionDate") -> Dict[str, int]:
     """Distinct members who *bought* each ticker in the trailing window.
 

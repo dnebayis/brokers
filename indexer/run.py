@@ -24,7 +24,7 @@ from config import STRATEGY_ID, BPS, MIN_ROUTE_COVERAGE, BOOSTER_ADDRESS, TRAILI
 from health import snapshot_health
 
 
-def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode, now=None, filed_window=None):
+def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode, now=None, filed_window=None, capped=None):
     """One JSONL line of the shadow-vs-live series.
 
     `live` is always the conviction basket and `shadow` the smart one, regardless of
@@ -40,6 +40,9 @@ def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode
         "posted": "smart" if mode == "live" else "conviction",
         "vetoed": sorted(vetoed),
         # second shadow: the 90-day window keyed on the FILING date instead of the trade date
+        # The cap-with-spillover variant, recorded beside the pure smart basket so the two
+        # can be priced against each other over the same hours.
+        "shadowCapped": None if capped is None else [{"ticker": s, "bps": w} for s, w in capped],
         "filedWindow": None if filed_window is None else {
             "basket": [{"ticker": s, "bps": w} for s, w in filed_window["basket"]],
             "divergenceBps": filed_window["divergenceBps"],
@@ -286,6 +289,11 @@ def main():
                   "member name format may have changed upstream; layer is running inert")
         smart_net, vetoed = smart_aggregate(trades)
         smart_basket = to_basket({s: v for s, v in smart_net.items() if s not in vetoed}, buyers)
+        # Second shadow series: the same picks with the single-name cap enforced by spilling
+        # into the conviction basket's names. Never posted; priced by the scorecard.
+        from aggregate import cap_with_spillover
+        from config import MAX_WEIGHT_BPS
+        smart_capped = cap_with_spillover(smart_basket, basket, vetoed, MAX_WEIGHT_BPS)
         # The conviction basket is the "live" column of the shadow series forever: once
         # SMART_BASKET=live reassigns `basket` below, the series would otherwise start
         # comparing the smart basket with itself and the receipts would go blind.
@@ -296,6 +304,7 @@ def main():
         shadow_report = {
             "mode": SMART_BASKET,
             "basket": [{"ticker": s, "bps": w} for s, w in smart_basket],
+            "capped": [{"ticker": s, "bps": w} for s, w in smart_capped],
             "vetoed": sorted(vetoed),
             "divergenceBps": divergence,
         }
@@ -307,6 +316,9 @@ def main():
         for s in sorted(vetoed):
             if s in live_w:
                 print(f"  {s:<6} VETOED — disclosed selling rivals buying; no new money")
+        if smart_capped != smart_basket:
+            print("  capped variant (single name held to the cap, rest to the live names): "
+                  + ", ".join(f"{s} {w/BPS*100:.1f}%" for s, w in smart_capped))
         if SMART_BASKET == "live":
             basket = smart_basket
 
@@ -319,7 +331,7 @@ def main():
                 with open(history_path, "a") as fh:
                     fh.write(shadow_history_row(
                         divergence, smart_basket, conviction_basket, vetoed, SMART_BASKET,
-                        filed_window=filed_report,
+                        filed_window=filed_report, capped=smart_capped,
                     ) + "\n")
                 print(f"  shadow history appended -> {history_path}")
             except OSError as e:

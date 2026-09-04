@@ -142,8 +142,9 @@ def aggregate(events: List[Dict], prices: Dict[str, float], meta: Dict[str, Dict
     }
 
 
-def smart_weights_at(history: List[Dict], ts: int) -> Optional[List[Dict]]:
-    """The shadow (smart) basket in force at `ts`: the latest history row at or before it."""
+def smart_weights_at(history: List[Dict], ts: int, key: str = "shadow") -> Optional[List[Dict]]:
+    """The shadow basket (`key`: "shadow" or "shadowCapped") in force at `ts`: the latest
+    history row at or before it."""
     best = None
     for row in history:
         try:
@@ -151,8 +152,28 @@ def smart_weights_at(history: List[Dict], ts: int) -> Optional[List[Dict]]:
         except (KeyError, ValueError):
             continue
         if at <= ts and (best is None or at > best[0]):
-            best = (at, row.get("shadow") or [])
+            best = (at, row.get(key) or [])
     return best[1] if best else None
+
+
+def with_capped(history: List[Dict], cap_bps: Optional[int] = None) -> List[Dict]:
+    """Every row with a `shadowCapped` series. Rows written before the variant existed carry
+    shadow, live and vetoed, which is all the rule needs, so the capped series is derived
+    retroactively and the benchmark covers the same hours as the pure smart one."""
+    from aggregate import cap_with_spillover
+    if cap_bps is None:
+        from config import MAX_WEIGHT_BPS
+        cap_bps = MAX_WEIGHT_BPS
+    out = []
+    for row in history:
+        r = dict(row)
+        if not r.get("shadowCapped"):
+            sm = [(x["ticker"], int(x["bps"])) for x in (r.get("shadow") or [])]
+            lv = [(x["ticker"], int(x["bps"])) for x in (r.get("live") or [])]
+            r["shadowCapped"] = [{"ticker": t, "bps": w}
+                                 for t, w in cap_with_spillover(sm, lv, r.get("vetoed") or [], cap_bps)]
+        out.append(r)
+    return out
 
 
 def benchmarks(events: List[Dict], prices_by_symbol: Dict[str, float], spy_now: Optional[float]) -> Dict:
@@ -173,30 +194,33 @@ def benchmarks(events: List[Dict], prices_by_symbol: Dict[str, float], spy_now: 
     out["spy"] = {"spent": round(spy_spent, 2), "value": round(spy_value, 2),
                   "pnlPct": round((spy_value / spy_spent - 1) * 100, 2) if spy_spent else None,
                   "purchases": n_spy, "coveragePct": round(spy_spent / spent * 100, 1) if spent else None}
-    # smart basket: each purchase split by the shadow weights of that hour
-    sm_spent = sm_value = 0.0
-    n_sm = 0
-    for e in events:
-        b = e.get("bench") or {}
-        legs = b.get("smart")
-        if not legs or not e.get("usdIn"):
-            continue
-        ok = True
-        val = 0.0
-        for leg in legs:
-            now = prices_by_symbol.get(leg["symbol"])
-            if not now or not leg.get("px"):
-                ok = False
-                break
-            val += leg["usd"] * now / leg["px"]
-        if not ok:
-            continue
-        sm_spent += e["usdIn"]
-        sm_value += val
-        n_sm += 1
-    out["smart"] = {"spent": round(sm_spent, 2), "value": round(sm_value, 2),
-                    "pnlPct": round((sm_value / sm_spent - 1) * 100, 2) if sm_spent else None,
-                    "purchases": n_sm, "coveragePct": round(sm_spent / spent * 100, 1) if spent else None}
+    # shadow baskets: each purchase split by that hour's weights, one series per variant
+    def series(key: str) -> Dict:
+        sm_spent = sm_value = 0.0
+        n_sm = 0
+        for e in events:
+            b = e.get("bench") or {}
+            legs = b.get(key)
+            if not legs or not e.get("usdIn"):
+                continue
+            ok = True
+            val = 0.0
+            for leg in legs:
+                now = prices_by_symbol.get(leg["symbol"])
+                if not now or not leg.get("px"):
+                    ok = False
+                    break
+                val += leg["usd"] * now / leg["px"]
+            if not ok:
+                continue
+            sm_spent += e["usdIn"]
+            sm_value += val
+            n_sm += 1
+        return {"spent": round(sm_spent, 2), "value": round(sm_value, 2),
+                "pnlPct": round((sm_value / sm_spent - 1) * 100, 2) if sm_spent else None,
+                "purchases": n_sm, "coveragePct": round(sm_spent / spent * 100, 1) if spent else None}
+    out["smart"] = series("smart")
+    out["smartCapped"] = series("smartCapped")
     return out
 
 
@@ -291,17 +315,23 @@ def build(w3, booster_address: str, previous: Optional[Dict], from_block: int, c
             hour_cache[k] = idx.price_at(ts) if idx else None
         return hour_cache[k]
 
+    if shadow_history:
+        shadow_history = with_capped(shadow_history)
+
+    def _legs(e, key):
+        weights = smart_weights_at(shadow_history, e["ts"], key) if shadow_history else None
+        if not weights:
+            return None
+        return [{"symbol": str(w["ticker"]).upper(), "usd": e["usdIn"] * int(w["bps"]) / 10_000,
+                 "px": _px_at(str(w["ticker"]), e["ts"])} for w in weights]
+
     for e in events:
-        if e.get("bench") is not None or not e.get("usdIn"):
+        if not e.get("usdIn"):
             continue
-        bench: Dict = {"spyPx": _px_at("SPY", e["ts"]) if spy_addr else None, "smart": None}
-        weights = smart_weights_at(shadow_history, e["ts"]) if shadow_history else None
-        if weights:
-            legs = []
-            for wgt in weights:
-                px = _px_at(str(wgt["ticker"]), e["ts"])
-                legs.append({"symbol": str(wgt["ticker"]).upper(), "usd": e["usdIn"] * int(wgt["bps"]) / 10_000, "px": px})
-            bench["smart"] = legs
+        bench: Dict = e.get("bench") or {"spyPx": _px_at("SPY", e["ts"]) if spy_addr else None, "smart": _legs(e, "shadow")}
+        # Cached events from before the capped variant existed lack this key; fill it in.
+        if "smartCapped" not in bench:
+            bench["smartCapped"] = _legs(e, "shadowCapped")
         e["bench"] = bench
     prices_by_symbol = {m["symbol"].upper(): prices[t] for t, m in meta_cache.items() if t in prices}
     spy_now = None
@@ -312,7 +342,7 @@ def build(w3, booster_address: str, previous: Optional[Dict], from_block: int, c
             prices_by_symbol.setdefault("SPY", spy_now)
     # smart legs may name stocks the engine never bought: price them from their feeds too
     for e in events:
-        for leg in (e.get("bench") or {}).get("smart") or []:
+        for leg in ((e.get("bench") or {}).get("smart") or []) + ((e.get("bench") or {}).get("smartCapped") or []):
             if leg["symbol"] not in prices_by_symbol:
                 idx = _index(symbol_to_token.get(leg["symbol"], "")) if symbol_to_token.get(leg["symbol"]) else None
                 prices_by_symbol[leg["symbol"]] = idx.price_at(int(datetime.now(timezone.utc).timestamp())) if idx else None
