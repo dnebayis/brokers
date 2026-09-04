@@ -7,7 +7,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { formatUnits, type Address } from "viem";
+import {
+  BaseError,
+  ContractFunctionRevertedError,
+  ContractFunctionZeroDataError,
+  ExecutionRevertedError,
+  formatUnits,
+  type Address,
+} from "viem";
 import { Header } from "@/components/Header";
 import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
 import { ShareOnX } from "@/components/ShareOnX";
@@ -18,13 +25,33 @@ import { brokerBacking, earnedSinceActivation, loadKnownTokens, usd } from "@/li
 import { useCoatPrice, usdLabel } from "@/lib/useCoatPrice";
 import type { CardData } from "@/lib/shareCard";
 
-type State = { status: "loading" } | { status: "missing" } | { status: "ready"; data: CardData; owner: string };
+type State =
+  | { status: "loading" }
+  | { status: "missing" }
+  | { status: "unreachable" }
+  | { status: "ready"; data: CardData; owner: string };
+
+// A Broker that does not exist makes ownerOf REVERT. Anything else that goes wrong (the RPC
+// timing out, a 429/5xx, a dropped connection) is the chain being unreachable, not a missing
+// Broker, and must not be reported as one.
+function isContractRevert(e: unknown): boolean {
+  if (!(e instanceof BaseError)) return false;
+  return (
+    e.walk(
+      (err) =>
+        err instanceof ContractFunctionRevertedError ||
+        err instanceof ExecutionRevertedError ||
+        err instanceof ContractFunctionZeroDataError,
+    ) !== null
+  );
+}
 
 export default function CardPage() {
   const params = useParams<{ id: string }>();
   const raw = String(params?.id ?? "");
   const valid = /^\d{1,4}$/.test(raw) && Number(raw) >= 1;
   const [state, setState] = useState<State>({ status: "loading" });
+  const [attempt, setAttempt] = useState(0);
   const price = useCoatPrice();
 
   useEffect(() => {
@@ -33,6 +60,7 @@ export default function CardPage() {
       setState({ status: "missing" });
       return;
     }
+    setState({ status: "loading" });
     (async () => {
       try {
         const id = BigInt(raw);
@@ -75,12 +103,12 @@ export default function CardPage() {
             symbols,
           },
         });
-      } catch {
-        if (!stale) setState({ status: "missing" });
+      } catch (e) {
+        if (!stale) setState({ status: isContractRevert(e) ? "missing" : "unreachable" });
       }
     })();
     return () => { stale = true; };
-  }, [raw, valid]);
+  }, [raw, valid, attempt]);
 
   const data = state.status === "ready"
     ? { ...state.data, coatUsd: price.coatWeiToUsd(state.data.coatInside) }
@@ -98,6 +126,14 @@ export default function CardPage() {
           {state.status === "loading" && <p className="text-ink-soft text-sm">Reading the chain…</p>}
           {state.status === "missing" && (
             <p className="text-ink-soft text-sm">No Broker with that id. Ids run from 1 to 1,776.</p>
+          )}
+          {state.status === "unreachable" && (
+            <p className="text-ink-soft text-sm" role="status">
+              Could not reach the chain right now, try again.{" "}
+              <button type="button" className="underline hover:text-ink-strong" onClick={() => setAttempt((n) => n + 1)}>
+                Retry
+              </button>
+            </p>
           )}
           {data && (
             <>

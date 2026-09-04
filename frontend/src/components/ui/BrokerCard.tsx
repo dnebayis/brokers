@@ -35,17 +35,24 @@ export function BrokerCard({
   /** NFT gifts from the vault still inside that wallet. */
   giftCount?: number;
 }) {
-  const [copied, setCopied] = useState(false);
+  // "copied" is only ever shown after the clipboard write actually resolved; a denied
+  // permission or a missing clipboard API shows a short hint instead of a false success.
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const copied = copyState === "copied";
   const money = (n: number) =>
     n < 0.005
       ? "$0"
       : n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: n < 100 ? 2 : 0 });
-  function copyWallet() {
+  async function copyWallet() {
     if (!wallet) return;
-    navigator.clipboard.writeText(wallet).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+    try {
+      if (!navigator.clipboard) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(wallet);
+      setCopyState("copied");
+    } catch {
+      setCopyState("failed");
+    }
+    setTimeout(() => setCopyState("idle"), 1500);
   }
   return (
     <div
@@ -108,12 +115,26 @@ export function BrokerCard({
             type="button"
             onClick={copyWallet}
             title="Copy this Broker's wallet address"
-            aria-label={copied ? "Wallet address copied" : `Copy wallet address ${wallet}`}
+            aria-label={
+              copied
+                ? "Wallet address copied"
+                : copyState === "failed"
+                  ? "Copy failed, select the address by hand"
+                  : `Copy wallet address ${wallet}`
+            }
             className={`inline-flex items-center gap-1 font-mono text-[10px] min-h-[28px] border px-2 transition-colors ${
-              copied ? "border-good text-good" : "border-line text-ink-soft hover:text-ink-strong hover:border-ink"
+              copied
+                ? "border-good text-good"
+                : copyState === "failed"
+                  ? "border-accent text-accent"
+                  : "border-line text-ink-soft hover:text-ink-strong hover:border-ink"
             }`}
           >
-            {copied ? "copied ✓" : `${wallet.slice(0, 6)}…${wallet.slice(-4)} ⧉`}
+            {copied
+              ? "copied ✓"
+              : copyState === "failed"
+                ? "copy failed, select it by hand"
+                : `${wallet.slice(0, 6)}…${wallet.slice(-4)} ⧉`}
           </button>
         </div>
       )}

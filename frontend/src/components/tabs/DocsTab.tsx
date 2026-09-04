@@ -181,7 +181,7 @@ export function DocsTab() {
         </tbody>
       </table>
       <p className="text-ink-soft text-sm mt-1">
-        v4 pool id: <Code>{ADDR.poolId.slice(0, 10)}…{ADDR.poolId.slice(-6)}</Code> · fee 1% · single-sided 1B $COAT.
+        v4 pool id: <Code>{ADDR.poolId.slice(0, 10)}…{ADDR.poolId.slice(-6)}</Code> · pool fee 1% plus the hook&rsquo;s 1% (about 2% per swap) · single-sided 1B $COAT.
       </p>
       <div className="mt-3">
         <RoutingNotice compact />

@@ -15,7 +15,8 @@ type Metrics = {
   burned?: number;
   burnedPct?: number;
   priceUsd?: number;
-  fdvUsd?: number;
+  /** price x CURRENT totalSupply (burns already removed), not the 1B launch supply. */
+  marketCapUsd?: number;
   earnedUsd?: number;
   /** True when not a single read succeeded — the RPC, not the data, is what's missing. */
   unreachable: boolean;
@@ -34,6 +35,7 @@ function compact(n?: number) {
 
 async function loadMetrics(): Promise<Metrics> {
   const next: Metrics = { unreachable: true };
+  let currentSupply: number | undefined;
 
   try {
     const [minted, active, supply] = await client.multicall({
@@ -46,7 +48,8 @@ async function loadMetrics(): Promise<Metrics> {
     });
     next.minted = Number(minted);
     next.active = Number(active);
-    next.burned = INITIAL_COAT_SUPPLY - Number(formatUnits(supply, 18));
+    currentSupply = Number(formatUnits(supply, 18));
+    next.burned = INITIAL_COAT_SUPPLY - currentSupply;
     next.burnedPct = (next.burned / INITIAL_COAT_SUPPLY) * 100;
     next.unreachable = false;
   } catch { /* leave undefined → renders "—" */ }
@@ -77,7 +80,9 @@ async function loadMetrics(): Promise<Metrics> {
       const perEth = Number(formatUnits(coatPerEth, 18));
       if (perEth > 0) {
         next.priceUsd = ethUsd / perEth;
-        next.fdvUsd = next.priceUsd * INITIAL_COAT_SUPPLY;
+        // Burned $COAT is gone for good, so value what is actually outstanding: the
+        // launch supply would overstate it by everything the hook has burned since.
+        if (currentSupply !== undefined) next.marketCapUsd = next.priceUsd * currentSupply;
       }
     }
   } catch { /* price stays undefined */ }
@@ -134,7 +139,7 @@ export function HomeMetrics() {
   // last known figures instantly, then revalidates in the background. Metrics move on the
   // keeper's hourly cadence; 2 min keeps the panel feeling live at a fraction of the load.
   const { data: m, isError } = useStoredQuery<Metrics>({
-    storageKey: "home:metrics:v2",
+    storageKey: "home:metrics:v3",
     queryKey: ["home-metrics", ADDR.booster],
     queryFn: loadMetrics,
     staleTime: 90_000,
@@ -158,7 +163,7 @@ export function HomeMetrics() {
     { k: "Stock distributed", v: usd(m?.earnedUsd) },
     { k: "$COAT dropped", v: usd(coatDroppedUsd), sub: `${compact(COAT_DROPPED_TOTAL)} COAT · ${COAT_DROPS.length} tranche${COAT_DROPS.length === 1 ? "" : "s"}` },
     { k: "$COAT price", v: usd(m?.priceUsd) },
-    { k: "Fully-diluted value", v: usd(m?.fdvUsd) },
+    { k: "Market cap", v: usd(m?.marketCapUsd), sub: "current supply" },
   ];
 
   return (

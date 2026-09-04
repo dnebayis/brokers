@@ -37,13 +37,17 @@ async function loadCoatPrice(): Promise<CoatPrice> {
   return { ethUsd, coatUsd };
 }
 
-export function useCoatPrice() {
+/** Pass `ssrSafe: true` from any component that is server-rendered (the /trade page, for
+ *  one): the stored price is then hidden for the first client render so hydration matches
+ *  the server's empty state, and revealed right after mount. */
+export function useCoatPrice(opts?: { ssrSafe?: boolean }) {
   const { data } = useStoredQuery<CoatPrice>({
     storageKey: "coat:price:v1",
     queryKey: ["coat-price", ADDR.router],
     queryFn: loadCoatPrice,
     staleTime: 60_000,
     refetchInterval: 120_000,
+    ssrSafe: opts?.ssrSafe,
     persistIf: (d) => d.ethUsd > 0,
   });
   const ethUsd = data?.ethUsd ?? 0;

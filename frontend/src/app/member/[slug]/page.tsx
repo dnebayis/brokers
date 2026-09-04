@@ -21,7 +21,11 @@ type Member = {
   score: { multiplier: number | null; avgExcess30d: number | null; trades: number | null } | null;
   rows: Row[];
 };
-type State = { status: "loading" } | { status: "missing" } | { status: "ready"; member: Member; windowDays: number };
+type State =
+  | { status: "loading" }
+  | { status: "missing" }
+  | { status: "unreachable" }
+  | { status: "ready"; member: Member; windowDays: number };
 
 const money = (n: number) => (n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${Math.round(n / 1_000)}K` : `$${Math.round(n)}`);
 
@@ -29,20 +33,26 @@ export default function MemberPage() {
   const params = useParams<{ slug: string }>();
   const slug = String(params?.slug ?? "");
   const [state, setState] = useState<State>({ status: "loading" });
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let stale = false;
     if (!slug) { setState({ status: "missing" }); return; }
+    setState({ status: "loading" });
     fetch(`/api/members/${encodeURIComponent(slug)}`)
       .then(async (r) => {
+        // Only a real 404 (or a 2xx that says "not found") means no filings. A 5xx, a
+        // gateway timeout or an unparseable body is the data being unreachable, not absent.
+        if (r.status === 404) { if (!stale) setState({ status: "missing" }); return; }
+        if (!r.ok) { if (!stale) setState({ status: "unreachable" }); return; }
         const j = await r.json();
         if (stale) return;
-        if (!r.ok || !j.ok) setState({ status: "missing" });
+        if (!j.ok) setState({ status: "missing" });
         else setState({ status: "ready", member: j.member, windowDays: j.windowDays });
       })
-      .catch(() => { if (!stale) setState({ status: "missing" }); });
+      .catch(() => { if (!stale) setState({ status: "unreachable" }); });
     return () => { stale = true; };
-  }, [slug]);
+  }, [slug, attempt]);
 
   const m = state.status === "ready" ? state.member : null;
   const chamber = m ? (m.chamber.includes("senat") ? "Senate" : "House") : "";
@@ -58,6 +68,14 @@ export default function MemberPage() {
           </div>
           {state.status === "loading" && <p className="text-ink-soft text-sm">Reading filings…</p>}
           {state.status === "missing" && <p className="text-ink-soft text-sm">No filings for this member in the current window.</p>}
+          {state.status === "unreachable" && (
+            <p className="text-ink-soft text-sm" role="status">
+              Could not reach the filings data right now, try again.{" "}
+              <button type="button" className="underline hover:text-ink-strong" onClick={() => setAttempt((n) => n + 1)}>
+                Retry
+              </button>
+            </p>
+          )}
           {m && (
             <>
               <div className="flex items-center gap-2 flex-wrap mb-1">

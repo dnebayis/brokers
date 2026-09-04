@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, type KeyboardEvent } from "react";
 import { Icon } from "./ui/Icon";
 import { TRADE_TAB_ENABLED } from "@/lib/floor";
 
@@ -17,7 +18,26 @@ const TABS: { id: TabId; label: string; icon: "home" | "swap" | "power" | "book"
   { id: "docs", label: "Docs", icon: "book" },
 ];
 
+/** ids shared with the panel that each tab controls (page.tsx sets them on the panel). */
+export const tabButtonId = (t: TabId) => `tab-${t}`;
+export const tabPanelId = (t: TabId) => `tabpanel-${t}`;
+
 export function Tabs({ active, onChange }: { active: TabId; onChange: (t: TabId) => void }) {
+  const buttons = useRef<Record<string, HTMLButtonElement | null>>({});
+  // WAI-ARIA tabs: only the selected tab sits in the tab order; Left/Right (wrapping),
+  // Home and End move between tabs and select as they go (automatic activation).
+  function onKeyDown(e: KeyboardEvent<HTMLButtonElement>, index: number) {
+    let next: number | null = null;
+    if (e.key === "ArrowRight") next = (index + 1) % TABS.length;
+    else if (e.key === "ArrowLeft") next = (index - 1 + TABS.length) % TABS.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = TABS.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    const target = TABS[next];
+    onChange(target.id);
+    buttons.current[target.id]?.focus();
+  }
   // Sticky with the page background painted, so content sliding under it never
   // bleeds through; on small screens the row scrolls sideways instead of wrapping
   // into a two-line jumble.
@@ -25,15 +45,22 @@ export function Tabs({ active, onChange }: { active: TabId; onChange: (t: TabId)
     <nav
       className="sticky top-0 z-30 bg-cream flex overflow-x-auto border-b-2 border-ink mt-6"
       role="tablist"
+      aria-label="Sections"
     >
-      {TABS.map((t) => {
+      {TABS.map((t, i) => {
         const on = t.id === active;
         return (
           <button
             key={t.id}
+            id={tabButtonId(t.id)}
+            ref={(el) => { buttons.current[t.id] = el; }}
+            type="button"
             role="tab"
             aria-selected={on}
+            aria-controls={tabPanelId(t.id)}
+            tabIndex={on ? 0 : -1}
             onClick={() => onChange(t.id)}
+            onKeyDown={(e) => onKeyDown(e, i)}
             className={`font-pixel text-xs px-4 py-3 -mb-0.5 border-b-[3px] flex items-center gap-2 shrink-0 transition-colors duration-150 ${
               on ? "text-ink-strong border-accent" : "text-ink-soft border-transparent hover:text-ink-strong"
             }`}

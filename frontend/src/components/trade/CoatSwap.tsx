@@ -29,7 +29,9 @@ export function CoatSwap() {
   const [quote, setQuote] = useState("");
   const [quoteWei, setQuoteWei] = useState<bigint | undefined>(undefined);
   const [steps, setSteps] = useState<StepState[]>(["idle", "idle"]);
-  const price = useCoatPrice();
+  // /trade is server-rendered: hide the stored price on the first client paint or the
+  // hydrated text never matches the server's "—".
+  const price = useCoatPrice({ ssrSafe: true });
   const setStep = (i: number, s: StepState) => setSteps((p) => p.map((v, j) => (j === i ? s : v)));
 
   const { data: eth } = useBalance({ address, chainId: activeChain.id });
@@ -190,7 +192,7 @@ export function CoatSwap() {
       <input className="fld" readOnly value={quote} placeholder="—" />
       <p className="text-ink-soft text-[12px] mt-1.5 tabular-nums" aria-live="polite">
         ≈ {usdLabel(dir === "buy" ? price.coatWeiToUsd(quoteWei) : price.ethWeiToUsd(quoteWei))}
-        {quoteWei !== undefined && " before the 2% in fees"}
+        {quoteWei !== undefined && " before fees: about 2% per swap (1% pool fee plus 1% hook fee)"}
       </p>
       <p className="text-ink-soft text-sm mt-2">Slippage 3% · minimum shown on confirm.</p>
 

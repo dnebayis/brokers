@@ -47,9 +47,14 @@ export function Terminal() {
   const symbolOf = (a: string) =>
     FLOOR.stocks.find((s) => s.address.toLowerCase() === a.toLowerCase())?.symbol ?? short(a);
   const decimalsOf = (c: Cur) => (c === "usdg" ? FLOOR.usdgDecimals : 18);
+  // parseUnits throws on more fractional digits than the token carries (USDG has 6), which
+  // used to disable Buy with no explanation. Detect it first so the input can say why.
+  const fraction = amount.split(".")[1] ?? "";
+  const tooManyDecimals = fraction.length > decimalsOf(cur);
   let amountWei: bigint | undefined;
   try {
-    amountWei = amount && Number(amount) > 0 ? parseUnits(amount, decimalsOf(cur)) : undefined;
+    amountWei =
+      amount && Number(amount) > 0 && !tooManyDecimals ? parseUnits(amount, decimalsOf(cur)) : undefined;
   } catch {
     amountWei = undefined;
   }
@@ -108,9 +113,14 @@ export function Terminal() {
   const [holdings, setHoldings] = useState<{ symbol: string; text: string }[]>([]);
   const [slipBps, setSlipBps] = useState(100); // 1% default, applied on top of quoted mins
   const applySlip = (x: bigint) => (x * (10000n - BigInt(slipBps))) / 10000n;
+  // The slippage setting only has a lever to pull where a min-out parameter exists: every
+  // sell (minOut) and a $COAT buy (minEthFromCoat on the COAT->ETH leg). buyBasketEth and
+  // buyBasket take no min-out; those paths rely on the contract's own Chainlink floor.
+  const slippageApplies = dir === "sell" || cur === "coat";
   // CoatRouter's quoteBuy/quoteSell are SPOT-price views: they exclude the hooked pool's
-  // fee take (~2% measured on-chain). Every quote from it gets this cut before use, both
-  // for display honesty and so mins computed from it don't sit above what a fill can pay.
+  // fee take (1% pool LP fee plus the 1% hook fee, about 2% per swap side). Every quote from
+  // it gets this cut before use, both for display honesty and so mins computed from it don't
+  // sit above what a fill can pay.
   const coatPoolCut = (x: bigint) => (x * 9800n) / 10000n;
 
   const USDG_ONE = 10n ** BigInt(FLOOR.usdgDecimals);
@@ -172,10 +182,11 @@ export function Terminal() {
     return { held, floorNet: (floor * (10000n - (feeBps ?? 30n))) / 10000n };
   }
 
-  // Floor-based minimum in the chosen exit currency: 5% under Chainlink by construction, a
-  // 1% conversion buffer on the ETH leg, then the user's slippage on top. Tight enough to
-  // kill a sandwich, loose enough never to revert an honest fill.
-  async function sellMinOut(floorNet: bigint): Promise<bigint> {
+  // FALLBACK minimum, used only when the live simulation below is unavailable. Floor-based,
+  // in the chosen exit currency: the contract's Chainlink floor (5% under the feed today), a
+  // 1% conversion buffer on the ETH leg, then the user's slippage on top. Loose by design
+  // (it stacks three haircuts), which is why the live quote is preferred whenever it answers.
+  async function sellFloorMinOut(floorNet: bigint): Promise<bigint> {
     if (cur === "usdg") return applySlip(floorNet);
     const p8 = await readEthUsd8();
     if (p8 === 0n) return 0n;
@@ -327,9 +338,13 @@ export function Terminal() {
       args: [address!, router],
     })) as bigint;
     if (cur_ >= needed) return;
-    tx.setStatus(`Approve ${label} once — later trades skip this step…`);
-    // max approval: one signature per token, ever. The router can only pull what a trade
-    // you sign passes it, so the standing allowance adds no extra exposure.
+    // Unlimited approval, one signature per token. A sell touches up to seven stocks, so an
+    // exact approval per trade would mean seven approvals per sell; the copy says plainly
+    // what the allowance is and that the wallet can revoke it, rather than claiming it is
+    // free of exposure.
+    tx.setStatus(
+      `Approve ${label} once: this gives the router an unlimited standing allowance for ${label}, so later trades skip this step. You can revoke it any time from your wallet.`,
+    );
     const a = await writeContractAsync({
       address: token,
       abi: erc20MiniAbi,
@@ -408,22 +423,31 @@ export function Terminal() {
       tx.setStatus("Nothing to sell at this size.", "err");
       return;
     }
-    // fresh floor at send time — the on-screen quote may be seconds old
-    const { floorNet } = await readSellFloor();
-    const minOut = await sellMinOut(floorNet);
+    const tokens = legsToSell.map((l) => l.t);
+    const amounts = legsToSell.map((l) => l.a);
+    // Live quote at send time: simulate the exact exit with minOut = 0 (allowances are in
+    // place by now) and take the user's slippage off what the pools would pay right now.
+    // Only if the simulation itself fails do we fall back to the looser Chainlink floor.
+    let minOut: bigint;
+    try {
+      const sim = await client.simulateContract({
+        account: address!,
+        address: router,
+        abi: basketRouterAbi,
+        functionName: "sellBasket",
+        args: [tokens, amounts, OUT_ENUM[cur], 0n, address!, deadline()],
+      });
+      minOut = applySlip(sim.result as bigint);
+    } catch {
+      const { floorNet } = await readSellFloor();
+      minOut = await sellFloorMinOut(floorNet);
+    }
     tx.setStatus("Confirm the basket exit…");
     const hash = await writeContractAsync({
       address: router,
       abi: basketRouterAbi,
       functionName: "sellBasket",
-      args: [
-        legsToSell.map((l) => l.t),
-        legsToSell.map((l) => l.a),
-        OUT_ENUM[cur],
-        minOut,
-        address!,
-        deadline(),
-      ],
+      args: [tokens, amounts, OUT_ENUM[cur], minOut, address!, deadline()],
     });
     tx.setStatus(
       sellPct === 100
@@ -502,6 +526,11 @@ export function Terminal() {
                 />
                 {currencySelect}
               </div>
+              {tooManyDecimals && (
+                <p className="label mt-1 text-accent">
+                  {CUR_LABEL[cur]} has {decimalsOf(cur)} decimals: shorten the amount.
+                </p>
+              )}
             </>
           ) : (
             <>
@@ -583,23 +612,32 @@ export function Terminal() {
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-3">
-          <span className="label">Max slippage</span>
-          <span className="flex gap-1.5">
-            {[50, 100, 200].map((b) => (
-              <button
-                key={b}
-                className={`font-pixel text-xs border-2 border-ink px-2 py-0.5 ${
-                  slipBps === b ? "bg-accent text-cream" : "bg-cream hover:shadow-pixel-sm"
-                }`}
-                onClick={() => setSlipBps(b)}
-                disabled={offline}
-              >
-                {b / 100}%
-              </button>
-            ))}
-          </span>
-        </div>
+        {slippageApplies ? (
+          <div className="flex items-center justify-between mt-3">
+            <span className="label">
+              {dir === "buy" ? "Max slippage ($COAT to ETH leg)" : "Max slippage"}
+            </span>
+            <span className="flex gap-1.5">
+              {[50, 100, 200].map((b) => (
+                <button
+                  key={b}
+                  className={`font-pixel text-xs border-2 border-ink px-2 py-0.5 ${
+                    slipBps === b ? "bg-accent text-cream" : "bg-cream hover:shadow-pixel-sm"
+                  }`}
+                  onClick={() => setSlipBps(b)}
+                  disabled={offline}
+                >
+                  {b / 100}%
+                </button>
+              ))}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between mt-3">
+            <span className="label">Minimum received</span>
+            <span className="label">contract floor: currently 5% under Chainlink</span>
+          </div>
+        )}
         <p className="label mt-2">
           Fee {feePct}% — funds Broker payroll · priced against Chainlink with an on-chain floor
         </p>

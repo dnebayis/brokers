@@ -826,9 +826,16 @@ export function ActivateTab() {
                 <button
                   className="font-mono text-[10px] border border-line px-1.5 py-0.5 text-ink-soft hover:text-ink-strong hover:border-ink transition-colors"
                   title="Copy this Broker's wallet address"
-                  onClick={() => {
-                    navigator.clipboard.writeText(info.wallet);
-                    act.setStatus(`Broker #${info.id} wallet copied: ${info.wallet}`, "ok");
+                  onClick={async () => {
+                    // Report "copied" only once the write resolved; a denied clipboard
+                    // permission used to show success while nothing was copied.
+                    try {
+                      if (!navigator.clipboard) throw new Error("clipboard unavailable");
+                      await navigator.clipboard.writeText(info.wallet);
+                      act.setStatus(`Broker #${info.id} wallet copied: ${info.wallet}`, "ok");
+                    } catch {
+                      act.setStatus(`Could not copy. Select the address by hand: ${info.wallet}`, "err");
+                    }
                   }}
                 >
                   copy ⧉

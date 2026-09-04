@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { BrokerMark } from "./ui/BrokerMark";
 import { ThemeToggle } from "./ui/ThemeToggle";
@@ -25,13 +25,37 @@ export function Header() {
       return;
     }
     // A wallet extension may retain a dead persisted session after a refresh. Never leave the
-    // only connect button disabled indefinitely; reset the stale wagmi connection after 3s.
+    // only connect button disabled indefinitely; reset the stale wagmi connection after a
+    // timeout. 15 s, not 3: a WalletConnect restore on mobile routinely takes longer than 3 s
+    // and the short timeout was forcing a fresh pairing on every reload.
     const timer = window.setTimeout(() => {
       wagmiConfig.setState((state) => ({ ...state, connections: new Map(), current: null, status: "disconnected" }));
       setRestoreTimedOut(true);
-    }, 3_000);
+    }, 15_000);
     return () => window.clearTimeout(timer);
   }, [status]);
+
+  // Accessible dialog: focus moves in on open, Tab cycles inside it, Escape closes it.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const first = dialogRef.current?.querySelector<HTMLElement>("button");
+    first?.focus();
+  }, [open]);
+  function onDialogKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
+      return;
+    }
+    if (e.key !== "Tab" || !dialogRef.current) return;
+    const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled])"));
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
 
   async function connectWallet(connector: (typeof connectors)[number]) {
     reset();
@@ -89,10 +113,18 @@ export function Header() {
       </div>
       {open && (
         <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4" onMouseDown={() => setOpen(false)}>
-          <div className="card w-full max-w-sm" onMouseDown={(e) => e.stopPropagation()}>
+          <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="connect-wallet-title"
+            className="card w-full max-w-sm"
+            onMouseDown={(e) => e.stopPropagation()}
+            onKeyDown={onDialogKeyDown}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="pixel-title text-sm">Connect wallet</h2>
-              <button className="btn btn-ghost" onClick={() => setOpen(false)}>×</button>
+              <h2 id="connect-wallet-title" className="pixel-title text-sm">Connect wallet</h2>
+              <button className="btn btn-ghost" onClick={() => setOpen(false)} aria-label="Close">×</button>
             </div>
             <div className="grid gap-2">
               {connectors.map((connector) => (

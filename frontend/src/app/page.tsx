@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
-import { Tabs, type TabId } from "@/components/Tabs";
+import { Tabs, tabButtonId, tabPanelId, type TabId } from "@/components/Tabs";
 import { TRADE_TAB_ENABLED } from "@/lib/floor";
 import { SidePanel } from "@/components/SidePanel";
 import { HomeTab } from "@/components/tabs/HomeTab";
@@ -37,11 +37,17 @@ export default function Page() {
         <Tabs active={tab} onChange={selectTab} />
         {/* key remounts the panel per tab so the entrance animation replays */}
         {tab === "home" ? (
-          <div key={tab} className="tab-panel py-6 lg:py-8">
+          <div key={tab} id={tabPanelId(tab)} role="tabpanel" aria-labelledby={tabButtonId(tab)} className="tab-panel py-6 lg:py-8">
             <HomeTab onNavigate={selectTab} />
           </div>
         ) : (
-          <div key={tab} className="tab-panel py-6 lg:py-8 grid gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <div
+            key={tab}
+            id={tabPanelId(tab)}
+            role="tabpanel"
+            aria-labelledby={tabButtonId(tab)}
+            className="tab-panel py-6 lg:py-8 grid gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
+          >
             <div className="min-w-0">
               {tab === "trade" && TRADE_TAB_ENABLED && <TradeTab />}
               {tab === "activate" && <ActivateTab />}
