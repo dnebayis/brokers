@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-04T23:56:35.241958+00:00",
+  "generatedAt": "2026-09-04T23:57:24.081929+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 54673484,
+    "block": 54674010,
     "dropped": []
   },
   "missedCoverage": [
@@ -349,6 +349,20 @@
       {
         "ticker": "INTC",
         "bps": 10000
+      }
+    ],
+    "capped": [
+      {
+        "ticker": "INTC",
+        "bps": 5000
+      },
+      {
+        "ticker": "SPCX",
+        "bps": 4535
+      },
+      {
+        "ticker": "MU",
+        "bps": 465
       }
     ],
     "vetoed": [
