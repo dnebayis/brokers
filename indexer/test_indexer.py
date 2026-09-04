@@ -811,6 +811,55 @@ class SnapshotBlockPinTests(unittest.TestCase):
         self.assertTrue(all(b == 53_682_930 for _, b in seen), seen)
 
 
+class UnusualWhalesDedupeTests(unittest.TestCase):
+    """A member filing the same ticker, day and range for two accounts (their own and a
+    spouse's) is two disclosures, not one; collapsing them halved those dollars. A page that
+    repeats an earlier page is still an artifact and must collapse."""
+
+    ROW = {"ticker": "MU", "transaction_date": "2026-08-01", "filed_at_date": "2026-08-05",
+           "txn_type": "Buy", "amounts": "$15,001 - $50,000", "name": "Jane Doe", "member_type": "house"}
+
+    def _pages(self, *pages):
+        responses = []
+        for page in pages:
+            r = Mock(); r.raise_for_status.return_value = None
+            r.json.return_value = {"data": page}
+            responses.append(r)
+        r = Mock(); r.raise_for_status.return_value = None
+        r.json.return_value = {"data": []}
+        responses.append(r)
+        return responses
+
+    @patch("unusual_whales.UNUSUAL_WHALES_API_KEY", "test-key")
+    @patch("unusual_whales.requests.get")
+    def test_two_identical_rows_in_one_page_are_both_kept(self, get):
+        from unusual_whales import fetch_congress_trades
+        get.side_effect = self._pages([dict(self.ROW), dict(self.ROW)])
+        rows = fetch_congress_trades()
+        self.assertEqual(len(rows), 2)
+
+    @patch("unusual_whales.UNUSUAL_WHALES_API_KEY", "test-key")
+    @patch("unusual_whales.requests.get")
+    def test_a_row_resent_on_a_later_page_is_collapsed(self, get):
+        from unusual_whales import fetch_congress_trades
+        # A full page (the walk continues only past a full one), its last row being ours;
+        # page 2 leads with a different row (so the page-signature guard does not fire) and
+        # re-sends that same row: the copy is a pagination artifact, not a second filing.
+        page1 = [dict(self.ROW, ticker=f"T{i}") for i in range(499)] + [dict(self.ROW)]
+        page2 = [dict(self.ROW, ticker="INTC"), dict(self.ROW)]
+        get.side_effect = self._pages(page1, page2)
+        rows = fetch_congress_trades()
+        self.assertEqual(sum(1 for r in rows if r["symbol"] == "MU"), 1)
+        self.assertEqual(sum(1 for r in rows if r["symbol"] == "INTC"), 1)
+
+    @patch("unusual_whales.UNUSUAL_WHALES_API_KEY", "test-key")
+    @patch("unusual_whales.requests.get")
+    def test_an_owner_field_separates_rows_on_its_own(self, get):
+        from unusual_whales import fetch_congress_trades
+        get.side_effect = self._pages([dict(self.ROW, owner="self"), dict(self.ROW, owner="spouse")])
+        self.assertEqual(len(fetch_congress_trades()), 2)
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""

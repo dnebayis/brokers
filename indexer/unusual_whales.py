@@ -142,6 +142,14 @@ def fetch_congress_trades() -> List[Dict]:
                 break
         else:
             old_filed_pages = 0
+        # Two distinct filings can be identical in every field we keep: a member reporting
+        # the same ticker, day and dollar range for their own account and for a spouse's.
+        # Collapsing those halved their dollars. So the key carries how many times this
+        # identity has already appeared IN THIS PAGE (repeats inside one response are
+        # separate records) while a page that repeats an earlier page still produces the
+        # same keys and is collapsed. Any identity-bearing field the API exposes joins the
+        # key too, so the day one appears the rows separate on their own.
+        page_seen: Dict[tuple, int] = {}
         for item in batch:
             symbol = str(item.get("ticker") or "").strip().upper()
             if not symbol:
@@ -155,7 +163,14 @@ def fetch_congress_trades() -> List[Dict]:
                 "who": str(item.get("name") or item.get("reporter") or "").strip(),
                 "chamber": str(item.get("member_type") or "").strip().lower(),
             }
-            key = tuple(sorted(row.items()))
+            identity = tuple(sorted(row.items())) + tuple(
+                (k, str(item.get(k)))
+                for k in ("owner", "id", "transaction_id", "filing_id", "asset_description")
+                if item.get(k) is not None
+            )
+            occurrence = page_seen.get(identity, 0)
+            page_seen[identity] = occurrence + 1
+            key = identity + (("_occurrence", occurrence),)
             if key in seen:
                 duplicates += 1
                 continue
