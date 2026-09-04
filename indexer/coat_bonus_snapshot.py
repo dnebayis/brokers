@@ -92,24 +92,31 @@ def allocate(entries, total_wei, active_weight=2, inactive_weight=1, inactive_to
     return dict(rows), per_share
 
 
-def read_collection(w3, broker_address, booster_address, chunk=150):
+def read_collection(w3, broker_address, booster_address, chunk=150, block=None):
+    """Owner, 6551 wallet and active flag of every Broker, all read at one block.
+
+    `block` pins every read to the block the report names. Without it the multicalls ran at
+    "latest" while the report claimed "at block N", so an activation mid-read produced a
+    snapshot that matched no block at all.
+    """
     from web3 import Web3
     from keeper import _mc_call
 
     broker = w3.eth.contract(address=Web3.to_checksum_address(broker_address), abi=BROKER_ABI)
     booster = w3.eth.contract(address=Web3.to_checksum_address(booster_address), abi=BOOSTER_ABI)
-    minted = int(broker.functions.totalMinted().call())
-    max_supply = int(broker.functions.MAX_SUPPLY().call())
+    at = {"block_identifier": block} if block is not None else {}
+    minted = int(broker.functions.totalMinted().call(**at))
+    max_supply = int(broker.functions.MAX_SUPPLY().call(**at))
     # The contract is not enumerable, but ids are drawn from 1..MAX_SUPPLY without
     # replacement, so every id in that range is either minted or reverts on ownerOf.
     ids = list(range(1, max_supply + 1))
-    owners = _mc_call(w3, [(broker, "ownerOf", (i,)) for i in ids], chunk=chunk)
+    owners = _mc_call(w3, [(broker, "ownerOf", (i,)) for i in ids], chunk=chunk, block=block)
     minted_ids = [i for i, o in zip(ids, owners) if o is not None]
     if len(minted_ids) != minted:
         raise RuntimeError(f"read {len(minted_ids)} owners for {minted} minted Brokers; "
                            "refusing a partial snapshot (RPC fault?)")
-    wallets = _mc_call(w3, [(broker, "accountOf", (i,)) for i in minted_ids], chunk=chunk)
-    actives = _mc_call(w3, [(booster, "isActive", (i,)) for i in minted_ids], chunk=chunk)
+    wallets = _mc_call(w3, [(broker, "accountOf", (i,)) for i in minted_ids], chunk=chunk, block=block)
+    actives = _mc_call(w3, [(booster, "isActive", (i,)) for i in minted_ids], chunk=chunk, block=block)
     owner_of = dict(zip(ids, owners))
     entries = []
     for token_id, wallet, active in zip(minted_ids, wallets, actives):
@@ -143,7 +150,7 @@ def main() -> int:
 
     w3 = make_web3()
     block = w3.eth.block_number
-    entries = read_collection(w3, broker_address, BOOSTER_ADDRESS)
+    entries = read_collection(w3, broker_address, BOOSTER_ADDRESS, block=block)
     sender = None
     if args.balance_of:
         from web3 import Web3

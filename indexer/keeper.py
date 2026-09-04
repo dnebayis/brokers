@@ -111,8 +111,11 @@ _MC3_ABI = [{
 }]
 
 
-def _mc_call(w3, calls, chunk=150):
+def _mc_call(w3, calls, chunk=150, block=None):
     """Batch many view calls through Multicall3. `calls` are (contract, fn_name, args).
+
+    `block` pins every chunk to one block height, so a caller that reports "state at block N"
+    (the holder snapshot) cannot straddle a state change midway through its reads.
 
     Valuing Brokers one field at a time meant ~1,400 sequential round trips for 164 enrolled
     playbooks, which took over three minutes and would only get worse. Batching keeps the
@@ -151,7 +154,8 @@ def _mc_call(w3, calls, chunk=150):
 
         payload = [(c[0].address, True, _encode(c[0], c[1], c[2])) for c in part]
         try:
-            res = mc.functions.aggregate3(payload).call()
+            res = (mc.functions.aggregate3(payload).call(block_identifier=block) if block is not None
+                   else mc.functions.aggregate3(payload).call())
         except Exception as exc:
             # A rate-limited RPC and unreadable data look identical downstream ("unpriced");
             # one line per failed chunk keeps the cause visible.

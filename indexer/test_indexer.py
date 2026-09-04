@@ -787,6 +787,30 @@ class SkipDoesNotOverwriteBasketTests(unittest.TestCase):
         self.assertEqual(json.load(open(out + ".skipped.json"))["skipped"], "route pre-flight unavailable")
 
 
+class SnapshotBlockPinTests(unittest.TestCase):
+    """The report says "at block N", so every read must be at block N: an activation during
+    the read otherwise produced a snapshot matching no block at all."""
+
+    def test_every_multicall_and_direct_read_is_pinned_to_the_block(self):
+        import coat_bonus_snapshot as cbs
+        seen = []
+        broker = Mock(); booster = Mock()
+        broker.functions.totalMinted.return_value.call.side_effect = lambda **kw: (seen.append(("totalMinted", kw.get("block_identifier"))), 2)[1]
+        broker.functions.MAX_SUPPLY.return_value.call.side_effect = lambda **kw: (seen.append(("MAX_SUPPLY", kw.get("block_identifier"))), 2)[1]
+        def mc(w3, calls, chunk=150, block=None):
+            fn = calls[0][1]
+            seen.append((fn, block))
+            if fn == "ownerOf": return ["0x" + "11" * 20, "0x" + "11" * 20]
+            if fn == "accountOf": return ["0x" + "22" * 20, "0x" + "33" * 20]
+            return [True, False]
+        w3 = Mock()
+        w3.eth.contract.side_effect = [broker, booster]
+        with patch("keeper._mc_call", mc), patch("web3.Web3.to_checksum_address", lambda a: a):
+            entries = cbs.read_collection(w3, "0x" + "bb" * 20, "0x" + "cc" * 20, block=53_682_930)
+        self.assertEqual(len(entries), 2)
+        self.assertTrue(all(b == 53_682_930 for _, b in seen), seen)
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""
