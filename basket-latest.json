@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-04T19:53:35.185022+00:00",
+  "generatedAt": "2026-09-04T19:54:34.895959+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 54529138,
+    "block": 54529752,
     "dropped": []
   },
   "missedCoverage": [
@@ -520,9 +520,9 @@
     "divergenceBps": 6877
   },
   "commentary": {
-    "text": "The basket's largest position is INTC, driven by Nancy Pelosi's $1.1M in buys, traded on 2026-07-24 and filed on 2026-08-21. SPCX is also a significant holding, with buys from William R. Timmons IV, Dan Meuser, and three other members. MU rounds out the basket, with three members buying. The largest name that could not be bought was BE, with $7.5M in net notional buying by Nancy Pelosi, because it is not tokenized or tradable on this chain. This basket covers 12.4% of disclosed buying dollars.",
+    "text": "The basket's largest position is INTC, with Nancy Pelosi buying an estimated $1.1M across two transactions, last traded on 2026-07-24 and filed on 2026-08-21. SPCX follows, with William R. Timmons IV buying an estimated $75K, Dan Meuser buying $33K, and three other members also making purchases. MU is the third position, with three members buying, including Dan Newhouse. The largest disclosed buying, BE, with an estimated $7.5M from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 12.4% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-04T19:53:35+00:00",
+    "generatedAt": "2026-09-04T19:54:34+00:00",
     "inputHash": "0fc288b53ab4ef4a",
     "promptVersion": 2
   }
