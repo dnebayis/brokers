@@ -1,13 +1,11 @@
-import { NextResponse } from "next/server";
 import { ADDR } from "@/lib/config";
 import { activeChain } from "@/lib/chains";
 import { walletBrokers } from "@/lib/brokerApi";
+import { publicJson, publicOptions } from "@/lib/publicApi";
 
 // Public, keyless: every Broker a wallet currently holds, with active status and each
 // Broker's 6551 wallet. Backs the G's campaign tooling and any holder dashboard.
-// CDN-cached for an hour — transfers show up on the next revalidation.
-const CACHE = "public, s-maxage=3600, stale-while-revalidate=600";
-
+// CDN-cached for an hour; CORS-open so browser code can call it.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ address: string }> },
@@ -17,21 +15,22 @@ export async function GET(
   try {
     const brokers = await walletBrokers(address);
     if (brokers === null) {
-      return NextResponse.json({ error: "address must be a checksummed or lowercase 0x address" }, { status: 400 });
+      return publicJson({ error: "address must be a checksummed or lowercase 0x address" }, 400);
     }
-    return NextResponse.json(
-      {
-        chainId: activeChain.id,
-        contracts: { broker: ADDR.broker, booster: ADDR.booster },
-        address,
-        count: brokers.length,
-        brokers,
-        asOf: new Date().toISOString(),
-      },
-      { headers: { "Cache-Control": CACHE } },
-    );
+    return publicJson({
+      chainId: activeChain.id,
+      contracts: { broker: ADDR.broker, booster: ADDR.booster },
+      address,
+      count: brokers.length,
+      brokers,
+      asOf: new Date().toISOString(),
+    });
   } catch (err) {
     console.warn("wallet api: chain read failed:", String(err));
-    return NextResponse.json({ error: "chain read failed, retry shortly" }, { status: 502 });
+    return publicJson({ error: "chain read failed, retry shortly" }, 502);
   }
+}
+
+export function OPTIONS() {
+  return publicOptions();
 }
