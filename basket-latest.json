@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-04T12:44:15.681871+00:00",
+  "generatedAt": "2026-09-04T13:44:45.775990+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 54274256,
+    "block": 54310487,
     "dropped": []
   },
   "missedCoverage": [
@@ -520,9 +520,9 @@
     "divergenceBps": 6877
   },
   "commentary": {
-    "text": "The current basket is led by a position in INTC, with Nancy Pelosi buying an estimated $1.1M across two trades, the latest on 2026-07-24 and filed on 2026-08-21. SPCX is also a significant holding, with William R. Timmons IV buying an estimated $75K on 2026-06-15, filed on 2026-07-19, and Dan Meuser buying an estimated $33K on 2026-06-15, filed on 2026-07-02. The basket also includes MU, with a total of three members buying. The largest name that could not be bought was BE, with an estimated $7.5M in buying from Nancy Pelosi, because it is not tokenized or tradable on this chain. This basket represents 12.4% of disclosed buying dollars.",
+    "text": "The basket's largest position is INTC, weighted 50.0%, following two buys by Nancy Pelosi with a notional value of $1.1M, traded on 2026-07-24 and filed on 2026-08-21. SPCX is 45.4% of the basket, with buys from William R. Timmons IV, Dan Meuser, and three other members. MU makes up 4.7% of the basket, with buys from Dan Newhouse, Michael Rulli, Sheldon Whitehouse, and zero other members. The largest disclosed buy, BE, with a net notional of $7.5M from Nancy Pelosi, could not be included because it is not tokenized or tradable on this chain. This basket covers 12.4% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-04T12:44:15+00:00",
+    "generatedAt": "2026-09-04T13:44:45+00:00",
     "inputHash": "0fc288b53ab4ef4a",
     "promptVersion": 2
   }
