@@ -15,6 +15,7 @@ import {
 } from "@/lib/floor";
 import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
+import { hasAllowance, waitForAllowance } from "@/lib/allowance";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
 
@@ -331,13 +332,9 @@ export function Terminal() {
   };
 
   async function ensureAllowance(token: `0x${string}`, needed: bigint, label: string) {
-    const cur_ = (await client.readContract({
-      address: token,
-      abi: erc20MiniAbi,
-      functionName: "allowance",
-      args: [address!, router],
-    })) as bigint;
-    if (cur_ >= needed) return;
+    // Tolerates the public RPC lagging a block: a just-mined approval read from a node
+    // that is behind looks missing and used to be requested a second time.
+    if (await hasAllowance(token, address!, router, needed)) return;
     // Unlimited approval, one signature per token. A sell touches up to seven stocks, so an
     // exact approval per trade would mean seven approvals per sell; the copy says plainly
     // what the allowance is and that the wallet can revoke it, rather than claiming it is
@@ -351,7 +348,14 @@ export function Terminal() {
       functionName: "approve",
       args: [router, 2n ** 256n - 1n],
     });
+    tx.setStatus(`${label} approval sent, waiting for it to be mined…`);
     await waitForSuccessfulReceipt(a);
+    // The trade that follows is simulated by the wallet against the same public RPC; send
+    // it only once a node that has seen the approval answers, or the wallet reports an
+    // allowance error and the user is asked to approve again for nothing.
+    if (!(await waitForAllowance(token, address!, router, needed))) {
+      throw new Error(`${label} approval is mined but the network has not caught up yet. Press the button again in a few seconds; no second approval is needed.`);
+    }
   }
 
   async function doBuy() {

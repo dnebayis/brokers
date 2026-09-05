@@ -2,10 +2,13 @@ import { formatUnits } from "viem";
 
 export const short = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 
+// Always en-US: the amount inputs read a dot as the decimal point, so a display that
+// follows the viewer's locale (a Turkish browser writes 14.636.487,16) shows the same
+// number two different ways on one screen. One convention everywhere.
 export function fmt(v: bigint | undefined, decimals = 18, precision = 4): string {
   if (v === undefined) return "—";
   const n = Number(formatUnits(v, decimals));
-  return n.toLocaleString(undefined, { maximumFractionDigits: precision });
+  return n.toLocaleString("en-US", { maximumFractionDigits: precision });
 }
 
 export function parseErr(e: unknown): string {

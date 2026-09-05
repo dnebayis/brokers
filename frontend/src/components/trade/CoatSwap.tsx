@@ -13,6 +13,7 @@ import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
 import { StepFlow, type StepState } from "@/components/ui/StepFlow";
 import { useCoatPrice, usdLabel } from "@/lib/useCoatPrice";
+import { hasAllowance, waitForAllowance } from "@/lib/allowance";
 
 const SLIPPAGE_BPS = 300n; // 3%
 const routerReady = ADDR.router !== "";
@@ -22,7 +23,6 @@ export function CoatSwap() {
   
   const { writeContractAsync } = useWriteContract();
   const swap = useTx();
-  const approval = useTx();
 
   const [dir, setDir] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
@@ -98,6 +98,11 @@ export function CoatSwap() {
     if (balance !== undefined && balance > 0n) void onAmount(formatUnits(balance, 18));
   }
 
+  // One button, one flow. Selling takes two signatures (approve, then sell) and the second
+  // follows the first without a second click, the way every swap UI behaves. Every read
+  // that gates on the approval tolerates the public RPC lagging a block: right after the
+  // approval is mined a lagging node still returns the old allowance, which used to make
+  // this component ask for the same approval again and refuse to sell.
   const doSwap = () =>
     swap.run(async () => {
       if (!routerReady) throw new Error("Swap router not wired in this build.");
@@ -107,6 +112,7 @@ export function CoatSwap() {
         // Quote by SIMULATING the real swap (minOut=0) — the router's spot-price quoteBuy
         // over-estimates on a single-sided pool, which would make minOut too high and revert.
         const value = parseEther(amount);
+        setStep(0, "doing");
         const sim = await client.simulateContract({
           account: address!, address: router, abi: routerAbi, functionName: "buy", args: [0n, address!], value,
         });
@@ -114,13 +120,27 @@ export function CoatSwap() {
         const min = expected - (expected * SLIPPAGE_BPS) / 10_000n;
         setStep(0, "done");
         setStep(1, "doing");
-        swap.setStatus(`Confirm: buy ≈ ${fmt(expected, 18, 0)} COAT (≥ ${fmt(min, 18, 0)}) for ${amount} ETH…`);
+        swap.setStatus(`Confirm in your wallet: buy ≈ ${fmt(expected, 18, 0)} COAT (at least ${fmt(min, 18, 0)}) for ${amount} ETH.`);
         const h = await writeContractAsync({ address: router, abi: routerAbi, functionName: "buy", args: [min, address!], value, chainId: activeChain.id });
+        swap.setStatus("Buying…");
         await waitForSuccessfulReceipt(h);
       } else {
         const coatIn = parseUnits(amount, 18);
-        const currentAllowance = (await client.readContract({ address: ADDR.coat, abi: coatAbi, functionName: "allowance", args: [address!, router] })) as bigint;
-        if (currentAllowance < coatIn) throw new Error("Approve $COAT first. Approval never performs a swap.");
+        setStep(0, "doing");
+        if (!(await hasAllowance(ADDR.coat, address!, router, coatIn))) {
+          swap.setStatus(`Signature 1 of 2: approve ${amount} $COAT for the router. This step cannot swap or spend COAT.`);
+          const a = await writeContractAsync({
+            address: ADDR.coat, abi: coatAbi, functionName: "approve", args: [router, coatIn], chainId: activeChain.id,
+          });
+          swap.setStatus("Approval sent, waiting for it to be mined…");
+          await waitForSuccessfulReceipt(a);
+          // The receipt is final; a node that still answers with the old allowance is behind,
+          // not right. Wait for one that has caught up before simulating the sell.
+          if (!(await waitForAllowance(ADDR.coat, address!, router, coatIn))) {
+            throw new Error("The approval is mined but the network has not caught up yet. Press SELL again in a few seconds; no second approval is needed.");
+          }
+          await refetchAllowance();
+        }
         setStep(0, "done");
         setStep(1, "doing");
         // simulate the real sell (needs the allowance above) for an accurate minimum-out
@@ -129,34 +149,40 @@ export function CoatSwap() {
         });
         const expected = sim.result as bigint;
         const min = expected - (expected * SLIPPAGE_BPS) / 10_000n;
-        swap.setStatus(`Confirm: sell ${amount} COAT for ≈ ${fmt(expected, 18, 6)} ETH (≥ ${fmt(min, 18, 6)})…`);
+        swap.setStatus(`Signature 2 of 2: sell ${amount} COAT for ≈ ${fmt(expected, 18, 6)} ETH (at least ${fmt(min, 18, 6)}).`);
         const h = await writeContractAsync({ address: router, abi: routerAbi, functionName: "sell", args: [coatIn, min, address!], chainId: activeChain.id });
+        swap.setStatus("Selling…");
         await waitForSuccessfulReceipt(h);
+        await refetchAllowance();
       }
       setStep(1, "done");
       swap.setStatus("Swap complete.", "ok");
+      setAmount("");
+      setQuote("");
+      setQuoteWei(undefined);
     });
 
-  const approveSell = () =>
-    approval.run(async () => {
-      if (!address || amountWei === undefined || dir !== "sell") throw new Error("Enter a $COAT amount first.");
-      const router = ADDR.router as `0x${string}`;
-      approval.setStatus(`Confirm approval for ${amount} $COAT. This transaction cannot swap or spend COAT.`);
-      const hash = await writeContractAsync({
-        address: ADDR.coat, abi: coatAbi, functionName: "approve", args: [router, amountWei], chainId: activeChain.id,
-      });
-      await waitForSuccessfulReceipt(hash);
-      await refetchAllowance();
-      setStep(0, "done");
-      approval.setStatus("Approval complete. Press SELL COAT to submit the separate swap.", "ok");
-    });
+  // Button copy is the state machine: every state a swap can be in has one label.
+  const buttonLabel = !address
+    ? "CONNECT WALLET"
+    : amountWei === undefined
+      ? "ENTER AN AMOUNT"
+      : insufficient
+        ? `NOT ENOUGH ${dir === "buy" ? "ETH" : "COAT"}`
+        : swap.busy
+          ? (steps[0] === "doing" ? (dir === "buy" ? "QUOTING…" : "APPROVING…") : dir === "buy" ? "BUYING…" : "SELLING…")
+          : dir === "buy"
+            ? "BUY COAT"
+            : needsApproval
+              ? `APPROVE & SELL ${rawSellAmount} COAT`
+              : `SELL ${rawSellAmount} COAT`;
 
   return (
     <div className="card">
       <h2 className="pixel-title text-[15px] mb-1">Swap $COAT</h2>
       <p className="text-ink-soft text-sm mb-5">
         Buy $COAT with ETH or sell it back, straight against the hooked v4 pool that holds the
-        real liquidity. Buying never needs approval; selling takes one approval and then one sell.
+        real liquidity. Buying is one signature; selling is an exact approval followed by the sell, in one go.
       </p>
 
       <div className="grid grid-cols-3 gap-2.5 mb-4">
@@ -196,13 +222,15 @@ export function CoatSwap() {
       </p>
       <p className="text-ink-soft text-sm mt-2">Slippage 3% · minimum shown on confirm.</p>
 
-      <button className="btn btn-accent w-full mt-4" onClick={needsApproval ? approveSell : doSwap} disabled={!canSwap || swap.busy || approval.busy}>
-        <Icon name="swap" /> {approval.busy ? "APPROVING…" : swap.busy ? "SWAPPING…" : dir === "buy" ? "BUY COAT" : needsApproval ? `APPROVE ${rawSellAmount} COAT` : `SELL ${rawSellAmount} COAT`}
+      <button className="btn btn-accent w-full mt-4" onClick={doSwap} disabled={!canSwap || swap.busy}>
+        <Icon name="swap" /> {buttonLabel}
       </button>
       {reason && <p className="text-accent text-sm mt-2">{reason}</p>}
+      {dir === "sell" && needsApproval && amountWei !== undefined && !insufficient && (
+        <p className="text-ink-soft text-[12px] mt-2">Two signatures: an exact approval for this amount, then the sell. Nothing else is approved.</p>
+      )}
       <StepFlow steps={[{ label: dir === "buy" ? "quote" : "approve COAT", state: steps[0] }, { label: dir === "buy" ? "buy" : "sell", state: steps[1] }]} />
       <StatusLine msg={swap.msg} kind={swap.kind} />
-      <StatusLine msg={approval.msg} kind={approval.kind} />
 
       {!routerReady && (
         <div className="border-l-[3px] border-accent bg-cream-2 px-4 py-3 mt-4 text-sm">
