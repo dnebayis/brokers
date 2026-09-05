@@ -1,7 +1,7 @@
 "use client";
 
 import { formatUnits, zeroAddress } from "viem";
-import { ADDR, COAT_DROPPED_TOTAL, COAT_DROPS, LINKS, OPENSEA_URL } from "@/lib/config";
+import { ADDR, COAT_DROPPED_TOTAL, COAT_DROPPED_USD_AT_DROP, COAT_DROPS, LINKS, OPENSEA_URL } from "@/lib/config";
 import { brokerAbi, coatAbi, boosterAbi, routerAbi, aggregatorAbi, erc20Abi } from "@/lib/abis";
 import { publicClient as client } from "@/lib/client";
 import { useStoredQuery } from "@/lib/useStoredQuery";
@@ -15,6 +15,7 @@ type Metrics = {
   burned?: number;
   burnedPct?: number;
   priceUsd?: number;
+  stockCostUsd?: number; // engine cost of every purchase at its own hour (scorecard)
   /** price x CURRENT totalSupply (burns already removed), not the 1B launch supply. */
   marketCapUsd?: number;
   earnedUsd?: number;
@@ -131,6 +132,18 @@ async function loadMetrics(): Promise<Metrics> {
     next.earnedUsd = total;
   } catch { /* earned stays undefined */ }
 
+  // What the stock cost when it was bought: each purchase priced at the Chainlink ETH/USD
+  // round of its own hour, summed by the scorecard. This is the settled figure; the live
+  // valuation above is what that stock is worth today and only decorates it.
+  try {
+    const res = await fetch("/api/scorecard");
+    if (res.ok) {
+      const sc = await res.json();
+      const spent = Number(sc?.totals?.usdSpent);
+      if (Number.isFinite(spent) && spent > 0) next.stockCostUsd = spent;
+    }
+  } catch { /* cost stays undefined */ }
+
   return next;
 }
 
@@ -139,7 +152,7 @@ export function HomeMetrics() {
   // last known figures instantly, then revalidates in the background. Metrics move on the
   // keeper's hourly cadence; 2 min keeps the panel feeling live at a fraction of the load.
   const { data: m, isError } = useStoredQuery<Metrics>({
-    storageKey: "home:metrics:v3",
+    storageKey: "home:metrics:v4",
     queryKey: ["home-metrics", ADDR.booster],
     queryFn: loadMetrics,
     staleTime: 90_000,
@@ -150,18 +163,18 @@ export function HomeMetrics() {
   const loading = m === undefined;
   const unreachable = !loading && (m.unreachable || isError);
 
-  // Everything paid to holders so far: the stock the engine bought for them, plus the
-  // $COAT the treasury dropped into Broker wallets, both valued at today's prices.
-  const coatDroppedUsd = m?.priceUsd !== undefined ? COAT_DROPPED_TOTAL * m.priceUsd : undefined;
-  const paidUsd =
-    m?.earnedUsd !== undefined && coatDroppedUsd !== undefined ? m.earnedUsd + coatDroppedUsd : undefined;
+  // Everything paid to holders so far, at the prices when it was paid: the stock at its
+  // purchase cost and each $COAT drop at its drop-day value. A settled number, so it only
+  // moves when something new is paid out, never with the market.
+  const coatDroppedUsd = COAT_DROPPED_USD_AT_DROP;
+  const paidUsd = m?.stockCostUsd !== undefined ? m.stockCostUsd + coatDroppedUsd : undefined;
   const stats: { k: string; v: string; sub?: string }[] = [
     { k: "Brokers", v: m?.minted !== undefined ? `${m.minted.toLocaleString("en-US")} / 1,776` : "—" },
     { k: "Active & earning", v: m?.active !== undefined ? m.active.toLocaleString("en-US") : "—" },
     { k: "$COAT burned", v: m?.burned !== undefined ? `${compact(m.burned)}${m.burnedPct ? ` · ${m.burnedPct.toFixed(1)}%` : ""}` : "—" },
-    { k: "Paid to holders", v: usd(paidUsd), sub: "stock + $COAT drops" },
-    { k: "Stock distributed", v: usd(m?.earnedUsd) },
-    { k: "$COAT dropped", v: usd(coatDroppedUsd), sub: `${compact(COAT_DROPPED_TOTAL)} COAT · ${COAT_DROPS.length} tranche${COAT_DROPS.length === 1 ? "" : "s"}` },
+    { k: "Paid to holders", v: usd(paidUsd), sub: "stock + $COAT drops, at the prices when paid" },
+    { k: "Stock distributed", v: usd(m?.stockCostUsd), sub: m?.earnedUsd !== undefined ? `worth ${usd(m.earnedUsd)} today` : "at purchase cost" },
+    { k: "$COAT dropped", v: usd(coatDroppedUsd), sub: `${compact(COAT_DROPPED_TOTAL)} COAT · ${COAT_DROPS.length} tranche${COAT_DROPS.length === 1 ? "" : "s"} · drop-day value` },
     { k: "$COAT price", v: usd(m?.priceUsd) },
     { k: "Market cap", v: usd(m?.marketCapUsd), sub: "current supply" },
   ];

@@ -51,14 +51,18 @@ export const LINKS = {
 
 // $COAT paid out to Broker holders from the treasury, one entry per tranche. Each drop is
 // a plain ERC-20 transfer per Broker wallet, so it is not visible through any contract
-// getter; the receipts file in the repo carries every tx hash. Valued at today's $COAT
-// price on the site, the same way stock is valued at today's feeds.
-export const COAT_DROPS: { label: string; block: number; coat: number; recipients: number; receipts: string }[] = [
+// getter; the receipts file in the repo carries every tx hash. `usdAtDrop` is what the
+// tranche was worth on the day it was sent (router quote x Chainlink ETH/USD at that time,
+// the figure the announcement carried). It is pinned on purpose: "paid to holders" is a
+// record of what was paid, and re-pricing it every minute at today's $COAT made a settled
+// number drift with the market.
+export const COAT_DROPS: { label: string; block: number; coat: number; recipients: number; usdAtDrop: number; receipts: string }[] = [
   {
     label: "tranche 1 · active Brokers",
     block: 52561613,
     coat: 14_000_000,
     recipients: 1175,
+    usdAtDrop: 5_010,
     receipts: "https://github.com/dnebayis/brokers/blob/main/indexer/reports/coat-bonus-t1.sent.csv",
   },
   {
@@ -66,10 +70,12 @@ export const COAT_DROPS: { label: string; block: number; coat: number; recipient
     block: 53682930,
     coat: 6_755_744.680851064,
     recipients: 567,
+    usdAtDrop: 2_694,
     receipts: "https://github.com/dnebayis/brokers/blob/main/indexer/reports/coat-bonus-t2.sent.csv",
   },
 ];
 export const COAT_DROPPED_TOTAL = COAT_DROPS.reduce((a, d) => a + d.coat, 0);
+export const COAT_DROPPED_USD_AT_DROP = COAT_DROPS.reduce((a, d) => a + d.usdAtDrop, 0);
 
 export const PARAMS = {
   activationBurn: 36_750,
