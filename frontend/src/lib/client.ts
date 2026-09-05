@@ -34,7 +34,13 @@ export const publicClient = createPublicClient({
   batch: { multicall: { wait: 16 } },
 });
 
+// Every flow that sends a transaction waits for it here, so this is the one place that
+// knows a hash exists. It is announced so the status line can link the explorer without
+// each of the ~25 call sites having to thread the hash through by hand.
+export const txEvents = new EventTarget();
+
 export async function waitForSuccessfulReceipt(hash: `0x${string}`) {
+  txEvents.dispatchEvent(new CustomEvent("sent", { detail: hash }));
   const receipt = await client.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error("Transaction reverted on-chain.");
   return receipt;

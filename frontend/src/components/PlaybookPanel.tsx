@@ -457,7 +457,7 @@ export function PlaybookPanel({
           <Icon name="power" /> APPLY TO ALL ACTIVE ({activeBrokers.length})
         </button>
       )}
-      <StatusLine msg={tx.msg} kind={tx.kind} />
+      <StatusLine msg={tx.msg} kind={tx.kind} hash={tx.hash} />
     </div>
   );
 }

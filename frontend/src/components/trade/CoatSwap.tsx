@@ -229,7 +229,7 @@ export function CoatSwap() {
         <p className="text-ink-soft text-[12px] mt-2">Two signatures: an exact approval for this amount, then the sell. Nothing else is approved.</p>
       )}
       <StepFlow steps={[{ label: dir === "buy" ? "quote" : "approve COAT", state: steps[0] }, { label: dir === "buy" ? "buy" : "sell", state: steps[1] }]} />
-      <StatusLine msg={swap.msg} kind={swap.kind} />
+      <StatusLine msg={swap.msg} kind={swap.kind} hash={swap.hash} />
 
       {!routerReady && (
         <div className="border-l-[3px] border-accent bg-cream-2 px-4 py-3 mt-4 text-sm">

@@ -9,7 +9,7 @@ import { ADDR, PARAMS } from "@/lib/config";
 import { brokerAbi, brokerAccountAbi, claimSweeperAbi, coatAbi, boosterAbi, erc20Abi, strategyRegistryAbi } from "@/lib/abis";
 import { activeChain } from "@/lib/chains";
 import { useTx } from "@/lib/useTx";
-import { client, waitForSuccessfulReceipt } from "@/lib/client";
+import { client, waitForSuccessfulReceipt, txEvents } from "@/lib/client";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
 import { PlaybookPanel } from "@/components/PlaybookPanel";
 import { useBrokerBacking } from "@/lib/useBrokerBacking";
@@ -515,6 +515,9 @@ export function ActivateTab() {
             const { id } = await sendCalls(wagmiConfig, { calls: chunk, chainId: activeChain.id, forceAtomic: true });
             claimTx.setStatus("Waiting for the bundle to confirm…");
             const result = await waitForCallsStatus(wagmiConfig, { id, timeout: 180_000 });
+            // A bundle has no hash of its own until it lands; link the receipt it produced.
+            const landed = result.receipts?.[result.receipts.length - 1]?.transactionHash;
+            if (landed) txEvents.dispatchEvent(new CustomEvent("sent", { detail: landed }));
             if (result.status !== "success") {
               throw new Error(`The bundle did not complete. ${await describeMoved()}`);
             }
@@ -861,7 +864,7 @@ export function ActivateTab() {
               </button>
               {activateReason && <p className="text-accent text-sm mt-2">{activateReason}</p>}
               <StepFlow steps={[{ label: "approve COAT", state: steps[0] }, { label: "activate", state: steps[1] }]} />
-              <StatusLine msg={act.msg} kind={act.kind} />
+              <StatusLine msg={act.msg} kind={act.kind} hash={act.hash} />
             </div>
           )}
 
@@ -938,7 +941,7 @@ export function ActivateTab() {
               <Icon name="wallet" /> {claimTx.busy ? "WITHDRAWING…" : "Withdraw stock to my wallet"}
             </button>
           )}
-          <StatusLine msg={claimTx.msg} kind={claimTx.kind} />
+          <StatusLine msg={claimTx.msg} kind={claimTx.kind} hash={claimTx.hash} />
           {isOwner && (
             <ShareOnX data={{
               id: info.id.toString(),
@@ -1008,13 +1011,13 @@ export function ActivateTab() {
                   <Icon name="arrow-right" /> SEND
                 </button>
               </div>
-              <StatusLine msg={xfer.msg} kind={xfer.kind} />
+              <StatusLine msg={xfer.msg} kind={xfer.kind} hash={xfer.hash} />
             </details>
           )}
         </div>
       )}
-      {!info && <StatusLine msg={act.msg} kind={act.kind} />}
-      {!info && <StatusLine msg={claimTx.msg} kind={claimTx.kind} />}
+      {!info && <StatusLine msg={act.msg} kind={act.kind} hash={act.hash} />}
+      {!info && <StatusLine msg={claimTx.msg} kind={claimTx.kind} hash={claimTx.hash} />}
 
       {/* ── 3. Playbooks: standing orders the hourly engine executes per Broker ── */}
       <PlaybookPanel

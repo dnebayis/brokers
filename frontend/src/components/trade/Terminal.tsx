@@ -657,7 +657,7 @@ export function Terminal() {
         >
           {dir === "buy" ? "Buy basket" : sellPct === 100 ? "Sell entire basket" : `Sell ${sellPct}% of basket`}
         </button>
-        <StatusLine msg={tx.msg} kind={tx.kind} />
+        <StatusLine msg={tx.msg} kind={tx.kind} hash={tx.hash} />
       </section>
 
       <p className="text-sm text-ink-soft max-w-xl">
