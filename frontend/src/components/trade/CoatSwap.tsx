@@ -218,7 +218,6 @@ export function CoatSwap() {
       <input className="fld" readOnly value={quote} placeholder="—" />
       <p className="text-ink-soft text-[12px] mt-1.5 tabular-nums" aria-live="polite">
         ≈ {usdLabel(dir === "buy" ? price.coatWeiToUsd(quoteWei) : price.ethWeiToUsd(quoteWei))}
-        {quoteWei !== undefined && " before fees: about 2% per swap (1% pool fee plus 1% hook fee)"}
       </p>
       <p className="text-ink-soft text-sm mt-2">Slippage 3% · minimum shown on confirm.</p>
 
