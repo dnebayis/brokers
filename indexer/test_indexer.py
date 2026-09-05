@@ -908,6 +908,22 @@ class CapWithSpilloverTests(unittest.TestCase):
         self.assertEqual(b["smartCapped"]["pnlPct"], 5.0)
 
 
+class ExplainRevertTests(unittest.TestCase):
+    def test_known_selectors_read_as_causes(self):
+        from route_preflight import explain_revert
+        self.assertIn("BadFeed", explain_revert("('0xb0171a5d', '0xb0171a5d')"))
+        self.assertIn("24h heartbeat", explain_revert("execution reverted 0xb0171a5d"))
+        self.assertIn("GuardMissing", explain_revert("GuardMissing(0xabc)"))
+        self.assertEqual(explain_revert("something else"), "something else")
+
+    def test_shrink_uses_the_nodes_numbers(self):
+        from keeper import _have_want, _shrink_batch
+        have, want = _have_want("{'code': -32000, 'message': 'insufficient funds for gas * price + value: address 0xa4 have 14706152531977337 want 28321134716864000'}")
+        self.assertEqual((have, want), (14706152531977337, 28321134716864000))
+        self.assertLess(_shrink_batch(25, have, want), 25)
+        self.assertGreaterEqual(_shrink_batch(25, have, want), 5)
+
+
 class PlaybookWorthTests(unittest.TestCase):
     """The run threshold counts wallet stock AND what the Booster still owes (claimable);
     an unpriceable leg still poisons the whole valuation."""

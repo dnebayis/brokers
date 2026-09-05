@@ -428,10 +428,12 @@ def _feed_watchdog(w3) -> None:
         from web3 import Web3
         ny = datetime.now(ZoneInfo("America/New_York"))
         wd = ny.weekday()  # Mon=0 .. Sun=6
-        if wd >= 5:
-            return
         limit_h = 70 if wd == 0 else 30
         booster = w3.eth.contract(address=Web3.to_checksum_address(booster_addr), abi=[
+            {"type": "function", "name": "ethUsdFeed", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+            {"type": "function", "name": "ethFeedStaleAfter", "stateMutability": "view",
+             "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
             {"type": "function", "name": "knownTokenCount", "stateMutability": "view",
              "inputs": [], "outputs": [{"name": "", "type": "uint256"}]},
             {"type": "function", "name": "knownTokens", "stateMutability": "view",
@@ -450,6 +452,30 @@ def _feed_watchdog(w3) -> None:
                          {"name": "answeredInRound", "type": "uint80"}]}]
         now = int(datetime.now(timezone.utc).timestamp())
         laggards = []
+        # ETH/USD first, every day of the week: it is a heartbeat feed (24h on RH Chain,
+        # 0.5% deviation), so a calm day leaves it silent for up to a day, and the poke
+        # reverts BadFeed the moment its age passes the Booster's ethFeedStaleAfter. Say so
+        # at 80% of the window, before the first poke fails, and name the two windows so the
+        # fix (setStaleWindows) is obvious from the alert alone.
+        try:
+            eth_feed = booster.functions.ethUsdFeed().call()
+            eth_after = int(booster.functions.ethFeedStaleAfter().call())
+            if int(eth_feed, 16) != 0 and eth_after > 0:
+                eth_updated = int(w3.eth.contract(address=eth_feed, abi=feed_abi)
+                                  .functions.latestRoundData().call()[3])
+                eth_age = now - eth_updated
+                if eth_age > eth_after * 0.8:
+                    from ops_alerts import alert
+                    state = "PAST" if eth_age > eth_after else "near"
+                    message = (f"ETH/USD feed {eth_age / 3600:.1f}h old, {state} the Booster's "
+                               f"{eth_after / 3600:.0f}h ethFeedStaleAfter (feed heartbeat is 24h): "
+                               "poke reverts BadFeed until it updates; owner setStaleWindows widens the window")
+                    print(f"::warning::{message}")
+                    alert(f"🩺 {message}")
+        except Exception as exc:  # noqa: BLE001 - the stock loop below still runs
+            print(json.dumps({"action": "feed.watchdog", "status": "eth-skipped", "error": redact(str(exc))[:120]}))
+        if wd >= 5:
+            return
         for i in range(int(booster.functions.knownTokenCount().call())):
             token = booster.functions.knownTokens(i).call()
             feed = booster.functions.stockFeed(token).call()
@@ -955,7 +981,10 @@ def main() -> None:
                         est = int(engine.functions.run(b_ids, b_mins).estimate_gas({"from": account.address}))
                         gas_limit = max(est * 2, 500_000 + 700_000 * len(b_ids))
                         have = int(w3.eth.get_balance(account.address))
-                        want = gas_limit * int(w3.eth.gas_price)
+                        # The node checks gas_limit x maxFeePerGas, and web3 sets maxFeePerGas to
+                        # about twice the base fee; sizing on gas_price alone passed this check
+                        # and then failed the real one at send time, deferring the whole stage.
+                        want = gas_limit * int(w3.eth.gas_price) * 2
                     except Exception as exc:
                         have, want = _have_want(redact(str(exc)))
                         if have is None:
@@ -970,6 +999,17 @@ def main() -> None:
                     if not submit("playbooks.run",
                                   lambda b_ids=b_ids, b_mins=b_mins: engine.functions.run(b_ids, b_mins),
                                   min_gas=500_000 + 700_000 * len(b_ids)):
+                        # The send itself was refused for affordability: shrink on the node's own
+                        # numbers and try again rather than leaving every order for next hour.
+                        have2, want2 = _have_want(failed_errors.get("playbooks.run", ""))
+                        smaller = _shrink_batch(size, have2, want2) if have2 is not None else size
+                        if smaller < size:
+                            failed_actions[:] = [a for a in failed_actions if a != "playbooks.run"]
+                            failed_errors.pop("playbooks.run", None)
+                            print(json.dumps({"action": "playbooks.run", "status": "resized",
+                                              "from": size, "to": smaller}))
+                            size = smaller
+                            continue
                         break
                     pending_ids, pending_mins = pending_ids[size:], pending_mins[size:]
             else:

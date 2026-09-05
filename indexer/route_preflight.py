@@ -147,6 +147,24 @@ def simulate_leg(w3, router_address, booster_address, stock, wei) -> tuple[bool,
     )
 
 
+_KNOWN_REVERTS = {
+    "0xb0171a5d": "BadFeed (a Chainlink feed the Booster reads is older than its staleness window; the ETH/USD feed has a 24h heartbeat)",
+    "0x850c6f76": "SlippageTooHigh",
+    "0x5740b27b": "InvalidPokeBatch",
+    "0x8b05c814": "BelowThreshold",
+}
+
+
+def explain_revert(text: str) -> str:
+    """Name the custom error behind a raw selector so an alert reads as a cause, not a hash."""
+    for sel, name in _KNOWN_REVERTS.items():
+        if sel in text:
+            return f"{name} [{sel}]"
+    if "GuardMissing" in text:
+        return "GuardMissing (no Chainlink feed set for this stock)"
+    return text
+
+
 def feed_guard(w3, booster_address, stock, wei) -> tuple[int | None, str]:
     """eth_call Booster.minOut(stock, wei): the Chainlink-derived floor `_swap` will demand.
 
@@ -166,7 +184,7 @@ def feed_guard(w3, booster_address, stock, wei) -> tuple[int | None, str]:
             return int(booster.functions.minOut(stock, int(wei)).call()), ""
         except Exception as exc:
             if is_revert(exc) and not is_transport_error(exc):
-                return None, "feed guard reverts: " + redact(str(exc))[:160]
+                return None, "feed guard reverts: " + explain_revert(redact(str(exc))[:160])
             if not is_transport_error(exc):
                 raise RouteProbeUnavailable(f"{stock}: unclassified minOut failure: {redact(str(exc))[:200]}")
             last = exc

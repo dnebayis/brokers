@@ -123,9 +123,12 @@ jobs:
             if python run.py --post --out latest-basket.json; then
               fail=0
               # the site reads this file; publish every pass so the feed is at most an hour old
-              bash ../scripts/publish_data.sh latest-basket.json basket-latest.json || echo "::warning::data publish failed"
-              bash ../scripts/publish_data.sh feed-30d.json feed-30d.json || echo "::warning::feed publish failed"
-              bash ../scripts/publish_data.sh members.json members.json || echo "::warning::members publish failed"
+              # A pass that kept the previous epoch (nothing executable, e.g. a stale feed) writes no
+              # basket; publishing what is not there only makes noise.
+              for pair in "latest-basket.json basket-latest.json" "feed-30d.json feed-30d.json" "members.json members.json"; do
+                set -- $pair
+                if [ -f "$1" ]; then bash ../scripts/publish_data.sh "$1" "$2" || echo "::warning::$2 publish failed"; else echo "$2: nothing to publish this pass"; fi
+              done
               if [ -n "${SHADOW_HISTORY_FILE:-}" ] && [ -f "$SHADOW_HISTORY_FILE" ]; then
                 bash ../scripts/publish_data.sh "$SHADOW_HISTORY_FILE" shadow-history.jsonl || echo "::warning::shadow publish failed"
               fi
