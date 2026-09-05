@@ -182,8 +182,10 @@ export default function StartPage() {
         <div className="card p-4 mt-4">
           <h2 className="font-pixel text-sm text-ink-strong">Worth knowing</h2>
           <ul className="list-disc ml-5 space-y-1.5 text-ink text-sm mt-2">
-            <li>The Broker is not in your wallet during the campaign, so there is nothing for you to
-              sign, approve or pay. Be suspicious of anyone who asks you to.</li>
+            <li>The Broker is not in your wallet during the campaign, so on Robinhood Chain there is
+              nothing for you to sign, approve or pay. Joining happens on your community&apos;s own
+              site, on their chain, by their rules. Be suspicious of anyone who asks you to sign
+              anything here, or to send anything to a wallet.</li>
             <li>Earnings are funded by trading activity, so they rise and fall with it. There is no
               fixed rate and nothing is guaranteed.</li>
             <li>If a Broker ever does land in your wallet, it arrives switched off: a transfer
