@@ -64,10 +64,11 @@ export function useCoatPrice(opts?: { ssrSafe?: boolean }) {
   };
 }
 
-/** "$1,234" / "$0.42" / "$0.00036"; dash when unknown. */
+/** "$1,234" / "$0.42" / "$0.00036"; dash when unknown. Dust below a thousandth of a
+ *  cent reads as "$0": a wallet holding a few wei of $COAT is worth nothing, not "$1.3e-16". */
 export function usdLabel(n: number | undefined): string {
   if (n === undefined || !isFinite(n)) return "—";
-  if (n === 0) return "$0";
+  if (n < 0.00001) return "$0";
   if (n >= 1) return "$" + n.toLocaleString("en-US", { maximumFractionDigits: n >= 1000 ? 0 : 2 });
   return "$" + n.toPrecision(2);
 }

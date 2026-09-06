@@ -762,6 +762,7 @@ export function ActivateTab() {
                 k="Earned since switch-on"
                 v={backing.totalEarnedUsd !== null && backing.totalEarnedUsd > 0 ? usd(backing.totalEarnedUsd) : "—"}
                 sub="never shrinks when you withdraw"
+                cls="text-good"
               />
               <Stat
                 k="Stock inside"
@@ -769,7 +770,7 @@ export function ActivateTab() {
                 sub="in Broker wallets + claimable"
               />
               <Stat k="Brokers" v={brokers.length ? `${activeOwned} on · ${offOwned} off` : "0"} sub={claimReadyCount > 0 ? `${claimReadyCount} ready to claim` : undefined} />
-              <Stat k="Your $COAT" v={fmt(coatBal as bigint | undefined, 18, 0)} sub={usdLabel(price.coatWeiToUsd(coatBal as bigint | undefined))} />
+              <Stat k="Your $COAT" v={fmt(coatBal as bigint | undefined, 18, 0)} sub={usdLabel(price.coatWeiToUsd(coatBal as bigint | undefined))} cls="text-accent" />
             </div>
             {brokerCoat.total > 0n && (
               <p className="text-[12px] text-ink-soft mb-3">
@@ -1076,11 +1077,11 @@ export function ActivateTab() {
   );
 }
 
-function Stat({ k, v, sub }: { k: string; v: string; sub?: string }) {
+function Stat({ k, v, sub, cls = "text-ink-strong" }: { k: string; v: string; sub?: string; cls?: string }) {
   return (
     <div className="stat">
       <div className="text-[11px] text-ink-soft uppercase tracking-widest">{k}</div>
-      <div className="font-pixel text-lg text-ink-strong mt-1 break-words">{v}</div>
+      <div className={`font-pixel text-lg mt-1 break-words ${cls}`}>{v}</div>
       {sub && <div className="text-[11px] text-ink-soft mt-0.5 tabular-nums">{sub}</div>}
     </div>
   );
