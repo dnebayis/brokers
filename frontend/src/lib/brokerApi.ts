@@ -191,5 +191,12 @@ export async function walletBrokers(address: string): Promise<OwnedBrokerRow[] |
     );
     owned = await resolveOwned(Array.from({ length: maxSupply }, (_, i) => BigInt(i + 1)));
   }
+  // The chain says the wallet holds `expected` Brokers. Returning fewer is not an answer, it
+  // is a read that silently failed part-way (a multicall chunk the RPC dropped), and served
+  // with a 200 it would be cached at the edge as "this wallet holds nothing" for an hour.
+  // Failing loudly turns it into a 502 that nobody caches.
+  if (owned.length < expected) {
+    throw new Error(`incomplete roster: resolved ${owned.length} of ${expected}`);
+  }
   return owned.sort((a, b) => a.id - b.id);
 }

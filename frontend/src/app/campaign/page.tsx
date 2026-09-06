@@ -387,9 +387,16 @@ function CampaignInner() {
     if (!CAMPAIGN.live || !CAMPAIGN.wallet) return;
     let alive = true;
     const load = () =>
-      fetch(`/api/wallet/${CAMPAIGN.wallet}/brokers?ttl=60`)
+      fetch(`/api/wallet/${CAMPAIGN.wallet}/brokers?ttl=60&v=2`)
         .then((r) => (r.ok ? r.json() : Promise.reject()))
-        .then((d) => { if (alive) { setRoster(d.brokers ?? []); setError(false); } })
+        .then((d) => {
+          if (!alive) return;
+          const rows: RosterRow[] = d.brokers ?? [];
+          // A roster that came back empty while the last one was full is a bad read, not a
+          // desk that emptied overnight: keep what we have and try again next minute.
+          setRoster((prev) => (rows.length === 0 && prev && prev.length > 0 ? prev : rows));
+          setError(rows.length === 0);
+        })
         .catch(() => { if (alive) setError(true); });
     void load();
     // Seats switch on in bursts while activations are open; keep the count honest.
@@ -472,8 +479,8 @@ function CampaignInner() {
         <Journey seatId={seatId} onSeat={(id) => openSeat(id)} seat={seat} reloadSeat={reloadSeat} calendar={calendar} active={active} />
       </div>
 
-      {error && !roster && <p className="text-accent text-sm">Could not read the roster just now. Try again in a moment.</p>}
-      {roster && <Desks roster={roster} selected={seatId} onSelect={(id) => openSeat(id, true)} />}
+      {error && !(roster && roster.length > 0) && <p className="text-accent text-sm">Could not read the roster just now. It retries every minute.</p>}
+      {roster && roster.length > 0 && <Desks roster={roster} selected={seatId} onSelect={(id) => openSeat(id, true)} />}
 
       <div className="card p-4 sm:p-5">
         <h2 className="font-pixel text-sm text-ink-strong">Who does what</h2>
