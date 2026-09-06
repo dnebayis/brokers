@@ -265,7 +265,7 @@ function Desks({ roster, selected, onSelect }: { roster: RosterRow[]; selected: 
       {shown.length === 0 ? (
         <p className="text-ink-soft text-sm mt-4">No desk matches that.</p>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-2 mt-4">
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-11 gap-2 mt-4">
           {shown.map((r) => <Desk key={r.id} row={r} selected={selected === r.id} onSelect={(id) => onSelect(selected === id ? null : id)} />)}
         </div>
       )}
@@ -350,7 +350,7 @@ function CampaignInner() {
     <div className="mt-6 space-y-6">
       {preview && <p className="chip inline-block">PREVIEW — PLACEHOLDER DATA</p>}
 
-      <p className="text-lg text-ink-strong leading-relaxed max-w-2xl">
+      <p className="text-lg text-ink-strong leading-relaxed max-w-3xl">
         {CAMPAIGN.seats > 0 ? `${num(CAMPAIGN.seats)} ` : ""}{CAMPAIGN.partnerName} holders each get a seat at the desk.
         A seat is a Coattail Broker held in the campaign wallet and switched on the only way a Broker
         can be: by burning {num(PARAMS.activationBurn)} $COAT. From there it earns like every other
@@ -406,7 +406,7 @@ export default function CampaignPage() {
   return (
     <>
       <Header />
-      <div className="max-w-4xl mx-auto px-4 py-10">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <p className="chip inline-block">SPONSORED DESK</p>
         {live ? (
           <div className="flex items-center gap-4 sm:gap-5 mt-5 flex-wrap">
