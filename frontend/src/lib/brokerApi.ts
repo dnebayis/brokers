@@ -1,6 +1,7 @@
 import { getAddress, isAddress, type Address } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { brokerAbi, boosterAbi, erc20Abi } from "./abis";
+import { alchemyOwnedTokenIds } from "@/lib/alchemy";
 import { publicClient } from "./client";
 
 // Server-side reads behind the public Broker API (/api/broker/[id],
@@ -133,10 +134,14 @@ export async function brokerSnapshot(id: number): Promise<BrokerSnapshot | null>
 
 export type OwnedBrokerRow = { id: number; active: boolean; wallet: Address };
 
-// Same discovery strategy as the app's useOwnedBrokers hook, server-side: inbound
-// Transfer logs give candidate IDs cheaply; ownerOf confirms; if the resolved count
-// falls short of balanceOf (truncated log range etc.) enumerate the full 1..MAX_SUPPLY
-// domain — random mint means IDs are scattered across it.
+// A wallet's Brokers, server-side. Candidate ids come from the cheapest source that answers:
+// the Alchemy NFT API (one HTTP call, no RPC), then inbound Transfer logs, then the whole
+// 1..MAX_SUPPLY domain (random mint scatters ids across it). ownerOf confirms each one.
+// Reads go out in small multicalls, and the ids a chunk failed to answer are retried on
+// their own before the read is declared short: a dropped chunk must never turn into a
+// roster that is quietly missing Brokers, nor into a needless full scan.
+const RESOLVE_CHUNK = 40;
+
 export async function walletBrokers(address: string): Promise<OwnedBrokerRow[] | null> {
   if (!isAddress(address)) return null;
   const ownerKey = address.toLowerCase();
@@ -148,53 +153,85 @@ export async function walletBrokers(address: string): Promise<OwnedBrokerRow[] |
   );
   if (expected === 0) return [];
 
-  let candidateIds: bigint[] = [];
-  try {
-    const inbound = await publicClient.getLogs({
-      address: ADDR.broker,
-      event: brokerAbi[0],
-      args: { to: address },
-      fromBlock: BROKER_DEPLOYMENT_BLOCK,
-    });
-    candidateIds = [...new Set(inbound.map((log) => log.args.tokenId).filter((id): id is bigint => id !== undefined))];
-  } catch {
-    candidateIds = [];
-  }
-
-  const resolveOwned = async (ids: bigint[]): Promise<OwnedBrokerRow[]> => {
-    const out: OwnedBrokerRow[] = [];
-    for (let offset = 0; offset < ids.length; offset += 200) {
-      const batch = ids.slice(offset, offset + 200);
-      const results = await publicClient.multicall({
-        contracts: batch.flatMap((id) => [
-          { address: ADDR.broker, abi: brokerAbi, functionName: "ownerOf", args: [id] } as const,
-          { address: ADDR.broker, abi: brokerAbi, functionName: "activated", args: [id] } as const,
-          { address: ADDR.broker, abi: brokerAbi, functionName: "accountOf", args: [id] } as const,
-        ]),
-        allowFailure: true,
-      });
+  const resolveOnce = async (ids: bigint[]): Promise<{ rows: OwnedBrokerRow[]; unanswered: bigint[] }> => {
+    const rows: OwnedBrokerRow[] = [];
+    const unanswered: bigint[] = [];
+    for (let offset = 0; offset < ids.length; offset += RESOLVE_CHUNK) {
+      const batch = ids.slice(offset, offset + RESOLVE_CHUNK);
+      type Cell = { result?: unknown; status: "success" | "failure" };
+      let results: readonly Cell[];
+      try {
+        results = (await publicClient.multicall({
+          contracts: batch.flatMap((id) => [
+            { address: ADDR.broker, abi: brokerAbi, functionName: "ownerOf", args: [id] } as const,
+            { address: ADDR.broker, abi: brokerAbi, functionName: "activated", args: [id] } as const,
+            { address: ADDR.broker, abi: brokerAbi, functionName: "accountOf", args: [id] } as const,
+          ]),
+          allowFailure: true,
+        })) as readonly Cell[];
+      } catch {
+        unanswered.push(...batch);
+        continue;
+      }
       batch.forEach((id, i) => {
-        const owner = results[i * 3]?.result as string | undefined;
-        const wallet = results[i * 3 + 2]?.result as Address | undefined;
-        if (owner && wallet && owner.toLowerCase() === ownerKey) {
-          out.push({ id: Number(id), active: !!(results[i * 3 + 1]?.result as boolean | undefined), wallet });
+        const owner = results![i * 3]?.result as string | undefined;
+        const wallet = results![i * 3 + 2]?.result as Address | undefined;
+        if (owner === undefined || wallet === undefined) { unanswered.push(id); return; }
+        if (owner.toLowerCase() === ownerKey) {
+          rows.push({ id: Number(id), active: !!(results![i * 3 + 1]?.result as boolean | undefined), wallet });
         }
       });
     }
-    return out;
+    return { rows, unanswered };
   };
 
-  let owned = await resolveOwned(candidateIds);
+  // Resolve, then retry whatever went unanswered (a burned or nonexistent id reverts on
+  // ownerOf and is simply not ours; a chunk the RPC dropped comes back on the second try).
+  const resolve = async (ids: bigint[]): Promise<OwnedBrokerRow[]> => {
+    const first = await resolveOnce(ids);
+    if (first.unanswered.length === 0) return first.rows;
+    await new Promise((r) => setTimeout(r, 400));
+    const second = await resolveOnce(first.unanswered);
+    return [...first.rows, ...second.rows];
+  };
+
+  // Phase timings go to the server log: the read has three very different cost paths and
+  // "the API is slow" is only diagnosable if the log says which one ran.
+  const t0 = Date.now();
+  const mark = (what: string) => console.info(`wallet api: ${what} at +${Date.now() - t0}ms`);
+  let candidateIds: bigint[] = [];
+  try {
+    candidateIds = await alchemyOwnedTokenIds(address as Address, ADDR.broker as Address);
+    mark(`nft api gave ${candidateIds.length} candidates`);
+  } catch (err) {
+    mark(`nft api failed (${String(err).slice(0, 80)}), scanning transfer logs`);
+    try {
+      const inbound = await publicClient.getLogs({
+        address: ADDR.broker,
+        event: brokerAbi[0],
+        args: { to: address },
+        fromBlock: BROKER_DEPLOYMENT_BLOCK,
+      });
+      candidateIds = [...new Set(inbound.map((log) => log.args.tokenId).filter((id): id is bigint => id !== undefined))];
+      mark(`transfer logs gave ${candidateIds.length} candidates`);
+    } catch (err) {
+      mark(`transfer logs failed (${String(err).slice(0, 80)})`);
+      candidateIds = [];
+    }
+  }
+
+  let owned = candidateIds.length > 0 ? await resolve(candidateIds) : [];
+  mark(`resolved ${owned.length} of ${expected} from candidates`);
   if (owned.length < expected) {
     const maxSupply = Number(
       await publicClient.readContract({ address: ADDR.broker, abi: brokerAbi, functionName: "MAX_SUPPLY" }),
     );
-    owned = await resolveOwned(Array.from({ length: maxSupply }, (_, i) => BigInt(i + 1)));
+    owned = await resolve(Array.from({ length: maxSupply }, (_, i) => BigInt(i + 1)));
+    mark(`full scan resolved ${owned.length} of ${expected}`);
   }
   // The chain says the wallet holds `expected` Brokers. Returning fewer is not an answer, it
-  // is a read that silently failed part-way (a multicall chunk the RPC dropped), and served
-  // with a 200 it would be cached at the edge as "this wallet holds nothing" for an hour.
-  // Failing loudly turns it into a 502 that nobody caches.
+  // is a read that failed part-way; served with a 200 it would be cached at the edge as the
+  // truth for an hour. Failing loudly turns it into a 502 that nothing caches.
   if (owned.length < expected) {
     throw new Error(`incomplete roster: resolved ${owned.length} of ${expected}`);
   }

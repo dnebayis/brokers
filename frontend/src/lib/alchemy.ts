@@ -3,13 +3,19 @@ import { ALCHEMY_NFT_BASE, ALCHEMY_KEY } from "./chains";
 
 const MAX_PAGES = 10; // 1,000 Brokers; more than any single wallet holds of a 1,776 collection
 
+// The key is allowlisted to the site's domain. A browser sends that Origin by itself; the
+// server-side callers (the open Broker API) must say it, or Alchemy answers 403 and the read
+// falls back to a Transfer-log scan that costs seconds instead of one request.
+const SERVER_HEADERS: HeadersInit | undefined =
+  typeof window === "undefined" ? { Origin: process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://www.coattail.cash" } : undefined;
+
 async function fetchPage(url: string): Promise<Response> {
   // One retry on the transient classes only: a single 429/5xx used to throw straight
   // through and push the caller onto the far costlier Transfer-log scan.
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: SERVER_HEADERS });
   if (res.ok || (res.status < 500 && res.status !== 429)) return res;
   await new Promise((r) => setTimeout(r, 800));
-  return fetch(url);
+  return fetch(url, { headers: SERVER_HEADERS });
 }
 
 // Enumerate a wallet's Brokers via the Alchemy NFT API (one request, scales to many users) —
