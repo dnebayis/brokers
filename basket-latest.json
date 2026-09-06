@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-05T23:00:01.546677+00:00",
+  "generatedAt": "2026-09-06T00:00:20.516690+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 10482,
     "distinctTraders": 134,
     "latestDisclosure": "2026-09-02",
-    "ageDays": 3,
+    "ageDays": 4,
     "errors": []
   },
-  "coverage": 0.12428689205701711,
+  "coverage": 0.1243822505513989,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,84 +29,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 55496549,
+    "block": 55532448,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7186959945022646
+      "shareOfBuying": 0.7192474103983393
     },
     {
       "ticker": "FWONK",
       "netNotional": 146003.0,
-      "shareOfBuying": 0.013990899107135456
+      "shareOfBuying": 0.014001633554282883
     },
     {
       "ticker": "LTH",
       "netNotional": 121004.5,
-      "shareOfBuying": 0.01159539017012919
+      "shareOfBuying": 0.011604286675062999
     },
     {
       "ticker": "CHRW",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.00852876309242155
+      "shareOfBuying": 0.008535306743115294
     },
     {
       "ticker": "BRK.B",
       "netNotional": 81002.0,
-      "shareOfBuying": 0.007762106322994638
+      "shareOfBuying": 0.007768061760128367
     },
     {
       "ticker": "CB",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006228792784140818
+      "shareOfBuying": 0.006233571794154515
     },
     {
       "ticker": "LLY",
       "netNotional": 58999.5,
-      "shareOfBuying": 0.0056536924027002075
-    },
-    {
-      "ticker": "HUBB",
-      "netNotional": 56502.0,
-      "shareOfBuying": 0.00541436670035114
+      "shareOfBuying": 0.0056580301698315304
     },
     {
       "ticker": "BWXT",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.00464770993092423
+      "shareOfBuying": 0.00465127586305111
     },
     {
       "ticker": "MLM",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.00464770993092423
+      "shareOfBuying": 0.00465127586305111
+    },
+    {
+      "ticker": "HUBB",
+      "netNotional": 48501.5,
+      "shareOfBuying": 0.00465127586305111
     },
     {
       "ticker": "SGI",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003114396392070409
+      "shareOfBuying": 0.0031167858970772575
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003114396392070409
+      "shareOfBuying": 0.0031167858970772575
     },
     {
       "ticker": "COHR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003114396392070409
+      "shareOfBuying": 0.0031167858970772575
     },
     {
       "ticker": "VOYG",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003114396392070409
+      "shareOfBuying": 0.0031167858970772575
     },
     {
       "ticker": "MTN",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003114396392070409
+      "shareOfBuying": 0.0031167858970772575
     }
   ],
   "missedAttribution": {
@@ -406,7 +406,6 @@
       "DE",
       "DEO",
       "DIS",
-      "DUK",
       "EFC",
       "EMR",
       "FITB",
@@ -441,12 +440,10 @@
       "KMB",
       "KVUE",
       "LHX",
-      "LMT",
       "LOW",
       "LRCX",
       "LUV",
       "LYV",
-      "MA",
       "MBGL",
       "MCD",
       "MDT",
@@ -464,8 +461,6 @@
       "OGN",
       "PANW",
       "PEP",
-      "PFE",
-      "PG",
       "PINS",
       "RBC",
       "SCI",
@@ -500,19 +495,19 @@
     "basket": [
       {
         "ticker": "AAPL",
-        "bps": 3526
+        "bps": 3519
       },
       {
         "ticker": "AMZN",
-        "bps": 3013
+        "bps": 3008
       },
       {
         "ticker": "INTC",
-        "bps": 2901
+        "bps": 2896
       },
       {
         "ticker": "PLTR",
-        "bps": 257
+        "bps": 275
       },
       {
         "ticker": "SPCX",
@@ -528,10 +523,10 @@
       },
       {
         "ticker": "TSM",
-        "bps": 12
+        "bps": 11
       }
     ],
-    "divergenceBps": 6877
+    "divergenceBps": 6882
   },
   "commentary": {
     "text": "The basket's largest position is INTC, with Nancy Pelosi buying an estimated $1.1M across two transactions, last traded on 2026-07-24 and filed on 2026-08-21. SPCX follows, with William R. Timmons IV buying an estimated $75K, Dan Meuser buying $33K, and three other members also making purchases. MU is the third position, with three members buying, including Dan Newhouse. The largest disclosed buying, BE, with an estimated $7.5M from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 12.4% of the disclosed buying dollars.",
