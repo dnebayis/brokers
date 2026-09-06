@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { encodeFunctionData, formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { getCapabilities, sendCalls, waitForCallsStatus } from "wagmi/actions";
@@ -20,6 +21,7 @@ import { fmt, short } from "@/lib/format";
 import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
+import { SIDE_PANEL_SLOT_ID } from "@/components/SidePanel";
 import { StepFlow, type StepState } from "@/components/ui/StepFlow";
 import { BrokerCard } from "@/components/ui/BrokerCard";
 import { ShareOnX } from "@/components/ShareOnX";
@@ -30,6 +32,11 @@ type Info = { id: bigint; active: boolean; owner: `0x${string}`; wallet: `0x${st
 type Holding = { token: Address; sym: string; bal: bigint; decimals: number; priceUsd?: number };
 
 export function ActivateTab() {
+  // The side panel mounts alongside this tab; its slot is looked up after mount and the
+  // tools card is portalled there. Until then (and on the server) the card renders in place.
+  const [sideSlot, setSideSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => { setSideSlot(document.getElementById(SIDE_PANEL_SLOT_ID)); }, []);
+  const portalTo = (node: React.ReactNode) => (sideSlot ? createPortal(node, sideSlot) : node);
   const { address } = useAccount();
   
   const { writeContractAsync } = useWriteContract();
@@ -1026,11 +1033,14 @@ export function ActivateTab() {
         walletsById={walletsById as Record<string, `0x${string}` | undefined>}
       />
 
-      {/* ── 4. Everything at once + power tools, out of the way ── */}
-      {address && (
-        <div className="card">
-          <h2 className="pixel-title text-[15px] mb-1">More tools</h2>
-          <p className="text-ink-soft text-sm mb-3">Nothing here is required. Your stock is already yours inside each Broker.</p>
+      {/* ── 4. Everything at once + power tools: at the top of the side panel, out of the
+             portfolio's way. The card keeps this component's state, so it is portalled into
+             the panel's slot rather than rebuilt there; before the slot exists it stays in
+             the flow here, so nothing depends on render order. ── */}
+      {address && portalTo((
+        <div className="card !p-4">
+          <h2 className="font-pixel text-[11px] text-ink-strong mb-1">More tools</h2>
+          <p className="text-ink-soft text-[12px] mb-3">Nothing here is required. Your stock is already yours inside each Broker.</p>
           {brokers.length > 0 && (
             <details className="group mt-1">
               <summary className="btn btn-ghost w-full justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden">
@@ -1072,7 +1082,7 @@ export function ActivateTab() {
             </div>
           </details>
         </div>
-      )}
+      ))}
     </div>
   );
 }

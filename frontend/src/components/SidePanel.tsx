@@ -7,7 +7,10 @@ import { brokerAbi, boosterAbi, coatAbi, routerAbi } from "@/lib/abis";
 import { activeChain } from "@/lib/chains";
 import { fmt } from "@/lib/format";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
-import { CoatAddress, SocialLinks } from "@/components/ui/SocialLinks";
+
+/** Where a tab may mount a card of its own at the top of the side panel (My Brokers puts
+ *  its tools here). Rendered as a slot so the tab keeps its own state and handlers. */
+export const SIDE_PANEL_SLOT_ID = "side-panel-slot";
 
 export function SidePanel() {
   const { address } = useAccount();
@@ -43,16 +46,7 @@ export function SidePanel() {
 
   return (
     <aside className="lg:sticky lg:top-24 grid gap-4 content-start">
-      <div className="card !p-4">
-        <div className="font-pixel text-[11px] text-ink-strong mb-3">Protocol</div>
-        <Row k="Minted" v={`${minted} / ${max}`} />
-        <div className="h-2 bg-cream-3 border border-ink my-2"><span className="block h-full bg-ink" style={{ width: `${pct}%` }} /></div>
-        <Row k="Active Brokers" v={active.toString()} />
-        <Row k="Fee to payroll" v="100%" />
-        {routerReady && coatPerEth !== undefined && (
-          <Row k="$COAT / ETH" v={fmt(coatPerEth as bigint, 18, 0)} />
-        )}
-      </div>
+      <div id={SIDE_PANEL_SLOT_ID} className="contents" />
 
       <div className="card !p-4">
         <div className="font-pixel text-[11px] text-ink-strong mb-3">Your wallet</div>
@@ -76,12 +70,16 @@ export function SidePanel() {
         </ol>
       </div>
 
+      {/* The social links and the $COAT address live in the page footer; the panel ends on the protocol. */}
       <div className="card !p-4">
-        <div className="font-pixel text-[11px] text-ink-strong mb-3">Links</div>
-        <SocialLinks variant="labels" />
-        <div className="mt-3">
-          <CoatAddress compact />
-        </div>
+        <div className="font-pixel text-[11px] text-ink-strong mb-3">Protocol</div>
+        <Row k="Minted" v={`${minted} / ${max}`} />
+        <div className="h-2 bg-cream-3 border border-ink my-2"><span className="block h-full bg-ink" style={{ width: `${pct}%` }} /></div>
+        <Row k="Active Brokers" v={active.toString()} />
+        <Row k="Fee to payroll" v="100%" />
+        {routerReady && coatPerEth !== undefined && (
+          <Row k="$COAT / ETH" v={fmt(coatPerEth as bigint, 18, 0)} />
+        )}
       </div>
     </aside>
   );
