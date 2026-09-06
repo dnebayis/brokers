@@ -119,9 +119,8 @@ export function Terminal() {
   // buyBasket take no min-out; those paths rely on the contract's own Chainlink floor.
   const slippageApplies = dir === "sell" || cur === "coat";
   // CoatRouter's quoteBuy/quoteSell are SPOT-price views: they exclude the hooked pool's
-  // fee take (1% pool LP fee plus the 1% hook fee, about 2% per swap side). Every quote from
-  // it gets this cut before use, both for display honesty and so mins computed from it don't
-  // sit above what a fill can pay.
+  // fee take on a swap. Every quote from it gets this cut before use, both for display
+  // honesty and so mins computed from it don't sit above what a fill can pay.
   const coatPoolCut = (x: bigint) => (x * 9800n) / 10000n;
 
   const USDG_ONE = 10n ** BigInt(FLOOR.usdgDecimals);
