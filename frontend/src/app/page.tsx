@@ -10,6 +10,7 @@ import { TradeTab } from "@/components/tabs/TradeTab";
 import { ActivateTab } from "@/components/tabs/ActivateTab";
 import { FeedTab } from "@/components/tabs/FeedTab";
 import { LeadersTab } from "@/components/tabs/LeadersTab";
+import { StatsTab } from "@/components/tabs/StatsTab";
 import { RoadmapTab } from "@/components/tabs/RoadmapTab";
 import { DocsTab } from "@/components/tabs/DocsTab";
 import { CoatAddress, SocialLinks } from "@/components/ui/SocialLinks";
@@ -18,7 +19,7 @@ export default function Page() {
   const [tab, setTab] = useState<TabId>("home");
   useEffect(() => {
     const saved = window.location.hash.slice(1) || window.localStorage.getItem("coattail.activeTab") || "";
-    const allowed = ["home", "activate", "feed", "leaders", "roadmap", "docs", ...(TRADE_TAB_ENABLED ? ["trade"] : [])];
+    const allowed = ["home", "activate", "feed", "leaders", "stats", "roadmap", "docs", ...(TRADE_TAB_ENABLED ? ["trade"] : [])];
     if (allowed.includes(saved)) setTab(saved as TabId);
   }, []);
 
@@ -53,6 +54,7 @@ export default function Page() {
               {tab === "activate" && <ActivateTab />}
               {tab === "feed" && <FeedTab />}
               {tab === "leaders" && <LeadersTab />}
+              {tab === "stats" && <StatsTab />}
               {tab === "roadmap" && <RoadmapTab />}
               {tab === "docs" && <DocsTab />}
             </div>

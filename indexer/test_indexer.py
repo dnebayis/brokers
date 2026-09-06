@@ -1246,3 +1246,53 @@ class FiledWindowTests(unittest.TestCase):
         self.assertEqual(row["filedWindow"]["divergenceBps"], 2500)
         self.assertEqual(row["filedWindow"]["basket"][1], {"ticker": "NVDA", "bps": 3000})
         self.assertIsNone(json.loads(shadow_history_row(0, [], [], set(), "shadow"))["filedWindow"])
+
+
+class ActivationHistoryTests(unittest.TestCase):
+    def test_merge_dedupes_rescanned_blocks_and_recomputes_totals(self):
+        from activations import merge, STATE_VERSION
+        prev = merge(None, [[100, 1000, 7, 1, 36750.0], [120, 1200, 9, 1, 36750.0]], 150, "t0")
+        self.assertEqual(prev["stateVersion"], STATE_VERSION)
+        self.assertEqual(prev["totals"], {"activations": 2, "deactivations": 0, "activeNow": 2, "burned": 73500.0})
+        # a rescan of block 120 plus a real switch-off later
+        out = merge(prev, [[120, 1200, 9, 1, 36750.0], [180, 1800, 9, 0, 0]], 200, "t1")
+        self.assertEqual(len(out["events"]), 3)
+        self.assertEqual(out["scannedTo"], 200)
+        self.assertEqual(out["totals"], {"activations": 2, "deactivations": 1, "activeNow": 1, "burned": 73500.0})
+        self.assertEqual([e[0] for e in out["events"]], [100, 120, 180])
+
+    def test_merge_discards_a_previous_file_of_another_version(self):
+        from activations import merge
+        out = merge({"stateVersion": 0, "events": [[1, 1, 1, 1, 1.0]], "scannedTo": 5}, [[10, 10, 2, 1, 5.0]], 10, "t")
+        self.assertEqual(len(out["events"]), 1)
+        self.assertEqual(out["totals"]["burned"], 5.0)
+
+    def test_interpolate_between_anchors_and_clamps_outside(self):
+        from activations import interpolate
+        anchors = [[100, 1000], [200, 2000], [400, 3000]]
+        self.assertEqual(interpolate(anchors, 150), 1500)
+        self.assertEqual(interpolate(anchors, 300), 2500)
+        self.assertEqual(interpolate(anchors, 50), 1000)
+        self.assertEqual(interpolate(anchors, 500), 3500)  # extrapolated past the last anchor
+        self.assertEqual(interpolate([], 5), 0)
+
+    def test_scan_logs_halves_the_window_when_the_node_refuses_a_range(self):
+        from activations import scan_logs
+        calls = []
+
+        def get_logs(a, b):
+            calls.append((a, b))
+            if b - a + 1 > 100:
+                raise ValueError("log query timed out")
+            return [f"{a}-{b}"]
+
+        out = scan_logs(get_logs, 1, 400, chunk=400, min_chunk=50)
+        self.assertEqual(out, ["1-100", "101-200", "201-300", "301-400"])
+        self.assertEqual(calls[0], (1, 400))   # refused
+        self.assertEqual(calls[1], (1, 200))   # refused
+        self.assertEqual(calls[2], (1, 100))   # accepted; the window stays at 100 from here
+
+    def test_scan_logs_gives_up_below_the_minimum_window(self):
+        from activations import scan_logs
+        with self.assertRaises(ValueError):
+            scan_logs(lambda a, b: (_ for _ in ()).throw(ValueError("timed out")), 1, 100, chunk=100, min_chunk=100)

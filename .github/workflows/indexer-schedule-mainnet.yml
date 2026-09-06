@@ -86,6 +86,8 @@ jobs:
       SCORECARD_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/basket-scorecard.json
       # Shadow-vs-live series, published so the scorecard can price the smart basket per hour.
       SHADOW_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/shadow-history.jsonl
+      # Activation history (every switch on/off and its burn), incremental over the published copy.
+      ACTIVATIONS_DATA_URL: https://raw.githubusercontent.com/${{ github.repository }}/data/activations.json
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -136,6 +138,11 @@ jobs:
                 bash ../scripts/publish_data.sh scorecard.json basket-scorecard.json || echo "::warning::scorecard publish failed"
               else
                 echo "::warning::scorecard build failed; the published copy stays"
+              fi
+              if python activations.py --out activations.json; then
+                bash ../scripts/publish_data.sh activations.json activations.json || echo "::warning::activations publish failed"
+              else
+                echo "::warning::activation history build failed; the published copy stays"
               fi
             else
               fail=1

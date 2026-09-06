@@ -4,16 +4,17 @@ import { useRef, type KeyboardEvent } from "react";
 import { Icon } from "./ui/Icon";
 import { TRADE_TAB_ENABLED } from "@/lib/floor";
 
-export type TabId = "home" | "trade" | "activate" | "feed" | "leaders" | "roadmap" | "docs";
+export type TabId = "home" | "trade" | "activate" | "feed" | "leaders" | "stats" | "roadmap" | "docs";
 
 // Labels say what the page IS for the visitor, not what the protocol calls the
 // action: "Activate" hid the fact that the tab is your whole portfolio.
-const TABS: { id: TabId; label: string; icon: "home" | "swap" | "power" | "book" | "list" | "route" | "trophy" }[] = [
+const TABS: { id: TabId; label: string; icon: "home" | "swap" | "power" | "book" | "list" | "route" | "trophy" | "chart" }[] = [
   { id: "home", label: "Home", icon: "home" },
   ...(TRADE_TAB_ENABLED ? [{ id: "trade" as const, label: "Floor", icon: "swap" as const }] : []),
   { id: "activate", label: "My Brokers", icon: "power" },
   { id: "feed", label: "Feed", icon: "list" },
   { id: "leaders", label: "Leaders", icon: "trophy" },
+  { id: "stats", label: "Stats", icon: "chart" },
   { id: "roadmap", label: "Roadmap", icon: "route" },
   { id: "docs", label: "Docs", icon: "book" },
 ];
