@@ -52,7 +52,7 @@ function CampaignInner() {
     if (!CAMPAIGN.live || !CAMPAIGN.wallet) return;
     let alive = true;
     const load = () =>
-      fetch(`/api/wallet/${CAMPAIGN.wallet}/brokers`)
+      fetch(`/api/wallet/${CAMPAIGN.wallet}/brokers?ttl=60`)
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((d) => { if (alive) { setRoster(d.brokers ?? []); setError(false); } })
         .catch(() => { if (alive) setError(true); });

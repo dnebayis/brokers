@@ -8,6 +8,19 @@ import { NextResponse } from "next/server";
 // opaque network failure instead of "that Broker does not exist".
 export const PUBLIC_API_CACHE = "public, s-maxage=3600, stale-while-revalidate=600";
 
+/**
+ * A caller that needs fresher data than the hour default asks for it with `?ttl=<seconds>`;
+ * clamped to [60, 3600] so a live page can poll once a minute without anyone being able to
+ * turn the endpoint into an uncached RPC relay. Returns the Cache-Control for that ttl.
+ */
+export function cacheFor(request: Request | undefined): string {
+  if (!request) return PUBLIC_API_CACHE;
+  const raw = new URL(request.url).searchParams.get("ttl");
+  if (raw === null) return PUBLIC_API_CACHE;
+  const ttl = Math.min(3600, Math.max(60, Math.floor(Number(raw)) || 3600));
+  return `public, s-maxage=${ttl}, stale-while-revalidate=${Math.min(600, ttl)}`;
+}
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -16,10 +29,10 @@ const CORS = {
 };
 
 /** JSON response for a public endpoint: CORS always, cache only on success. */
-export function publicJson(body: unknown, status = 200): NextResponse {
+export function publicJson(body: unknown, status = 200, cacheControl = PUBLIC_API_CACHE): NextResponse {
   return NextResponse.json(body, {
     status,
-    headers: status === 200 ? { ...CORS, "Cache-Control": PUBLIC_API_CACHE } : CORS,
+    headers: status === 200 ? { ...CORS, "Cache-Control": cacheControl } : CORS,
   });
 }
 
