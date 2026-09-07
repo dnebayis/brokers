@@ -25,6 +25,32 @@ const TABS: { id: TabId; label: string; icon: "home" | "swap" | "power" | "book"
 export const tabButtonId = (t: TabId) => `tab-${t}`;
 export const tabPanelId = (t: TabId) => `tabpanel-${t}`;
 
+/**
+ * The same row on a page that is not the tabbed app (the sponsored desk): every tab is a
+ * link back into the app at that panel, and the desk item is the selected one. Same
+ * geometry and type as the tablist, so moving between the two feels like switching tabs.
+ */
+export function NavLinks({ current }: { current: "campaign" }) {
+  const item = "font-pixel text-xs px-4 py-3 -mb-0.5 border-b-[3px] flex items-center gap-2 shrink-0 transition-colors duration-150";
+  return (
+    <nav className="sticky top-0 z-30 bg-cream flex overflow-x-auto border-b-2 border-ink mt-6" aria-label="Sections">
+      {TABS.map((t) => (
+        <Link key={t.id} href={`/#${t.id}`} className={`${item} text-ink-soft border-transparent hover:text-ink-strong`}>
+          <Icon name={t.icon} className="w-[15px] h-[15px]" />
+          {t.label}
+        </Link>
+      ))}
+      {CAMPAIGN.live && (
+        <span className={`${item} text-ink-strong border-accent`} aria-current={current === "campaign" ? "page" : undefined}>
+          <Icon name="desk" className="w-[15px] h-[15px]" />
+          <span>{CAMPAIGN.partnerName} desk</span>
+          <span className="w-1.5 h-1.5" style={{ background: "#ff8a1f" }} aria-hidden="true" />
+        </span>
+      )}
+    </nav>
+  );
+}
+
 export function Tabs({ active, onChange }: { active: TabId; onChange: (t: TabId) => void }) {
   const buttons = useRef<Record<string, HTMLButtonElement | null>>({});
   // WAI-ARIA tabs: only the selected tab sits in the tab order; Left/Right (wrapping),

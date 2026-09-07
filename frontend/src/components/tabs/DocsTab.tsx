@@ -154,6 +154,16 @@ export function DocsTab() {
         coverage figure and the biggest names it had to skip, so the gap is measurable rather than
         implied.
       </P>
+      <P>
+        <b>How the weights are set.</b> Disclosed buys in the trailing window are weighted by dollars, then
+        refined: a member&rsquo;s past buys that went up carry more weight (track record), a filing fades as it
+        ages, filing within days counts for more than filing at the deadline, and a name whose disclosed
+        selling rivals its buying gets no new money. No single name may exceed half the basket; the excess
+        spills into the names the plain dollar-weighted basket already holds. That is the <b>capped smart
+        basket</b>, and it is what the engine posts. The plain basket and the uncapped smart basket are still
+        computed every pass and priced against it on the Stats tab, same dollars at the same hours, so the
+        choice stays auditable.
+      </P>
 
       <H>Contracts — live on {activeChain.name}</H>
       <table className="w-full border-collapse text-[13px] my-2">
@@ -290,7 +300,7 @@ function TokenomicsCharts() {
         </svg>
       </div>
       <Chart title="Launch price / FDV band" rows={[["Start FDV", 1, "10 ETH"], ["Graduation", 42, "4.2 ETH principal"], ["Band end FDV", 100, "1,000 ETH"]]} />
-      <Chart title="Automation cadence" rows={[["Keeper checks", 100, "hourly"], ["Basket refresh", 17, "every 6h"]]} />
+      <Chart title="Automation cadence" rows={[["Keeper checks", 100, "hourly"], ["Basket refresh", 100, "hourly"]]} />
     </div>
   );
 }

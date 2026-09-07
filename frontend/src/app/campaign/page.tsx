@@ -12,6 +12,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Header } from "@/components/Header";
+import { NavLinks } from "@/components/Tabs";
 import { BrokerArtwork } from "@/components/ui/BrokerArtwork";
 import { BrokerMark } from "@/components/ui/BrokerMark";
 import { Icon } from "@/components/ui/Icon";
@@ -655,8 +656,9 @@ export default function CampaignPage() {
   return (
     <>
       <Header />
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <p className="chip inline-block">SPONSORED DESK</p>
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+        <NavLinks current="campaign" />
+        <p className="chip inline-block mt-8">SPONSORED DESK</p>
         {live ? (
           <div className="flex items-center gap-4 sm:gap-5 mt-5 flex-wrap">
             <PartnerLogo className="h-10 sm:h-12" />
