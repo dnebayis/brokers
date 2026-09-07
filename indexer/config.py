@@ -88,7 +88,9 @@ if CONVICTION_COEFF < 0 or CONVICTION_MAX < 1:
 # Three deterministic refinements on top of the conviction basket, run in SHADOW by
 # default: every run computes and logs the smart basket next to the live one WITHOUT
 # posting it, so we can measure the divergence for weeks before flipping. Set
-# SMART_BASKET=live to post the smart weights, off to skip the computation entirely.
+# SMART_BASKET=live to post the pure smart weights, capped to post the smart picks with the
+# single-name cap enforced (excess spilled into the conviction basket's names), off to skip
+# the computation entirely.
 #   decay      — a disclosure loses weight as it ages (half-life; markets price news in);
 #   fast filer — a member who files within days carries fresher information than one who
 #                waits out the 45-day limit: bonus fades linearly to zero at FILER_DAYS;
@@ -96,8 +98,8 @@ if CONVICTION_COEFF < 0 or CONVICTION_MAX < 1:
 #                money to it even while net dollars are still positive (we can only ever
 #                stop buying — the Booster has no sell path by design).
 SMART_BASKET = os.environ.get("SMART_BASKET", "shadow")
-if SMART_BASKET not in {"shadow", "live", "off"}:
-    raise ValueError("SMART_BASKET must be shadow, live, or off")
+if SMART_BASKET not in {"shadow", "live", "capped", "off"}:
+    raise ValueError("SMART_BASKET must be shadow, live, capped, or off")
 DECAY_HALF_LIFE_DAYS = float(os.environ.get("DECAY_HALF_LIFE_DAYS", "14"))  # 0 disables
 FAST_FILER_BONUS = float(os.environ.get("FAST_FILER_BONUS", "0.25"))        # 0 disables
 FAST_FILER_DAYS = float(os.environ.get("FAST_FILER_DAYS", "14"))

@@ -28,8 +28,8 @@ def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode
     """One JSONL line of the shadow-vs-live series.
 
     `live` is always the conviction basket and `shadow` the smart one, regardless of
-    which of them was posted; `posted` records that, so the series keeps measuring the
-    same two things before and after a SMART_BASKET=live flip.
+    which of them was posted; `posted` records that (conviction, smart or capped), so the
+    series keeps measuring the same things before and after a SMART_BASKET flip.
     """
     now = now or datetime.now(timezone.utc)
     return json.dumps({
@@ -37,7 +37,7 @@ def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode
         "divergenceBps": divergence,
         "shadow": [{"ticker": s, "bps": w} for s, w in smart_basket],
         "live": [{"ticker": s, "bps": w} for s, w in conviction_basket],
-        "posted": "smart" if mode == "live" else "conviction",
+        "posted": {"live": "smart", "capped": "capped"}.get(mode, "conviction"),
         "vetoed": sorted(vetoed),
         # second shadow: the 90-day window keyed on the FILING date instead of the trade date
         # The cap-with-spillover variant, recorded beside the pure smart basket so the two
@@ -308,7 +308,7 @@ def main():
             "vetoed": sorted(vetoed),
             "divergenceBps": divergence,
         }
-        label = "LIVE (smart)" if SMART_BASKET == "live" else "SHADOW (not posted)"
+        label = {"live": "LIVE (smart)", "capped": "LIVE (capped smart)"}.get(SMART_BASKET, "SHADOW (not posted)")
         print(f"\nSmart basket [{label}] — divergence from conviction basket: {divergence} bps")
         for s, w in smart_basket:
             delta = w - live_w.get(s, 0)
@@ -321,6 +321,11 @@ def main():
                   + ", ".join(f"{s} {w/BPS*100:.1f}%" for s, w in smart_capped))
         if SMART_BASKET == "live":
             basket = smart_basket
+        elif SMART_BASKET == "capped":
+            # Post the smart picks with the single-name cap enforced: the seat's payroll is
+            # never more than MAX_WEIGHT_BPS in one name, the excess goes to the conviction
+            # basket's other names. The pure smart basket stays in the shadow series.
+            basket = smart_capped
 
         # Append this run's shadow snapshot to a JSONL history so the shadow-vs-live
         # decision ("weeks of receipts") reads from a series, not from grepping old CI

@@ -510,6 +510,9 @@ class ShadowHistoryTests(unittest.TestCase):
         self.assertEqual(row["vetoed"], ["AAPL"])
         shadow_row = json.loads(shadow_history_row(5000, smart, conviction, set(), "shadow"))
         self.assertEqual(shadow_row["posted"], "conviction")
+        capped_row = json.loads(shadow_history_row(5000, smart, conviction, set(), "capped", capped=[("AAPL", 5000), ("MSFT", 5000)]))
+        self.assertEqual(capped_row["posted"], "capped")
+        self.assertEqual(capped_row["shadow"], [{"ticker": s, "bps": w} for s, w in smart])  # pure smart still recorded
 
 
 class RetryDelayTests(unittest.TestCase):
