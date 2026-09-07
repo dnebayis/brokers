@@ -129,7 +129,10 @@ function Payroll({ sc }: { sc: NonNullable<StatsPayload["scorecard"]> }) {
 function Basket({ sh }: { sh: NonNullable<StatsPayload["shadow"]> }) {
   // What the engine actually bought each pass: the conviction basket while the smart layer
   // ran in shadow, the capped smart basket since the flip. `posted` on each row says which.
-  const postedOf = (r: StatsShadowRow) => (r.posted === "capped" && r.capped ? r.capped : r.posted === "smart" ? r.smart : r.live);
+  // Every array is read with a fallback: a payload cached by an older build (before `smart`
+  // and `posted` existed) once took the whole page down with "cannot read .map of undefined".
+  const postedOf = (r: StatsShadowRow): [string, number][] =>
+    (r.posted === "capped" && r.capped ? r.capped : r.posted === "smart" ? r.smart : r.live) ?? [];
   const { keys, rows, divergence, flips } = useMemo(() => {
     const totals = new Map<string, number>();
     for (const r of sh.rows) for (const [t, bps] of postedOf(r)) totals.set(t, (totals.get(t) ?? 0) + bps);
@@ -165,13 +168,13 @@ function Basket({ sh }: { sh: NonNullable<StatsPayload["shadow"]> }) {
           <div className="stat">
             <div className="text-[11px] text-ink-soft uppercase tracking-widest">conviction basket</div>
             <div className="font-pixel text-[11px] text-ink-strong mt-1 leading-relaxed">
-              {latest.live.map(([t, b]) => `${t} ${(b / 100).toFixed(0)}%`).join(" · ")}
+              {(latest.live ?? []).map(([t, b]) => `${t} ${(b / 100).toFixed(0)}%`).join(" · ")}
             </div>
           </div>
           <div className="stat">
             <div className="text-[11px] text-ink-soft uppercase tracking-widest">pure smart · shadow</div>
             <div className="font-pixel text-[11px] text-ink-strong mt-1 leading-relaxed">
-              {latest.smart.map(([t, b]) => `${t} ${(b / 100).toFixed(0)}%`).join(" · ")}
+              {(latest.smart ?? []).map(([t, b]) => `${t} ${(b / 100).toFixed(0)}%`).join(" · ")}
             </div>
           </div>
         </div>
