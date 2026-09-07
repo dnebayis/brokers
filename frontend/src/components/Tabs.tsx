@@ -2,7 +2,9 @@
 
 import { useRef, type KeyboardEvent } from "react";
 import { Icon } from "./ui/Icon";
+import Link from "next/link";
 import { TRADE_TAB_ENABLED } from "@/lib/floor";
+import { CAMPAIGN } from "@/lib/campaign";
 
 export type TabId = "home" | "trade" | "activate" | "feed" | "leaders" | "stats" | "roadmap" | "docs";
 
@@ -71,6 +73,18 @@ export function Tabs({ active, onChange }: { active: TabId; onChange: (t: TabId)
           </button>
         );
       })}
+      {/* The sponsored desk is its own page, not a panel: a link in the same row, in the
+          partner's colour so it reads as theirs and ours at once. */}
+      {CAMPAIGN.live && (
+        <Link
+          href="/campaign"
+          className="font-pixel text-xs px-4 py-3 -mb-0.5 border-b-[3px] border-transparent flex items-center gap-2 shrink-0 transition-colors duration-150 text-ink-soft hover:text-ink-strong"
+        >
+          <Icon name="desk" className="w-[15px] h-[15px]" />
+          <span>{CAMPAIGN.partnerName} desk</span>
+          <span className="w-1.5 h-1.5 rounded-none" style={{ background: "#ff8a1f" }} aria-hidden="true" />
+        </Link>
+      )}
     </nav>
   );
 }

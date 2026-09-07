@@ -1,7 +1,7 @@
 // Dependency-free line-icon set (24x24, stroke = currentColor). Clean, not sloppy.
 type Name =
   | "swap" | "power" | "book" | "wallet" | "search" | "home"
-  | "download" | "plus" | "minus" | "flip" | "check" | "copy" | "external" | "arrow-right" | "list" | "route" | "trophy" | "chart" | "sun" | "moon";
+  | "download" | "plus" | "minus" | "flip" | "check" | "copy" | "external" | "arrow-right" | "list" | "route" | "trophy" | "chart" | "desk" | "sun" | "moon";
 
 const paths: Record<Name, React.ReactNode> = {
   swap: <><path d="M7 7h13l-3-3" /><path d="M17 17H4l3 3" /></>,
@@ -22,6 +22,7 @@ const paths: Record<Name, React.ReactNode> = {
   route: <><path d="M6 4v16" /><path d="M6 5h9l-2 2 2 2H6" /><circle cx="6" cy="20" r="1" /></>,
   trophy: <><path d="M8 4h8v4a4 4 0 0 1-8 0Z" /><path d="M8 5H5v2a3 3 0 0 0 3 3" /><path d="M16 5h3v2a3 3 0 0 1-3 3" /><path d="M12 12v4" /><path d="M9 20h6" /><path d="M10 16h4l1 4H9Z" /></>,
   chart: <><path d="M4 20h16" /><path d="M6 17v-5" /><path d="M11 17V7" /><path d="M16 17v-8" /><path d="M21 17V4" /></>,
+  desk: <><path d="M3 9h18" /><path d="M5 9v10" /><path d="M19 9v10" /><path d="M9 9v4h6V9" /><path d="M8 5h8" /><path d="M12 5v4" /></>,
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M19.4 4.6l-2.1 2.1M6.7 17.3l-2.1 2.1" /></>,
   moon: <><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" /></>,
 };

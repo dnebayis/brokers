@@ -122,7 +122,7 @@ export function DocsTab() {
             ["Activation burn", "36,750 $COAT / Broker (immutable)"],
             ["Primary mint cap", "2 per address; secondary ownership unrestricted"],
             ["Mint price", "0.001 ETH → creator"],
-            ["Secondary royalty", "2.5% → current creator (ERC-2981)"],
+            ["Secondary royalty", "2.5% on-chain (ERC-2981) → current creator · OpenSea creator earnings set to 6%"],
             ["Fee split", "80/10/10 constants; buyback and treasury sinks both point at the Booster — effective 100% stock"],
           ].map(([k, v]) => (
             <tr key={k}>
