@@ -962,6 +962,8 @@ export function ActivateTab() {
               gifts: giftCountById[info.id.toString()],
             }} />
           )}
+          {/* Apple Wallet pass: <AddToAppleWallet id={info.id.toString()} /> goes here once the
+              Pass Type certificate is in place (see WALLET_PASS.md); kept off the page until then. */}
 
           {isOwner && holdings.length > 0 && (
             <details className="group mt-3 border-t border-line pt-3">
