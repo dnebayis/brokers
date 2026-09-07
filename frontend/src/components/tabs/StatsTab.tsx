@@ -7,7 +7,7 @@
 
 import { useMemo, useState } from "react";
 import { BarChart, HBarChart, Legend, LineChart, StackedArea, SERIES_COLORS } from "@/components/charts/Charts";
-import { useStats, type StatsPayload } from "@/lib/useStats";
+import { useStats, type StatsPayload, type StatsShadowRow } from "@/lib/useStats";
 import { COAT_DROPS, PARAMS } from "@/lib/config";
 
 const DAY = 86_400;
@@ -88,8 +88,8 @@ function Payroll({ sc }: { sc: NonNullable<StatsPayload["scorecard"]> }) {
   const benchRows = b ? [
     { label: "basket", value: b.basket.pnlPct ?? 0, note: "what the engine actually bought" },
     { label: "SPY", value: b.spy.pnlPct ?? 0, note: "same dollars, same hours, into SPY" },
-    { label: "smart", value: b.smart.pnlPct ?? 0, note: `shadow smart basket · ${b.smart.coveragePct?.toFixed(0) ?? "—"}% of purchases covered` },
-    ...(b.smartCapped ? [{ label: "capped", value: b.smartCapped.pnlPct ?? 0, note: `capped smart basket · ${b.smartCapped.coveragePct?.toFixed(0) ?? "—"}% covered` }] : []),
+    { label: "smart", value: b.smart.pnlPct ?? 0, note: `pure smart basket, shadow · ${b.smart.coveragePct?.toFixed(0) ?? "—"}% of purchases covered` },
+    ...(b.smartCapped ? [{ label: "capped", value: b.smartCapped.pnlPct ?? 0, note: `capped smart basket, posted since the flip · ${b.smartCapped.coveragePct?.toFixed(0) ?? "—"}% covered` }] : []),
   ].map((r) => ({ ...r, tone: r.value >= 0 ? "var(--c-good)" : "var(--c-accent)" })) : [];
   return (
     <Section eyebrow="payroll" title="What the engine bought." asOf={stamp(sc.generatedAt)}
@@ -116,7 +116,7 @@ function Payroll({ sc }: { sc: NonNullable<StatsPayload["scorecard"]> }) {
           <ChartTitle right="same dollars at the same hours">Against the benchmarks</ChartTitle>
           <HBarChart rows={benchRows} format={(v) => pct(v)} hint="basket return against SPY and the shadow baskets" />
           <p className="text-[11px] text-ink-soft mt-2">
-            SPY is buy-and-hold of the same dollars at the same hours. The smart basket is a shadow the indexer runs alongside the live one; it only covers the hours where it had a basket of its own.
+            SPY is buy-and-hold of the same dollars at the same hours. The smart baskets are what the indexer computed alongside the conviction basket each pass; they only cover the hours where they had a basket of their own. The engine now posts the capped smart basket.
           </p>
         </>
       )}
@@ -127,43 +127,53 @@ function Payroll({ sc }: { sc: NonNullable<StatsPayload["scorecard"]> }) {
 /* ───────────── basket over time ───────────── */
 
 function Basket({ sh }: { sh: NonNullable<StatsPayload["shadow"]> }) {
-  const { keys, rows, divergence } = useMemo(() => {
+  // What the engine actually bought each pass: the conviction basket while the smart layer
+  // ran in shadow, the capped smart basket since the flip. `posted` on each row says which.
+  const postedOf = (r: StatsShadowRow) => (r.posted === "capped" && r.capped ? r.capped : r.posted === "smart" ? r.smart : r.live);
+  const { keys, rows, divergence, flips } = useMemo(() => {
     const totals = new Map<string, number>();
-    for (const r of sh.rows) for (const [t, bps] of r.live) totals.set(t, (totals.get(t) ?? 0) + bps);
+    for (const r of sh.rows) for (const [t, bps] of postedOf(r)) totals.set(t, (totals.get(t) ?? 0) + bps);
     const keys = [...totals.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
     const rows = sh.rows.map((r) => {
       const values: Record<string, number> = {};
-      for (const [t, bps] of r.live) values[t] = bps / 10000;
+      for (const [t, bps] of postedOf(r)) values[t] = bps / 10000;
       return { x: r.at, values };
     });
     const divergence = sh.rows.map((r) => ({ x: r.at, y: r.divergenceBps / 100 }));
-    return { keys, rows, divergence };
+    const flips: { at: number; to: string }[] = [];
+    for (let i = 1; i < sh.rows.length; i++) if (sh.rows[i].posted !== sh.rows[i - 1].posted) flips.push({ at: sh.rows[i].at, to: sh.rows[i].posted });
+    return { keys, rows, divergence, flips };
   }, [sh]);
   const latest = sh.rows[sh.rows.length - 1];
+  const modeLabel = (m: string) => (m === "capped" ? "capped smart" : m === "smart" ? "smart" : "conviction");
   return (
     <Section eyebrow="the basket" title="How the basket has moved." asOf={latest ? stamp(new Date(latest.at * 1000).toISOString()) : undefined}
-      blurb={<>The live basket at every indexer pass: which tokenized names carried what weight. Weights come from what members of Congress disclosed as buys, filtered to names that trade on Robinhood Chain.</>}>
-      <ChartTitle right={`${sh.rows.length} passes`}>Live weights over time</ChartTitle>
-      <StackedArea keys={keys} rows={rows} height={240} hint="basket weights per name over time" />
+      blurb={<>The basket the engine bought at every indexer pass: which tokenized names carried what weight. Weights come from what members of Congress disclosed as buys, filtered to names that trade on Robinhood Chain{latest ? <>; the engine is posting the <b className="text-ink-strong">{modeLabel(latest.posted)}</b> basket</> : null}.</>}>
+      <ChartTitle right={`${sh.rows.length} passes${flips.length ? ` · switched to ${modeLabel(flips[flips.length - 1].to)} on ${new Date(flips[flips.length - 1].at * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}` : ""}`}>Posted weights over time</ChartTitle>
+      <StackedArea keys={keys} rows={rows} height={240} hint="basket weights per name over time, as posted" />
       <Legend items={keys.map((k, i) => ({ name: k, index: i }))} />
-      <ChartTitle right="how far the shadow smart basket sits from the live one">Divergence, live vs smart</ChartTitle>
-      <LineChart series={[{ name: "divergence", points: divergence, color: "var(--c-accent)" }]} yFormat={(v) => `${v.toFixed(0)}%`} height={150} hint="divergence between the live and shadow baskets in percent" />
+      <ChartTitle right="how far the pure smart basket sits from the conviction basket">Divergence, conviction vs smart</ChartTitle>
+      <LineChart series={[{ name: "divergence", points: divergence, color: "var(--c-accent)" }]} yFormat={(v) => `${v.toFixed(0)}%`} height={150} hint="divergence between the conviction and pure smart baskets in percent" />
       {latest && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-4">
           <div className="stat">
-            <div className="text-[11px] text-ink-soft uppercase tracking-widest">live basket now</div>
+            <div className="text-[11px] text-ink-soft uppercase tracking-widest">posted now · {modeLabel(latest.posted)}</div>
+            <div className="font-pixel text-[11px] text-ink-strong mt-1 leading-relaxed">
+              {postedOf(latest).map(([t, b]) => `${t} ${(b / 100).toFixed(0)}%`).join(" · ")}
+            </div>
+          </div>
+          <div className="stat">
+            <div className="text-[11px] text-ink-soft uppercase tracking-widest">conviction basket</div>
             <div className="font-pixel text-[11px] text-ink-strong mt-1 leading-relaxed">
               {latest.live.map(([t, b]) => `${t} ${(b / 100).toFixed(0)}%`).join(" · ")}
             </div>
           </div>
-          {latest.capped && (
-            <div className="stat">
-              <div className="text-[11px] text-ink-soft uppercase tracking-widest">shadow, capped smart</div>
-              <div className="font-pixel text-[11px] text-ink-strong mt-1 leading-relaxed">
-                {latest.capped.map(([t, b]) => `${t} ${(b / 100).toFixed(0)}%`).join(" · ")}
-              </div>
+          <div className="stat">
+            <div className="text-[11px] text-ink-soft uppercase tracking-widest">pure smart · shadow</div>
+            <div className="font-pixel text-[11px] text-ink-strong mt-1 leading-relaxed">
+              {latest.smart.map(([t, b]) => `${t} ${(b / 100).toFixed(0)}%`).join(" · ")}
             </div>
-          )}
+          </div>
         </div>
       )}
     </Section>

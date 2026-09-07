@@ -30,7 +30,8 @@ export type StatsScorecard = {
   totals: { usdSpent: number; value: number; pnlUsd: number; pnlPct: number | null };
   benchmarks?: { basket: StatsBench; spy: StatsBench; smart: StatsBench; smartCapped?: StatsBench };
 };
-export type StatsShadowRow = { at: number; live: [string, number][]; capped: [string, number][] | null; divergenceBps: number };
+/** `posted` says which basket the engine actually bought that pass: conviction (the `live` column), smart, or capped. */
+export type StatsShadowRow = { at: number; live: [string, number][]; smart: [string, number][]; capped: [string, number][] | null; divergenceBps: number; posted: "conviction" | "smart" | "capped" };
 export type StatsFeedRow = {
   chamber: string; type: string; symbol: string; notional: number; traded: string; filed: string;
   lagDays: number | null; buyable: boolean; inBasket: boolean;
@@ -92,11 +93,14 @@ function compactShadow(raw: string): { rows: StatsShadowRow[] } {
       const r = JSON.parse(line);
       const at = Date.parse(r.at);
       if (!isFinite(at)) continue;
+      const posted = r.posted === "smart" || r.posted === "capped" ? r.posted : "conviction";
       rows.push({
         at: Math.floor(at / 1000),
         live: pairs(r.live),
+        smart: pairs(r.shadow),
         capped: r.shadowCapped ? pairs(r.shadowCapped) : null,
         divergenceBps: Number(r.divergenceBps ?? 0),
+        posted,
       });
     } catch { /* a torn line is skipped, the rest of the history still charts */ }
   }
