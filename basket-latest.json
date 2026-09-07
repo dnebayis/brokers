@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-07T14:16:23.840423+00:00",
+  "generatedAt": "2026-09-07T15:16:43.783013+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3343,
+    "rows": 3357,
     "distinctTraders": 79,
     "latestDisclosure": "2026-09-07",
     "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.12447775548478807,
+  "coverage": 0.12269839268115097,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,84 +29,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 56898383,
+    "block": 56934232,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7197996730862704
+      "shareOfBuying": 0.7008639266975025
     },
     {
       "ticker": "FWONK",
       "netNotional": 146003.0,
-      "shareOfBuying": 0.014012384485979433
+      "shareOfBuying": 0.013643761146945755
     },
     {
       "ticker": "LTH",
       "netNotional": 121004.5,
-      "shareOfBuying": 0.011613196842076522
+      "shareOfBuying": 0.011307688853692032
     },
     {
       "ticker": "CHRW",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.008541860442685319
+      "shareOfBuying": 0.008317150000212596
     },
     {
       "ticker": "BRK.B",
       "netNotional": 81002.0,
-      "shareOfBuying": 0.007774026342837518
+      "shareOfBuying": 0.007569515286842737
     },
     {
       "ticker": "CB",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006238358143141916
+      "shareOfBuying": 0.006074245860103018
     },
     {
       "ticker": "LLY",
       "netNotional": 58999.5,
-      "shareOfBuying": 0.005662374598333894
+      "shareOfBuying": 0.005513414695514654
     },
     {
       "ticker": "BWXT",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.00465484727126656
+      "shareOfBuying": 0.004532392356791227
     },
     {
       "ticker": "MLM",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.00465484727126656
+      "shareOfBuying": 0.004532392356791227
     },
     {
       "ticker": "HUBB",
       "netNotional": 40501.0,
-      "shareOfBuying": 0.003887013171418759
+      "shareOfBuying": 0.0037847576434213684
+    },
+    {
+      "ticker": "MSB",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.003037122930051509
+    },
+    {
+      "ticker": "ALKS",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.003037122930051509
     },
     {
       "ticker": "SGI",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003119179071570958
+      "shareOfBuying": 0.003037122930051509
+    },
+    {
+      "ticker": "SFM",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.003037122930051509
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003119179071570958
-    },
-    {
-      "ticker": "COHR",
-      "netNotional": 32500.5,
-      "shareOfBuying": 0.003119179071570958
-    },
-    {
-      "ticker": "VOYG",
-      "netNotional": 32500.5,
-      "shareOfBuying": 0.003119179071570958
-    },
-    {
-      "ticker": "MTN",
-      "netNotional": 32500.5,
-      "shareOfBuying": 0.003119179071570958
+      "shareOfBuying": 0.003037122930051509
     }
   ],
   "missedAttribution": {
@@ -378,8 +378,10 @@
       "ARCC",
       "ARLP",
       "ATO",
+      "AVAV",
       "AWK",
       "BA",
+      "BABA",
       "BAC",
       "BIIB",
       "BLK",
@@ -395,17 +397,20 @@
       "CMCSA",
       "CME",
       "CNM",
-      "COIN",
       "COST",
       "CPAY",
       "CRDO",
+      "CRNX",
       "CSCO",
       "CSX",
+      "DD",
       "DE",
       "DEO",
       "DIS",
+      "EA",
       "EFC",
       "EMR",
+      "FDX",
       "FLL",
       "FMC",
       "FN",
@@ -436,7 +441,9 @@
       "JPM",
       "KMB",
       "KVUE",
+      "LAMR",
       "LHX",
+      "LITE",
       "LOW",
       "LRCX",
       "LUV",
@@ -450,6 +457,7 @@
       "MKL",
       "MPC",
       "MSFT",
+      "MTSI",
       "NEE",
       "NOK",
       "NTDOY",
@@ -458,7 +466,9 @@
       "OGN",
       "PANW",
       "PEP",
+      "PGR",
       "PINS",
+      "PSKY",
       "RBC",
       "SCI",
       "SFTBF",
@@ -467,8 +477,10 @@
       "SPGI",
       "SPOT",
       "SPSM",
+      "SPXC",
       "STE",
       "STRL",
+      "STZ",
       "SYK",
       "T",
       "TMO",
@@ -476,7 +488,6 @@
       "TPYP",
       "TRV",
       "TSCO",
-      "TTD",
       "UNH",
       "UPS",
       "V",
@@ -485,7 +496,8 @@
       "WAB",
       "WMB",
       "WMT",
-      "XOM"
+      "XOM",
+      "ZTS"
     ],
     "divergenceBps": 5000
   },
@@ -493,31 +505,31 @@
     "basket": [
       {
         "ticker": "AAPL",
-        "bps": 3779
+        "bps": 3750
       },
       {
         "ticker": "AMZN",
-        "bps": 2907
+        "bps": 2884
       },
       {
         "ticker": "INTC",
-        "bps": 2791
-      },
-      {
-        "ticker": "SPCX",
-        "bps": 214
+        "bps": 2770
       },
       {
         "ticker": "PLTR",
-        "bps": 205
+        "bps": 263
+      },
+      {
+        "ticker": "SPCX",
+        "bps": 212
+      },
+      {
+        "ticker": "COIN",
+        "bps": 46
       },
       {
         "ticker": "ASML",
         "bps": 38
-      },
-      {
-        "ticker": "COIN",
-        "bps": 29
       },
       {
         "ticker": "MSTR",
@@ -532,7 +544,7 @@
         "bps": 11
       }
     ],
-    "divergenceBps": 6995
+    "divergenceBps": 7018
   },
   "commentary": {
     "text": "Your basket is led by a position in INTC, where Nancy Pelosi bought an estimated $1.1M across two trades, with the latest traded on 2026-07-24 and filed on 2026-08-21. SPCX follows, with William R. Timmons IV buying an estimated $75K, and Dan Meuser buying an estimated $33K, among five total buyers. MU makes up the remainder, with three buyers including Dan Newhouse. One position, BE, with an estimated $7.5M in buying from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 12.4% of disclosed buying dollars.",
