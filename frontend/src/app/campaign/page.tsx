@@ -2,12 +2,13 @@
 
 // The sponsored desk: one community's holders, each given a seat that is a Broker in the
 // campaign wallet. The whole participant journey lives on this one page: what a seat is,
-// opening yours, watching it earn, what happens at the end. Everything shown is read live
-// from the open Broker API (roster, which seats are switched on, what each seat holds) or
-// derived from it. The rules, eligibility and rewards are the partner's and live on their
-// page; this page never restates them, and only points there where joining or claiming
-// genuinely happens on their side. `?broker=N` opens a seat; `?preview=1` renders the
-// layout with placeholder data when the campaign is switched off.
+// opening yours, watching it earn, what happens at the end. Two sources, both live: the
+// chain through the open Broker API (roster, which seats are switched on, what each seat
+// holds) and the partner's public campaign feed through our proxy (seat mapping, their
+// side's totals, the calendar). The rules, eligibility and rewards are the partner's and
+// live on their page; this page shows their numbers and never restates their rules.
+// `?broker=N` or `?geez=N` opens a seat; `?preview=1` renders the layout with placeholder
+// data when the campaign is switched off.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Header } from "@/components/Header";
@@ -18,6 +19,7 @@ import { CAMPAIGN } from "@/lib/campaign";
 import { PARAMS } from "@/lib/config";
 import { explorerAddress } from "@/lib/chains";
 import type { BrokerSnapshot } from "@/lib/brokerApi";
+import type { FeedPayload, FeedSeat } from "@/app/api/campaign/feed/route";
 
 type RosterRow = { id: number; active: boolean; wallet: string };
 type Filter = "all" | "on" | "off";
@@ -26,6 +28,7 @@ type Scorecard = {
   names: { symbol: string; buys: number; lastBuy: number }[];
 };
 type SeatState = { status: "idle" } | { status: "loading" } | { status: "error" } | { status: "ready"; data: BrokerSnapshot; at: number };
+type Calendar = { week: number; daysLeft: number; started: boolean };
 
 // The partner's brand colour, used only where the page speaks about their side.
 const PARTNER_ACCENT = "#ff8a1f";
@@ -40,11 +43,29 @@ const PREVIEW_ROSTER: RosterRow[] = Array.from({ length: 100 }, (_, i) => ({
 
 const num = (n: number) => n.toLocaleString("en-US");
 const compact = (n: number) => n.toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 });
+const usd0 = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
 const clock = (ms: number) => new Date(ms).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-const dayLabel = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
+const dayLabel = (iso: string) => new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso).toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
+const stampUtc = (iso: string) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
 const hostOf = (url: string) => { try { return new URL(url).hostname; } catch { return url; } };
 
-/** Mount children only once the element is near the viewport (142 on-chain artworks otherwise load at once). */
+/** The partner's normalized seat state, in plain words. Their operator states read as "pending on their side": not ours to alarm about. */
+function seatStateLabel(s: FeedSeat): string {
+  switch (s.state) {
+    case "paid": return "seat paid, activation pending";
+    case "activation_requested": case "activating": case "activation_fulfillment": return "activating";
+    case "activation_attention_required": return "activation pending on their side";
+    case "waiting_for_stock": case "stock_batch_assigned": case "stocks_purchasing": return "sponsored stock on its way";
+    case "stocks_purchased": return "sponsored stock bought";
+    case "stock_attention_required": return "sponsored stock pending on their side";
+    case "claimable": return "claimable";
+    case "claimed": return "claimed";
+    case "forfeited": return "forfeited";
+    default: return s.state.replace(/_/g, " ");
+  }
+}
+
+/** Mount children only once the element is near the viewport (140+ on-chain artworks otherwise load at once). */
 function useNearViewport<T extends HTMLElement>(margin = "320px"): [(el: T | null) => void, boolean] {
   const [seen, setSeen] = useState(false);
   const [obs] = useState(() => (typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver((entries) => {
@@ -73,6 +94,24 @@ function useSeat(id: number | null): { state: SeatState; reload: () => void } {
     return () => { alive = false; };
   }, [id, tick]);
   return { state, reload: () => setTick((t) => t + 1) };
+}
+
+/** The partner's feed through our proxy, once a minute; a failed refresh keeps the last snapshot. */
+function useFeed(enabled: boolean): FeedPayload | null {
+  const [feed, setFeed] = useState<FeedPayload | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    let alive = true;
+    const load = () =>
+      fetch("/api/campaign/feed")
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((j: FeedPayload) => { if (alive && j.ok) setFeed(j); })
+        .catch(() => { /* keep the last snapshot */ });
+    void load();
+    const t = setInterval(load, 60_000);
+    return () => { alive = false; clearInterval(t); };
+  }, [enabled]);
+  return feed;
 }
 
 function PartnerLogo({ className = "h-9" }: { className?: string }) {
@@ -108,18 +147,48 @@ function Stat({ label, value, hint, accent }: { label: string; value: string; hi
   );
 }
 
-function Tile({ k, v, accent, wide }: { k: string; v: React.ReactNode; accent?: boolean; wide?: boolean }) {
+function Tile({ k, v, accent, wide, sub }: { k: string; v: React.ReactNode; accent?: boolean; wide?: boolean; sub?: string }) {
   return (
     <div className={`border border-line bg-cream p-3 ${wide ? "col-span-2" : ""}`}>
       <div className="font-pixel text-[10px] uppercase tracking-wider" style={{ color: accent ? PARTNER_ACCENT : "var(--c-ink-soft)" }}>{k}</div>
       <div className="font-pixel text-[12px] text-ink-strong mt-1 leading-relaxed">{v}</div>
+      {sub && <div className="text-[11px] text-ink-soft mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+/* ───────────── both sides of the desk (their feed) ───────────── */
+
+function BothSides({ feed }: { feed: FeedPayload }) {
+  const p = feed.purchases, c = feed.counts, e = feed.economics, inv = feed.inventory;
+  return (
+    <div className="card p-4 sm:p-5">
+      <div className="flex items-baseline justify-between gap-3 flex-wrap">
+        <h2 className="font-pixel text-sm text-ink-strong">Both sides of the desk</h2>
+        <span className="text-[11px] text-ink-soft">
+          {CAMPAIGN.partnerName}&rsquo;s campaign feed, as of {stampUtc(feed.generatedAt)}{feed.stale ? " · last good snapshot" : ""}
+        </span>
+      </div>
+      <p className="text-ink-soft text-sm mt-1">
+        The same totals their campaign page shows, read from their feed once a minute. Their side is in their colour.
+      </p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+        <Tile accent k="seats taken" v={`${num(c.paidSeats)} / ${num(inv.total)}`} sub={`${num(c.participantWallets)} wallets · ${num(inv.temporarilyBooked)} booked`} />
+        <Tile accent k={`${CAMPAIGN.partnerName} activated`} v={num(c.geezActivated)} sub={`${num(e.entryFeePnutz)} $PNUTZ each, ${e.stakingFeePct}% to staking`} />
+        <Tile accent k="entry fees" v={`${num(p.entryFeesPnutz)} $PNUTZ`} sub={`${num(p.stakingAllocationPnutz)} $PNUTZ to the staking pool`} />
+        <Tile accent k="$PNUTZ bought for seats" v={num(Math.round(p.pnutzPurchased))} sub={`${num(p.pnutzPurchasedPositions)} seats · $${e.sponsoredPnutzUsd} target each`} />
+        <Tile k="$COAT bought by the treasury" v={compact(p.coatPurchased)} sub="market buys on Robinhood Chain" />
+        <Tile k="$COAT burned to switch on" v={compact(p.coatBurned)} sub={`${num(PARAMS.activationBurn)} per activation`} />
+        <Tile k="sponsored stock" v={`${num(c.stocksPurchased)} / ${num(c.paidSeats)} seats`} sub={`$${e.sponsoredStockUsd} target each · ${usd0(p.sponsoredStockTargetUsd)} so far`} />
+        <Tile k="waiting on a poke" v={num(c.waitingForPoke)} sub="seats whose sponsored stock follows the next engine purchase" />
+      </div>
     </div>
   );
 }
 
 /* ───────────── the seat card (used inside the journey) ───────────── */
 
-function SeatCard({ id, seat, onReload }: { id: number; seat: SeatState; onReload: () => void }) {
+function SeatCard({ id, seat, onReload, mapped }: { id: number; seat: SeatState; onReload: () => void; mapped?: FeedSeat }) {
   const d = seat.status === "ready" ? seat.data : null;
   const stock = d?.holdings.filter((h) => h.symbol !== "COAT") ?? [];
   const owed = d?.claimable.filter((h) => h.symbol !== "COAT") ?? [];
@@ -130,7 +199,10 @@ function SeatCard({ id, seat, onReload }: { id: number; seat: SeatState; onReloa
         <div className="shrink-0 border-2 border-ink bg-cream-2"><BrokerArtwork tokenId={BigInt(id)} size={112} /></div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <h3 className="font-pixel text-base text-ink-strong">Broker #{id}</h3>
+            <h3 className="font-pixel text-base text-ink-strong">
+              Broker #{id}
+              {mapped && <span className="ml-2 text-[11px]" style={{ color: PARTNER_ACCENT }}>· {CAMPAIGN.partnerName} #{mapped.geez}</span>}
+            </h3>
             <button type="button" className="font-pixel text-[10px] text-ink-soft hover:text-ink-strong inline-flex items-center gap-1" onClick={onReload}>
               <Icon name="flip" className="w-3 h-3" /> {seat.status === "ready" ? `as of ${clock(seat.at)} · refresh` : "refresh"}
             </button>
@@ -154,6 +226,20 @@ function SeatCard({ id, seat, onReload }: { id: number; seat: SeatState; onReloa
                   <dt className="font-pixel text-[10px] uppercase tracking-wider text-ink-soft">Still owed by the engine</dt>
                   <dd className="text-ink-strong">{owed.length ? owed.map((h) => `${h.formatted} ${h.symbol}`).join(" · ") : "nothing pending"}</dd>
                 </div>
+                {mapped && (
+                  <>
+                    <div>
+                      <dt className="font-pixel text-[10px] uppercase tracking-wider" style={{ color: PARTNER_ACCENT }}>On the {CAMPAIGN.partnerName} side</dt>
+                      <dd className="text-ink-strong">{seatStateLabel(mapped)}{mapped.activatedAt ? ` · since ${stampUtc(mapped.activatedAt)}` : ""}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-pixel text-[10px] uppercase tracking-wider" style={{ color: PARTNER_ACCENT }}>Sponsored by their treasury</dt>
+                      <dd className="text-ink-strong">
+                        $PNUTZ {mapped.pnutzPurchased ? "bought" : "pending"} · stock {mapped.stock.replace(/_/g, " ")}
+                      </dd>
+                    </div>
+                  </>
+                )}
                 <div className="sm:col-span-2">
                   <dt className="font-pixel text-[10px] uppercase tracking-wider text-ink-soft">The seat&rsquo;s own wallet, on the explorer</dt>
                   <dd><a className="font-pixel text-[11px] underline break-all" href={explorerAddress(d.wallet)} target="_blank" rel="noreferrer">{d.wallet}</a></dd>
@@ -169,14 +255,17 @@ function SeatCard({ id, seat, onReload }: { id: number; seat: SeatState; onReloa
 
 /* ───────────── the journey ───────────── */
 
-function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active }: {
+function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active, feed, byBroker, byGeez }: {
   seatId: number | null; onSeat: (id: number) => void; seat: SeatState; reloadSeat: () => void;
-  calendar: { week: number; daysLeft: number; started: boolean } | null; active: number;
+  calendar: Calendar | null; active: number; feed: FeedPayload | null;
+  byBroker: Map<number, FeedSeat>; byGeez: Map<string, FeedSeat>;
 }) {
   const [step, setStep] = useState(0);
   const [typed, setTyped] = useState("");
+  const [mode, setMode] = useState<"broker" | "geez">("broker");
+  const [miss, setMiss] = useState<string | null>(null);
   // A seat arriving from a link, a desk tap or the last visit moves the journey to it.
-  useEffect(() => { if (seatId !== null) { setTyped(String(seatId)); setStep((s) => (s < 1 ? 1 : s)); } }, [seatId]);
+  useEffect(() => { if (seatId !== null) { setStep((s) => (s < 1 ? 1 : s)); setMiss(null); } }, [seatId]);
 
   // Desk-wide context for "watch it earn": how often the engine has been buying.
   const [sc, setSc] = useState<Scorecard | null>(null);
@@ -187,16 +276,26 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active }: {
   const lastBuy = sc ? Math.max(0, ...sc.names.map((n) => n.lastBuy)) : 0;
 
   const seatReady = seat.status === "ready";
+  const mapped = seatId !== null ? byBroker.get(seatId) : undefined;
   const titles = ["What a seat is", "Open your seat", "Watch it earn", "At the end"];
   const go = (i: number) => setStep(Math.max(0, Math.min(titles.length - 1, i)));
   const canNext = step === 0 || (step === 1 && seatReady) || step === 2;
   const partnerHost = CAMPAIGN.partnerUrl ? hostOf(CAMPAIGN.partnerUrl) : "";
 
+  const submit = () => {
+    const raw = typed.trim();
+    if (!raw) return;
+    if (mode === "broker") { const n = Number(raw); if (n > 0) { setMiss(null); onSeat(n); } return; }
+    const hit = byGeez.get(raw);
+    if (hit) { setMiss(null); onSeat(hit.broker); }
+    else setMiss(byGeez.size === 0 ? "The seat map is not loaded yet. Try again in a moment, or use the Broker number." : `No seat is mapped to ${CAMPAIGN.partnerName} #${raw} in the campaign feed.`);
+  };
+
   return (
     <div className="card p-4 sm:p-5" id="journey">
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <h2 className="font-pixel text-sm text-ink-strong">Your seat, step by step</h2>
-        <span className="text-[11px] text-ink-soft">everything here reads from the chain, nothing to sign</span>
+        <span className="text-[11px] text-ink-soft">everything here reads from the chain and the campaign feed, nothing to sign</span>
       </div>
       <ol className="mt-3 grid grid-cols-4 gap-1.5" role="tablist" aria-label="Steps">
         {titles.map((t, i) => {
@@ -232,7 +331,8 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active }: {
             <p className="text-sm text-ink mt-3 leading-relaxed max-w-3xl">
               What the engine buys is whatever members of Congress are disclosing as buys, paid for with
               the fees of every $COAT trade and split equally across every switched-on Broker. Right now
-              there are <b className="text-ink-strong">{num(active)}</b> switched on across this desk.
+              there are <b className="text-ink-strong">{num(active)}</b> switched on across this desk
+              {feed ? <>, and <b className="text-ink-strong">{num(feed.counts.paidSeats)}</b> of <b className="text-ink-strong">{num(feed.inventory.total)}</b> seats are taken</> : null}.
             </p>
             <details className="mt-3">
               <summary className="cursor-pointer list-none font-pixel text-[11px] text-ink-soft hover:text-ink-strong [&::-webkit-details-marker]:hidden">
@@ -241,6 +341,7 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active }: {
               <p className="text-sm text-ink mt-2 leading-relaxed max-w-3xl">
                 Seats are handed out by {CAMPAIGN.partnerName}, on their site, to their holders, by their
                 rules. Nothing about joining happens here.
+                {feed && feed.inventory.available === 0 && <> Their feed says every seat is taken at the moment; some bookings can expire and reopen.</>}
                 {partnerHost && <> Their campaign page: <a className="underline" href={CAMPAIGN.partnerUrl} target="_blank" rel="noreferrer">{partnerHost}</a>.</>}
               </p>
             </details>
@@ -250,13 +351,23 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active }: {
         {step === 1 && (
           <div>
             <h3 className="font-pixel text-[12px] text-ink-strong">Type your seat number, or tap a desk below.</h3>
-            <form className="flex flex-wrap gap-2 mt-3 max-w-md" onSubmit={(e) => { e.preventDefault(); const n = Number(typed); if (n > 0) onSeat(n); }}>
-              <input className="fld flex-1 min-w-[9rem]" inputMode="numeric" placeholder={`Broker number, 1 to ${num(PARAMS.maxSupply)}`} value={typed}
-                onChange={(e) => setTyped(e.target.value.replace(/[^0-9]/g, ""))} aria-label="Broker number" />
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              {(["broker", "geez"] as const).map((m) => (
+                <button key={m} type="button" onClick={() => setMode(m)} aria-pressed={mode === m}
+                  className={`font-pixel text-[10px] uppercase tracking-widest px-2.5 py-1.5 border-[1.5px] ${mode === m ? "border-ink bg-ink text-cream" : "border-line text-ink-soft hover:text-ink-strong"}`}>
+                  {m === "broker" ? "by Broker #" : `by ${CAMPAIGN.partnerName} #`}
+                </button>
+              ))}
+            </div>
+            <form className="flex flex-wrap gap-2 mt-2 max-w-md" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+              <input className="fld flex-1 min-w-[9rem]" inputMode="numeric"
+                placeholder={mode === "broker" ? `Broker number, 1 to ${num(PARAMS.maxSupply)}` : `${CAMPAIGN.partnerName} token number`}
+                value={typed} onChange={(e) => setTyped(e.target.value.replace(/[^0-9]/g, ""))} aria-label={mode === "broker" ? "Broker number" : `${CAMPAIGN.partnerName} number`} />
               <button className="btn text-[11px]" type="submit"><Icon name="search" /> Open</button>
             </form>
+            {miss && <p className="text-accent text-sm mt-2">{miss}</p>}
             {seatId !== null
-              ? <div className="mt-3"><SeatCard id={seatId} seat={seat} onReload={reloadSeat} /></div>
+              ? <div className="mt-3"><SeatCard id={seatId} seat={seat} onReload={reloadSeat} mapped={mapped} /></div>
               : <p className="text-ink-soft text-sm mt-3">No wallet, no sign-in. The seat is read straight from the chain and remembered on this device.</p>}
           </div>
         )}
@@ -278,20 +389,32 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active }: {
               </div>
             )}
             {seatId !== null
-              ? <div className="mt-3"><SeatCard id={seatId} seat={seat} onReload={reloadSeat} /></div>
+              ? <div className="mt-3"><SeatCard id={seatId} seat={seat} onReload={reloadSeat} mapped={mapped} /></div>
               : <p className="text-ink-soft text-sm mt-3">Open a seat in step 2 to see its own numbers here.</p>}
-            <p className="text-[11px] text-ink-soft mt-3">Quiet trading means quiet earnings. There is no fixed rate and nothing is promised; the chain is the record.</p>
+            <p className="text-[11px] text-ink-soft mt-3">
+              On top of what the seat earns, {CAMPAIGN.partnerName}&rsquo;s treasury buys sponsored $PNUTZ and tokenized stock per seat; that
+              part is tracked on their side and shows on the seat card above. Quiet trading means quiet earnings; there is no fixed rate and nothing is promised.
+            </p>
           </div>
         )}
 
         {step === 3 && (
           <div>
             <h3 className="font-pixel text-[12px] text-ink-strong">The seat runs for {CAMPAIGN.weeks} weeks.</h3>
-            <div className="grid grid-cols-3 gap-2 mt-3 max-w-xl">
-              <Tile k="opened" v={CAMPAIGN.startDate ? dayLabel(CAMPAIGN.startDate) : "—"} />
-              <Tile k="closes" v={CAMPAIGN.endDate ? dayLabel(CAMPAIGN.endDate) : "—"} />
-              <Tile k="days left" accent v={calendar ? num(calendar.daysLeft) : "—"} />
-            </div>
+            {feed ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                <Tile k="opened" v={dayLabel(feed.campaign.startsAt)} />
+                <Tile k="activations close" v={stampUtc(feed.campaign.activationClosesAt)} />
+                <Tile accent k="claims open" v={stampUtc(feed.campaign.claimOpensAt)} sub="on their side, once the final check is done" />
+                <Tile accent k="claim deadline" v={stampUtc(feed.campaign.claimDeadlineAt)} sub="unclaimed earnings are sent out after it" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 mt-3 max-w-xl">
+                <Tile k="opened" v={CAMPAIGN.startDate ? dayLabel(CAMPAIGN.startDate) : "—"} />
+                <Tile k="closes" v={CAMPAIGN.endDate ? dayLabel(CAMPAIGN.endDate) : "—"} />
+                <Tile accent k="days left" v={calendar ? num(calendar.daysLeft) : "—"} />
+              </div>
+            )}
             <ul className="list-disc ml-5 space-y-1.5 text-sm text-ink mt-3 max-w-3xl">
               <li>Until then the seat keeps earning into its own wallet; come back to this page any time and it will remember your seat.</li>
               <li>What the seat earned stays on Robinhood Chain in the Broker&rsquo;s wallet. The Broker belongs to the {CAMPAIGN.partnerName} Treasury throughout.</li>
@@ -314,19 +437,20 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active }: {
 
 /* ───────────── the desks ───────────── */
 
-function Desk({ row, selected, onSelect }: { row: RosterRow; selected: boolean; onSelect: (id: number) => void }) {
+function Desk({ row, selected, onSelect, mapped }: { row: RosterRow; selected: boolean; onSelect: (id: number) => void; mapped?: FeedSeat }) {
   const [ref, near] = useNearViewport<HTMLButtonElement>();
   return (
     <button ref={ref} type="button" onClick={() => onSelect(row.id)} aria-pressed={selected}
-      title={row.active ? `Broker #${row.id}, switched on` : `Broker #${row.id}, not switched on yet`}
+      title={`Broker #${row.id}, ${row.active ? "switched on" : "not switched on yet"}${mapped ? ` · ${CAMPAIGN.partnerName} #${mapped.geez} · ${seatStateLabel(mapped)}` : ""}`}
       className={`group relative border-2 bg-cream-2 p-1.5 text-left transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:shadow-pixel-sm ${
         selected ? "border-ink shadow-pixel" : row.active ? "border-ink" : "border-line opacity-70"}`}>
       <div className="aspect-square w-full overflow-hidden bg-cream">
         {near ? <BrokerArtwork tokenId={BigInt(row.id)} size={160} /> : <div className="w-full h-full" />}
       </div>
-      <div className="flex items-center justify-between mt-1.5">
+      <div className="flex items-center justify-between mt-1.5 gap-1">
         <span className="font-pixel text-[10px] text-ink-strong">#{row.id}</span>
-        <span className="font-pixel text-[8px] px-1 py-0.5 border"
+        {mapped && <span className="font-pixel text-[8px] truncate" style={{ color: PARTNER_ACCENT }} title={`${CAMPAIGN.partnerName} #${mapped.geez}`}>G#{mapped.geez}</span>}
+        <span className="font-pixel text-[8px] px-1 py-0.5 border shrink-0"
           style={row.active ? { color: PARTNER_ACCENT, borderColor: PARTNER_ACCENT } : { color: "var(--c-ink-soft)", borderColor: "var(--c-line)" }}>
           {row.active ? "ON" : "OFF"}
         </span>
@@ -335,11 +459,11 @@ function Desk({ row, selected, onSelect }: { row: RosterRow; selected: boolean; 
   );
 }
 
-function Desks({ roster, selected, onSelect }: { roster: RosterRow[]; selected: number | null; onSelect: (id: number) => void }) {
+function Desks({ roster, selected, onSelect, byBroker }: { roster: RosterRow[]; selected: number | null; onSelect: (id: number) => void; byBroker: Map<number, FeedSeat> }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [q, setQ] = useState("");
   const shown = useMemo(() => roster.filter((r) =>
-    (filter === "all" || (filter === "on") === r.active) && (q === "" || String(r.id).includes(q))), [roster, filter, q]);
+    (filter === "all" || (filter === "on") === r.active) && (q === "" || String(r.id).includes(q) || (byBroker.get(r.id)?.geez ?? "") === q)), [roster, filter, q, byBroker]);
   const counts = { all: roster.length, on: roster.filter((r) => r.active).length, off: roster.filter((r) => !r.active).length };
   return (
     <div className="card p-4 sm:p-5">
@@ -354,14 +478,14 @@ function Desks({ roster, selected, onSelect }: { roster: RosterRow[]; selected: 
             {f === "all" ? "all" : f === "on" ? "switched on" : "not yet"} · {counts[f]}
           </button>
         ))}
-        <input className="fld !w-40 !py-1.5 !text-sm ml-auto" inputMode="numeric" placeholder="find #" value={q}
-          onChange={(e) => setQ(e.target.value.replace(/[^0-9]/g, ""))} aria-label="Find a Broker number" />
+        <input className="fld !w-44 !py-1.5 !text-sm ml-auto" inputMode="numeric" placeholder={`find Broker or ${CAMPAIGN.partnerName} #`} value={q}
+          onChange={(e) => setQ(e.target.value.replace(/[^0-9]/g, ""))} aria-label="Find a seat by number" />
       </div>
       {shown.length === 0 ? (
         <p className="text-ink-soft text-sm mt-4">No desk matches that.</p>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-11 gap-2 mt-4">
-          {shown.map((r) => <Desk key={r.id} row={r} selected={selected === r.id} onSelect={onSelect} />)}
+          {shown.map((r) => <Desk key={r.id} row={r} selected={selected === r.id} onSelect={onSelect} mapped={byBroker.get(r.id)} />)}
         </div>
       )}
     </div>
@@ -404,15 +528,22 @@ function CampaignInner() {
     return () => { alive = false; clearInterval(t); };
   }, []);
 
+  const feed = useFeed(CAMPAIGN.live && CAMPAIGN.feedUrl !== "");
+  const byBroker = useMemo(() => new Map((feed?.seats ?? []).map((s) => [s.broker, s])), [feed]);
+  const byGeez = useMemo(() => new Map((feed?.seats ?? []).map((s) => [s.geez, s])), [feed]);
+
   const active = useMemo(() => roster?.filter((b) => b.active).length ?? 0, [roster]);
   const burned = active * PARAMS.activationBurn;
+  const seatsTotal = feed?.inventory.total || CAMPAIGN.seats;
 
-  // Calendar, read once per mount: which week the desk is in and how many days remain.
-  const [calendar, setCalendar] = useState<{ week: number; daysLeft: number; started: boolean } | null>(null);
+  // Calendar, read once per mount (and again when the feed's dates arrive): which week the
+  // desk is in and how many days remain until activations close.
+  const [calendar, setCalendar] = useState<Calendar | null>(null);
   useEffect(() => {
-    if (!CAMPAIGN.startDate) { if (preview) setCalendar({ week: 1, daysLeft: 27, started: true }); return; }
-    const start = Date.parse(`${CAMPAIGN.startDate}T00:00:00Z`);
-    const end = start + CAMPAIGN.weeks * 7 * 86_400_000;
+    const startIso = feed?.campaign.startsAt || (CAMPAIGN.startDate ? `${CAMPAIGN.startDate}T00:00:00Z` : "");
+    if (!startIso) { if (preview) setCalendar({ week: 1, daysLeft: 27, started: true }); return; }
+    const start = Date.parse(startIso);
+    const end = feed?.campaign.activationClosesAt ? Date.parse(feed.campaign.activationClosesAt) : start + CAMPAIGN.weeks * 7 * 86_400_000;
     const now = Date.now();
     const days = (now - start) / 86_400_000;
     setCalendar({
@@ -420,10 +551,11 @@ function CampaignInner() {
       week: Math.min(CAMPAIGN.weeks, Math.max(0, Math.floor(days / 7) + 1)),
       daysLeft: Math.max(0, Math.ceil((end - now) / 86_400_000)),
     });
-  }, [preview]);
+  }, [preview, feed]);
 
-  // The open seat: from a desk tap, the journey's form, a ?broker= link, or the last visit.
+  // The open seat: from a desk tap, the journey's form, a ?broker= / ?geez= link, or the last visit.
   const [seatId, setSeatId] = useState<number | null>(null);
+  const [wantGeez, setWantGeez] = useState<string | null>(null);
   const journeyRef = useRef<HTMLDivElement>(null);
   const openSeat = useCallback((id: number, scroll = false) => {
     setSeatId(id);
@@ -431,13 +563,22 @@ function CampaignInner() {
     if (scroll) requestAnimationFrame(() => journeyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }, []);
   useEffect(() => {
-    const q = Number(new URLSearchParams(window.location.search).get("broker"));
+    const qs = new URLSearchParams(window.location.search);
+    const q = Number(qs.get("broker"));
     if (Number.isInteger(q) && q > 0) { openSeat(q); return; }
+    const g = (qs.get("geez") ?? "").replace(/[^0-9]/g, "");
+    if (g) { setWantGeez(g); return; }
     try {
       const saved = Number(window.localStorage.getItem(SEAT_KEY));
       if (Number.isInteger(saved) && saved > 0) setSeatId(saved);
     } catch { /* no storage, no memory */ }
   }, [openSeat]);
+  // A ?geez= link resolves once the seat map is in.
+  useEffect(() => {
+    if (wantGeez === null) return;
+    const hit = byGeez.get(wantGeez);
+    if (hit) { openSeat(hit.broker); setWantGeez(null); }
+  }, [wantGeez, byGeez, openSeat]);
   const { state: seat, reload: reloadSeat } = useSeat(seatId);
 
   if (!showLive) {
@@ -459,7 +600,7 @@ function CampaignInner() {
       {preview && <p className="chip inline-block">PREVIEW — PLACEHOLDER DATA</p>}
 
       <p className="text-lg text-ink-strong leading-relaxed max-w-3xl">
-        {CAMPAIGN.seats > 0 ? `${num(CAMPAIGN.seats)} ` : ""}{CAMPAIGN.partnerName} holders each get a seat at the desk.
+        {seatsTotal > 0 ? `${num(seatsTotal)} ` : ""}{CAMPAIGN.partnerName} holders each get a seat at the desk.
         A seat is a Coattail Broker held in the campaign wallet and switched on the only way a Broker
         can be: by burning {num(PARAMS.activationBurn)} $COAT. From there it earns like every other
         active Broker, real tokenized stock into its own wallet on Robinhood Chain, bought with trading
@@ -467,20 +608,23 @@ function CampaignInner() {
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Seats" value={CAMPAIGN.seats > 0 ? num(CAMPAIGN.seats) : (roster ? num(roster.length) : "…")}
-          hint={roster ? `${num(roster.length)} Brokers in the campaign wallet` : undefined} />
+        <Stat label="Seats" value={seatsTotal > 0 ? num(seatsTotal) : (roster ? num(roster.length) : "…")}
+          hint={feed ? `${num(feed.counts.paidSeats)} taken by ${num(feed.counts.participantWallets)} wallets` : roster ? `${num(roster.length)} Brokers in the campaign wallet` : undefined} />
         <Stat label="Switched on" value={roster ? num(active) : "…"} hint="read from the chain, refreshed every minute" accent />
         <Stat label="$COAT burned" value={roster ? compact(burned) : "…"} hint={`${num(PARAMS.activationBurn)} per activation`} />
         <Stat label="Week" value={calendar ? `${calendar.week} / ${CAMPAIGN.weeks}` : "…"}
-          hint={calendar ? (calendar.started ? `${num(calendar.daysLeft)} days left` : "not started yet") : undefined} />
+          hint={calendar ? (calendar.started ? `${num(calendar.daysLeft)} days until activations close` : "not started yet") : undefined} />
       </div>
 
       <div ref={journeyRef} className="scroll-mt-24">
-        <Journey seatId={seatId} onSeat={(id) => openSeat(id)} seat={seat} reloadSeat={reloadSeat} calendar={calendar} active={active} />
+        <Journey seatId={seatId} onSeat={(id) => openSeat(id)} seat={seat} reloadSeat={reloadSeat} calendar={calendar} active={active}
+          feed={feed} byBroker={byBroker} byGeez={byGeez} />
       </div>
 
+      {feed && <BothSides feed={feed} />}
+
       {error && !(roster && roster.length > 0) && <p className="text-accent text-sm">Could not read the roster just now. It retries every minute.</p>}
-      {roster && roster.length > 0 && <Desks roster={roster} selected={seatId} onSelect={(id) => openSeat(id, true)} />}
+      {roster && roster.length > 0 && <Desks roster={roster} selected={seatId} onSelect={(id) => openSeat(id, true)} byBroker={byBroker} />}
 
       <div className="card p-4 sm:p-5">
         <h2 className="font-pixel text-sm text-ink-strong">Who does what</h2>
@@ -494,6 +638,9 @@ function CampaignInner() {
               <> Campaign wallet:{" "}
                 <a className="font-pixel text-[11px] break-all underline" href={explorerAddress(CAMPAIGN.wallet)} target="_blank" rel="noreferrer">{CAMPAIGN.wallet}</a>
               </>
+            )}
+            {feed?.chains.apechain.treasuryWallet && feed.chains.apechain.treasuryWallet.toLowerCase() !== String(CAMPAIGN.wallet).toLowerCase() && (
+              <> · ApeChain treasury: <span className="font-pixel text-[11px] break-all">{feed.chains.apechain.treasuryWallet}</span></>
             )}
           </li>
         </ul>

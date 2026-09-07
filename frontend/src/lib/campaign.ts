@@ -12,6 +12,7 @@ import type { Address } from "viem";
 //   NEXT_PUBLIC_CAMPAIGN_START=2026-01-01          (ISO date, first campaign day, UTC)
 //   NEXT_PUBLIC_CAMPAIGN_WEEKS=4
 //   NEXT_PUBLIC_CAMPAIGN_SEATS=100                 (seats offered to participants)
+//   CAMPAIGN_FEED_URL=https://...                  (partner's public campaign feed, server-side only)
 //
 // Next inlines only literal `process.env.X` reads, so each one is spelled out.
 const DEFAULTS = {
@@ -22,6 +23,7 @@ const DEFAULTS = {
   start: "2026-09-06",
   weeks: "4",
   seats: "100",
+  feedUrl: "https://www.geezonape.com/api/coattail/public/v1/campaign?slug=coattail-geez",
 };
 const env = (v: string | undefined, fallback: string) => {
   const t = (v ?? "").trim();
@@ -34,6 +36,8 @@ const startDate = env(process.env.NEXT_PUBLIC_CAMPAIGN_START, DEFAULTS.start);
 const weeksEnv = env(process.env.NEXT_PUBLIC_CAMPAIGN_WEEKS, DEFAULTS.weeks);
 const seatsEnv = env(process.env.NEXT_PUBLIC_CAMPAIGN_SEATS ?? process.env.NEXT_PUBLIC_CAMPAIGN_BROKERS, DEFAULTS.seats);
 const liveEnv = env(process.env.NEXT_PUBLIC_CAMPAIGN_LIVE, DEFAULTS.live);
+// Read on the server only (the proxy route); the browser never calls the partner directly.
+const feedUrl = env(process.env.CAMPAIGN_FEED_URL, DEFAULTS.feedUrl);
 
 // A half-set config must not half-render the page: live needs the flag AND a usable wallet,
 // since every number on the page is derived from that wallet's roster.
@@ -53,6 +57,8 @@ export const CAMPAIGN: {
   seats: number;
   /** First day after the campaign (ISO date), derived from start + weeks. */
   endDate: string;
+  /** The partner's public campaign feed (server-side only); empty disables the feed. */
+  feedUrl: string;
 } = {
   live: liveEnv === "1" && wallet !== "",
   partnerName: partner,
@@ -61,6 +67,7 @@ export const CAMPAIGN: {
   startDate,
   weeks: positive(weeksEnv, 4),
   seats: positive(seatsEnv, 0),
+  feedUrl,
   endDate: (() => {
     const t = Date.parse(`${startDate}T00:00:00Z`);
     if (!Number.isFinite(t)) return "";
