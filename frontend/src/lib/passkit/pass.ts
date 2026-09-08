@@ -74,13 +74,11 @@ export function buildPassJson(p: PassInput): Record<string, unknown> {
     { key: "claimable", label: "WAITING IN BOOSTER", value: usdText(p.claimableUsd) },
   ];
 
+  // One change message per event: a payout changes LAST PAYOUT (front) and the balance
+  // (back) at once, and when several fields carry change messages iOS collapses them into a
+  // generic "pass changed" summary instead of our text. So only the payout field speaks.
   const backFields: Field[] = [
-    {
-      key: "balance",
-      label: "IN THE WALLET",
-      value: usdText(p.balanceUsd),
-      changeMessage: "balance now %@",
-    },
+    { key: "balance", label: "IN THE WALLET", value: usdText(p.balanceUsd) },
     { key: "stocks", label: "STOCKS", value: `${top}${more}` },
     { key: "broker", label: "BROKER", value: `#${p.id}` },
   ];

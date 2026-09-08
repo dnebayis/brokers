@@ -132,7 +132,9 @@ test("pass.json carries the numbers, the issuer contact and the web service", ()
   assert.equal(g.secondaryFields[1].value, "$0.50");
   const back = Object.fromEntries(g.backFields.map((f) => [f.key, f.value]));
   assert.equal(back["balance"], "$12.35");
-  assert.match(g.backFields.find((f) => f.key === "balance").changeMessage, /%@/);
+  assert.equal(g.backFields.find((f) => f.key === "balance").changeMessage, undefined); // one change message per event
+  const withMessages = [...g.headerFields, ...g.secondaryFields, ...g.backFields].filter((f) => f.changeMessage);
+  assert.deepEqual(withMessages.map((f) => f.key), ["status", "payout"]);
   assert.equal(back["stocks"], "INTC, SPCX, COAT");
   assert.equal(back["broker"], "#527");
   assert.equal(back["issuer-contact"], issuer.email);
