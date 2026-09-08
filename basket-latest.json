@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-07T23:24:00.367662+00:00",
+  "generatedAt": "2026-09-08T00:24:17.047960+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 3357,
     "distinctTraders": 79,
     "latestDisclosure": "2026-09-07",
-    "ageDays": 0,
+    "ageDays": 1,
     "errors": []
   },
-  "coverage": 0.12269839268115097,
+  "coverage": 0.1248932479575414,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,84 +29,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 57223973,
+    "block": 57259808,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7008639266975025
+      "shareOfBuying": 0.7090805109651708
     },
     {
       "ticker": "FWONK",
       "netNotional": 146003.0,
-      "shareOfBuying": 0.013643761146945755
+      "shareOfBuying": 0.013803713898002673
     },
     {
       "ticker": "LTH",
       "netNotional": 121004.5,
-      "shareOfBuying": 0.011307688853692032
+      "shareOfBuying": 0.01144025464114343
     },
     {
       "ticker": "CHRW",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.008317150000212596
+      "shareOfBuying": 0.008414656179715367
     },
     {
       "ticker": "BRK.B",
       "netNotional": 81002.0,
-      "shareOfBuying": 0.007569515286842737
+      "shareOfBuying": 0.007658256564358352
     },
     {
       "ticker": "CB",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006074245860103018
-    },
-    {
-      "ticker": "LLY",
-      "netNotional": 58999.5,
-      "shareOfBuying": 0.005513414695514654
+      "shareOfBuying": 0.0061454573336443205
     },
     {
       "ticker": "BWXT",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.004532392356791227
+      "shareOfBuying": 0.004585527897536192
     },
     {
       "ticker": "MLM",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.004532392356791227
+      "shareOfBuying": 0.004585527897536192
     },
     {
       "ticker": "HUBB",
       "netNotional": 40501.0,
-      "shareOfBuying": 0.0037847576434213684
+      "shareOfBuying": 0.003829128282179176
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003037122930051509
+      "shareOfBuying": 0.0030727286668221603
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003037122930051509
+      "shareOfBuying": 0.0030727286668221603
     },
     {
       "ticker": "SGI",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003037122930051509
+      "shareOfBuying": 0.0030727286668221603
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003037122930051509
+      "shareOfBuying": 0.0030727286668221603
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003037122930051509
+      "shareOfBuying": 0.0030727286668221603
+    },
+    {
+      "ticker": "COHR",
+      "netNotional": 32500.5,
+      "shareOfBuying": 0.0030727286668221603
     }
   ],
   "missedAttribution": {
@@ -240,7 +240,7 @@
         }
       ],
       "buyerCount": 1,
-      "sellCount": 3
+      "sellCount": 2
     },
     "MU": {
       "buyers": [
@@ -417,7 +417,6 @@
       "FOX",
       "FTGC",
       "FTNT",
-      "GD",
       "GDDY",
       "GE",
       "GEV",
@@ -434,7 +433,6 @@
       "ICLR",
       "IEF",
       "IMCB",
-      "INSM",
       "INTU",
       "ITW",
       "JNJ",
@@ -444,6 +442,7 @@
       "LAMR",
       "LHX",
       "LITE",
+      "LLY",
       "LOW",
       "LRCX",
       "LUV",
@@ -547,10 +546,10 @@
     "divergenceBps": 7018
   },
   "commentary": {
-    "text": "Your basket's largest position is INTC, driven by Nancy Pelosi's $1.1M in buys, traded on 2026-07-24 and filed on 2026-08-21. SPCX is another notable holding, with buys from William R. Timmons IV ($75K) and Dan Meuser ($33K), among five total buyers. MU also features three buyers. A total of 12 members contributed to the basket. The largest disclosed buy, BE at $7.5M from Nancy Pelosi, could not be included because it is not tokenized or tradable on this chain. This basket covers 12.3% of the disclosed buying dollars.",
+    "text": "Your latest basket is led by Intel, with Nancy Pelosi making two buys totaling $1.1M, traded on 2026-07-24 and filed on 2026-08-21. SPCX is another notable position, with buys from William R. Timmons IV for $75K, traded on 2026-06-15 and filed on 2026-07-19, and Dan Meuser for $33K, traded on 2026-06-15 and filed on 2026-07-02. Three other members also bought into the basket. The largest disclosed buying, BE at $7.5M, could not be bought because it is not tokenized or tradable on this chain. This basket represents 12.5% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-07T19:22:38+00:00",
-    "inputHash": "b3957bd648437122",
+    "generatedAt": "2026-09-08T00:24:17+00:00",
+    "inputHash": "66b55d3817da6b44",
     "promptVersion": 2
   }
 }
