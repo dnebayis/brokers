@@ -39,6 +39,9 @@ export function payoutValue(prevUnits: Record<string, string>, live: LiveState):
 }
 
 const cents = (n: number | null) => (n === null ? null : Math.round(n * 100));
+export const DRIFT_REFRESH_SEC = 3600;
+/** Reasons worth a push (a phone ping): everything except a silent price drift refresh. */
+export const pushWorthy = (reasons: string[]): boolean => reasons.some((r) => r !== "drift");
 
 export function advance(prev: RecordState, live: LiveState, now: number): { next: RecordState; changed: boolean; reasons: string[] } {
   const reasons: string[] = [];
@@ -54,8 +57,11 @@ export function advance(prev: RecordState, live: LiveState, now: number): { next
       lastPayoutUsd = paid;
     }
   }
+  // A price move is not an event: it must not push the phone (a push per tick got Wallet
+  // throttling us) and must not move Last-Modified on every fetch. The numbers still refresh
+  // silently, at most once an hour, so a manual pull shows something current.
   const balanceMoved = !voided && cents(live.balanceUsd) !== cents(prev.balanceUsd);
-  if (balanceMoved) reasons.push("balance");
+  if (balanceMoved && reasons.length === 0 && now - prev.updatedAt >= DRIFT_REFRESH_SEC) reasons.push("drift");
 
   const changed = reasons.length > 0;
   const next: RecordState = {

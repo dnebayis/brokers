@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { passkitConfig, pushSecret } from "@/lib/passkit/config";
 import { readBrokerPassState } from "@/lib/passkit/chain";
 import { refreshRecord } from "@/lib/passkit/build";
+import { pushWorthy } from "@/lib/passkit/record";
 import { allSerials, deviceLog, devicesFor, forgetDevice, getCursor, getPass, lastFetch, pushTokenFor, registeredAt, setCursor } from "@/lib/passkit/store";
 import { pushDefaults, pushPassUpdates, type PushType } from "@/lib/passkit/apns";
 import { kvConfigured } from "@/lib/kv";
@@ -57,8 +58,8 @@ async function sweep(request: Request): Promise<NextResponse> {
       const r = await refreshRecord(record, live, now);
       const devices = await devicesFor(id);
       passes.push({ id, updatedAt: r.record.updatedAt, registeredAt: await registeredAt(id), lastFetch: await lastFetch(id), devices: devices.length });
-      if (!r.changed && id !== force) continue;
       if (r.changed) changed.push({ id, reasons: r.reasons });
+      if (!(r.changed && pushWorthy(r.reasons)) && id !== force) continue; // drift refreshes never ping
       for (const d of devices) touchedDevices.add(d);
     } catch (err) {
       failed.push(id);

@@ -10,7 +10,7 @@ import { buildPassJson, usdText } from "../src/lib/passkit/pass.ts";
 import { logoPng, glyphAt, LOGO_W } from "../src/lib/passkit/logo.ts";
 import { measureText, drawText, newCanvas } from "../src/lib/passkit/font.ts";
 import { stripPng, stocksLine } from "../src/lib/passkit/strip.ts";
-import { advance, payoutValue } from "../src/lib/passkit/record.ts";
+import { advance, payoutValue, pushWorthy, DRIFT_REFRESH_SEC } from "../src/lib/passkit/record.ts";
 
 // ── art → PNG ────────────────────────────────────────────────────────────────
 function bitmapWith(setPixels) {
@@ -195,11 +195,22 @@ test("nothing changed → no update", () => {
   assert.equal(r.next.updatedAt, 100);
 });
 
-test("a price move alone is a balance change, never a payout", () => {
-  const r = advance(prev, live({ balanceUsd: 11, holdings: [{ symbol: "INTC", usd: 9, units: "1000" }, { symbol: "SPCX", usd: 2, units: "500" }] }), 200);
-  assert.deepEqual(r.reasons, ["balance"]);
-  assert.equal(r.next.lastPayoutUsd, null);
-  assert.equal(r.next.updatedAt, 200);
+test("a price move alone is never a payout and never a push: silent drift, at most hourly", () => {
+  const moved = live({ balanceUsd: 11, holdings: [{ symbol: "INTC", usd: 9, units: "1000" }, { symbol: "SPCX", usd: 2, units: "500" }] });
+  // within the hour: nothing changes, Last-Modified stays put
+  const soon = advance(prev, moved, 200);
+  assert.deepEqual(soon.reasons, []);
+  assert.equal(soon.changed, false);
+  assert.equal(soon.next.updatedAt, 100);
+  assert.equal(soon.next.balanceUsd, 11); // the numbers still travel with the record
+  // an hour later: a silent refresh, still not worth a ping
+  const later = advance(prev, moved, 100 + DRIFT_REFRESH_SEC);
+  assert.deepEqual(later.reasons, ["drift"]);
+  assert.equal(later.next.lastPayoutUsd, null);
+  assert.equal(later.next.updatedAt, 100 + DRIFT_REFRESH_SEC);
+  assert.equal(pushWorthy(later.reasons), false);
+  assert.equal(pushWorthy(["payout"]), true);
+  assert.equal(pushWorthy(["drift", "switched-off"]), true);
 });
 
 test("more units = payout, valued at today's prices for the new slice", () => {
