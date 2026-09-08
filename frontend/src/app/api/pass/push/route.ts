@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { passkitConfig, pushSecret } from "@/lib/passkit/config";
 import { readBrokerPassState } from "@/lib/passkit/chain";
 import { refreshRecord } from "@/lib/passkit/build";
-import { allSerials, devicesFor, forgetDevice, getCursor, getPass, pushTokenFor, setCursor } from "@/lib/passkit/store";
+import { allSerials, deviceLog, devicesFor, forgetDevice, getCursor, getPass, lastFetch, pushTokenFor, registeredAt, setCursor } from "@/lib/passkit/store";
 import { pushPassUpdates } from "@/lib/passkit/apns";
 import { kvConfigured } from "@/lib/kv";
 
@@ -33,9 +33,14 @@ async function sweep(request: Request): Promise<NextResponse> {
   if (start < 0) start = 0; // wrapped
   const slice = serials.slice(start, start + LIMIT);
 
+  // ?force=<id>: ping that pass's phones even if nothing changed (diagnostics: does a push
+  // make the phone fetch? the fetch note below answers). Never changes the record.
+  const force = Number(new URL(request.url).searchParams.get("force") ?? "") || 0;
+
   const touchedDevices = new Set<string>();
   const changed: { id: number; reasons: string[] }[] = [];
   const failed: number[] = [];
+  const passes: { id: number; updatedAt: number; registeredAt: number | null; lastFetch: { at: number; status: number } | null; devices: number }[] = [];
   let last = cursor;
   for (const id of slice) {
     if (Date.now() - started > BUDGET_MS) break;
@@ -46,9 +51,11 @@ async function sweep(request: Request): Promise<NextResponse> {
       const live = await readBrokerPassState(id);
       if (!live) continue;
       const r = await refreshRecord(record, live, now);
-      if (!r.changed) continue;
-      changed.push({ id, reasons: r.reasons });
-      for (const d of await devicesFor(id)) touchedDevices.add(d);
+      const devices = await devicesFor(id);
+      passes.push({ id, updatedAt: r.record.updatedAt, registeredAt: await registeredAt(id), lastFetch: await lastFetch(id), devices: devices.length });
+      if (!r.changed && id !== force) continue;
+      if (r.changed) changed.push({ id, reasons: r.reasons });
+      for (const d of devices) touchedDevices.add(d);
     } catch (err) {
       failed.push(id);
       console.warn(`pass sweep: #${id} failed:`, String(err));
@@ -86,6 +93,9 @@ async function sweep(request: Request): Promise<NextResponse> {
     devices: touchedDevices.size,
     pushed,
     pushErrors: pushErrors.slice(0, 5),
+    forced: force || undefined,
+    passes,
+    deviceLog: (await deviceLog().catch(() => [])).slice(-10),
     ms: Date.now() - started,
   });
 }

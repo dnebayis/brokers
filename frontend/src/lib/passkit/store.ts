@@ -31,7 +31,14 @@ const K = {
   push: (device: string) => `wp:push:${device}`,
   serials: "wp:serials",
   cursor: "wp:cursor",
+  // diagnostics, so the sweep can tell whether a phone actually fetched after a push
+  fetch: (id: number) => `wp:fetch:${id}`, // {at, status} of the last web-service GET
+  regAt: (id: number) => `wp:regat:${id}`, // unix seconds of the last registration
+  log: "wp:log", // last lines the phones posted to /v1/log
 };
+
+export type FetchNote = { at: number; status: number };
+export type DeviceLogLine = { at: number; line: string };
 
 export const getPass = (id: number) => kvGetJson<PassRecord>(K.pass(id));
 export const putPass = (r: PassRecord) => kvSetJson(K.pass(r.id), r);
@@ -44,9 +51,27 @@ export async function register(id: number, device: string, pushToken: string): P
     kvSAdd(K.dev(device), String(id)),
     kvSet(K.push(device), pushToken),
     kvSAdd(K.serials, String(id)),
+    kvSet(K.regAt(id), String(Math.floor(Date.now() / 1000))),
   ]);
   return already ? "exists" : "created";
 }
+
+export const noteFetch = (id: number, status: number) =>
+  kvSetJson(K.fetch(id), { at: Math.floor(Date.now() / 1000), status } satisfies FetchNote);
+export const lastFetch = (id: number) => kvGetJson<FetchNote>(K.fetch(id));
+export const registeredAt = async (id: number): Promise<number | null> => {
+  const v = await kvGet(K.regAt(id));
+  return v ? Number(v) : null;
+};
+
+/** Keep the last 20 lines phones posted to the log endpoint (they only post on failures). */
+export async function appendDeviceLog(lines: string[]): Promise<void> {
+  const at = Math.floor(Date.now() / 1000);
+  const current = (await kvGetJson<DeviceLogLine[]>(K.log)) ?? [];
+  const next = [...current, ...lines.map((line) => ({ at, line: line.slice(0, 300) }))].slice(-20);
+  await kvSetJson(K.log, next);
+}
+export const deviceLog = async (): Promise<DeviceLogLine[]> => (await kvGetJson<DeviceLogLine[]>(K.log)) ?? [];
 
 export async function unregister(id: number, device: string): Promise<void> {
   await Promise.all([kvSRem(K.reg(id), device), kvSRem(K.dev(device), String(id))]);
