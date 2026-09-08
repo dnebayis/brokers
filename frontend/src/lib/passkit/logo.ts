@@ -1,14 +1,52 @@
-import { artPng, ART_BYTES } from "./png.ts";
+import { encodePng, CREAM, type Rgb } from "./png.ts";
 
-// The Coattail mark (the Broker portrait from public/brand/logo-mark.png) as the same 40x40
-// 1-bit bitmap format the on-chain renderer uses, so the pass logo is drawn crisp at every
-// scale by the same encoder as the art, instead of resampling a PNG.
-const LOGO_HEX =
-  "0000000000000000000000001800000003ff80000003ffc000001ffff000001ffff800003ffffe00007ffffc0001fffffe0000ffffff0000ffffff8000ff79ff8001fe70ffc001fe10bf0003fc001f8001ffc3df8001ffffff8003ffffffc000ffe7ff0000ffe7ff0000ffffff8000ffddff8000733c4e00007b3cfe00002f00fc00003bffdc000039ffdc00001cff1800001d1c3800000f08f000000780f0000003c1e0000002ff80000006ff2000003cff3c0000f1412f0003f8410fe00ffc631ff83ffe22bffe";
+// The site's logo, exactly as the header draws it (`components/ui/BrokerMark.tsx`): the
+// 10x10 pixel broker glyph, suit + tie + flag pin, in the same three colours. Rendered here
+// as PNG for Apple's logo slot instead of resampling an image, so the pixels stay crisp.
+const INK: Rgb = [0x4e, 0x56, 0x66];
+const SHIRT: Rgb = [0xf5, 0xf2, 0xeb];
+const PIN: Rgb = [0xa6, 0x41, 0x2f];
 
-export const LOGO_BITMAP: Uint8Array = Uint8Array.from(Buffer.from(LOGO_HEX, "hex"));
-if (LOGO_BITMAP.length !== ART_BYTES) throw new Error("logo bitmap must be 200 bytes");
+/** Same rects, same order, as the header SVG (x, y, w, h, colour). */
+const RECTS: [number, number, number, number, Rgb][] = [
+  [3, 1, 4, 3, INK],
+  [2, 2, 1, 2, INK],
+  [7, 2, 1, 2, INK],
+  [2, 5, 6, 3, INK],
+  [4, 5, 2, 3, SHIRT],
+  [4, 5, 2, 1, PIN],
+];
 
-/** Apple's pass logo slot is 50pt tall; 40px of art + a 5px margin each side = 50 x 50 pt. */
+export const GLYPH = 10;
+/** Apple's logo slot is 50pt tall: 10 cells x 4px + 5px margin each side = 50 x 50 pt at 1x. */
+export const CELL = 4;
 export const LOGO_MARGIN = 5;
-export const logoPng = (scale: 1 | 2 | 3): Buffer => artPng(LOGO_BITMAP, scale, undefined, undefined, LOGO_MARGIN);
+export const LOGO_SIDE = GLYPH * CELL + LOGO_MARGIN * 2;
+
+/** The glyph's colour at cell (x, y), or null for background. Later rects paint over earlier. */
+export function glyphAt(x: number, y: number): Rgb | null {
+  let c: Rgb | null = null;
+  for (const [rx, ry, rw, rh, colour] of RECTS) {
+    if (x >= rx && x < rx + rw && y >= ry && y < ry + rh) c = colour;
+  }
+  return c;
+}
+
+export function logoPng(scale: 1 | 2 | 3, bg: Rgb = CREAM): Buffer {
+  const side = LOGO_SIDE * scale;
+  const rgb = new Uint8Array(side * side * 3);
+  for (let y = 0; y < side; y++) {
+    for (let x = 0; x < side; x++) {
+      const gx = Math.floor((x - LOGO_MARGIN * scale) / (CELL * scale));
+      const gy = Math.floor((y - LOGO_MARGIN * scale) / (CELL * scale));
+      const inside = gx >= 0 && gy >= 0 && gx < GLYPH && gy < GLYPH;
+      const c = inside ? glyphAt(gx, gy) : null;
+      const [r, g, b] = c ?? bg;
+      const i = (y * side + x) * 3;
+      rgb[i] = r;
+      rgb[i + 1] = g;
+      rgb[i + 2] = b;
+    }
+  }
+  return encodePng(side, side, rgb);
+}

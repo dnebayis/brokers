@@ -65,7 +65,7 @@ export async function renderPkpass(cfg: PasskitConfig, record: PassRecord, live:
 
   const files: Record<string, Buffer> = {
     "pass.json": Buffer.from(JSON.stringify(passJson)),
-    // top-left of the card: the Coattail mark next to logoText
+    // top-left of the card: the site's header glyph next to logoText
     "logo.png": logoPng(1),
     "logo@2x.png": logoPng(2),
     "logo@3x.png": logoPng(3),
