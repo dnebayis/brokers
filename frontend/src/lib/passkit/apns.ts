@@ -11,11 +11,13 @@ export type PushOptions = { pushType?: PushType; priority?: 5 | 10 };
 
 const APNS_HOST = "https://api.push.apple.com";
 
-/** Wallet wake-ups are silent: `background` at priority 5 is what Apple's own guidance and
- *  working implementations use; `alert` at 10 with an empty body can be dropped by iOS. */
+/** Measured on a real iPhone (2026-09-08): `alert` at priority 10 with the empty `{}` body
+ *  woke Wallet (with a few minutes of delay on a locked phone); `background` at 5 produced
+ *  no fetch in ten minutes. So alert is the default; PASSKIT_PUSH_TYPE=background is the
+ *  experiment switch, and the sweep's force door can override per push. */
 export function pushDefaults(): Required<PushOptions> {
   const t = (process.env.PASSKIT_PUSH_TYPE ?? "").trim();
-  const pushType: PushType = t === "alert" ? "alert" : "background";
+  const pushType: PushType = t === "background" ? "background" : "alert";
   return { pushType, priority: pushType === "alert" ? 10 : 5 };
 }
 
