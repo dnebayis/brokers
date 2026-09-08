@@ -7,6 +7,7 @@ import { artPng, pixelAt, encodePng, ART_BYTES } from "../src/lib/passkit/png.ts
 import { passToken, passTokenMatches, downloadToken, parseDownloadToken } from "../src/lib/passkit/token.ts";
 import { issueMessage, issueExpiryValid } from "../src/lib/passkit/message.ts";
 import { buildPassJson, usdText } from "../src/lib/passkit/pass.ts";
+import { logoPng, LOGO_BITMAP } from "../src/lib/passkit/logo.ts";
 import { advance, payoutValue } from "../src/lib/passkit/record.ts";
 
 // ── art → PNG ────────────────────────────────────────────────────────────────
@@ -240,6 +241,19 @@ function selfSigned() {
   cert.sign(keys.privateKey, forge.md.sha256.create());
   return { cert: forge.pki.certificateToPem(cert), key: forge.pki.privateKeyToPem(keys.privateKey) };
 }
+
+test("the logo is the Coattail mark, 50pt square at 1x/2x/3x, drawn by the art encoder", () => {
+  const dims = (png) => [png.readUInt32BE(16), png.readUInt32BE(20)];
+  assert.deepEqual(dims(logoPng(1)), [50, 50]);
+  assert.deepEqual(dims(logoPng(2)), [100, 100]);
+  assert.deepEqual(dims(logoPng(3)), [150, 150]);
+  assert.equal(LOGO_BITMAP.length, ART_BYTES);
+  // the mark has ink (it is not a blank square) and the margin ring stays clear
+  let ink = 0;
+  for (let y = 0; y < 40; y++) for (let x = 0; x < 40; x++) if (pixelAt(LOGO_BITMAP, x, y)) ink++;
+  assert.ok(ink > 400 && ink < 1000, `ink cells ${ink}`);
+  for (let x = 0; x < 40; x++) assert.equal(pixelAt(LOGO_BITMAP, x, 0), false);
+});
 
 test("the pass.json we build is accepted by passkit-generator and signs into a .pkpass", () => {
   const { cert, key } = selfSigned();
