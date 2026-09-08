@@ -29,7 +29,10 @@ async function poke(path, secret) {
 }
 
 const sweepSales = (env) => poke("/api/discord/sales", env.RECHECK_SECRET);
-const sweepPasses = (env) => poke("/api/pass/push", env.PASSKIT_PUSH_SECRET || env.RECHECK_SECRET);
+// `force` (a Broker id) is a diagnostics door on the pass sweep: ping that pass's phones even
+// if nothing changed, so we can see whether a push makes the phone fetch. Debug URL only.
+const sweepPasses = (env, force = "") =>
+  poke("/api/pass/push" + (force ? `?force=${encodeURIComponent(force)}` : ""), env.PASSKIT_PUSH_SECRET || env.RECHECK_SECRET);
 
 export default {
   async scheduled(event, env, ctx) {
@@ -45,8 +48,9 @@ export default {
   // result; add ?passes to run the pass sweep instead. Both are idempotent, so extra hits
   // are harmless, and the secrets themselves are never revealed.
   async fetch(request, env) {
-    const wantPasses = new URL(request.url).searchParams.has("passes");
-    const r = wantPasses ? await sweepPasses(env) : await sweepSales(env);
+    const params = new URL(request.url).searchParams;
+    const wantPasses = params.has("passes");
+    const r = wantPasses ? await sweepPasses(env, params.get("force") ?? "") : await sweepSales(env);
     return new Response(`${wantPasses ? "pass sweep" : "sales sweep"} -> upstream ${r.status}\n${r.body}`, {
       headers: { "Content-Type": "text/plain" },
     });
