@@ -104,7 +104,7 @@ pre{margin:0;padding:10px 12px;font-family:"IBM Plex Mono",monospace;font-size:1
 '''
 
 HEAD = '<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"><style>' + CSS + "</style></head>"
-FOOT = '<div class="foot"><span>reproduce it: python3 scripts/provenance/compare_verified_sources.py · github.com/dnebayis/brokers/tree/main/scripts/provenance · all sources from sourcify.dev, chain 4663</span><span class="px">COATTAIL BROKERS · ROBINHOOD CHAIN</span></div>'
+FOOT = '<div class="foot"><span>all code from the verified sources on sourcify.dev, chain 4663 · read the same lines on robinhoodchain.blockscout.com</span><span class="px">COATTAIL BROKERS · ROBINHOOD CHAIN</span></div>'
 
 def page2(name, title, sub, left, right, cap):
     body = f'''<body class="two"><h1 class="px">{title}</h1><div class="sub">{sub}</div>
@@ -191,7 +191,7 @@ cap4 = (f"an nft that owns a wallet is a public standard from 2023, not a produc
         f"{pct_ours:.0%} of its 8-token runs appear in the eip verbatim. theirs is a shorter custom variant ({pct_theirs:.0%}). "
         f"between the two accounts themselves: {jac:.1%} overlap, all of it interface boilerplate.")
 body = f'''<body class="three"><h1 class="px">ERC-6551: THE STANDARD BOTH PROJECTS BUILD ON</h1>
-<div class="sub">three token-bound accounts side by side: the reference from the public standard, ours, theirs. overlap numbers computed from these exact files by the public script.</div>
+<div class="sub">three token-bound accounts side by side: the reference from the public standard, ours, theirs. overlap numbers computed from these exact files.</div>
 <div class="col a">{ev_eip}<pre>{code_html_plain(eip_show)}</pre></div>
 <div class="col b">{ev_ours}<pre>{code_html(c_rows)}</pre></div>
 <div class="col c">{ev_theirs}<pre>{code_html(s_rows)}</pre></div>
