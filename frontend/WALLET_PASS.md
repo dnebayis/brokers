@@ -50,9 +50,9 @@ page, so a forwarded `.pkpass` grants nothing.
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | already set for the sales bot; needed for live updates |
 | `NEXT_PUBLIC_SITE_ORIGIN` | already set; the web service URL is `<origin>/api/passkit` |
 
-**Status: built, not switched on.** The button is not mounted in My Brokers yet (one line in
-`ActivateTab.tsx`, marked with a comment) and `PASSKIT_ENABLED` is unset, so nothing is
-reachable in production until the certificate arrives.
+**Status: built and mounted, waiting for env.** The button is in My Brokers (`ActivateTab.tsx`)
+but renders nothing until `/api/pass/status` reports `apple:true`, which needs `PASSKIT_ENABLED=1`
+plus the certificate variables below. Until then every pass endpoint answers 503.
 
 Without the certificate variables the button does not render (`/api/pass/status` → `apple:false`).
 Without KV, passes still issue as static cards (no web service fields in the pass).
@@ -61,34 +61,37 @@ Without KV, passes still issue as static cards (no web service fields in the pas
 
 1. developer.apple.com → Certificates, Identifiers & Profiles → **Identifiers** → `+` →
    *Pass Type IDs* → identifier `pass.cash.coattail.broker`, description "Coattail Broker".
-2. Select it → **Create Certificate**. It asks for a CSR: on the Mac open Keychain Access →
-   Certificate Assistant → *Request a Certificate From a Certificate Authority…* → your email,
-   common name "Coattail Pass", *Saved to disk*. Upload the `.certSigningRequest`, download `pass.cer`.
-3. Double-click `pass.cer` (it lands in the login keychain next to the private key the CSR
-   created). In Keychain Access select the certificate **and** its key → export as `pass.p12`
-   with a passphrase.
-4. Convert for the server (the passphrase prompts are the `.p12` one):
+2. Select it → **Create Certificate**. It asks for a CSR. Keychain is not needed: make the key
+   and the CSR with OpenSSL (the key never leaves the machine):
 
    ```bash
-   openssl pkcs12 -in pass.p12 -clcerts -nokeys -out signerCert.pem -legacy
+   openssl req -new -newkey rsa:2048 -nodes -keyout signerKey.pem -out coattail-pass.certSigningRequest -subj "/CN=Coattail Pass/O=Coattail Brokers/C=TR"
    ```
 
+   Upload the `.certSigningRequest`, download `pass.cer` next to it.
+3. Convert Apple's DER certificate and fetch the WWDR G4 intermediate:
+
    ```bash
-   openssl pkcs12 -in pass.p12 -nocerts -out signerKey.pem -legacy
+   openssl x509 -inform der -in pass.cer -out signerCert.pem
    ```
 
    ```bash
    curl -sO https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer && openssl x509 -inform der -in AppleWWDRCAG4.cer -out wwdr.pem
    ```
 
-5. Paste into Vercel as base64 so line breaks survive:
+   The certificate subject carries the team id (`OU=`) and the pass type id (`UID=`):
+   `openssl x509 -in signerCert.pem -noout -subject`.
+4. Paste into Vercel as base64 so line breaks survive:
 
    ```bash
    base64 -i signerCert.pem | pbcopy
    ```
 
-   (same for `signerKey.pem` and `wwdr.pem`), plus the key passphrase, team id and pass type id.
-   Generate `PASSKIT_AUTH_SECRET` with `openssl rand -hex 32`. Fill the issuer fields. Redeploy.
+   (same for `signerKey.pem` and `wwdr.pem`), plus team id and pass type id. No passphrase
+   variable is needed for an OpenSSL key made with `-nodes`. Generate `PASSKIT_AUTH_SECRET` with
+   `openssl rand -hex 32`. Fill the issuer fields. Set `PASSKIT_ENABLED=1`. Redeploy.
+5. (The owner's machine keeps these files in `~/Documents/coattail-passkit/`, outside every
+   repo; `make-env.sh` there writes all the values into one `vercel.env` file to paste from.)
 
 6. Cloudflare: the heartbeat worker (`cloudflare/sales-heartbeat.js`) gained a second cron
    trigger `*/5 * * * *`; paste the updated file and add the trigger.

@@ -25,6 +25,7 @@ import { SIDE_PANEL_SLOT_ID } from "@/components/SidePanel";
 import { StepFlow, type StepState } from "@/components/ui/StepFlow";
 import { BrokerCard } from "@/components/ui/BrokerCard";
 import { ShareOnX } from "@/components/ShareOnX";
+import { AddToAppleWallet } from "@/components/AddToAppleWallet";
 import { useBrokerGifts } from "@/lib/useGifts";
 import { nftAbi } from "@/lib/gifts";
 
@@ -962,8 +963,9 @@ export function ActivateTab() {
               gifts: giftCountById[info.id.toString()],
             }} />
           )}
-          {/* Apple Wallet pass: <AddToAppleWallet id={info.id.toString()} /> goes here once the
-              Pass Type certificate is in place (see WALLET_PASS.md); kept off the page until then. */}
+          {/* Apple Wallet pass. Renders nothing until the server reports the Pass Type
+              certificate is configured (PASSKIT_ENABLED + certs, see WALLET_PASS.md). */}
+          {isOwner && <AddToAppleWallet id={info.id.toString()} />}
 
           {isOwner && holdings.length > 0 && (
             <details className="group mt-3 border-t border-line pt-3">
