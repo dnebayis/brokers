@@ -112,12 +112,12 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
   },
   {
     no: "06",
-    status: "works",
+    status: "live",
     title: "Playbooks: the broker takes orders",
     body: (
       <>
         An NFT that owns a real wallet is more than a collectible — it&rsquo;s a <b>portfolio that
-        can follow instructions</b>. In the works now: <b>Playbooks</b>, standing orders the hourly
+        can follow instructions</b>. Delivered: <b>Playbooks</b>, standing orders the hourly
         engine executes for your Broker — collect the salary automatically, convert it to USDG or
         $COAT, deliver it wherever you choose. One setup, revocable any time, dies with a transfer
         so a buyer never inherits your instructions. No new fee: conversions ride The Floor, whose
@@ -127,6 +127,24 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
   },
   {
     no: "07",
+    status: "works",
+    title: "Curator Desk: follow a curator",
+    body: (
+      <>
+        Decided, and next to ship. A <b>curator</b> publishes one public basket and signs it: anyone
+        can register, from a well-known Congress-trade account to a single holder with a record.
+        You point your Broker at a curator and its wallet follows that basket through The Floor.
+        Nothing trades on its own: each time the curator updates, <b>you confirm with one
+        signature</b>, and only then does the engine rebalance. Curators must hold a Broker that
+        follows their own basket, earn a flat USDG fee per 30 days, and carry a public record net of
+        fees. No new token, no new fee on the engine: rebalances ride The Floor, which already pays
+        salaries. Registration is open to everyone from day one; our own signal registers as
+        curator #1.
+      </>
+    ),
+  },
+  {
+    no: "08",
     status: "hardening",
     title: "A machine no one has to run",
     body: (
@@ -140,7 +158,7 @@ const HORIZONS: { no: string; status: Status; title: string; body: React.ReactNo
     ),
   },
   {
-    no: "08",
+    no: "09",
     status: "continuous",
     title: "Nothing you can’t check",
     body: (
@@ -188,7 +206,7 @@ export function RoadmapTab() {
       <p className="text-ink leading-relaxed mt-3">
         A roadmap here doesn&rsquo;t mean rewriting what exists. The contracts are frozen by design.
         What grows is everything <i>around</i> them: how much the basket can reach, what signals it
-        can follow, how independently it runs, and how completely you can verify it. Eight horizons,
+        can follow, how independently it runs, and how completely you can verify it. Nine horizons,
         in the order they arrive.
       </p>
 
@@ -229,8 +247,9 @@ export function RoadmapTab() {
       {/* Close */}
       <p className="text-ink-strong text-lg leading-relaxed mt-10">
         A wider basket on an earlier signal. A public floor where anyone can trade it — live now.
-        More strategies than one, a vault that opens them to everyone, and a broker that takes your
-        orders. A machine that runs without us. And nothing, anywhere, you have to take on faith.
+        More strategies than one, a vault that opens them to everyone, a broker that takes your
+        orders and, next, one that can follow a curator you choose. A machine that runs without us.
+        And nothing, anywhere, you have to take on faith.
       </p>
       <p className="text-ink leading-relaxed mt-3">
         That&rsquo;s the whole plan. It&rsquo;s already sold out, already burning, already buying. The
