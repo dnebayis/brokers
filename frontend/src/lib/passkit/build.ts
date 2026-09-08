@@ -5,7 +5,8 @@ import { type PasskitConfig } from "./config";
 import { readArt, readBrokerPassState, type BrokerPassState } from "./chain";
 import { artPng } from "./png";
 import { logoPng } from "./logo";
-import { buildPassJson } from "./pass";
+import { buildPassJson, usdText } from "./pass";
+import { stripPng, type StripInput } from "./strip";
 import { advance } from "./record";
 import { getPass, putPass, type PassRecord } from "./store";
 import { passToken } from "./token";
@@ -70,13 +71,20 @@ export async function renderPkpass(cfg: PasskitConfig, record: PassRecord, live:
     "logo@2x.png": logoPng(2),
     "logo@3x.png": logoPng(3),
   };
+  // the coloured middle band: art, number, balance, stocks (drawn, since Wallet text is one colour)
+  const strip: StripInput = {
+    id: record.id,
+    art,
+    balanceText: usdText(record.voided ? record.balanceUsd : live.balanceUsd),
+    symbols: live.holdings.map((h) => h.symbol),
+  };
+  files["strip.png"] = stripPng(strip, 1);
+  files["strip@2x.png"] = stripPng(strip, 2);
+  files["strip@3x.png"] = stripPng(strip, 3);
   if (art) {
     files["icon.png"] = artPng(art, 1);
     files["icon@2x.png"] = artPng(art, 2);
     files["icon@3x.png"] = artPng(art, 3);
-    files["thumbnail.png"] = artPng(art, 2);
-    files["thumbnail@2x.png"] = artPng(art, 4);
-    files["thumbnail@3x.png"] = artPng(art, 6);
   } else {
     // art unavailable (renderer unset on this network): a blank icon keeps the pass valid
     const blank = artPng(new Uint8Array(200), 1);

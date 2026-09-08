@@ -1,5 +1,8 @@
 // pass.json for a Broker, built from plain values so it can be unit-tested without a chain.
-// Generic pass style; every number links back to the chain from the back of the card.
+// Store-card style so the front carries a strip image (see strip.ts): Wallet allows one text
+// colour per pass, so the coloured numbers are drawn by us; the text fields keep the change
+// messages that drive the lock-screen pushes. Every number links back to the chain from the
+// back of the card.
 
 export type PassHolding = { symbol: string; formatted: string; usd: number | null };
 
@@ -59,14 +62,8 @@ export function buildPassJson(p: PassInput): Record<string, unknown> {
       changeMessage: `broker #${p.id} is now %@`,
     },
   ];
-  const primaryFields: Field[] = [
-    {
-      key: "balance",
-      label: "IN THE WALLET",
-      value: usdText(p.balanceUsd),
-      changeMessage: "balance now %@",
-    },
-  ];
+  // The strip image shows the Broker number, the balance and the stocks in colour; these two
+  // stay as text under it, and the balance lives on the back so its change message survives.
   const secondaryFields: Field[] = [
     {
       key: "payout",
@@ -74,14 +71,19 @@ export function buildPassJson(p: PassInput): Record<string, unknown> {
       value: p.lastPayoutUsd === null ? "—" : `+${usdText(p.lastPayoutUsd)}`,
       changeMessage: "payroll landed: %@",
     },
-    { key: "stocks", label: "STOCKS", value: `${top}${more}` },
-  ];
-  const auxiliaryFields: Field[] = [
     { key: "claimable", label: "WAITING IN BOOSTER", value: usdText(p.claimableUsd) },
-    { key: "broker", label: "BROKER", value: `#${p.id}` },
   ];
 
-  const backFields: Field[] = [];
+  const backFields: Field[] = [
+    {
+      key: "balance",
+      label: "IN THE WALLET",
+      value: usdText(p.balanceUsd),
+      changeMessage: "balance now %@",
+    },
+    { key: "stocks", label: "STOCKS", value: `${top}${more}` },
+    { key: "broker", label: "BROKER", value: `#${p.id}` },
+  ];
   if (voided) {
     backFields.push({
       key: "sold",
@@ -135,7 +137,7 @@ export function buildPassJson(p: PassInput): Record<string, unknown> {
         altText: `broker #${p.id}`,
       },
     ],
-    generic: { headerFields, primaryFields, secondaryFields, auxiliaryFields, backFields },
+    storeCard: { headerFields, secondaryFields, backFields },
   };
   if (voided) pass.voided = true;
   if (p.webService) {

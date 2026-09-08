@@ -8,6 +8,8 @@ import { passToken, passTokenMatches, downloadToken, parseDownloadToken } from "
 import { issueMessage, issueExpiryValid } from "../src/lib/passkit/message.ts";
 import { buildPassJson, usdText } from "../src/lib/passkit/pass.ts";
 import { logoPng, glyphAt } from "../src/lib/passkit/logo.ts";
+import { measureText, drawText, newCanvas } from "../src/lib/passkit/font.ts";
+import { stripPng, stocksLine } from "../src/lib/passkit/strip.ts";
 import { advance, payoutValue } from "../src/lib/passkit/record.ts";
 
 // ── art → PNG ────────────────────────────────────────────────────────────────
@@ -121,13 +123,18 @@ test("pass.json carries the numbers, the issuer contact and the web service", ()
   assert.equal(p.webServiceURL, base.webService.url);
   assert.equal(p.authenticationToken, base.webService.authenticationToken);
   assert.equal(p.sharingProhibited, true);
-  const g = p.generic;
+  const g = p.storeCard;
+  assert.equal(p.generic, undefined);
   assert.equal(g.headerFields[0].value, "ACTIVE");
-  assert.equal(g.primaryFields[0].value, "$12.35");
-  assert.match(g.primaryFields[0].changeMessage, /%@/);
+  assert.equal(g.primaryFields, undefined); // the strip image carries the coloured numbers
   assert.equal(g.secondaryFields[0].value, "+$0.31");
-  assert.equal(g.secondaryFields[1].value, "INTC, SPCX, COAT");
+  assert.match(g.secondaryFields[0].changeMessage, /%@/);
+  assert.equal(g.secondaryFields[1].value, "$0.50");
   const back = Object.fromEntries(g.backFields.map((f) => [f.key, f.value]));
+  assert.equal(back["balance"], "$12.35");
+  assert.match(g.backFields.find((f) => f.key === "balance").changeMessage, /%@/);
+  assert.equal(back["stocks"], "INTC, SPCX, COAT");
+  assert.equal(back["broker"], "#527");
   assert.equal(back["issuer-contact"], issuer.email);
   assert.equal(back["issuer-address"], issuer.address);
   assert.equal(back["h-COAT"], "1000");
@@ -138,8 +145,8 @@ test("pass.json carries the numbers, the issuer contact and the web service", ()
 test("a sold Broker's pass is voided and says so", () => {
   const p = buildPassJson({ ...base, liveOwner: "0x" + "d".repeat(40) });
   assert.equal(p.voided, true);
-  assert.equal(p.generic.headerFields[0].value, "SOLD");
-  assert.ok(p.generic.backFields.some((f) => f.key === "sold"));
+  assert.equal(p.storeCard.headerFields[0].value, "SOLD");
+  assert.ok(p.storeCard.backFields.some((f) => f.key === "sold"));
 });
 
 test("without a web service the pass has neither URL nor token", () => {
@@ -261,6 +268,48 @@ test("the logo is the site's header glyph (suit, tie, flag pin), 50pt square at 
   assert.deepEqual(px(0, 0), [0xed, 0xe8, 0xde]); // margin = pass background
   assert.deepEqual(px(5 + 3 * 4, 5 + 1 * 4), [0x4e, 0x56, 0x66]); // cell (3,1) suit
   assert.deepEqual(px(5 + 4 * 4, 5 + 5 * 4), [0xa6, 0x41, 0x2f]); // cell (4,5) pin
+});
+
+test("the Silkscreen glyph table measures and draws like the site's font", () => {
+  assert.equal(measureText("A"), 6);
+  assert.equal(measureText("BROKER #527"), 6 + 6 + 6 + 6 + 5 + 6 + 4 + 7 + 6 + 6 + 6);
+  assert.equal(measureText("ab", 2), measureText("AB") * 2); // lower case maps to the capitals
+  const c = newCanvas(20, 11, [0, 0, 0]);
+  drawText(c, 0, 0, "I", 1, [255, 255, 255]);
+  // "I" is a single column (bit 1) on rows 4..8
+  const at = (x, y) => c.rgb[(y * c.width + x) * 3];
+  assert.equal(at(1, 4), 255);
+  assert.equal(at(1, 8), 255);
+  assert.equal(at(1, 3), 0);
+  assert.equal(at(0, 4), 0);
+});
+
+test("the strip is 375x123 pt at 1x/2x/3x and carries art, an orange number and green money", () => {
+  const dims = (png) => [png.readUInt32BE(16), png.readUInt32BE(20)];
+  const input = { id: 527, art: bitmapWith([[0, 0], [39, 39]]), balanceText: "$2.12", symbols: ["INTC", "SPCX", "MU"] };
+  assert.deepEqual(dims(stripPng(input, 1)), [375, 123]);
+  assert.deepEqual(dims(stripPng(input, 2)), [750, 246]);
+  assert.deepEqual(dims(stripPng(input, 3)), [1125, 369]);
+  const png = stripPng(input, 1);
+  const idatLen = png.readUInt32BE(33);
+  const raw = inflateSync(png.subarray(41, 41 + idatLen));
+  const px = (x, y) => Array.from(raw.subarray(y * (375 * 3 + 1) + 1 + x * 3, y * (375 * 3 + 1) + 4 + x * 3));
+  assert.deepEqual(px(14, 21), [0x4e, 0x56, 0x66]); // art cell (0,0) at 2 pt per cell, top-left
+  assert.deepEqual(px(0, 0), [0xed, 0xe8, 0xde]); // cream margin
+  const colours = new Set();
+  for (let y = 0; y < 123; y++) for (let x = 108; x < 375; x++) colours.add(px(x, y).join(","));
+  assert.ok(colours.has("166,65,47"), "accent orange present"); // BROKER #527
+  assert.ok(colours.has("47,107,82"), "good green present"); // balance + stocks
+  assert.ok(colours.has("117,123,138"), "label grey present"); // IN THE WALLET
+  // the stocks line trims to the available width
+  assert.equal(stocksLine(["INTC", "SPCX", "MU"], 1000), "INTC · SPCX · MU");
+  const eight = ["INTC", "SPCX", "MU", "NVDA", "AAPL", "MSFT", "AMD", "META"];
+  assert.equal(stocksLine(eight, 120), "INTC · SPCX · MU +5"); // 98 px fits, the next symbol would not
+  assert.ok(measureText(stocksLine(eight, 120)) <= 120);
+  assert.ok(measureText("INTC · SPCX · MU · NVDA +4") > 120);
+  assert.equal(stocksLine([], 100), "NONE YET");
+  // no art: text starts at the left margin and the image is still valid
+  assert.deepEqual(dims(stripPng({ ...input, art: null }, 2)), [750, 246]);
 });
 
 test("the pass.json we build is accepted by passkit-generator and signs into a .pkpass", () => {
