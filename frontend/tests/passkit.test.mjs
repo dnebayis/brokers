@@ -7,7 +7,7 @@ import { artPng, pixelAt, encodePng, ART_BYTES } from "../src/lib/passkit/png.ts
 import { passToken, passTokenMatches, downloadToken, parseDownloadToken } from "../src/lib/passkit/token.ts";
 import { issueMessage, issueExpiryValid } from "../src/lib/passkit/message.ts";
 import { buildPassJson, usdText } from "../src/lib/passkit/pass.ts";
-import { logoPng, glyphAt } from "../src/lib/passkit/logo.ts";
+import { logoPng, glyphAt, LOGO_W } from "../src/lib/passkit/logo.ts";
 import { measureText, drawText, newCanvas } from "../src/lib/passkit/font.ts";
 import { stripPng, stocksLine } from "../src/lib/passkit/strip.ts";
 import { advance, payoutValue } from "../src/lib/passkit/record.ts";
@@ -249,25 +249,31 @@ function selfSigned() {
   return { cert: forge.pki.certificateToPem(cert), key: forge.pki.privateKeyToPem(keys.privateKey) };
 }
 
-test("the logo is the site's header glyph (suit, tie, flag pin), 50pt square at 1x/2x/3x", () => {
+test("the logo is the site's header lockup: boxed glyph + COATTAIL / BROKERS + MIRROR CONGRESS", () => {
   const dims = (png) => [png.readUInt32BE(16), png.readUInt32BE(20)];
-  assert.deepEqual(dims(logoPng(1)), [50, 50]);
-  assert.deepEqual(dims(logoPng(2)), [100, 100]);
-  assert.deepEqual(dims(logoPng(3)), [150, 150]);
+  assert.ok(LOGO_W <= 160 && LOGO_W > 100, `logo width ${LOGO_W}`); // Apple allots 160 x 50 pt
+  assert.deepEqual(dims(logoPng(1)), [LOGO_W, 50]);
+  assert.deepEqual(dims(logoPng(2)), [LOGO_W * 2, 100]);
+  assert.deepEqual(dims(logoPng(3)), [LOGO_W * 3, 150]);
   // cells match components/ui/BrokerMark.tsx: suit ink, shirt light, pin red, corners empty
   assert.deepEqual(glyphAt(3, 1), [0x4e, 0x56, 0x66]);
   assert.deepEqual(glyphAt(4, 5), [0xa6, 0x41, 0x2f]);
   assert.deepEqual(glyphAt(4, 6), [0xf5, 0xf2, 0xeb]);
   assert.equal(glyphAt(0, 0), null);
-  assert.equal(glyphAt(9, 9), null);
-  // and the rendered pixels agree: decode the 1x PNG (no filter) and probe a few points
+  // rendered pixels: decode the 1x PNG (no filter) and probe the box, the glyph and the text
   const png = logoPng(1);
   const idatLen = png.readUInt32BE(33);
   const raw = inflateSync(png.subarray(41, 41 + idatLen));
-  const px = (x, y) => Array.from(raw.subarray(y * (50 * 3 + 1) + 1 + x * 3, y * (50 * 3 + 1) + 4 + x * 3));
-  assert.deepEqual(px(0, 0), [0xed, 0xe8, 0xde]); // margin = pass background
-  assert.deepEqual(px(5 + 3 * 4, 5 + 1 * 4), [0x4e, 0x56, 0x66]); // cell (3,1) suit
-  assert.deepEqual(px(5 + 4 * 4, 5 + 5 * 4), [0xa6, 0x41, 0x2f]); // cell (4,5) pin
+  const px = (x, y) => Array.from(raw.subarray(y * (LOGO_W * 3 + 1) + 1 + x * 3, y * (LOGO_W * 3 + 1) + 4 + x * 3));
+  assert.deepEqual(px(0, 0), [0xed, 0xe8, 0xde]); // above the box = pass background
+  assert.deepEqual(px(0, 6), [0x4e, 0x56, 0x66]); // box border
+  assert.deepEqual(px(3, 9), [0xf5, 0xf2, 0xeb]); // box fill (cream-2)
+  assert.deepEqual(px(7 + 4 * 2, 6 + 7 + 5 * 2), [0xa6, 0x41, 0x2f]); // glyph cell (4,5) = pin
+  assert.deepEqual(px(35, 41), [0x4e, 0x56, 0x66]); // the 2pt pixel shadow, right of the box
+  const strong = new Set();
+  for (let y = 0; y < 50; y++) for (let x = 46; x < LOGO_W; x++) strong.add(px(x, y).join(","));
+  assert.ok(strong.has("52,57,69"), "title drawn in ink-strong");
+  assert.ok(strong.has("117,123,138"), "subtitle drawn in ink-soft");
 });
 
 test("the Silkscreen glyph table measures and draws like the site's font", () => {
@@ -284,20 +290,22 @@ test("the Silkscreen glyph table measures and draws like the site's font", () =>
   assert.equal(at(0, 4), 0);
 });
 
-test("the strip is 375x123 pt at 1x/2x/3x and carries art, an orange number and green money", () => {
+test("the strip is Apple's 375x144 pt store-card band at 1x/2x/3x with art, an orange number and green money", () => {
   const dims = (png) => [png.readUInt32BE(16), png.readUInt32BE(20)];
   const input = { id: 527, art: bitmapWith([[0, 0], [39, 39]]), balanceText: "$2.12", symbols: ["INTC", "SPCX", "MU"] };
-  assert.deepEqual(dims(stripPng(input, 1)), [375, 123]);
-  assert.deepEqual(dims(stripPng(input, 2)), [750, 246]);
-  assert.deepEqual(dims(stripPng(input, 3)), [1125, 369]);
+  assert.deepEqual(dims(stripPng(input, 1)), [375, 144]);
+  assert.deepEqual(dims(stripPng(input, 2)), [750, 288]);
+  assert.deepEqual(dims(stripPng(input, 3)), [1125, 432]);
   const png = stripPng(input, 1);
   const idatLen = png.readUInt32BE(33);
   const raw = inflateSync(png.subarray(41, 41 + idatLen));
   const px = (x, y) => Array.from(raw.subarray(y * (375 * 3 + 1) + 1 + x * 3, y * (375 * 3 + 1) + 4 + x * 3));
-  assert.deepEqual(px(14, 21), [0x4e, 0x56, 0x66]); // art cell (0,0) at 2 pt per cell, top-left
+  assert.deepEqual(px(20, 12), [0x4e, 0x56, 0x66]); // art cell (0,0): 3 pt per cell, 20 pt in, 12 pt down
+  assert.deepEqual(px(20 + 39 * 3 + 2, 12 + 39 * 3 + 2), [0x4e, 0x56, 0x66]); // art cell (39,39), fully inside
+  assert.deepEqual(px(19, 12), [0xed, 0xe8, 0xde]); // nothing left of the art
   assert.deepEqual(px(0, 0), [0xed, 0xe8, 0xde]); // cream margin
   const colours = new Set();
-  for (let y = 0; y < 123; y++) for (let x = 108; x < 375; x++) colours.add(px(x, y).join(","));
+  for (let y = 0; y < 144; y++) for (let x = 156; x < 375; x++) colours.add(px(x, y).join(","));
   assert.ok(colours.has("166,65,47"), "accent orange present"); // BROKER #527
   assert.ok(colours.has("47,107,82"), "good green present"); // balance + stocks
   assert.ok(colours.has("117,123,138"), "label grey present"); // IN THE WALLET
@@ -309,7 +317,7 @@ test("the strip is 375x123 pt at 1x/2x/3x and carries art, an orange number and 
   assert.ok(measureText("INTC · SPCX · MU · NVDA +4") > 120);
   assert.equal(stocksLine([], 100), "NONE YET");
   // no art: text starts at the left margin and the image is still valid
-  assert.deepEqual(dims(stripPng({ ...input, art: null }, 2)), [750, 246]);
+  assert.deepEqual(dims(stripPng({ ...input, art: null }, 2)), [750, 288]);
 });
 
 test("the pass.json we build is accepted by passkit-generator and signs into a .pkpass", () => {

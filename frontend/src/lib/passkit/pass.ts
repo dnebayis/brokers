@@ -124,7 +124,6 @@ export function buildPassJson(p: PassInput): Record<string, unknown> {
     serialNumber: String(p.id),
     organizationName: p.issuer.name,
     description: `coattail broker #${p.id}`,
-    logoText: "coattail brokers",
     backgroundColor: PASS_COLORS.background,
     foregroundColor: PASS_COLORS.foreground,
     labelColor: PASS_COLORS.label,

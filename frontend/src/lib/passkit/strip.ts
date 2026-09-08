@@ -6,8 +6,10 @@ import { drawArt, drawText, measureText, newCanvas } from "./font.ts";
 // left, the Broker number in the site's accent, the balance and the stocks in the site's
 // green, all in the Silkscreen pixel font the site uses.
 
+// Apple's allotted strip for store cards is 375 x 144 pt; a different aspect gets scaled to
+// fill and cropped (which is exactly what cut the art off at 375 x 123).
 export const STRIP_W = 375;
-export const STRIP_H = 123;
+export const STRIP_H = 144;
 
 export const STRIP_COLORS: Record<"accent" | "good" | "label", Rgb> = {
   accent: [0xa6, 0x41, 0x2f], // --c-accent (light theme), also the glyph's flag pin
@@ -23,16 +25,16 @@ export type StripInput = {
 };
 
 // Layout in points (1x). Text y is the top of the font's 11-row cell; caps sit on rows 4-8.
-const ART_X = 14;
-const ART_SCALE = 2; // 40 cells -> 80 pt
-const ART_Y = Math.floor((STRIP_H - 40 * ART_SCALE) / 2); // 21
-const TEXT_X = 108;
+const ART_X = 20;
+const ART_SCALE = 3; // 40 cells -> 120 pt, centred in the 144 pt band
+const ART_Y = (STRIP_H - 40 * ART_SCALE) / 2; // 12
+const TEXT_X = ART_X + 40 * ART_SCALE + 16; // 156
 const RIGHT_MARGIN = 14;
-const LINE_ID_Y = 14;
-const LINE_LABEL_Y = 32;
-const LINE_BALANCE_Y = 44;
+const LINE_ID_Y = 18;
+const LINE_LABEL_Y = 42;
+const LINE_BALANCE_Y = 56;
 const BALANCE_SCALE = 3; // 24 pt
-const LINE_STOCKS_Y = 90;
+const LINE_STOCKS_Y = 108;
 const SEPARATOR = " · ";
 
 /** Join the symbols with " · ", dropping the tail (as "+N") until the line fits. */
