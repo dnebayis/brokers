@@ -14,7 +14,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ pass
   if (!cfg || !kvConfigured()) return new NextResponse(null, { status: 503 });
   const { passTypeId, serial } = await params;
   const record = await authorizedRecord(cfg, request, passTypeId, serial);
-  if (!record) return new NextResponse(null, { status: 401 });
+  if (!record) {
+    const id = Number(serial);
+    if (Number.isInteger(id) && id > 0) await noteFetch(id, 401).catch(() => undefined); // diagnostics
+    return new NextResponse(null, { status: 401 });
+  }
 
   try {
     const built = await refreshPass(cfg, record);

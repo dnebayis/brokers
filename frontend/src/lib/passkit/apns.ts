@@ -6,15 +6,27 @@ import http2 from "node:http2";
 // forgotten.
 
 export type PushResult = { token: string; status: number; gone: boolean; error?: string };
+export type PushType = "background" | "alert";
+export type PushOptions = { pushType?: PushType; priority?: 5 | 10 };
 
 const APNS_HOST = "https://api.push.apple.com";
+
+/** Wallet wake-ups are silent: `background` at priority 5 is what Apple's own guidance and
+ *  working implementations use; `alert` at 10 with an empty body can be dropped by iOS. */
+export function pushDefaults(): Required<PushOptions> {
+  const t = (process.env.PASSKIT_PUSH_TYPE ?? "").trim();
+  const pushType: PushType = t === "alert" ? "alert" : "background";
+  return { pushType, priority: pushType === "alert" ? 10 : 5 };
+}
 
 export async function pushPassUpdates(
   tokens: string[],
   cert: { cert: string; key: string; passphrase?: string },
   passTypeId: string,
+  options: PushOptions = {},
   host = APNS_HOST,
 ): Promise<PushResult[]> {
+  const opts = { ...pushDefaults(), ...options };
   if (tokens.length === 0) return [];
   const session = http2.connect(host, { cert: cert.cert, key: cert.key, passphrase: cert.passphrase });
   const results: PushResult[] = [];
@@ -24,7 +36,7 @@ export async function pushPassUpdates(
       session.once("error", reject);
     });
     for (const token of tokens) {
-      results.push(await send(session, token, passTypeId));
+      results.push(await send(session, token, passTypeId, opts));
     }
   } catch (err) {
     for (const token of tokens) {
@@ -36,14 +48,14 @@ export async function pushPassUpdates(
   return results;
 }
 
-function send(session: http2.ClientHttp2Session, token: string, passTypeId: string): Promise<PushResult> {
+function send(session: http2.ClientHttp2Session, token: string, passTypeId: string, opts: Required<PushOptions>): Promise<PushResult> {
   return new Promise((resolve) => {
     const req = session.request({
       ":method": "POST",
       ":path": `/3/device/${token}`,
       "apns-topic": passTypeId,
-      "apns-push-type": "alert",
-      "apns-priority": "10",
+      "apns-push-type": opts.pushType,
+      "apns-priority": String(opts.priority),
       "content-type": "application/json",
     });
     let status = 0;

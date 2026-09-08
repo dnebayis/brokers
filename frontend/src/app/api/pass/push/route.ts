@@ -3,7 +3,7 @@ import { passkitConfig, pushSecret } from "@/lib/passkit/config";
 import { readBrokerPassState } from "@/lib/passkit/chain";
 import { refreshRecord } from "@/lib/passkit/build";
 import { allSerials, deviceLog, devicesFor, forgetDevice, getCursor, getPass, lastFetch, pushTokenFor, registeredAt, setCursor } from "@/lib/passkit/store";
-import { pushPassUpdates } from "@/lib/passkit/apns";
+import { pushDefaults, pushPassUpdates, type PushType } from "@/lib/passkit/apns";
 import { kvConfigured } from "@/lib/kv";
 
 // The push sweep: walks every Broker that has a registered pass, compares the chain with what
@@ -35,7 +35,11 @@ async function sweep(request: Request): Promise<NextResponse> {
 
   // ?force=<id>: ping that pass's phones even if nothing changed (diagnostics: does a push
   // make the phone fetch? the fetch note below answers). Never changes the record.
-  const force = Number(new URL(request.url).searchParams.get("force") ?? "") || 0;
+  const forceRaw = new URL(request.url).searchParams.get("force") ?? "";
+  const [forceIdRaw, forceTypeRaw] = forceRaw.split(":");
+  const force = Number(forceIdRaw) || 0;
+  const forceType: PushType | undefined = forceTypeRaw === "alert" || forceTypeRaw === "background" ? forceTypeRaw : undefined;
+  const pushOptions = forceType ? { pushType: forceType, priority: forceType === "alert" ? (10 as const) : (5 as const) } : {};
 
   const touchedDevices = new Set<string>();
   const changed: { id: number; reasons: string[] }[] = [];
@@ -74,6 +78,7 @@ async function sweep(request: Request): Promise<NextResponse> {
     [...tokens.keys()],
     { cert: cfg.signerCert, key: cfg.signerKey, passphrase: cfg.signerKeyPassphrase },
     cfg.passTypeId,
+    pushOptions,
   );
   let pushed = 0;
   const pushErrors: string[] = [];
@@ -94,6 +99,7 @@ async function sweep(request: Request): Promise<NextResponse> {
     pushed,
     pushErrors: pushErrors.slice(0, 5),
     forced: force || undefined,
+    push: { ...pushDefaults(), ...pushOptions },
     passes,
     deviceLog: (await deviceLog().catch(() => [])).slice(-10),
     ms: Date.now() - started,
