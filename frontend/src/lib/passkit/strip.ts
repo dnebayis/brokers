@@ -1,7 +1,7 @@
-import { CREAM, INK, encodePng, type Rgb } from "./png.ts";
+import { INK, encodePngRgba, type Rgb } from "./png.ts";
 import { drawArt, drawText, measureText, newCanvas } from "./font.ts";
 
-// The card's middle band (Apple's "strip" image, 375 x 123 pt), drawn by us because Wallet
+// The card's middle band (Apple's "strip" image, 375 x 144 pt), drawn by us because Wallet
 // allows a single text colour per pass and the owner wants colour: the Broker's art on the
 // left, the Broker number in the site's accent, the balance and the stocks in the site's
 // green, all in the Silkscreen pixel font the site uses.
@@ -49,7 +49,7 @@ export function stocksLine(symbols: string[], maxWidth: number, scale = 1): stri
 }
 
 export function stripPng(input: StripInput, scale: 1 | 2 | 3): Buffer {
-  const c = newCanvas(STRIP_W * scale, STRIP_H * scale, CREAM);
+  const c = newCanvas(STRIP_W * scale, STRIP_H * scale, null); // transparent: one ground, the pass background
   const textX = (input.art ? TEXT_X : ART_X) * scale;
   if (input.art) drawArt(c, ART_X * scale, ART_Y * scale, input.art, ART_SCALE * scale, INK);
   drawText(c, textX, LINE_ID_Y * scale, `BROKER #${input.id}`, scale, STRIP_COLORS.accent);
@@ -57,5 +57,5 @@ export function stripPng(input: StripInput, scale: 1 | 2 | 3): Buffer {
   drawText(c, textX, LINE_BALANCE_Y * scale, input.balanceText.toUpperCase(), BALANCE_SCALE * scale, STRIP_COLORS.good);
   const maxWidth = STRIP_W * scale - textX - RIGHT_MARGIN * scale;
   drawText(c, textX, LINE_STOCKS_Y * scale, stocksLine(input.symbols, maxWidth, scale), scale, STRIP_COLORS.good);
-  return encodePng(c.width, c.height, c.rgb);
+  return encodePngRgba(c.width, c.height, c.rgba);
 }

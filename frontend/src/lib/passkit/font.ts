@@ -72,32 +72,36 @@ export function measureText(text: string, scale = 1): number {
   return w * scale;
 }
 
-export type Canvas = { width: number; height: number; rgb: Uint8Array };
+/** RGBA pixels; a `null` background leaves the canvas transparent so Wallet's own pass
+ *  background shows through (an opaque cream rectangle reads as a lighter patch on the card). */
+export type Canvas = { width: number; height: number; rgba: Uint8Array };
 
-export function newCanvas(width: number, height: number, bg: Rgb): Canvas {
-  const rgb = new Uint8Array(width * height * 3);
-  for (let i = 0; i < width * height; i++) {
-    rgb[i * 3] = bg[0];
-    rgb[i * 3 + 1] = bg[1];
-    rgb[i * 3 + 2] = bg[2];
+export function newCanvas(width: number, height: number, bg: Rgb | null): Canvas {
+  const rgba = new Uint8Array(width * height * 4);
+  if (bg) {
+    for (let i = 0; i < width * height; i++) {
+      rgba[i * 4] = bg[0];
+      rgba[i * 4 + 1] = bg[1];
+      rgba[i * 4 + 2] = bg[2];
+      rgba[i * 4 + 3] = 255;
+    }
   }
-  return { width, height, rgb };
+  return { width, height, rgba };
+}
+
+/** Paint one pixel, fully opaque. */
+export function setPixel(c: Canvas, x: number, y: number, colour: Rgb): void {
+  if (x < 0 || y < 0 || x >= c.width || y >= c.height) return;
+  const i = (y * c.width + x) * 4;
+  c.rgba[i] = colour[0];
+  c.rgba[i + 1] = colour[1];
+  c.rgba[i + 2] = colour[2];
+  c.rgba[i + 3] = 255;
 }
 
 /** Fill a `size`-pixel square at (x, y); silently clipped at the edges. */
 function block(c: Canvas, x: number, y: number, size: number, colour: Rgb): void {
-  for (let dy = 0; dy < size; dy++) {
-    const yy = y + dy;
-    if (yy < 0 || yy >= c.height) continue;
-    for (let dx = 0; dx < size; dx++) {
-      const xx = x + dx;
-      if (xx < 0 || xx >= c.width) continue;
-      const i = (yy * c.width + xx) * 3;
-      c.rgb[i] = colour[0];
-      c.rgb[i + 1] = colour[1];
-      c.rgb[i + 2] = colour[2];
-    }
-  }
+  for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) setPixel(c, x + dx, y + dy, colour);
 }
 
 /** Draw `text` with its 11-row cell's top-left at (x, y). Returns the x after the text. */

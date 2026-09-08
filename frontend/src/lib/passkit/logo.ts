@@ -1,5 +1,5 @@
-import { encodePng, CREAM, type Rgb } from "./png.ts";
-import { drawText, measureText, newCanvas, type Canvas } from "./font.ts";
+import { encodePngRgba, type Rgb } from "./png.ts";
+import { drawText, measureText, newCanvas, setPixel, type Canvas } from "./font.ts";
 
 // The site's header lockup, pixel for pixel (`components/Header.tsx`): the 10x10 broker
 // glyph (`ui/BrokerMark.tsx`) inside its 34pt bordered box with the pixel shadow, then
@@ -52,21 +52,13 @@ const SUBTITLE = "MIRROR CONGRESS";
 export const LOGO_W = TEXT_X + Math.max(measureText(TITLE1, TITLE_SCALE), measureText(TITLE2, TITLE_SCALE), measureText(SUBTITLE)) + 2;
 
 function fill(c: Canvas, x: number, y: number, w: number, h: number, colour: Rgb): void {
-  for (let yy = y; yy < y + h; yy++) {
-    if (yy < 0 || yy >= c.height) continue;
-    for (let xx = x; xx < x + w; xx++) {
-      if (xx < 0 || xx >= c.width) continue;
-      const i = (yy * c.width + xx) * 3;
-      c.rgb[i] = colour[0];
-      c.rgb[i + 1] = colour[1];
-      c.rgb[i + 2] = colour[2];
-    }
-  }
+  for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) setPixel(c, xx, yy, colour);
 }
 
-export function logoPng(scale: 1 | 2 | 3, bg: Rgb = CREAM): Buffer {
+/** Transparent outside the box and the letters: the pass background is the only ground. */
+export function logoPng(scale: 1 | 2 | 3): Buffer {
   const s = scale;
-  const c = newCanvas(LOGO_W * s, LOGO_H * s, bg);
+  const c = newCanvas(LOGO_W * s, LOGO_H * s, null);
   // box: shadow, border, fill
   fill(c, SHADOW * s, (BOX_Y + SHADOW) * s, BOX * s, BOX * s, INK);
   fill(c, 0, BOX_Y * s, BOX * s, BOX * s, INK);
@@ -82,5 +74,5 @@ export function logoPng(scale: 1 | 2 | 3, bg: Rgb = CREAM): Buffer {
   drawText(c, TEXT_X * s, TITLE1_Y * s, TITLE1, TITLE_SCALE * s, INK_STRONG);
   drawText(c, TEXT_X * s, TITLE2_Y * s, TITLE2, TITLE_SCALE * s, INK_STRONG);
   drawText(c, TEXT_X * s, SUB_Y * s, SUBTITLE, s, INK_SOFT);
-  return encodePng(c.width, c.height, c.rgb);
+  return encodePngRgba(c.width, c.height, c.rgba);
 }

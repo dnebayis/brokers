@@ -46,22 +46,32 @@ function chunk(type: string, data: Uint8Array): Uint8Array {
   return out;
 }
 
-/** Encode an RGB pixel buffer (w*h*3 bytes) as a PNG. */
-export function encodePng(width: number, height: number, rgb: Uint8Array): Buffer {
-  if (rgb.length !== width * height * 3) throw new Error("rgb buffer size mismatch");
-  const raw = new Uint8Array((width * 3 + 1) * height);
+function encode(width: number, height: number, pixels: Uint8Array, bpp: 3 | 4): Buffer {
+  if (pixels.length !== width * height * bpp) throw new Error("pixel buffer size mismatch");
+  const stride = width * bpp;
+  const raw = new Uint8Array((stride + 1) * height);
   for (let y = 0; y < height; y++) {
-    raw[y * (width * 3 + 1)] = 0; // filter: none
-    raw.set(rgb.subarray(y * width * 3, (y + 1) * width * 3), y * (width * 3 + 1) + 1);
+    raw[y * (stride + 1)] = 0; // filter: none
+    raw.set(pixels.subarray(y * stride, (y + 1) * stride), y * (stride + 1) + 1);
   }
   const ihdr = new Uint8Array(13);
   const dv = new DataView(ihdr.buffer);
   dv.setUint32(0, width);
   dv.setUint32(4, height);
-  ihdr.set([8, 2, 0, 0, 0], 8); // 8-bit, truecolor, deflate, no filter, no interlace
+  ihdr.set([8, bpp === 3 ? 2 : 6, 0, 0, 0], 8); // 8-bit, truecolor (+alpha), deflate, no filter, no interlace
   const sig = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   const idat = new Uint8Array(deflateSync(raw, { level: 9 }));
   return Buffer.concat([sig, chunk("IHDR", ihdr), chunk("IDAT", idat), chunk("IEND", new Uint8Array(0))]);
+}
+
+/** Encode an RGB pixel buffer (w*h*3 bytes) as a PNG. */
+export function encodePng(width: number, height: number, rgb: Uint8Array): Buffer {
+  return encode(width, height, rgb, 3);
+}
+
+/** Encode an RGBA pixel buffer (w*h*4 bytes) as a PNG with an alpha channel. */
+export function encodePngRgba(width: number, height: number, rgba: Uint8Array): Buffer {
+  return encode(width, height, rgba, 4);
 }
 
 /** The artwork as a PNG, `scale` device pixels per bitmap pixel, with an optional margin

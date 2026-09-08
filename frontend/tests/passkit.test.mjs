@@ -139,7 +139,8 @@ test("pass.json carries the numbers, the issuer contact and the web service", ()
   assert.equal(back["issuer-address"], issuer.address);
   assert.equal(back["h-COAT"], "1000");
   assert.equal(back["h-INTC"], "0.12 ($10.00)");
-  assert.equal(p.barcodes[0].message, "https://www.coattail.cash/card/527");
+  assert.equal(p.barcodes, undefined); // one-colour card: no white barcode panel
+  assert.equal(back["card"], "https://www.coattail.cash/card/527");
 });
 
 test("a sold Broker's pass is voided and says so", () => {
@@ -264,14 +265,15 @@ test("the logo is the site's header lockup: boxed glyph + COATTAIL / BROKERS + M
   const png = logoPng(1);
   const idatLen = png.readUInt32BE(33);
   const raw = inflateSync(png.subarray(41, 41 + idatLen));
-  const px = (x, y) => Array.from(raw.subarray(y * (LOGO_W * 3 + 1) + 1 + x * 3, y * (LOGO_W * 3 + 1) + 4 + x * 3));
-  assert.deepEqual(px(0, 0), [0xed, 0xe8, 0xde]); // above the box = pass background
-  assert.deepEqual(px(0, 6), [0x4e, 0x56, 0x66]); // box border
-  assert.deepEqual(px(3, 9), [0xf5, 0xf2, 0xeb]); // box fill (cream-2)
-  assert.deepEqual(px(7 + 4 * 2, 6 + 7 + 5 * 2), [0xa6, 0x41, 0x2f]); // glyph cell (4,5) = pin
-  assert.deepEqual(px(35, 41), [0x4e, 0x56, 0x66]); // the 2pt pixel shadow, right of the box
+  const px = (x, y) => Array.from(raw.subarray(y * (LOGO_W * 4 + 1) + 1 + x * 4, y * (LOGO_W * 4 + 1) + 5 + x * 4));
+  assert.equal(png[25], 6); // colour type 6 = truecolor with alpha
+  assert.equal(px(0, 0)[3], 0); // above the box: transparent, the pass background shows
+  assert.deepEqual(px(0, 6), [0x4e, 0x56, 0x66, 255]); // box border
+  assert.deepEqual(px(3, 9), [0xf5, 0xf2, 0xeb, 255]); // box fill (cream-2)
+  assert.deepEqual(px(7 + 4 * 2, 6 + 7 + 5 * 2), [0xa6, 0x41, 0x2f, 255]); // glyph cell (4,5) = pin
+  assert.deepEqual(px(35, 41), [0x4e, 0x56, 0x66, 255]); // the 2pt pixel shadow, right of the box
   const strong = new Set();
-  for (let y = 0; y < 50; y++) for (let x = 46; x < LOGO_W; x++) strong.add(px(x, y).join(","));
+  for (let y = 0; y < 50; y++) for (let x = 46; x < LOGO_W; x++) strong.add(px(x, y).slice(0, 3).join(","));
   assert.ok(strong.has("52,57,69"), "title drawn in ink-strong");
   assert.ok(strong.has("117,123,138"), "subtitle drawn in ink-soft");
 });
@@ -283,7 +285,7 @@ test("the Silkscreen glyph table measures and draws like the site's font", () =>
   const c = newCanvas(20, 11, [0, 0, 0]);
   drawText(c, 0, 0, "I", 1, [255, 255, 255]);
   // "I" is a single column (bit 1) on rows 4..8
-  const at = (x, y) => c.rgb[(y * c.width + x) * 3];
+  const at = (x, y) => c.rgba[(y * c.width + x) * 4];
   assert.equal(at(1, 4), 255);
   assert.equal(at(1, 8), 255);
   assert.equal(at(1, 3), 0);
@@ -299,13 +301,13 @@ test("the strip is Apple's 375x144 pt store-card band at 1x/2x/3x with art, an o
   const png = stripPng(input, 1);
   const idatLen = png.readUInt32BE(33);
   const raw = inflateSync(png.subarray(41, 41 + idatLen));
-  const px = (x, y) => Array.from(raw.subarray(y * (375 * 3 + 1) + 1 + x * 3, y * (375 * 3 + 1) + 4 + x * 3));
-  assert.deepEqual(px(20, 12), [0x4e, 0x56, 0x66]); // art cell (0,0): 3 pt per cell, 20 pt in, 12 pt down
-  assert.deepEqual(px(20 + 39 * 3 + 2, 12 + 39 * 3 + 2), [0x4e, 0x56, 0x66]); // art cell (39,39), fully inside
-  assert.deepEqual(px(19, 12), [0xed, 0xe8, 0xde]); // nothing left of the art
-  assert.deepEqual(px(0, 0), [0xed, 0xe8, 0xde]); // cream margin
+  const px = (x, y) => Array.from(raw.subarray(y * (375 * 4 + 1) + 1 + x * 4, y * (375 * 4 + 1) + 5 + x * 4));
+  assert.deepEqual(px(20, 12), [0x4e, 0x56, 0x66, 255]); // art cell (0,0): 3 pt per cell, 20 pt in, 12 pt down
+  assert.deepEqual(px(20 + 39 * 3 + 2, 12 + 39 * 3 + 2), [0x4e, 0x56, 0x66, 255]); // art cell (39,39), fully inside
+  assert.equal(px(19, 12)[3], 0); // nothing left of the art: transparent
+  assert.equal(px(0, 0)[3], 0); // transparent margin, the pass background is the only ground
   const colours = new Set();
-  for (let y = 0; y < 144; y++) for (let x = 156; x < 375; x++) colours.add(px(x, y).join(","));
+  for (let y = 0; y < 144; y++) for (let x = 156; x < 375; x++) colours.add(px(x, y).slice(0, 3).join(","));
   assert.ok(colours.has("166,65,47"), "accent orange present"); // BROKER #527
   assert.ok(colours.has("47,107,82"), "good green present"); // balance + stocks
   assert.ok(colours.has("117,123,138"), "label grey present"); // IN THE WALLET

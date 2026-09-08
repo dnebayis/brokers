@@ -128,14 +128,8 @@ export function buildPassJson(p: PassInput): Record<string, unknown> {
     foregroundColor: PASS_COLORS.foreground,
     labelColor: PASS_COLORS.label,
     sharingProhibited: true,
-    barcodes: [
-      {
-        format: "PKBarcodeFormatQR",
-        message: `${p.siteOrigin}/card/${p.id}`,
-        messageEncoding: "iso-8859-1",
-        altText: `broker #${p.id}`,
-      },
-    ],
+    // No barcode: Wallet draws barcodes on a white panel it does not let us recolour, and the
+    // owner wants the card in one colour. The public card link stays on the back.
     storeCard: { headerFields, secondaryFields, backFields },
   };
   if (voided) pass.voided = true;
