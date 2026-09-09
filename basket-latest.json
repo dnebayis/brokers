@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-09T12:15:34.946680+00:00",
+  "generatedAt": "2026-09-09T13:10:48.510273+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3357,
+    "rows": 3356,
     "distinctTraders": 79,
-    "latestDisclosure": "2026-09-07",
-    "ageDays": 2,
+    "latestDisclosure": "2026-09-09",
+    "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.1250824726259057,
+  "coverage": 0.12498778867281785,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,84 +29,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 58539125,
+    "block": 58571936,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7101548326496911
+      "shareOfBuying": 0.7096172651916125
     },
     {
       "ticker": "FWONK",
       "netNotional": 146003.0,
-      "shareOfBuying": 0.013824627784279639
+      "shareOfBuying": 0.013814162925526018
     },
     {
       "ticker": "LTH",
       "netNotional": 121004.5,
-      "shareOfBuying": 0.011457587670957895
+      "shareOfBuying": 0.011448914595739905
     },
     {
       "ticker": "CHRW",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.008427405151745844
+      "shareOfBuying": 0.008421025840421974
     },
     {
       "ticker": "BRK.B",
       "netNotional": 81002.0,
-      "shareOfBuying": 0.007669859521942831
+      "shareOfBuying": 0.007664053651592492
     },
     {
       "ticker": "CB",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.0061547682623368065
+      "shareOfBuying": 0.006150109273933527
     },
     {
       "ticker": "BWXT",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.004592475390774428
+      "shareOfBuying": 0.0045889990146257284
     },
     {
       "ticker": "MLM",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.004592475390774428
+      "shareOfBuying": 0.0045889990146257284
     },
     {
       "ticker": "HUBB",
       "netNotional": 40501.0,
-      "shareOfBuying": 0.0038349297609714156
+      "shareOfBuying": 0.003832026825796246
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030773841311684032
+      "shareOfBuying": 0.0030750546369667634
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030773841311684032
+      "shareOfBuying": 0.0030750546369667634
     },
     {
       "ticker": "SGI",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030773841311684032
+      "shareOfBuying": 0.0030750546369667634
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030773841311684032
+      "shareOfBuying": 0.0030750546369667634
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030773841311684032
+      "shareOfBuying": 0.0030750546369667634
     },
     {
       "ticker": "COHR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030773841311684032
+      "shareOfBuying": 0.0030750546369667634
     }
   ],
   "missedAttribution": {
