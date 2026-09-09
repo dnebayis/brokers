@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-08T23:49:13.614596+00:00",
+  "generatedAt": "2026-09-09T00:49:25.024117+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 3357,
     "distinctTraders": 79,
     "latestDisclosure": "2026-09-07",
-    "ageDays": 1,
+    "ageDays": 2,
     "errors": []
   },
-  "coverage": 0.1248932479575414,
+  "coverage": 0.1250824726259057,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,84 +29,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 58095293,
+    "block": 58131108,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7090805109651708
+      "shareOfBuying": 0.7101548326496911
     },
     {
       "ticker": "FWONK",
       "netNotional": 146003.0,
-      "shareOfBuying": 0.013803713898002673
+      "shareOfBuying": 0.013824627784279639
     },
     {
       "ticker": "LTH",
       "netNotional": 121004.5,
-      "shareOfBuying": 0.01144025464114343
+      "shareOfBuying": 0.011457587670957895
     },
     {
       "ticker": "CHRW",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.008414656179715367
+      "shareOfBuying": 0.008427405151745844
     },
     {
       "ticker": "BRK.B",
       "netNotional": 81002.0,
-      "shareOfBuying": 0.007658256564358352
+      "shareOfBuying": 0.007669859521942831
     },
     {
       "ticker": "CB",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.0061454573336443205
+      "shareOfBuying": 0.0061547682623368065
     },
     {
       "ticker": "BWXT",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.004585527897536192
+      "shareOfBuying": 0.004592475390774428
     },
     {
       "ticker": "MLM",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.004585527897536192
+      "shareOfBuying": 0.004592475390774428
     },
     {
       "ticker": "HUBB",
       "netNotional": 40501.0,
-      "shareOfBuying": 0.003829128282179176
+      "shareOfBuying": 0.0038349297609714156
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.0030773841311684032
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.0030773841311684032
     },
     {
       "ticker": "SGI",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.0030773841311684032
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.0030773841311684032
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.0030773841311684032
     },
     {
       "ticker": "COHR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.0030773841311684032
     }
   ],
   "missedAttribution": {
@@ -466,7 +466,6 @@
       "PANW",
       "PEP",
       "PGR",
-      "PINS",
       "PSKY",
       "RBC",
       "SCI",
@@ -546,10 +545,10 @@
     "divergenceBps": 7018
   },
   "commentary": {
-    "text": "Your latest basket is led by Intel, with Nancy Pelosi making two buys totaling $1.1M, traded on 2026-07-24 and filed on 2026-08-21. SPCX is another notable position, with buys from William R. Timmons IV for $75K, traded on 2026-06-15 and filed on 2026-07-19, and Dan Meuser for $33K, traded on 2026-06-15 and filed on 2026-07-02. Three other members also bought into the basket. The largest disclosed buying, BE at $7.5M, could not be bought because it is not tokenized or tradable on this chain. This basket represents 12.5% of the disclosed buying dollars.",
+    "text": "Your latest basket is led by Intel, with Nancy Pelosi's $1.1M buy, traded on 2026-07-24 and filed on 2026-08-21. SPCX follows, with William R. Timmons IV's $75K buy, traded on 2026-06-15 and filed on 2026-07-19, and Dan Meuser's $33K buy, traded on 2026-06-15 and filed on 2026-07-02. Three other members also bought into the basket. The largest disclosed buy, BE, could not be included because it is not tokenized or tradable on this chain. This basket represents 12.5% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-08T00:24:17+00:00",
-    "inputHash": "66b55d3817da6b44",
+    "generatedAt": "2026-09-09T00:49:25+00:00",
+    "inputHash": "2b96a10d7294e9f4",
     "promptVersion": 2
   }
 }
