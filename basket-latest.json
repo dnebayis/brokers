@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-09T20:26:16.787871+00:00",
+  "generatedAt": "2026-09-09T21:20:38.464661+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3361,
+    "rows": 3407,
     "distinctTraders": 80,
     "latestDisclosure": "2026-09-09",
     "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.1248932479575414,
+  "coverage": 0.12470459494224627,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,84 +29,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 58830998,
+    "block": 58863335,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7090805109651708
+      "shareOfBuying": 0.7080094348368114
     },
     {
       "ticker": "FWONK",
       "netNotional": 146003.0,
-      "shareOfBuying": 0.013803713898002673
+      "shareOfBuying": 0.013782863193167013
     },
     {
       "ticker": "LTH",
       "netNotional": 121004.5,
-      "shareOfBuying": 0.01144025464114343
+      "shareOfBuying": 0.011422973974901733
     },
     {
       "ticker": "CHRW",
-      "netNotional": 89002.5,
-      "shareOfBuying": 0.008414656179715367
+      "netNotional": 97003.0,
+      "shareOfBuying": 0.00915720278574262
     },
     {
       "ticker": "BRK.B",
       "netNotional": 81002.0,
-      "shareOfBuying": 0.007658256564358352
+      "shareOfBuying": 0.007646688659636544
     },
     {
       "ticker": "CB",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.0061454573336443205
+      "shareOfBuying": 0.006136174533530468
     },
     {
       "ticker": "BWXT",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.004585527897536192
+      "shareOfBuying": 0.00457860139287131
     },
     {
       "ticker": "MLM",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.004585527897536192
+      "shareOfBuying": 0.00457860139287131
     },
     {
       "ticker": "HUBB",
       "netNotional": 40501.0,
-      "shareOfBuying": 0.003829128282179176
+      "shareOfBuying": 0.003823344329818272
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.003068087266765234
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.003068087266765234
     },
     {
       "ticker": "SGI",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.003068087266765234
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.003068087266765234
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.003068087266765234
     },
     {
       "ticker": "COHR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0030727286668221603
+      "shareOfBuying": 0.003068087266765234
     }
   ],
   "missedAttribution": {
@@ -173,8 +173,8 @@
         {
           "member": "April Delaney",
           "chamber": "house",
-          "buys": 5,
-          "notionalUsd": 89002.5,
+          "buys": 6,
+          "notionalUsd": 97003.0,
           "latestTraded": "2026-07-31",
           "latestFiled": "2026-08-03",
           "ranges": [
@@ -473,6 +473,7 @@
       "PSKY",
       "RBC",
       "SCI",
+      "SDZNY",
       "SFTBF",
       "SMTC",
       "SOLS",
