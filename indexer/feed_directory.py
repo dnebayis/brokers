@@ -17,11 +17,12 @@ DIRECTORY_URL = os.environ.get(
     "CHAINLINK_RH_DIRECTORY_URL",
     "https://reference-data-directory.vercel.app/feeds-robinhood-mainnet.json",
 )
-_NAME_RE = re.compile(r"^Robinhood\s+([A-Z0-9.]+)-USD$", re.I)
+# Chainlink has used both "Robinhood SGOV-USD" and "Robinhood GOOGL / USD" in this directory.
+_NAME_RE = re.compile(r"^Robinhood\s+([A-Z0-9.]+)\s*[-/]\s*USD$", re.I)
 
 
 def match_feeds(directory, tickers) -> dict[str, str]:
-    """{ticker: proxyAddress} for every wanted ticker that has a 'Robinhood <T>-USD' feed."""
+    """{ticker: proxyAddress} for every wanted ticker with a Robinhood <T>-USD or <T> / USD feed."""
     wanted = {t.upper(): t for t in tickers}
     found: dict[str, str] = {}
     items = directory if isinstance(directory, list) else directory.get("feeds", [])

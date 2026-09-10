@@ -736,13 +736,20 @@ class FeedDirectoryTests(unittest.TestCase):
     DIR = [{"name": "Robinhood SGOV-USD", "proxyAddress": "0x" + "a1" * 20},
            {"name": "Robinhood BE-USD", "proxyAddress": "0x" + "b2" * 20},
            {"name": "ETH / USD", "proxyAddress": "0x" + "c3" * 20},
-           {"name": "Robinhood BRK.B-USD", "proxyAddress": None, "contractAddress": "0x" + "d4" * 20}]
+           {"name": "Robinhood BRK.B-USD", "proxyAddress": None, "contractAddress": "0x" + "d4" * 20},
+           {"name": "Robinhood NBIS / USD", "proxyAddress": "0x" + "e5" * 20}]
 
     def test_matches_only_wanted_robinhood_feeds(self):
         from feed_directory import match_feeds
         found = match_feeds(self.DIR, ["BE", "FWONK", "brk.b"])
         self.assertEqual(found, {"BE": "0x" + "b2" * 20, "brk.b": "0x" + "d4" * 20})
         self.assertEqual(match_feeds({"feeds": self.DIR}, ["SGOV"]), {"SGOV": "0x" + "a1" * 20})
+
+    def test_matches_the_slash_name_format_chainlink_switched_to(self):
+        # 2026-09: the directory lists most Robinhood feeds as "Robinhood NBIS / USD"; the old
+        # dash-only pattern saw 3 of 35 feeds and the "newly listed" alert went blind.
+        from feed_directory import match_feeds
+        self.assertEqual(match_feeds(self.DIR, ["NBIS", "ETH"]), {"NBIS": "0x" + "e5" * 20})
 
     def test_directory_failure_is_silent(self):
         from feed_directory import newly_listed
