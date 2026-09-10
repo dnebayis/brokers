@@ -67,6 +67,11 @@ jobs:
       FLOOR_ROUTER: ${{ secrets.FLOOR_ROUTER }}
       # Playbooks standing-order execution (same env-gating: empty secret = inert stage).
       PLAYBOOKS_ENGINE: ${{ secrets.PLAYBOOKS_ENGINE }}
+      # Rialto legs: basket names routed through a RialtoLeg adapter need this hour's Rialto
+      # quote staged in the same tx as the poke (RialtoPokeRunner.run). Both empty = the poke
+      # goes straight to Booster.poke as before.
+      RIALTO_API_KEY: ${{ secrets.RIALTO_API_KEY }}
+      RIALTO_RUNNER_ADDRESS: ${{ vars.MAINNET_RIALTO_RUNNER_ADDRESS }}
       # A playbook run costs ~1M gas, so an order waits until the Broker's wallet is worth
       # moving. The wait skips the order's claim step too, so a below-threshold Broker is
       # claimed by the weekly ClaimSweeper pass or by the holder in one click, same as a

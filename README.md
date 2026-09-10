@@ -55,6 +55,8 @@ The mandatory fork job is intentionally separate and must run with `REQUIRE_MAIN
 ```bash
 cd exchange-floor && forge test --match-path 'test/Fork*' --fork-url https://rpc.mainnet.chain.robinhood.com
 cd ../playbooks && forge test
+# Rialto adapter probes (need RIALTO_API_KEY in indexer/.env):
+cd ../contracts && forge test --match-contract 'ForkRialto' --fork-url https://rpc.mainnet.chain.robinhood.com --ffi --gas-limit 8000000 --gas-price 150000000
 ```
 
 Current system state is in [STATUS.md](STATUS.md); the historical deploy-day sequence is in [MAINNET_READINESS.md](MAINNET_READINESS.md).

@@ -58,7 +58,10 @@ contract ForkRialtoExecutorTest is Test {
         deal(USDG, address(harness), SELL);
     }
 
-    function _quote(address buy) internal returns (address to, bytes memory data, uint256 minBuy, uint256 sellRaw) {
+    function _quote(address buy)
+        internal
+        returns (address to, bytes memory data, uint256 minBuy, uint256 sellRaw)
+    {
         string[] memory cmd = new string[](6);
         cmd[0] = "python3";
         cmd[1] = "test/ffi/rialto_quote.py";

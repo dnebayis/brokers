@@ -65,6 +65,9 @@ jobs:
       # honest number is disclosed in the docs and in every run's output.
       MIN_ROUTE_COVERAGE: ${{ vars.MIN_ROUTE_COVERAGE || '0.40' }}
       UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
+      # Route pre-flight for a RialtoLeg-routed name is a sized Rialto quote (the adapter cannot
+      # be eth_called unstaged). Empty = such names are dropped at pre-flight with a named cause.
+      RIALTO_API_KEY: ${{ secrets.RIALTO_API_KEY }}
       # Reuses the existing oracle key (shared-key launch, accepted-risk decision).
       UPDATER_PRIVATE_KEY: ${{ secrets.TESTNET_ORACLE_PRIVATE_KEY }}
       # Optional Discord channel webhook for operator alerts (health FAIL, preflight

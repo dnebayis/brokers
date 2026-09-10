@@ -33,6 +33,9 @@ def api_key() -> str:
 def main() -> None:
     sell, buy, amount, taker = sys.argv[1:5]
     slippage = int(sys.argv[5]) if len(sys.argv) > 5 else 50
+    if amount.startswith("raw6:"):  # raw 6-decimal units (USDG) -> human decimal string
+        raw = int(amount[5:])
+        amount = f"{raw // 10**6}.{raw % 10**6:06d}"
     q = urllib.parse.urlencode({
         "sell_token": sell, "buy_token": buy, "sell_amount": amount, "taker": taker,
         "slippage_bps": slippage, "chain_id": 4663, "settlement": "allowance",

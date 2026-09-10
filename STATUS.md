@@ -87,6 +87,13 @@ Known operational limits, stated plainly:
 - The $COAT exit has no Chainlink floor of its own (it crosses the hooked pool), so the keeper
   computes that order's minimum out before running it, and skips any order it cannot price
   rather than sending an unguarded one.
+- Names with no Uniswap v3 liquidity can be routed through a `RialtoLeg` adapter
+  (`contracts/src/RialtoLeg.sol`): the StockRouter sees an ordinary Rialto-shaped pool, the
+  adapter executes one API-built Rialto quote staged by `RialtoPokeRunner` in the same
+  transaction as the poke. For those names the poke needs the keeper's quote (anyone else's
+  plain `poke()` reverts `NotStaged`), Rialto charges 5 bps, and the Chainlink floor still
+  applies; a name still needs a Chainlink feed. Unsold USDG stays in the adapter as carry
+  and is sold next hour.
 - Playbook orders wait until the Broker's wallet is worth at least 5 USDG before the keeper
   moves it: a run costs ~1M gas and a Broker earns cents an hour, so hourly conversion would
   cost the treasury more than the salaries are worth. Claiming stays hourly for everyone.
@@ -114,6 +121,15 @@ cd frontend       && npm run lint && npm test && npm run build
 
 The Floor and Playbooks fork suites run against the **deployed mainnet contracts**, not
 local copies: they replay the exact user paths, including the frontend's slippage math.
+
+The Rialto adapter fork suites need the integrator key in `indexer/.env` and ffi (the
+quote comes from Rialto's API; an ArbSys stand-in is etched at 0x64 because IMC's propAMMs
+read it and Foundry has no Arbitrum precompiles):
+
+```bash
+cd contracts && forge test --match-contract 'ForkRialto' --fork-url https://rpc.mainnet.chain.robinhood.com \
+  --ffi --gas-limit 8000000 --gas-price 150000000 -vv
+```
 
 ## Known gaps
 

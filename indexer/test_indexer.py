@@ -759,6 +759,104 @@ class FeedDirectoryTests(unittest.TestCase):
         self.assertEqual(newly_listed(["BE"], fetch=lambda: self.DIR), {"BE": "0x" + "b2" * 20})
 
 
+class RialtoLegTests(unittest.TestCase):
+    """rialto.py: sizing, quote validation and the pre-flight branch for adapter-routed names."""
+
+    def test_size_sell_prices_the_slice_haircuts_and_adds_carry(self):
+        from rialto import size_sell
+        # 0.02 ETH at $2,500 = $50 -> 49.5 USDG after the 1% haircut, plus 0.4 USDG carry.
+        self.assertEqual(size_sell(2 * 10**16, 2500 * 10**8, 400_000, haircut_bps=100), 49_500_000 + 400_000)
+        self.assertEqual(size_sell(0, 2500 * 10**8, 5), 0)
+        self.assertEqual(size_sell(10**18, 0, 5), 0)
+
+    def _quote_body(self, **over):
+        body = {"settlement": "allowance", "sell_amount": "250000000", "buy_amount": "1090979000000000000",
+                "min_buy_amount": "1085524000000000000",
+                "tx": {"to": "0xC94135b63772b91D79d0A2DaAb2a8801f32359bD", "data": "0x7796", "value": "0"},
+                "issues": {"allowance": {"actual": "0", "spender": "0xc94135b63772b91d79d0a2daab2a8801f32359bd"}}}
+        body.update(over)
+        return body
+
+    def test_quote_returns_the_executable_and_never_the_key(self):
+        from rialto import quote
+        seen = {}
+        def fetch(url, headers):
+            seen["url"] = url
+            seen["auth"] = headers["Authorization"]
+            return self._quote_body()
+        q = quote("0x" + "ab" * 20, 250_000_000, "0x" + "cd" * 20, fetch=fetch, api_key="rialto_live_x.secret")
+        self.assertEqual(q["sell"], 250_000_000)
+        self.assertEqual(q["min_buy"], 1085524000000000000)
+        self.assertEqual(q["data"], "0x7796")
+        self.assertIn("sell_amount=250.000000", seen["url"])
+        self.assertIn("settlement=allowance", seen["url"])
+        self.assertEqual(seen["auth"], "Bearer rialto_live_x.secret")
+        self.assertNotIn("secret", seen["url"])
+
+    def test_quote_rejects_wrong_settlement_spender_or_amount(self):
+        from rialto import quote, RialtoQuoteError
+        cases = [
+            self._quote_body(settlement="permit2"),
+            self._quote_body(issues={"allowance": {"actual": "0", "spender": "0x" + "ee" * 20}}),
+            self._quote_body(sell_amount="249000000"),
+        ]
+        for body in cases:
+            with self.assertRaises(RialtoQuoteError):
+                quote("0x" + "ab" * 20, 250_000_000, "0x" + "cd" * 20, fetch=lambda u, h: body, api_key="k.s")
+        with self.assertRaises(RialtoQuoteError):
+            quote("0x" + "ab" * 20, 1, "0x" + "cd" * 20, fetch=lambda u, h: {}, api_key="")
+
+    def test_quote_http_error_is_named_without_the_key(self):
+        import io
+        import urllib.error
+        from rialto import quote, RialtoQuoteError
+        def fetch(url, headers):
+            raise urllib.error.HTTPError(url, 401, "unauthorized", {}, io.BytesIO(b'{"error":"unauthorized"}'))
+        with self.assertRaises(RialtoQuoteError) as ctx:
+            quote("0x" + "ab" * 20, 5, "0x" + "cd" * 20, fetch=fetch, api_key="rialto_live_x.secret")
+        self.assertIn("401", str(ctx.exception))
+        self.assertNotIn("secret", str(ctx.exception))
+
+    def test_preflight_probes_an_adapter_routed_name_through_rialto(self):
+        import route_preflight
+        from route_preflight import preflight_basket
+        probed = []
+        def fake_leg_for(w3, router, stock):
+            return "0x" + "1e" * 20 if stock.lower().endswith("aa" * 20) else None
+        def fake_rialto_probe(w3, booster, leg, stock, wei):
+            probed.append((leg, wei))
+            return True, 10**18, ""
+        def fake_simulate(w3, router, booster, stock, wei):
+            return True, 10**18, ""
+        with patch.object(route_preflight, "rialto_leg_for", fake_leg_for), \
+             patch.object(route_preflight, "rialto_probe_leg", fake_rialto_probe), \
+             patch.object(route_preflight, "feed_guard", lambda *a, **k: (10**17, "")), \
+             patch("tokens.address_of", lambda t: {"NBIS": "0x" + "aa" * 20, "INTC": "0x" + "bb" * 20}.get(t)):
+            # INTC goes through the ordinary eth_call path; NBIS through the Rialto probe.
+            with patch.object(route_preflight, "simulate_leg", wraps=route_preflight.simulate_leg) as sim:
+                sim.side_effect = lambda w3, r, b, stock, wei: (
+                    route_preflight.rialto_probe_leg(w3, b, "0x" + "1e" * 20, stock, wei)
+                    if route_preflight.rialto_leg_for(w3, r, stock) else fake_simulate(w3, r, b, stock, wei))
+                live, dropped = preflight_basket(None, [("NBIS", 5000), ("INTC", 5000)], "0x" + "b0" * 20,
+                                                 10**16, router_address="0x" + "c0" * 20)
+        self.assertEqual(dropped, [])
+        self.assertEqual(live, [("NBIS", 5000), ("INTC", 5000)])
+        self.assertEqual(probed, [("0x" + "1e" * 20, 5 * 10**15)])
+
+    def test_preflight_drops_an_adapter_name_rialto_cannot_quote(self):
+        import route_preflight
+        from route_preflight import preflight_basket
+        with patch.object(route_preflight, "simulate_leg",
+                          lambda w3, r, b, stock, wei: (False, 0, "rialto: quote HTTP 400: no route")), \
+             patch.object(route_preflight, "feed_guard", lambda *a, **k: (0, "")), \
+             patch("tokens.address_of", lambda t: "0x" + "aa" * 20):
+            live, dropped = preflight_basket(None, [("IONQ", 10000)], "0x" + "b0" * 20, 10**16,
+                                             router_address="0x" + "c0" * 20)
+        self.assertEqual(live, [])
+        self.assertEqual(dropped[0][0], "IONQ")
+        self.assertIn("rialto", dropped[0][2])
+
+
 class ShadowMergeTests(unittest.TestCase):
     def test_union_keeps_every_hour_and_prefers_the_local_row_on_ties(self):
         from shadow_merge import merge, parse, dump

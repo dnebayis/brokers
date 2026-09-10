@@ -31,6 +31,25 @@ BPS = 10_000
 # once read as "no route can fill", collapsed coverage, and skipped the post as a clean
 # no-op with nothing to show for it.
 PROBE_ATTEMPTS = int(os.environ.get("ROUTE_PREFLIGHT_ATTEMPTS", "3"))
+
+
+def rialto_leg_for(w3, router_address, stock):
+    """Module-level indirection so tests can patch the Rialto detection like `simulate_leg`."""
+    try:
+        from rialto import leg_for
+    except ImportError:  # pragma: no cover - rialto.py ships with the indexer
+        return None
+    try:
+        return leg_for(w3, router_address, stock)
+    except Exception as exc:  # noqa: BLE001 - an RPC failure here is the same class as below
+        if is_transport_error(exc):
+            raise RouteProbeUnavailable(f"{stock}: route read failed: {redact(str(exc))[:200]}")
+        return None
+
+
+def rialto_probe_leg(w3, booster_address, leg, stock, wei):
+    from rialto import probe_leg
+    return probe_leg(w3, booster_address, leg, stock, wei)
 _TRANSPORT_RE = re.compile(
     r"429|too many requests|rate limit|timed? ?out|timeout|connection|reset by peer|"
     r"502|503|504|bad gateway|service unavailable|metadata is not found|"
@@ -118,6 +137,11 @@ def simulate_leg(w3, router_address, booster_address, stock, wei) -> tuple[bool,
     router_address = Web3.to_checksum_address(router_address)
     booster_address = Web3.to_checksum_address(booster_address)
     stock = Web3.to_checksum_address(stock)
+    # A Rialto-routed name cannot be eth_called unstaged (the adapter reverts NotStaged by
+    # design); its probe is a sized Rialto quote instead, same (ok, out, reason) contract.
+    leg = rialto_leg_for(w3, router_address, stock)
+    if leg:
+        return rialto_probe_leg(w3, booster_address, leg, stock, wei)
     router = w3.eth.contract(address=router_address, abi=ROUTER_ABI)
     deadline = int(time.time()) + 600
     overrides = {booster_address: {"balance": hex(wei + 10**18)}}

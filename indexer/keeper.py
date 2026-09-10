@@ -26,6 +26,7 @@ from config import (
     make_web3,
     wei_env,
 )
+from rialto import RIALTO_RUNNER_ADDRESS  # noqa: E402
 
 
 def is_poke_eligible(balance: int, threshold: int, active_shares: int) -> bool:
@@ -736,13 +737,44 @@ def main() -> None:
             time.sleep(2)
             booster_balance = max(booster_balance, int(w3.eth.get_balance(booster_address)))
     if is_poke_eligible(booster_balance, threshold, shares):
+        # Names routed through a RialtoLeg adapter need this hour's Rialto quote staged in the
+        # same transaction as the poke, so the poke goes through RialtoPokeRunner.run instead of
+        # Booster.poke. A basket name we cannot quote would revert the whole poke (NotStaged),
+        # so that defers the stage with a named cause rather than burning relay gas.
+        poke_call = lambda: booster.functions.poke(poke_max_wei)  # noqa: E731
+        rialto_blockers: List[str] = []
+        if RIALTO_RUNNER_ADDRESS:
+            try:
+                from rialto import RUNNER_ABI, build_legs
+
+                strategy_registry = w3.eth.contract(
+                    address=booster.functions.registry().call(), abi=registry_abi)
+                basket_tokens, basket_weights, _epoch = strategy_registry.functions.getBasket(
+                    int(booster.functions.strategyId().call())).call()
+                # min(balance, cap) is what _poke will spend if the buffer only grows from here;
+                # a larger fill leaves USDG carry in the adapter, never a revert.
+                legs, failed = build_legs(
+                    w3, booster_address, booster.functions.router().call(),
+                    basket_tokens, basket_weights, min(booster_balance, poke_max_wei))
+                rialto_blockers = [f"{tok}: {why}" for tok, why in failed]
+                if legs and not failed:
+                    runner = w3.eth.contract(
+                        address=_address(RIALTO_RUNNER_ADDRESS, "RIALTO_RUNNER_ADDRESS", Web3),
+                        abi=RUNNER_ABI)
+                    poke_call = lambda: runner.functions.run(legs, poke_max_wei)  # noqa: E731
+                    print(json.dumps({"action": "booster.poke", "via": "rialto.runner",
+                                      "legs": [leg for leg, _d, _s in legs]}))
+            except Exception as exc:  # noqa: BLE001 - name it, then defer like a pre-flight revert
+                rialto_blockers.append(f"rialto leg build failed: {redact(str(exc))[:200]}")
         # Pre-flight the poke as a free eth_call before spending relay gas. During a venue-wide
         # halt (all Rialto pools reverting "ACF" for 13+ hours on 2026-08-25/26) every on-chain
         # attempt burns real relay gas and changes nothing; hourly retries drained the relay
         # below its floor. A revert here defers the stage with zero cost; the first run after
         # the venue recovers passes the call and the poke goes on-chain as before.
         try:
-            booster.functions.poke(poke_max_wei).call({"from": account.address})
+            if rialto_blockers:
+                raise RuntimeError("rialto quote unavailable: " + "; ".join(rialto_blockers))
+            poke_call().call({"from": account.address})
             poke_sendable = True
         except Exception as exc:
             print(json.dumps({"action": "booster.poke", "status": "deferred",
@@ -754,8 +786,7 @@ def main() -> None:
             poke_sendable = False
         # poke buys the whole basket in one tx; real usage scales with the number of routes
         # (observed 0.24M–1.0M). Floor high so a stale-low estimate can never under-gas it.
-        poked = poke_sendable and submit(
-            "booster.poke", lambda: booster.functions.poke(poke_max_wei), min_gas=2_000_000)
+        poked = poke_sendable and submit("booster.poke", poke_call, min_gas=3_000_000)
         if poke_sendable and not poked:
             # The basket is bought atomically, so one illiquid route reverts every leg and the
             # buffer sits until the next indexer epoch replaces the basket — up to six hours of
