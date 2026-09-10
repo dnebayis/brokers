@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-09T23:22:07.104665+00:00",
+  "generatedAt": "2026-09-10T00:22:20.398366+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 3407,
     "distinctTraders": 80,
     "latestDisclosure": "2026-09-09",
-    "ageDays": 0,
+    "ageDays": 1,
     "errors": []
   },
-  "coverage": 0.12470459494224627,
+  "coverage": 0.12228877871187804,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -23,90 +23,90 @@
   ],
   "weightsBps": [
     5000,
-    4535,
-    465
+    4327,
+    673
   ],
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 58935639,
+    "block": 58971476,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7080094348368114
+      "shareOfBuying": 0.7118061078642216
     },
     {
       "ticker": "FWONK",
       "netNotional": 146003.0,
-      "shareOfBuying": 0.013782863193167013
+      "shareOfBuying": 0.01385677326039379
     },
     {
       "ticker": "LTH",
       "netNotional": 121004.5,
-      "shareOfBuying": 0.011422973974901733
+      "shareOfBuying": 0.0114842292280797
     },
     {
       "ticker": "CHRW",
       "netNotional": 97003.0,
-      "shareOfBuying": 0.00915720278574262
+      "shareOfBuying": 0.009206307929138298
     },
     {
       "ticker": "BRK.B",
       "netNotional": 81002.0,
-      "shareOfBuying": 0.007646688659636544
+      "shareOfBuying": 0.007687693729844029
     },
     {
       "ticker": "CB",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006136174533530468
+      "shareOfBuying": 0.006169079530549761
     },
     {
       "ticker": "BWXT",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.00457860139287131
+      "shareOfBuying": 0.004603153964569149
     },
     {
       "ticker": "MLM",
       "netNotional": 48501.5,
-      "shareOfBuying": 0.00457860139287131
+      "shareOfBuying": 0.004603153964569149
     },
     {
       "ticker": "HUBB",
       "netNotional": 40501.0,
-      "shareOfBuying": 0.003823344329818272
+      "shareOfBuying": 0.0038438468649220144
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003068087266765234
+      "shareOfBuying": 0.0030845397652748806
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003068087266765234
+      "shareOfBuying": 0.0030845397652748806
     },
     {
       "ticker": "SGI",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003068087266765234
+      "shareOfBuying": 0.0030845397652748806
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003068087266765234
+      "shareOfBuying": 0.0030845397652748806
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003068087266765234
+      "shareOfBuying": 0.0030845397652748806
     },
     {
       "ticker": "COHR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003068087266765234
+      "shareOfBuying": 0.0030845397652748806
     }
   ],
   "missedAttribution": {
@@ -306,17 +306,6 @@
           ]
         },
         {
-          "member": "John James",
-          "chamber": "house",
-          "buys": 1,
-          "notionalUsd": 32500.5,
-          "latestTraded": "2026-06-12",
-          "latestFiled": "2026-07-12",
-          "ranges": [
-            "$15,001 - $50,000"
-          ]
-        },
-        {
           "member": "Gilbert Cisneros",
           "chamber": "house",
           "buys": 1,
@@ -339,7 +328,7 @@
           ]
         }
       ],
-      "buyerCount": 5,
+      "buyerCount": 4,
       "sellCount": 0
     }
   },
@@ -358,11 +347,11 @@
       },
       {
         "ticker": "SPCX",
-        "bps": 4535
+        "bps": 4327
       },
       {
         "ticker": "MU",
-        "bps": 465
+        "bps": 673
       }
     ],
     "vetoed": [
@@ -379,7 +368,6 @@
       "APD",
       "ARCC",
       "ARLP",
-      "ATO",
       "AVAV",
       "AWK",
       "BA",
@@ -398,7 +386,6 @@
       "CLH",
       "CMCSA",
       "CME",
-      "CNM",
       "COST",
       "CPAY",
       "CRDO",
@@ -434,7 +421,6 @@
       "ICHR",
       "ICLR",
       "IEF",
-      "IMCB",
       "INTU",
       "ITW",
       "JD",
@@ -454,7 +440,6 @@
       "MCD",
       "MDT",
       "MGA",
-      "MGK",
       "MIDD",
       "MKL",
       "MPC",
@@ -479,7 +464,6 @@
       "SOLS",
       "SPGI",
       "SPOT",
-      "SPSM",
       "SPXC",
       "STE",
       "STRL",
@@ -508,19 +492,19 @@
     "basket": [
       {
         "ticker": "AAPL",
-        "bps": 3811
+        "bps": 3808
       },
       {
         "ticker": "INTC",
-        "bps": 2815
+        "bps": 2813
       },
       {
         "ticker": "AMZN",
-        "bps": 2770
+        "bps": 2775
       },
       {
         "ticker": "PLTR",
-        "bps": 268
+        "bps": 267
       },
       {
         "ticker": "SPCX",
@@ -528,7 +512,7 @@
       },
       {
         "ticker": "COIN",
-        "bps": 46
+        "bps": 47
       },
       {
         "ticker": "ASML",
@@ -547,7 +531,7 @@
         "bps": 11
       }
     ],
-    "divergenceBps": 6970
+    "divergenceBps": 6972
   },
   "commentary": {
     "text": "Your basket is led by Intel, with Nancy Pelosi making two buys totaling $1.1M, traded on 2026-07-24 and filed on 2026-08-21. SPCX is the next largest position, with William R. Timmons IV buying $75K, traded on 2026-06-15 and filed on 2026-07-19, and Dan Meuser buying $33K, traded on 2026-06-15 and filed on 2026-07-02, among five buyers. Three members bought MU. The largest disclosed buy, BE, with a notional value of $7.5M from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 12.5% of the total disclosed buying dollars.",
