@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T17:25:14.013544+00:00",
+  "generatedAt": "2026-09-11T18:19:01.839866+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 60431426,
+    "block": 60463216,
     "dropped": []
   },
   "missedCoverage": [
@@ -586,10 +586,10 @@
     "divergenceBps": 6954
   },
   "commentary": {
-    "text": "The latest basket is led by Nancy Pelosi's $1.1M position in INTC, traded on 2026-07-24 and filed on 2026-08-21. SPCX follows with buying from William R. Timmons IV and Dan Meuser, among others. MSFT also appears, with buying from three members. In total, the basket reflects buying from nine members. The largest disclosed buying, a $7.5M position in BE from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 12.5% of the disclosed buying dollars.",
+    "text": "The latest basket is led by INTC, with Nancy Pelosi buying an estimated $1.1M in two trades, the latest on 2026-07-24, filed 2026-08-21. SPCX is also present, with William R. Timmons IV buying an estimated $75K, and MSFT, with Gilbert Cisneros buying an estimated $65K. Other members also made buys in the basket. The largest disclosed buy, BE, with an estimated $7.5M from Nancy Pelosi, could not be included as it is not tokenized or tradable on this chain. This basket represents 12.5% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-11T13:10:03+00:00",
-    "inputHash": "a8d6eb9206313447",
+    "generatedAt": "2026-09-11T18:19:01+00:00",
+    "inputHash": "08bf21958755337f",
     "promptVersion": 2
   }
 }
