@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-11T16:17:41.447918+00:00",
+  "generatedAt": "2026-09-11T17:18:01.843614+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3523,
+    "rows": 3528,
     "distinctTraders": 80,
     "latestDisclosure": "2026-09-11",
     "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.12510806985774559,
+  "coverage": 0.12462699787976478,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,84 +29,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 60391559,
+    "block": 60427179,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7237226624089913
+      "shareOfBuying": 0.7209397668442966
     },
     {
       "ticker": "BRK.B",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.00858841454456362
+      "shareOfBuying": 0.008555389931703952
     },
     {
       "ticker": "MRK",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006272357897937473
+      "shareOfBuying": 0.006248239105089055
     },
     {
       "ticker": "FWONK",
       "netNotional": 44004.0,
-      "shareOfBuying": 0.004246224472559508
+      "shareOfBuying": 0.004229896672056411
+    },
+    {
+      "ticker": "SPYM",
+      "netNotional": 40002.5,
+      "shareOfBuying": 0.0038452513776914958
     },
     {
       "ticker": "ETN",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "PWR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "GMED",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "CB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "MOG.A",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
+      "shareOfBuying": 0.0031241195525445273
     },
     {
       "ticker": "VOYG",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031361789489687364
-    },
-    {
-      "ticker": "AVGO",
-      "netNotional": 32002.0,
-      "shareOfBuying": 0.0030880755288348644
+      "shareOfBuying": 0.0031241195525445273
     }
   ],
   "missedAttribution": {
@@ -168,23 +168,6 @@
       "buyerCount": 3,
       "sellCount": 0
     },
-    "ETN": {
-      "buyers": [
-        {
-          "member": "Gilbert Cisneros",
-          "chamber": "house",
-          "buys": 1,
-          "notionalUsd": 32500.5,
-          "latestTraded": "2026-08-27",
-          "latestFiled": "2026-09-11",
-          "ranges": [
-            "$15,001 - $50,000"
-          ]
-        }
-      ],
-      "buyerCount": 1,
-      "sellCount": 0
-    },
     "FWONK": {
       "buyers": [
         {
@@ -214,6 +197,23 @@
           "latestFiled": "2026-09-10",
           "ranges": [
             "$15,001 - $50,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 0
+    },
+    "SPYM": {
+      "buyers": [
+        {
+          "member": "John Boozman",
+          "chamber": "senate",
+          "buys": 5,
+          "notionalUsd": 40002.5,
+          "latestTraded": "2026-08-20",
+          "latestFiled": "2026-09-11",
+          "ranges": [
+            "$1,001 - $15,000"
           ]
         }
       ],
