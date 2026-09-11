@@ -19,6 +19,26 @@ were verified on-chain (codesize > 0, roles, closed-state) immediately after bro
 | BrokerAccount (6551 impl) | `0x32A055D504840E69B7a0B2136264EEF643f6312C` |
 | ERC-6551 Registry (canonical) | `0x000000006551c19487814612e58FE06813775758` |
 
+### Rialto adapters (deployed 2026-09-11, block 60553140-60553144, Sourcify exact match)
+
+`RialtoLeg` per stock (`contracts/src/RialtoLeg.sol`): the StockRouter route for these names points at
+the adapter (`PoolKind.Rialto`); the keeper stages one Rialto quote per hour through the runner.
+Owner of the runner = deployer; the only stager is the keeper relay.
+
+| Component | Mainnet address |
+|---|---|
+| RialtoPokeRunner | `0x637935eC724704B93B9C40C480a653BC3e2b8391` |
+| RialtoLeg COIN | `0xD629DA9e2b79fd5318AB8A872E9d90BC96be97D2` |
+| RialtoLeg ORCL | `0x378Ed516b7B926E2075792CDE55d09D7b0BbBb93` |
+| RialtoLeg CRWV | `0x47F9831DE7bE437147F118Ae64516A84C8E0c925` |
+| RialtoLeg NBIS | `0x067E20D8407438Af73fcCB64d7412d6791d56Fea` |
+| RialtoLeg RKLB | `0x868DA3eCB77EeBbb713af9Dd340E94b5D348ADbe` |
+| RialtoLeg EWY | `0xFe861da2cDCb6D5d144531b2Da244AF75F3d0d4a` |
+| RialtoLeg CLSK | `0x7b6214daC69dd2C658CF35397bb28F3fF9a1114c` |
+| RialtoLeg IONQ | `0x725E37F537FC1f53D9BfaD248326e6A36dF430aE` (routed; Rialto does not quote IONQ yet) |
+| RialtoLeg RGTI | `0xF99B0bCd263faC84B408280975dD2F2ef15570DA` (routed; Rialto does not quote RGTI yet) |
+| Rialto router registry (theirs) | `0x71a120CbBf3Ce7cD910a3c50fF77aFc62735687E` (feature 2 = taker router) |
+
 Verified state at deploy: `broker.owner = broker.creator = booster.owner = FeeSplitter.treasury =
 deployer 0x9e643731…C440`; `registry.oracleSigner = 0x822864D8…7608e`; `registry` UPDATER_ROLE held
 by the deployer; FeeSplitter split `8000/1000/1000` (80/10/10); `broker.mintOpen = false`;

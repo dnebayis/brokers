@@ -87,6 +87,9 @@ Known operational limits, stated plainly:
 - The $COAT exit has no Chainlink floor of its own (it crosses the hooked pool), so the keeper
   computes that order's minimum out before running it, and skips any order it cannot price
   rather than sending an unguarded one.
+- Since 2026-09-11 nine names are routed through `RialtoLeg` adapters (COIN, ORCL, CRWV back in
+  the universe; NBIS, RKLB, EWY, CLSK new; IONQ and RGTI wired but not quoted by Rialto yet), so
+  the route-ready universe is 33 names (26 v3 + 7 Rialto). Addresses in `ADDRESSES.md`.
 - Names with no Uniswap v3 liquidity can be routed through a `RialtoLeg` adapter
   (`contracts/src/RialtoLeg.sol`): the StockRouter sees an ordinary Rialto-shaped pool, the
   adapter executes one API-built Rialto quote staged by `RialtoPokeRunner` in the same
