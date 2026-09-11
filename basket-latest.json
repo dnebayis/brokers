@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-09-11T18:19:01.839866+00:00",
+  "generatedAt": "2026-09-11T18:40:18.525302+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3528,
+    "rows": 3532,
     "distinctTraders": 80,
     "latestDisclosure": "2026-09-11",
     "ageDays": 0,
@@ -29,7 +29,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 60463216,
+    "block": 60475732,
     "dropped": []
   },
   "missedCoverage": [
@@ -404,6 +404,7 @@
       "CBOE",
       "CBZ",
       "CCI",
+      "CEG",
       "CHRW",
       "CLH",
       "CMCSA",
@@ -456,6 +457,7 @@
       "IEF",
       "ITT",
       "ITW",
+      "IVV",
       "JD",
       "JNJ",
       "JPM",
@@ -535,6 +537,7 @@
       "VRTX",
       "WAB",
       "WMB",
+      "WWSYX",
       "XOM",
       "ZTS"
     ],
