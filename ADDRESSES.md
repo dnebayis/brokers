@@ -19,7 +19,7 @@ were verified on-chain (codesize > 0, roles, closed-state) immediately after bro
 | BrokerAccount (6551 impl) | `0x32A055D504840E69B7a0B2136264EEF643f6312C` |
 | ERC-6551 Registry (canonical) | `0x000000006551c19487814612e58FE06813775758` |
 
-### Rialto adapters (deployed 2026-09-11, block 60553140-60553144, Sourcify exact match)
+### Rialto adapters (deployed 2026-09-11, blocks 60553140-60553144; Sourcify exact match and Blockscout verified)
 
 `RialtoLeg` per stock (`contracts/src/RialtoLeg.sol`): the StockRouter route for these names points at
 the adapter (`PoolKind.Rialto`); the keeper stages one Rialto quote per hour through the runner.
