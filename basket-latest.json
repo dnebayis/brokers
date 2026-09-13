@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T03:21:05.528033+00:00",
+  "generatedAt": "2026-09-13T05:20:46.008405+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -26,7 +26,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 61632754,
+    "block": 61703694,
     "dropped": []
   },
   "missedCoverage": [
@@ -517,10 +517,10 @@
     "divergenceBps": 6954
   },
   "commentary": {
-    "text": "The current basket is led by Nancy Pelosi's purchases of INTC, with a notional value of $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Gilbert Cisneros and David Taylor also contributed to the basket, alongside four other members. The largest disclosed buying, BE with $7.5M from Nancy Pelosi, could not be bought because it is not tokenized or not tradable on this chain. This basket represents 11.5% of the disclosed buying dollars.",
+    "text": "Your basket is currently weighted with Intel (INTC) and Microsoft (MSFT). Nancy Pelosi's two buys of INTC, with a notional value of $1.1M, were traded on 2026-07-24 and filed on 2026-08-21. MSFT saw buying from Gilbert Cisneros, David Taylor, Jared Moskowitz, and three other members. The largest disclosed buy, BE, with a notional value of $7.5M from Nancy Pelosi, could not be included as it is not tokenized or tradable on this chain. This basket represents 11.5% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-13T00:19:58+00:00",
-    "inputHash": "4d936b34b369693c",
+    "generatedAt": "2026-09-13T05:20:46+00:00",
+    "inputHash": "e570d30ecb34bd65",
     "promptVersion": 2
   }
 }
