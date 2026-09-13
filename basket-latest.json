@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T00:19:58.866704+00:00",
+  "generatedAt": "2026-09-13T01:20:11.837579+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -13,23 +13,20 @@
   "strategyId": 0,
   "tickers": [
     "INTC",
-    "MSFT",
-    "SPCX"
+    "MSFT"
   ],
   "tokens": [
     "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681",
-    "0xe93237C50D904957Cf27E7B1133b510C669c2e74",
-    "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa"
+    "0xe93237C50D904957Cf27E7B1133b510C669c2e74"
   ],
   "weightsBps": [
     5000,
-    3611,
-    1389
+    5000
   ],
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 61525535,
+    "block": 61561133,
     "dropped": []
   },
   "missedCoverage": [
@@ -278,34 +275,6 @@
       ],
       "buyerCount": 3,
       "sellCount": 7
-    },
-    "SPCX": {
-      "buyers": [
-        {
-          "member": "Maria Elvira",
-          "chamber": "house",
-          "buys": 2,
-          "notionalUsd": 16001.0,
-          "latestTraded": "2026-08-12",
-          "latestFiled": "2026-09-10",
-          "ranges": [
-            "$1,001 - $15,000"
-          ]
-        },
-        {
-          "member": "Gilbert Cisneros",
-          "chamber": "house",
-          "buys": 1,
-          "notionalUsd": 8000.5,
-          "latestTraded": "2026-06-18",
-          "latestFiled": "2026-07-02",
-          "ranges": [
-            "$1,001 - $15,000"
-          ]
-        }
-      ],
-      "buyerCount": 2,
-      "sellCount": 0
     }
   },
   "smartShadow": {
@@ -317,11 +286,7 @@
       },
       {
         "ticker": "MSFT",
-        "bps": 3611
-      },
-      {
-        "ticker": "SPCX",
-        "bps": 1389
+        "bps": 5000
       }
     ],
     "capped": [
@@ -331,11 +296,7 @@
       },
       {
         "ticker": "MSFT",
-        "bps": 3611
-      },
-      {
-        "ticker": "SPCX",
-        "bps": 1389
+        "bps": 5000
       }
     ],
     "vetoed": [
@@ -508,7 +469,7 @@
       "XOM",
       "ZTS"
     ],
-    "divergenceBps": 3611
+    "divergenceBps": 5000
   },
   "filedWindowShadow": {
     "basket": [
