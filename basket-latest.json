@@ -1,32 +1,35 @@
 {
-  "generatedAt": "2026-09-14T09:33:56.553746+00:00",
+  "generatedAt": "2026-09-14T13:12:15.913493+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3532,
+    "rows": 3537,
     "distinctTraders": 80,
-    "latestDisclosure": "2026-09-11",
-    "ageDays": 3,
+    "latestDisclosure": "2026-09-14",
+    "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.11777887736763076,
+  "coverage": 0.11699689793484808,
   "strategyId": 0,
   "tickers": [
     "INTC",
-    "MSFT"
+    "MU",
+    "SPCX"
   ],
   "tokens": [
     "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681",
-    "0xe93237C50D904957Cf27E7B1133b510C669c2e74"
+    "0xfF080c8ce2E5feadaCa0Da81314Ae59D232d4afD",
+    "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa"
   ],
   "weightsBps": [
     5000,
-    5000
+    2857,
+    2143
   ],
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 62705016,
+    "block": 62834081,
     "dropped": []
   },
   "missedCoverage": [
@@ -237,44 +240,72 @@
       "buyerCount": 1,
       "sellCount": 1
     },
-    "MSFT": {
+    "MU": {
       "buyers": [
         {
-          "member": "Gilbert Cisneros",
+          "member": "Dan Newhouse",
           "chamber": "house",
-          "buys": 2,
-          "notionalUsd": 65001.0,
-          "latestTraded": "2026-08-18",
-          "latestFiled": "2026-09-11",
-          "ranges": [
-            "$15,001 - $50,000"
-          ]
-        },
-        {
-          "member": "David Taylor",
-          "chamber": "house",
-          "buys": 2,
-          "notionalUsd": 16001.0,
-          "latestTraded": "2026-07-24",
-          "latestFiled": "2026-08-06",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-07-10",
+          "latestFiled": "2026-07-17",
           "ranges": [
             "$1,001 - $15,000"
           ]
         },
         {
-          "member": "Jared Moskowitz",
+          "member": "Michael Rulli",
           "chamber": "house",
-          "buys": 2,
-          "notionalUsd": 16001.0,
-          "latestTraded": "2026-06-17",
-          "latestFiled": "2026-07-26",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-06-25",
+          "latestFiled": "2026-08-07",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        },
+        {
+          "member": "Sheldon Whitehouse",
+          "chamber": "senate",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-06-25",
+          "latestFiled": "2026-07-08",
           "ranges": [
             "$1,001 - $15,000"
           ]
         }
       ],
       "buyerCount": 3,
-      "sellCount": 5
+      "sellCount": 0
+    },
+    "SPCX": {
+      "buyers": [
+        {
+          "member": "Maria Elvira",
+          "chamber": "house",
+          "buys": 2,
+          "notionalUsd": 16001.0,
+          "latestTraded": "2026-08-12",
+          "latestFiled": "2026-09-10",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        },
+        {
+          "member": "Gilbert Cisneros",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-06-18",
+          "latestFiled": "2026-07-02",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        }
+      ],
+      "buyerCount": 2,
+      "sellCount": 0
     }
   },
   "smartShadow": {
@@ -282,11 +313,7 @@
     "basket": [
       {
         "ticker": "INTC",
-        "bps": 5000
-      },
-      {
-        "ticker": "MSFT",
-        "bps": 5000
+        "bps": 10000
       }
     ],
     "capped": [
@@ -295,8 +322,12 @@
         "bps": 5000
       },
       {
-        "ticker": "MSFT",
-        "bps": 5000
+        "ticker": "MU",
+        "bps": 2857
+      },
+      {
+        "ticker": "SPCX",
+        "bps": 2143
       }
     ],
     "vetoed": [
@@ -308,6 +339,7 @@
       "ALC",
       "ALL",
       "ALNY",
+      "AMCR",
       "AMGN",
       "AMZN",
       "APD",
@@ -403,6 +435,7 @@
       "MKL",
       "MLM",
       "MPC",
+      "MSFT",
       "MTSI",
       "NDAQ",
       "NEE",
@@ -504,10 +537,10 @@
     "divergenceBps": 6932
   },
   "commentary": {
-    "text": "Your Coattail Brokers basket is led by Intel, with Nancy Pelosi making two buys totaling $1.1M, most recently traded on 2026-07-24 and filed on 2026-08-21. Microsoft is also in the basket, with Gilbert Cisneros, David Taylor, Jared Moskowitz, and three other members buying. Bloom Energy, with $7.5M in net notional buying from Nancy Pelosi, was not included because it is not tokenized or tradable on this chain. This basket represents 11.8% of the disclosed buying dollars.",
+    "text": "The current Coattail Brokers basket is led by Intel, with Nancy Pelosi buying an estimated $1.1M across two trades, the latest on 2026-07-24 and filed 2026-08-21. Micron Technology is also in the basket, with buys from Dan Newhouse, Michael Rulli, and Sheldon Whitehouse. The basket includes SPCX, with two members buying, and other members buying other tokens. Bloom Energy, with an estimated $7.5M in buying from Nancy Pelosi, could not be included because it is not tokenized or tradable on this chain. This basket represents 11.7% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-14T00:28:29+00:00",
-    "inputHash": "83452689511f30e8",
+    "generatedAt": "2026-09-14T13:12:16+00:00",
+    "inputHash": "dff46359ca62f665",
     "promptVersion": 2
   }
 }
