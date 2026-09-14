@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-13T23:28:12.527200+00:00",
+  "generatedAt": "2026-09-14T00:28:28.550756+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 3532,
     "distinctTraders": 80,
     "latestDisclosure": "2026-09-11",
-    "ageDays": 2,
+    "ageDays": 3,
     "errors": []
   },
-  "coverage": 0.11543293906928272,
+  "coverage": 0.11777887736763076,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -26,7 +26,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 62346713,
+    "block": 62382335,
     "dropped": []
   },
   "missedCoverage": [
@@ -235,7 +235,7 @@
         }
       ],
       "buyerCount": 1,
-      "sellCount": 2
+      "sellCount": 1
     },
     "MSFT": {
       "buyers": [
@@ -274,7 +274,7 @@
         }
       ],
       "buyerCount": 3,
-      "sellCount": 7
+      "sellCount": 5
     }
   },
   "smartShadow": {
@@ -325,8 +325,6 @@
       "BRO",
       "BUD",
       "BWXT",
-      "C",
-      "CAG",
       "CARR",
       "CB",
       "CBOE",
@@ -336,7 +334,6 @@
       "CHRW",
       "CLH",
       "CMCSA",
-      "CME",
       "CNM",
       "COHR",
       "COIN",
@@ -363,13 +360,9 @@
       "FLL",
       "FMC",
       "FN",
-      "FOX",
       "FTGC",
       "FTNT",
       "FWONK",
-      "GDDY",
-      "GE",
-      "GEV",
       "GIL",
       "GOOGL",
       "GTLS",
@@ -399,7 +392,6 @@
       "LOW",
       "LRCX",
       "LTH",
-      "LUV",
       "LYV",
       "MBGL",
       "MCD",
@@ -451,7 +443,6 @@
       "TDG",
       "TDY",
       "TMO",
-      "TPR",
       "TPYP",
       "TRMB",
       "TRV",
@@ -475,23 +466,23 @@
     "basket": [
       {
         "ticker": "AAPL",
-        "bps": 3802
+        "bps": 3830
       },
       {
         "ticker": "INTC",
-        "bps": 2809
+        "bps": 2829
       },
       {
         "ticker": "AMZN",
-        "bps": 2771
-      },
-      {
-        "ticker": "PLTR",
-        "bps": 267
+        "bps": 2791
       },
       {
         "ticker": "SPCX",
-        "bps": 237
+        "bps": 239
+      },
+      {
+        "ticker": "PLTR",
+        "bps": 208
       },
       {
         "ticker": "COIN",
@@ -508,19 +499,15 @@
       {
         "ticker": "ORCL",
         "bps": 11
-      },
-      {
-        "ticker": "TSM",
-        "bps": 11
       }
     ],
-    "divergenceBps": 6954
+    "divergenceBps": 6932
   },
   "commentary": {
-    "text": "Your basket is currently weighted with Intel (INTC) and Microsoft (MSFT). Nancy Pelosi's two buys of INTC, with a notional value of $1.1M, were traded on 2026-07-24 and filed on 2026-08-21. MSFT saw buying from Gilbert Cisneros, David Taylor, Jared Moskowitz, and three other members. The largest disclosed buy, BE, with a notional value of $7.5M from Nancy Pelosi, could not be included as it is not tokenized or tradable on this chain. This basket represents 11.5% of the disclosed buying dollars.",
+    "text": "Your Coattail Brokers basket is led by Intel, with Nancy Pelosi making two buys totaling $1.1M, most recently traded on 2026-07-24 and filed on 2026-08-21. Microsoft is also in the basket, with Gilbert Cisneros, David Taylor, Jared Moskowitz, and three other members buying. Bloom Energy, with $7.5M in net notional buying from Nancy Pelosi, was not included because it is not tokenized or tradable on this chain. This basket represents 11.8% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-13T05:20:46+00:00",
-    "inputHash": "e570d30ecb34bd65",
+    "generatedAt": "2026-09-14T00:28:29+00:00",
+    "inputHash": "83452689511f30e8",
     "promptVersion": 2
   }
 }
