@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-14T23:23:46.852563+00:00",
+  "generatedAt": "2026-09-15T00:24:04.418883+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 3537,
     "distinctTraders": 81,
     "latestDisclosure": "2026-09-14",
-    "ageDays": 0,
+    "ageDays": 1,
     "errors": []
   },
-  "coverage": 0.11699689793484808,
+  "coverage": 0.11676275493933101,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -29,84 +29,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 63194553,
+    "block": 63230162,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7330600974725316
+      "shareOfBuying": 0.7365157384287639
     },
     {
       "ticker": "BRK.B",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.008699221856914038
+      "shareOfBuying": 0.008740229937206159
     },
     {
       "ticker": "MRK",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006353283558565988
+      "shareOfBuying": 0.006383232899618971
     },
     {
       "ticker": "FWONK",
       "netNotional": 44004.0,
-      "shareOfBuying": 0.004301009056955089
+      "shareOfBuying": 0.0043212839881668465
     },
     {
       "ticker": "SPYM",
       "netNotional": 40002.5,
-      "shareOfBuying": 0.003909897163913416
+      "shareOfBuying": 0.003928328395978645
     },
     {
       "ticker": "ETN",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "PWR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "GMED",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "CB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "MOG.A",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.003176641779282994
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "AVGO",
       "netNotional": 32002.0,
-      "shareOfBuying": 0.003127917731130733
+      "shareOfBuying": 0.0031426627167829156
     }
   ],
   "missedAttribution": {
@@ -395,7 +395,6 @@
       "FTGC",
       "FTNT",
       "FWONK",
-      "GIL",
       "GOOGL",
       "GTLS",
       "GWW",
@@ -405,9 +404,7 @@
       "HUBB",
       "IBM",
       "ICE",
-      "ICHR",
       "ICLR",
-      "IEF",
       "ITT",
       "ITW",
       "IVV",
@@ -443,7 +440,6 @@
       "NFLX",
       "NKE",
       "NOK",
-      "NTDOY",
       "NVDA",
       "NXPI",
       "O",
@@ -499,23 +495,23 @@
     "basket": [
       {
         "ticker": "AAPL",
-        "bps": 3830
+        "bps": 3832
       },
       {
         "ticker": "INTC",
-        "bps": 2829
+        "bps": 2828
       },
       {
         "ticker": "AMZN",
-        "bps": 2791
+        "bps": 2792
       },
       {
         "ticker": "SPCX",
-        "bps": 239
+        "bps": 238
       },
       {
         "ticker": "PLTR",
-        "bps": 208
+        "bps": 207
       },
       {
         "ticker": "COIN",
@@ -534,13 +530,13 @@
         "bps": 11
       }
     ],
-    "divergenceBps": 6932
+    "divergenceBps": 6934
   },
   "commentary": {
-    "text": "The current Coattail Brokers basket is led by Intel, with Nancy Pelosi buying an estimated $1.1M across two trades, the latest on 2026-07-24 and filed 2026-08-21. Micron Technology is also in the basket, with buys from Dan Newhouse, Michael Rulli, and Sheldon Whitehouse. The basket includes SPCX, with two members buying, and other members buying other tokens. Bloom Energy, with an estimated $7.5M in buying from Nancy Pelosi, could not be included because it is not tokenized or tradable on this chain. This basket represents 11.7% of the disclosed buying dollars.",
+    "text": "The current basket is led by Intel, representing 50% of the basket, following two buys by Nancy Pelosi with a notional value of $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Micron Technology makes up 28.6% of the basket, with buys from Dan Newhouse, Michael Rulli, and Sheldon Whitehouse. SPCX accounts for 21.4% of the basket, with buys from two members. In total, seven members contributed to the basket. Bloom Energy, with a net notional of $7.5M from Nancy Pelosi, could not be included as it is not tokenized or tradable on this chain. This basket covers 11.7% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-14T13:12:16+00:00",
-    "inputHash": "dff46359ca62f665",
+    "generatedAt": "2026-09-15T00:24:04+00:00",
+    "inputHash": "9a53fdb75b79cad9",
     "promptVersion": 2
   }
 }
