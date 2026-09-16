@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-15T23:44:33.857653+00:00",
+  "generatedAt": "2026-09-16T00:44:45.764291+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 3544,
     "distinctTraders": 81,
     "latestDisclosure": "2026-09-15",
-    "ageDays": 0,
+    "ageDays": 1,
     "errors": []
   },
-  "coverage": 0.11657956980554776,
+  "coverage": 0.11615961450498562,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -26,84 +26,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 64053173,
+    "block": 64089034,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7353602438179384
+      "shareOfBuying": 0.7376748700844249
     },
     {
       "ticker": "BRK.B",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.008726517686316092
+      "shareOfBuying": 0.008753985348895777
     },
     {
       "ticker": "MRK",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006373218461596385
+      "shareOfBuying": 0.006393278859173331
     },
     {
       "ticker": "FWONK",
       "netNotional": 44004.0,
-      "shareOfBuying": 0.004314504471994082
+      "shareOfBuying": 0.004328084843603379
     },
     {
       "ticker": "SPYM",
       "netNotional": 40002.5,
-      "shareOfBuying": 0.003922165374532844
-    },
-    {
-      "ticker": "AMAT",
-      "netNotional": 40002.5,
-      "shareOfBuying": 0.003922165374532844
+      "shareOfBuying": 0.003934510816204077
     },
     {
       "ticker": "ETN",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
     },
     {
       "ticker": "PWR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
     },
     {
       "ticker": "GMED",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
     },
     {
       "ticker": "CB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
     },
     {
       "ticker": "MOG.A",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031866092307981926
+      "shareOfBuying": 0.0031966394295866655
+    },
+    {
+      "ticker": "AVGO",
+      "netNotional": 32002.0,
+      "shareOfBuying": 0.0031476086529632612
     }
   ],
   "missedAttribution": {
@@ -315,7 +315,6 @@
       "APD",
       "APP",
       "ARCC",
-      "ARLP",
       "AVAV",
       "AWK",
       "BA",
@@ -353,7 +352,6 @@
       "DIS",
       "DLTR",
       "EA",
-      "EFC",
       "EME",
       "EMR",
       "ENTG",
@@ -431,7 +429,6 @@
       "SMTC",
       "SOLS",
       "SPGI",
-      "SPOT",
       "SPXC",
       "STE",
       "STRL",
@@ -502,10 +499,10 @@
     "divergenceBps": 6934
   },
   "commentary": {
-    "text": "This basket reflects recent congressional trading, led by Nancy Pelosi's two buys of INTC, with a notional value of $1.1M, traded on 2026-07-24 and filed on 2026-08-21. MSFT also features, with Josh Gottheimer's two buys of $1.1M, traded on 2026-08-14 and filed on 2026-09-15, and two buys by Gilbert Cisneros. One other member also bought into the basket. BE, with a net notional of $7.5M from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 11.7% of disclosed buying dollars.",
+    "text": "The latest basket is led by Intel, with Nancy Pelosi's two buys totaling $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Microsoft also features, with Josh Gottheimer's two buys of $1.1M, traded on 2026-08-14 and filed on 2026-09-15, along with Gilbert Cisneros and one other member. Bloom Energy, with $7.5M in buying from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 11.6% of disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-15T13:09:24+00:00",
-    "inputHash": "b7192f42acab9da2",
+    "generatedAt": "2026-09-16T00:44:45+00:00",
+    "inputHash": "54001a6936a4819b",
     "promptVersion": 2
   }
 }
