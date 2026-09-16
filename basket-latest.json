@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-16T16:02:30.620045+00:00",
+  "generatedAt": "2026-09-16T17:02:44.199203+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3545,
+    "rows": 3548,
     "distinctTraders": 81,
     "latestDisclosure": "2026-09-16",
     "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.1160682801242722,
+  "coverage": 0.11597708926013528,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -26,84 +26,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 64636374,
+    "block": 64672220,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7370948485535844
+      "shareOfBuying": 0.7365157384287639
     },
     {
       "ticker": "BRK.B",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.00874710223522479
+      "shareOfBuying": 0.008740229937206159
     },
     {
       "ticker": "MRK",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006388251929910357
+      "shareOfBuying": 0.006383232899618971
     },
     {
       "ticker": "FWONK",
       "netNotional": 44004.0,
-      "shareOfBuying": 0.004324681742185126
+      "shareOfBuying": 0.0043212839881668465
     },
     {
       "ticker": "SPYM",
       "netNotional": 40002.5,
-      "shareOfBuying": 0.003931417175524055
+      "shareOfBuying": 0.003928328395978645
     },
     {
       "ticker": "ETN",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "PWR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "GMED",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "CB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "MOG.A",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031941259649551786
+      "shareOfBuying": 0.0031916164498094856
     },
     {
       "ticker": "AVGO",
       "netNotional": 32002.0,
-      "shareOfBuying": 0.0031451337404192438
+      "shareOfBuying": 0.0031426627167829156
     }
   ],
   "missedAttribution": {
@@ -444,12 +444,15 @@
       "TRV",
       "TSCO",
       "TSLA",
+      "UBER",
       "UNH",
       "UPS",
       "V",
+      "VIAV",
       "VIK",
       "VRSK",
       "VRTX",
+      "VZ",
       "WAB",
       "WMB",
       "WWSYX",
