@@ -33,6 +33,10 @@ Owner decision on 2026-09-03: stay on v1.
 
 ## Products
 
+- **Site terms** (`/terms`, since 2026-09-18) — ten-section terms with a one-time acceptance
+  window on first visit; the version string in `frontend/src/lib/terms.ts` re-shows it when the
+  text changes. Restricted-jurisdiction list, governing law and the NFT art licence are the
+  founder's open items for counsel.
 - **Brokers** — the base collection. Activating one burns `36,750 COAT` and adds an equal
   share of every engine purchase. Claims land in the Broker's own ERC-6551 wallet.
 - **The Floor** (`exchange-floor/`, `BasketRouter`) — public terminal: buy or exit the whole
