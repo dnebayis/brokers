@@ -263,7 +263,8 @@ export function DocsTab() {
       <P>
         Rewards are <b>volume-funded, not guaranteed yield</b> — if trading dies, the Booster has nothing to
         spend. Access to third-party assets and venues can depend on their terms and applicable law. We use the descriptive name &quot;The Politician,&quot; never a person&apos;s name or likeness,
-        and imply no affiliation with Robinhood. Not financial or legal advice.
+        and imply no affiliation with Robinhood. Not financial or legal advice. Who may use the stock token features,
+        where they are not offered, and the NFT art licence are set out in the <a className="underline" href="/terms">terms</a>.
       </P>
     </div>
   );

@@ -13,7 +13,14 @@ Coattail Brokers is a non-custodial protocol on Robinhood Chain. A Broker NFT ow
 - The project is independent and is not affiliated with or endorsed by Robinhood, members of Congress, data providers or token issuers.
 - Users should evaluate applicable obligations and third-party terms for their own circumstances.
 
-The frontend does not implement a blanket access-eligibility gate. This is an implementation statement, not a universal legal conclusion.
+Since 2026-09-18 the frontend shows a one-time acceptance window on first visit (and again whenever the terms
+version changes): the visitor must tick that they have read the terms, are not in a restricted jurisdiction and are
+not a sanctioned person before the app continues. The full text lives at coattail.cash/terms (source:
+`frontend/src/components/legal/TermsContent.tsx`, restricted list and version in `frontend/src/lib/terms.ts`). The
+gate is a self-attestation; no IP geolocation or wallet screening is implemented yet, although the terms reserve the
+right to add them. This is an implementation statement, not a universal legal conclusion. Open for counsel: the
+restricted-jurisdiction list, the governing-law clause (currently "place where the operator is established") and the
+NFT art licence scope (personal, non-commercial, travels with the token).
 
 Mainnet (chain 4663) is live: the 1,776-piece collection is sold out, COAT trades, and the engine
 buys the disclosed-Congress basket hourly. Two periphery products run on top of the core: The Floor

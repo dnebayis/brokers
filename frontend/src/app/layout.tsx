@@ -4,6 +4,7 @@ import { Silkscreen, Space_Grotesk } from "next/font/google";
 import { cookieToInitialState } from "wagmi";
 import "./globals.css";
 import { Providers } from "./providers";
+import { TermsGate } from "@/components/TermsGate";
 import { wagmiConfig } from "@/lib/wagmi";
 
 const silkscreen = Silkscreen({
@@ -47,7 +48,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${silkscreen.variable} ${grotesk.variable}`}>
       <body>
-        <Providers initialState={initialState}>{children}</Providers>
+        <Providers initialState={initialState}>
+          {children}
+          <TermsGate />
+        </Providers>
       </body>
     </html>
   );

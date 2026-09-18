@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Tabs, tabButtonId, tabPanelId, type TabId } from "@/components/Tabs";
 import { TRADE_TAB_ENABLED } from "@/lib/floor";
@@ -70,7 +71,10 @@ export default function Page() {
           </div>
           <div className="text-xs text-ink-soft flex flex-wrap justify-between gap-2">
             <span>Coattail Brokers · fully on-chain on Robinhood Chain</span>
-            <span>Not financial or legal advice · participation involves risk</span>
+            <span>
+              Not financial or legal advice · participation involves risk ·{" "}
+              <Link href="/terms" className="underline hover:text-ink-strong">Terms</Link>
+            </span>
           </div>
         </div>
       </footer>
