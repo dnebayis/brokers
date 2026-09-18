@@ -10,11 +10,13 @@ import { activeChain, RPC_HTTP, RPC_PUBLIC_FIRST } from "./chains";
 //    with the metered provider left as the fallback rather than the default.
 // Both use JSON-RPC + Multicall3 batching to keep call counts low under concurrency.
 //
-// `rank` matters more than it looks: when the metered provider hit its monthly cap it
-// answered every request with a 429, and a fixed order kept sending it to the dead endpoint
-// first on every single read. Ranking demotes an endpoint that is erroring or slow, so a
-// provider outage degrades latency instead of correctness.
-const RANK = { interval: 60_000, sampleCount: 3 } as const;
+// No `rank`. viem's ranking pings both endpoints every minute and moves the better-scoring
+// one to the FRONT; the metered provider is almost always the faster of the two, so the
+// "public first" client was quietly sending nearly every ambient read to the metered key
+// (the ~$300/month it cost in 2026-09). A fixed order does what the comment above says: the
+// public endpoint answers, the metered one is used only when the public one fails. A dead or
+// rate-limited endpoint is retried twice, then the next transport answers, so an outage costs
+// latency, not correctness.
 
 // The metered key is locked to the site's origin on the provider side. A browser sends
 // `Origin` on its own, so the key works in the app; a Vercel function sends none, and the
@@ -30,13 +32,13 @@ const transport = (url: string) => http(url, { batch: { wait: 16 }, retryCount: 
 
 export const client = createPublicClient({
   chain: activeChain,
-  transport: fallback(RPC_HTTP.map(transport), { rank: RANK }),
+  transport: fallback(RPC_HTTP.map(transport)),
   batch: { multicall: { wait: 16 } },
 });
 
 export const publicClient = createPublicClient({
   chain: activeChain,
-  transport: fallback(RPC_PUBLIC_FIRST.map(transport), { rank: RANK }),
+  transport: fallback(RPC_PUBLIC_FIRST.map(transport)),
   batch: { multicall: { wait: 16 } },
 });
 

@@ -206,7 +206,7 @@ export function ActivateTab() {
     const id = info.id.toString();
     const timer = setInterval(() => {
       if (!act.busy && !claimTx.busy && !xfer.busy) void check(id, { silent: true });
-    }, 20_000);
+    }, 60_000);
     return () => clearInterval(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [info?.id, act.busy, claimTx.busy, xfer.busy]);

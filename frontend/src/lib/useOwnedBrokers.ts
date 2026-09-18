@@ -5,7 +5,7 @@ import { useAccount } from "wagmi";
 import { type Address } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { brokerAbi } from "./abis";
-import { client } from "./client";
+import { publicClient as client } from "./client";
 import { alchemyOwnedTokenIds } from "./alchemy";
 
 // `active: null` means the chain did not answer, NOT that the Broker is off. Rendering an
@@ -16,7 +16,9 @@ export type OwnedBroker = { id: bigint; active: boolean | null };
 // One store per wallet, shared by every component that calls the hook (the side panel and
 // My Brokers both do): concurrent loads collapse into one request, a fresh snapshot is served
 // without touching the RPC, and the 1..MAX_SUPPLY fallback scan (18 multicalls) runs at most
-// once per cooldown instead of on every 60 s poll when the wide getLogs is being refused.
+// once per cooldown instead of on every poll when the wide getLogs is being refused.
+// Ambient reads (ownership scan, status) go to the public endpoint; the poll is five minutes,
+// and a wallet's own transactions refresh the list on receipt regardless of the timer.
 type Snapshot = { owned: OwnedBroker[]; at: number };
 const snapshots = new Map<string, Snapshot>();
 const inflight = new Map<string, Promise<OwnedBroker[]>>();
@@ -195,7 +197,7 @@ export function useOwnedBrokers() {
     if (!address) return;
     // Poll on-chain ownership/active state so the UI reflects mints, activations
     // and keeper distributions without a manual page refresh.
-    const timer = setInterval(() => void load({ silent: true }), 60_000);
+    const timer = setInterval(() => void load({ silent: true }), 5 * 60_000);
     return () => clearInterval(timer);
   }, [load, address]);
 

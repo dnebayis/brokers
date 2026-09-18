@@ -13,7 +13,7 @@
 
 import { parseAbiItem } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
-import { client } from "./client";
+import { publicClient as client } from "./client";
 
 export type ActivationLog = { block: number; by: string };
 export type ClaimLog = { block: number; token: string; amount: string };

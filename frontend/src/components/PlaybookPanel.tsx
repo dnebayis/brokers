@@ -8,7 +8,7 @@ import { ADDR } from "@/lib/config";
 import { boosterAbi, brokerAccountAbi } from "@/lib/abis";
 import { FLOOR, erc20MiniAbi, basketRouterAbi } from "@/lib/floor";
 import { PLAYBOOKS, playbooksReady, playbookEngineAbi, PB_MODE } from "@/lib/playbooks";
-import { client, waitForSuccessfulReceipt } from "@/lib/client";
+import { publicClient as client, waitForSuccessfulReceipt } from "@/lib/client";
 import { useTx } from "@/lib/useTx";
 import { Icon } from "@/components/ui/Icon";
 import { StatusLine } from "@/components/ui/Status";
