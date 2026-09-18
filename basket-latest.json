@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-18T12:48:24.808594+00:00",
+  "generatedAt": "2026-09-18T13:11:01.578202+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3548,
-    "distinctTraders": 81,
-    "latestDisclosure": "2026-09-16",
-    "ageDays": 2,
+    "rows": 3567,
+    "distinctTraders": 82,
+    "latestDisclosure": "2026-09-18",
+    "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.11597708926013528,
+  "coverage": 0.11588604157457229,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -26,84 +26,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 66236797,
+    "block": 66250285,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7365157384287639
+      "shareOfBuying": 0.7359375375634685
     },
     {
       "ticker": "BRK.B",
       "netNotional": 89002.5,
-      "shareOfBuying": 0.008740229937206159
+      "shareOfBuying": 0.008733368429367432
     },
     {
       "ticker": "MRK",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006383232899618971
+      "shareOfBuying": 0.006378221749695935
     },
     {
       "ticker": "FWONK",
       "netNotional": 44004.0,
-      "shareOfBuying": 0.0043212839881668465
+      "shareOfBuying": 0.004317891568954631
     },
     {
       "ticker": "SPYM",
       "netNotional": 40002.5,
-      "shareOfBuying": 0.003928328395978645
+      "shareOfBuying": 0.003925244466119162
     },
     {
       "ticker": "ETN",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "PWR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "GMED",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "CB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "MOG.A",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0031891108748479677
     },
     {
       "ticker": "AVGO",
       "netNotional": 32002.0,
-      "shareOfBuying": 0.0031426627167829156
+      "shareOfBuying": 0.0031401955728953294
     }
   ],
   "missedAttribution": {
@@ -301,8 +301,8 @@
       }
     ],
     "vetoed": [
+      "AAPL",
       "ABT",
-      "ACN",
       "ADBE",
       "ADI",
       "ADP",
@@ -363,6 +363,7 @@
       "FTGC",
       "FTNT",
       "FWONK",
+      "GOOG",
       "GOOGL",
       "GTLS",
       "GWW",
@@ -413,7 +414,6 @@
       "OGN",
       "PANW",
       "PAYX",
-      "PEP",
       "PGR",
       "PH",
       "PHR",
@@ -465,15 +465,15 @@
     "basket": [
       {
         "ticker": "AAPL",
-        "bps": 3832
+        "bps": 3825
       },
       {
         "ticker": "INTC",
-        "bps": 2828
+        "bps": 2831
       },
       {
         "ticker": "AMZN",
-        "bps": 2792
+        "bps": 2795
       },
       {
         "ticker": "SPCX",
@@ -481,7 +481,7 @@
       },
       {
         "ticker": "PLTR",
-        "bps": 207
+        "bps": 208
       },
       {
         "ticker": "COIN",
@@ -500,13 +500,13 @@
         "bps": 11
       }
     ],
-    "divergenceBps": 6934
+    "divergenceBps": 6931
   },
   "commentary": {
-    "text": "The current basket is led by Intel, with Nancy Pelosi making two buys totaling an estimated $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Microsoft also features, with Josh Gottheimer making two buys totaling an estimated $1.1M, traded on 2026-08-14 and filed on 2026-09-15, joined by two other members. Bloom Energy, with an estimated $7.5M in net notional buying from Nancy Pelosi, could not be bought as it is not tokenized or tradable on this chain. This basket represents 11.6% of disclosed buying dollars.",
+    "text": "The current basket is led by Intel, with Nancy Pelosi making two buys totaling $1.1M, last traded on 2026-07-24 and filed on 2026-08-21. Microsoft is also included, with Josh Gottheimer making two buys totaling $1.1M, and Gilbert Cisneros making two buys totaling $65K, alongside three other members. Bloom Energy, with $7.5M in buying from Nancy Pelosi, could not be included because it is not tokenized or tradable on this chain. This basket represents 11.6% of disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-16T13:10:16+00:00",
-    "inputHash": "865972d21794ebb4",
+    "generatedAt": "2026-09-18T13:11:01+00:00",
+    "inputHash": "620280cd40614aff",
     "promptVersion": 2
   }
 }
