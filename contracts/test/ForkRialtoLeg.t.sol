@@ -82,6 +82,13 @@ contract ForkRialtoLegTest is Test {
         return (d, m);
     }
 
+    /// The quote-backed tests call the Rialto API through ffi. CI runs without --ffi and without a
+    /// key, so they only run when asked for: `RIALTO_LIVE=1 forge test --ffi --match-path 'test/ForkRialto*'`.
+    function liveQuotes() internal returns (bool live) {
+        live = vm.envOr("RIALTO_LIVE", false);
+        if (!live) vm.skip(true);
+    }
+
     function test_route_is_installed_on_the_deployed_router() public view {
         (,, address stockPool, StockRouter.PoolKind kind,, bool stockZeroForOne) = STOCK_ROUTER.routes(NBIS);
         assertEq(stockPool, address(leg));
@@ -90,6 +97,7 @@ contract ForkRialtoLegTest is Test {
     }
 
     function test_stockrouter_buys_through_the_adapter() public {
+        if (!liveQuotes()) return; // needs --ffi and a Rialto key: RIALTO_LIVE=1 forge test --ffi
         uint256 ethIn = 0.02 ether;
         uint256 sell = _sellFor(ethIn);
         (bytes memory data, uint256 rialtoMin) = _quote(sell);
@@ -118,6 +126,7 @@ contract ForkRialtoLegTest is Test {
     }
 
     function test_runner_stages_and_pokes_the_real_booster() public {
+        if (!liveQuotes()) return; // needs --ffi and a Rialto key: RIALTO_LIVE=1 forge test --ffi
         // Repoint the live basket at NBIS (Rialto leg) + INTC (existing v3 route), 50/50.
         address[] memory tokens = new address[](2);
         tokens[0] = NBIS;

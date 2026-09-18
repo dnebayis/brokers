@@ -91,11 +91,20 @@ contract ForkRialtoExecutorTest is Test {
         assertGe(got * 10000, expected * 9700, "more than 3% below the feed");
     }
 
+    /// The quote-backed tests call the Rialto API through ffi. CI runs without --ffi and without a
+    /// key, so they only run when asked for: `RIALTO_LIVE=1 forge test --ffi --match-path 'test/ForkRialto*'`.
+    function liveQuotes() internal returns (bool live) {
+        live = vm.envOr("RIALTO_LIVE", false);
+        if (!live) vm.skip(true);
+    }
+
     function test_contract_taker_buys_nbis_via_rialto() public {
+        if (!liveQuotes()) return; // needs --ffi and a Rialto key: RIALTO_LIVE=1 forge test --ffi
         _buy(NBIS, NBIS_FEED, "NBIS");
     }
 
     function test_contract_taker_buys_coin_via_rialto() public {
+        if (!liveQuotes()) return; // needs --ffi and a Rialto key: RIALTO_LIVE=1 forge test --ffi
         _buy(COIN, COIN_FEED, "COIN");
     }
 }
