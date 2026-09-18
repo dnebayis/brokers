@@ -71,7 +71,20 @@ function toAmounts(
     });
 }
 
+// The Booster's token list only grows when the keeper first buys a new name, so one read
+// serves every snapshot for a few minutes; before this every uncached Broker lookup spent two
+// of its four round trips re-reading the same list.
+const TOKEN_LIST_TTL_MS = 5 * 60_000;
+let tokenListCache: { at: number; tokens: Address[] } | null = null;
+
 async function boosterTokenList(): Promise<Address[]> {
+  if (tokenListCache && Date.now() - tokenListCache.at < TOKEN_LIST_TTL_MS) return tokenListCache.tokens;
+  const tokens = await readBoosterTokenList();
+  tokenListCache = { at: Date.now(), tokens };
+  return tokens;
+}
+
+async function readBoosterTokenList(): Promise<Address[]> {
   const count = Number(
     await publicClient.readContract({ address: ADDR.booster, abi: boosterAbi, functionName: "knownTokenCount" }),
   );
