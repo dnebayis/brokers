@@ -97,7 +97,13 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
    parity fixtures against the Python reference (scene_gen.py), 6 renderer tests green,
    traits keccak commit `0xa9ca0d1af9e49f121368ad423a74c685ede94ca1cf3bdf7591b7f24b7016974e`**
 3. DeskAccount + DeskNFT (mint flow end-to-end on fork) ← contracts done, 19 tests green
-4. DeskEngine (fork tests against real USDG pools) ← contract done; fork pass pending
+4. DeskEngine (fork tests against real USDG pools) ← **done 2026-09-19: `desk/test/ForkDeskEngine.t.sol`
+   deploys all four contracts on a mainnet fork, opens a desk, funds it with USDG and runs the live
+   basket (INTC/MSFT 50/50, epoch 58) through the real v3 USDG pools with the Booster's Chainlink
+   feeds as floor. Fills landed at 10001 bps (INTC) and 9991 bps (MSFT) of oracle; sell-back,
+   0.5% fee flush to the Booster as native ETH (80/20), the $1,000 pilot cap and the owner's
+   pause all hold. 5 fork tests, 30 desk tests total.** Note: the 7 Rialto-routed names have no
+   v3 USDG pool; the Desk universe is the 26 v3 names until a RialtoLeg-style adapter is added.
 5. **Full testnet deployment (chain 46630)**: every contract deployed and every flow
    (mint, deposit, buy, rebalance, fee split, bonus round, withdraw, desk sale) exercised
    on testnet BEFORE any mainnet transaction (user gate, 2026-08-26)
