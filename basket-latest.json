@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-20T23:31:29.882096+00:00",
+  "generatedAt": "2026-09-21T00:31:48.808281+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 3567,
     "distinctTraders": 82,
     "latestDisclosure": "2026-09-18",
-    "ageDays": 2,
+    "ageDays": 3,
     "errors": []
   },
-  "coverage": 0.11597708926013528,
+  "coverage": 0.11634842881946497,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -26,84 +26,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 68334331,
+    "block": 68370153,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.7365157384287639
-    },
-    {
-      "ticker": "BRK.B",
-      "netNotional": 89002.5,
-      "shareOfBuying": 0.008740229937206159
+      "shareOfBuying": 0.7388739406520847
     },
     {
       "ticker": "MRK",
       "netNotional": 65001.0,
-      "shareOfBuying": 0.006383232899618971
+      "shareOfBuying": 0.0064036709611978975
+    },
+    {
+      "ticker": "BRK.B",
+      "netNotional": 56502.0,
+      "shareOfBuying": 0.005566379234928749
     },
     {
       "ticker": "FWONK",
       "netNotional": 44004.0,
-      "shareOfBuying": 0.0043212839881668465
+      "shareOfBuying": 0.004335120028561903
     },
     {
       "ticker": "SPYM",
       "netNotional": 40002.5,
-      "shareOfBuying": 0.003928328395978645
+      "shareOfBuying": 0.003940906257216333
     },
     {
       "ticker": "ETN",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "PWR",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "GMED",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "CB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "MOG.A",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "MSB",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "ALKS",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "SFM",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "AGX",
       "netNotional": 32500.5,
-      "shareOfBuying": 0.0031916164498094856
+      "shareOfBuying": 0.0032018354805989488
     },
     {
       "ticker": "AVGO",
       "netNotional": 32002.0,
-      "shareOfBuying": 0.0031426627167829156
+      "shareOfBuying": 0.003152725005773067
     }
   ],
   "missedAttribution": {
@@ -140,17 +140,6 @@
           ]
         },
         {
-          "member": "Jerry Moran",
-          "chamber": "senate",
-          "buys": 1,
-          "notionalUsd": 32500.5,
-          "latestTraded": "2026-06-23",
-          "latestFiled": "2026-07-21",
-          "ranges": [
-            "$15,001 - $50,000"
-          ]
-        },
-        {
           "member": "Rich McCormick",
           "chamber": "house",
           "buys": 1,
@@ -162,7 +151,7 @@
           ]
         }
       ],
-      "buyerCount": 3,
+      "buyerCount": 2,
       "sellCount": 0
     },
     "FWONK": {
@@ -465,48 +454,48 @@
     "basket": [
       {
         "ticker": "AAPL",
-        "bps": 3825
-      },
-      {
-        "ticker": "INTC",
-        "bps": 2831
+        "bps": 4829
       },
       {
         "ticker": "AMZN",
-        "bps": 2795
+        "bps": 3528
+      },
+      {
+        "ticker": "INTC",
+        "bps": 949
       },
       {
         "ticker": "SPCX",
-        "bps": 238
+        "bps": 301
       },
       {
         "ticker": "PLTR",
-        "bps": 208
+        "bps": 262
       },
       {
         "ticker": "COIN",
-        "bps": 39
+        "bps": 50
       },
       {
         "ticker": "ASML",
-        "bps": 38
+        "bps": 48
       },
       {
         "ticker": "MSTR",
-        "bps": 15
+        "bps": 19
       },
       {
         "ticker": "ORCL",
-        "bps": 11
+        "bps": 14
       }
     ],
-    "divergenceBps": 6931
+    "divergenceBps": 8750
   },
   "commentary": {
-    "text": "This basket reflects recent Congressional buying, led by Nancy Pelosi's two buys of INTC totaling $1.1M, traded on 2026-07-24 and filed on 2026-08-21. MSFT also saw buying from Josh Gottheimer, Gilbert Cisneros, and three other members. BE, with $7.5M in buying from Nancy Pelosi, was not included as it is not tokenized or tradable on this chain. This basket covers 11.6% of the disclosed buying dollars.",
+    "text": "The latest basket shows Nancy Pelosi's $1.1M notional position in INTC, traded on 2026-07-24 and filed on 2026-08-21. MSFT also appears, with Josh Gottheimer's $1.1M notional, traded on 2026-08-14 and filed on 2026-09-15, along with two other members. BE, a $7.5M notional position from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 11.6% of disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-20T00:09:13+00:00",
-    "inputHash": "865972d21794ebb4",
+    "generatedAt": "2026-09-21T00:31:48+00:00",
+    "inputHash": "3bd99ad3a6d1d297",
     "promptVersion": 2
   }
 }
