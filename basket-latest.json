@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-21T09:36:01.731247+00:00",
+  "generatedAt": "2026-09-21T13:10:45.030708+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 3567,
+    "rows": 3572,
     "distinctTraders": 82,
-    "latestDisclosure": "2026-09-18",
-    "ageDays": 3,
+    "latestDisclosure": "2026-09-21",
+    "ageDays": 0,
     "errors": []
   },
   "coverage": 0.11634842881946497,
@@ -26,7 +26,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 68694047,
+    "block": 68822154,
     "dropped": []
   },
   "missedCoverage": [
@@ -291,6 +291,7 @@
     ],
     "vetoed": [
       "AAPL",
+      "ABBV",
       "ABT",
       "ADBE",
       "ADI",
