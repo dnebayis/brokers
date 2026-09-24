@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-23T23:13:06.306419+00:00",
+  "generatedAt": "2026-09-24T00:13:27.701215+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 4763,
     "distinctTraders": 82,
     "latestDisclosure": "2026-09-23",
-    "ageDays": 0,
+    "ageDays": 1,
     "errors": []
   },
   "coverage": 0.021067450020885812,
@@ -30,18 +30,18 @@
     "0x3b14C39E89D60D627b42a1A4CA45b5bb45Fc12e2"
   ],
   "weightsBps": [
-    2900,
-    2222,
-    1561,
-    1090,
-    1037,
-    725,
-    465
+    3074,
+    1755,
+    1655,
+    1156,
+    1099,
+    768,
+    493
   ],
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 70897676,
+    "block": 70933531,
     "dropped": []
   },
   "missedCoverage": [
@@ -326,17 +326,6 @@
           ]
         },
         {
-          "member": "Cleo Fields",
-          "chamber": "house",
-          "buys": 2,
-          "notionalUsd": 16001.0,
-          "latestTraded": "2026-06-26",
-          "latestFiled": "2026-07-16",
-          "ranges": [
-            "$1,001 - $15,000"
-          ]
-        },
-        {
           "member": "Gilbert Cisneros",
           "chamber": "house",
           "buys": 1,
@@ -348,7 +337,7 @@
           ]
         }
       ],
-      "buyerCount": 3,
+      "buyerCount": 2,
       "sellCount": 8
     },
     "RKLB": {
@@ -419,61 +408,61 @@
     "basket": [
       {
         "ticker": "INTC",
-        "bps": 2900
+        "bps": 3074
       },
       {
         "ticker": "NVDA",
-        "bps": 2222
+        "bps": 1755
       },
       {
         "ticker": "TSLA",
-        "bps": 1561
+        "bps": 1655
       },
       {
         "ticker": "MSTR",
-        "bps": 1090
+        "bps": 1156
       },
       {
         "ticker": "AMD",
-        "bps": 1037
+        "bps": 1099
       },
       {
         "ticker": "SPCX",
-        "bps": 725
+        "bps": 768
       },
       {
         "ticker": "RKLB",
-        "bps": 465
+        "bps": 493
       }
     ],
     "capped": [
       {
         "ticker": "INTC",
-        "bps": 2900
+        "bps": 3074
       },
       {
         "ticker": "NVDA",
-        "bps": 2222
+        "bps": 1755
       },
       {
         "ticker": "TSLA",
-        "bps": 1561
+        "bps": 1655
       },
       {
         "ticker": "MSTR",
-        "bps": 1090
+        "bps": 1156
       },
       {
         "ticker": "AMD",
-        "bps": 1037
+        "bps": 1099
       },
       {
         "ticker": "SPCX",
-        "bps": 725
+        "bps": 768
       },
       {
         "ticker": "RKLB",
-        "bps": 465
+        "bps": 493
       }
     ],
     "vetoed": [
@@ -993,7 +982,7 @@
       "YUM",
       "ZBH"
     ],
-    "divergenceBps": 2765
+    "divergenceBps": 2548
   },
   "filedWindowShadow": {
     "basket": [
@@ -1037,10 +1026,10 @@
     "divergenceBps": 6194
   },
   "commentary": {
-    "text": "The basket's largest position is INTC, driven by Nancy Pelosi's $1.1M buy, traded on 2026-07-24 and filed on 2026-08-21. Donald J Trump's buys also contribute to the basket, along with Cleo Fields and 8 other members. The largest disclosed buy that could not be included was BE, a $7.5M position from Nancy Pelosi, because it is not tokenized or tradable on this chain. This basket represents 2.1% of the total disclosed buying dollars.",
+    "text": "The latest basket is led by Intel, with Nancy Pelosi's two buys totaling $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Other notable positions include Nvidia and Tesla, both with buys from Donald J Trump, and AMD, with buys from Gilbert Cisneros and one other member. Overall, the basket reflects buying activity from a total of seven members. The largest disclosed buy, BE, could not be included as it is not tokenized or tradable on this chain. This basket covers 2.1% of the disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-09-23T00:40:16+00:00",
-    "inputHash": "10ab8cc8e1586a30",
+    "generatedAt": "2026-09-24T00:13:27+00:00",
+    "inputHash": "cfbbc329d7448038",
     "promptVersion": 2
   }
 }
