@@ -6,8 +6,9 @@ import { explorerAddress, explorerTx } from "@/lib/chains";
 import { giftsReady, GIFTS } from "@/lib/gifts";
 import { nextDrawLabel, useGiftFeed } from "@/lib/useGifts";
 
-// Gift drops, the public view: when the next draw is, what is queued, and who won so far.
-// Every row is a settled on-chain round, so each one links to its transaction.
+// Gift drops, the public view: the program is closed, the winners stay listed. Every row is a
+// settled on-chain round, so each one links to its transaction. The vault contract itself is
+// permissionless and still live, so if something does get queued the next-draw stat comes back.
 export function GiftsPanel() {
   const { data, isLoading } = useGiftFeed();
   // Clock lives in state: reading Date.now() during render is impure, and the countdown
@@ -19,7 +20,7 @@ export function GiftsPanel() {
     return () => clearInterval(t);
   }, []);
   if (!giftsReady) return null;
-  const cadence = data ? Math.round(data.interval / 86_400) : 0;
+  const pending = !!data && (data.queued > 0 || !!data.openRound);
   const label = (nft: string, id: string) => {
     const name = data?.names[nft.toLowerCase()] ?? "NFT";
     return `${name} #${id}`;
@@ -39,15 +40,17 @@ export function GiftsPanel() {
           target="_blank" rel="noopener noreferrer">vault ↗</a>
       </div>
       <p className="text-ink-soft text-sm mb-4">
-        {cadence > 0 ? `Every ${cadence} day${cadence > 1 ? "s" : ""}, ` : "Regularly, "}
-        one NFT from the vault goes to a <b className="text-ink-strong">random active Broker</b>. The
-        winner is drawn on chain from a block hash, so nobody picks. It lands in the Broker&rsquo;s own
-        wallet, travels with the NFT, and the holder can pull it out from My Brokers whenever they like.
+        The gift program has <b className="text-ink-strong">closed</b>. Each round sent one NFT from the
+        vault to a random active Broker, drawn on chain from a block hash, so nobody picked. Every gift
+        landed in the Broker&rsquo;s own wallet, travels with the NFT, and the holder can pull it out from
+        My Brokers whenever they like.
       </p>
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="stat">
-          <div className="text-[11px] text-ink-soft uppercase tracking-widest">Next draw</div>
-          <div className="font-pixel text-[13px] text-ink-strong mt-1">{(isLoading && !data) || !now ? "…" : nextDrawLabel(data, now)}</div>
+          <div className="text-[11px] text-ink-soft uppercase tracking-widest">{pending ? "Next draw" : "Program"}</div>
+          <div className="font-pixel text-[13px] text-ink-strong mt-1">
+            {(isLoading && !data) || !now ? "…" : pending ? nextDrawLabel(data, now) : "Closed"}
+          </div>
         </div>
         <div className="stat">
           <div className="text-[11px] text-ink-soft uppercase tracking-widest">In the vault</div>
@@ -81,8 +84,7 @@ export function GiftsPanel() {
         </div>
       )}
       <p className="text-ink-soft text-xs mt-3">
-        Only Brokers that are switched on can win. Want to put an NFT in the vault? Send it with a
-        safe transfer to the vault address above and it joins the queue.
+        The vault contract stays on chain, verified, and every round above links to its transaction.
       </p>
     </section>
   );
