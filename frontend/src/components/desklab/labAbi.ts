@@ -68,6 +68,7 @@ export const depositRouterAbi = [
     inputs: [u("deskId"), u("coatIn"), u("minEthOut"), u("minUsdgOut")], outputs: [{ type: "uint256" }],
   },
   { type: "function", name: "minUsdgForEth", stateMutability: "view", inputs: [u("ethIn")], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "maxSlippageBps", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
 
 export const coatRouterAbi = [

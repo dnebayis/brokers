@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Show or change the Desk's basket on the local fork (the registry's desk strategy slot).
+"""Show or change the Desk's basket on the local fork (the registry's desk strategy slot),
+or move the test stock prices so profit and loss has something to show.
 
     python3 keeper/desk_basket.py show
     python3 keeper/desk_basket.py set tAAPL=50 tMSFT=30 tNVDA=20
+    python3 keeper/desk_basket.py price tAAPL=+5% tNVDA=-3% tMSFT=520
 
 The registry refuses a move of more than its drift limit (30% turnover on testnet) in one
 epoch; bigger moves go in steps. Local fork only: the deployer is impersonated.
@@ -28,6 +30,14 @@ REGISTRY = [
      "outputs": []},
     {"type": "function", "name": "maxDriftBps", "stateMutability": "view", "inputs": [], "outputs": [{"type": "uint16"}]},
 ]
+FEEDS = [
+    {"type": "function", "name": "stockFeed", "stateMutability": "view", "inputs": [{"name": "t", "type": "address"}],
+     "outputs": [{"type": "address"}]},
+    {"type": "function", "name": "latestRoundData", "stateMutability": "view", "inputs": [],
+     "outputs": [{"type": "uint80"}, {"type": "int256"}, {"type": "uint256"}, {"type": "uint256"}, {"type": "uint80"}]},
+    {"type": "function", "name": "setAnswer", "stateMutability": "nonpayable", "inputs": [{"name": "a", "type": "int256"}],
+     "outputs": []},
+]
 
 
 def main() -> int:
@@ -48,8 +58,27 @@ def main() -> int:
         print(f"epoch {e}: " + ", ".join(f"{k} {v:g}%" for k, v in cur.items()))
         return cur, e
 
+    def prices() -> None:
+        booster = w3.eth.contract(address=Web3.to_checksum_address(A["booster"]), abi=FEEDS)
+        for sym, tok in by_sym.items():
+            feed = w3.eth.contract(address=booster.functions.stockFeed(Web3.to_checksum_address(tok)).call(), abi=FEEDS)
+            print(f"  {sym} ${feed.functions.latestRoundData().call()[1] / 1e8:,.2f}")
+
     if len(sys.argv) < 2 or sys.argv[1] == "show":
         show()
+        prices()
+        return 0
+    if sys.argv[1] == "price":
+        booster = w3.eth.contract(address=Web3.to_checksum_address(A["booster"]), abi=FEEDS)
+        for arg in sys.argv[2:]:
+            sym, v = arg.split("=")
+            feed = w3.eth.contract(address=booster.functions.stockFeed(Web3.to_checksum_address(by_sym[sym])).call(), abi=FEEDS)
+            now = feed.functions.latestRoundData().call()[1] / 1e8
+            new = now * (1 + float(v[:-1]) / 100) if v.endswith("%") else float(v)
+            tx = feed.functions.setAnswer(int(round(new * 1e8))).build_transaction(
+                {"from": Web3.to_checksum_address(A["deployer"])})
+            w3.eth.wait_for_transaction_receipt(w3.eth.send_transaction(tx))
+            print(f"{sym}: ${now:,.2f} -> ${new:,.2f}")
         return 0
     if sys.argv[1] != "set":
         print(__doc__)
