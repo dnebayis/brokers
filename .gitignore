@@ -53,3 +53,5 @@ desk/rehearsal/local-fork-addresses.json
 frontend/public/desk-local.json
 desk/rehearsal/keeper.log
 desk/rehearsal/rehearsal-fork-addresses.json
+desk/keeper/.testnet-keeper.json
+frontend/public/desk-testnet.json

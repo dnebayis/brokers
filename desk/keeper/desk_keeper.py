@@ -11,8 +11,13 @@ and flushes the engine's fees (80/20 Booster/treasury as native ETH) once they p
 Only the difference is traded, so a basket change costs a fraction of a full round trip.
 Trades under MIN_TRADE_USD are skipped so the keeper never churns dust.
 
-Used by script/local_env.py (anvil fork, deployer impersonated). A real network needs
-KEEPER_KEY; without it the keeper refuses to run anywhere but localhost.
+Used by script/local_env.py (anvil fork, deployer impersonated). On a real network it signs with
+the key in KEEPER_KEY_FILE (or KEEPER_KEY); without one it refuses to run anywhere but localhost.
+When it owns the test price feeds (testnet), it also re-posts their prices before they go stale:
+the engine rejects prices older than 96h and the deposit router older than 24h.
+
+    RPC=https://rpc.testnet.chain.robinhood.com DESK_ADDRESSES=rehearsal/testnet-46630.json \
+      KEEPER_KEY_FILE=keeper/.testnet-keeper.json python3 keeper/desk_keeper.py
 """
 
 from __future__ import annotations
@@ -32,12 +37,16 @@ DESK = Path(__file__).resolve().parents[1]
 E18, E6, BPS = 10**18, 10**6, 10_000
 MIN_TRADE_USD = 1.0
 FLUSH_MIN_USDG = 5 * E6
+FEED_REFRESH_AFTER = 12 * 3600  # well inside the router's 24h window
 
 ERC20 = [{"type": "function", "name": "balanceOf", "stateMutability": "view",
           "inputs": [{"name": "a", "type": "address"}], "outputs": [{"type": "uint256"}]}]
 FEED = [{"type": "function", "name": "latestRoundData", "stateMutability": "view", "inputs": [],
          "outputs": [{"type": "uint80"}, {"type": "int256"}, {"type": "uint256"}, {"type": "uint256"},
-                     {"type": "uint80"}]}]
+                     {"type": "uint80"}]},
+        {"type": "function", "name": "owner", "stateMutability": "view", "inputs": [], "outputs": [{"type": "address"}]},
+        {"type": "function", "name": "setAnswer", "stateMutability": "nonpayable",
+         "inputs": [{"name": "a", "type": "int256"}], "outputs": []}]
 BOOSTER = [{"type": "function", "name": "stockFeed", "stateMutability": "view",
             "inputs": [{"name": "t", "type": "address"}], "outputs": [{"type": "address"}]}]
 REGISTRY = [{"type": "function", "name": "getBasket", "stateMutability": "view",
@@ -73,6 +82,8 @@ class Keeper:
         self.acct_abi = abi("DeskAccount")
         self.sid = int(self.A["strategyId"])
         key = os.environ.get("KEEPER_KEY")
+        if not key and os.environ.get("KEEPER_KEY_FILE"):
+            key = json.loads(Path(os.environ["KEEPER_KEY_FILE"]).read_text())["key"]
         self.signer = Account.from_key(key) if key else None
         if not self.signer:
             rpc = str(self.w3.provider.endpoint_uri)
@@ -92,7 +103,8 @@ class Keeper:
     def send(self, fn, what: str) -> bool:
         try:
             if self.signer:
-                tx = fn.build_transaction({"from": self.sender, "nonce": self.w3.eth.get_transaction_count(self.sender)})
+                tx = fn.build_transaction({"from": self.sender, "nonce": self.w3.eth.get_transaction_count(self.sender),
+                                           "chainId": self.w3.eth.chain_id})
                 h = self.w3.eth.send_raw_transaction(_raw(self.signer.sign_transaction(tx)))
             else:
                 h = self.w3.eth.send_transaction(fn.build_transaction({"from": self.sender}))
@@ -114,7 +126,24 @@ class Keeper:
 
     # --- one pass ---
 
+    def refresh_feeds(self) -> None:
+        """Re-post the same price on test feeds this keeper owns once they are 12h old."""
+        feeds = [self.booster.functions.stockFeed(t).call() for t in self.stocks] + [self.A["ethFeed"]]
+        now = self.w3.eth.get_block("latest").timestamp
+        for addr in feeds:
+            feed = self.w3.eth.contract(address=Web3.to_checksum_address(addr), abi=FEED)
+            try:
+                if feed.functions.owner().call().lower() != self.sender.lower():
+                    continue
+            except Exception:
+                continue  # a real Chainlink feed: nothing to refresh
+            _, answer, _, updated, _ = feed.functions.latestRoundData().call()
+            if now - updated >= FEED_REFRESH_AFTER:
+                self.send(feed.functions.setAnswer(answer), f"refresh feed {addr[:8]}… (${answer / 1e8:,.2f})")
+
     def tick(self) -> None:
+        if self.signer:
+            self.refresh_feeds()
         n = self.desks.functions.totalMinted().call()
         tokens, weights, epoch = self.registry.functions.getBasket(self.sid).call()
         weight = {Web3.to_checksum_address(t): w / BPS for t, w in zip(tokens, weights)}

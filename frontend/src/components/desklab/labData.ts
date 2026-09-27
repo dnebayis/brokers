@@ -14,10 +14,12 @@ import {
 // Everything the Desk lab shows, read from the local fork in one pass.
 
 export type LabConfig = {
+  /** "fork": local anvil fork (impersonated test wallet, faucet); "testnet": the real testnet */
+  mode?: "fork" | "testnet";
   rpc: string;
   chainId: number;
   forkBlock?: number;
-  testWallet: Address;
+  testWallet?: Address;
   deployer: Address;
   symbols: Record<string, string>;
   usdg: Address;

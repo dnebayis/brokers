@@ -7,7 +7,8 @@ or move the test stock prices so profit and loss has something to show.
     python3 keeper/desk_basket.py price tAAPL=+5% tNVDA=-3% tMSFT=520
 
 The registry refuses a move of more than its drift limit (30% turnover on testnet) in one
-epoch; bigger moves go in steps. Local fork only: the deployer is impersonated.
+epoch; bigger moves go in steps. On the local fork the deployer is impersonated; on testnet it
+signs with the testnet keeper (KEEPER_KEY_FILE), which holds UPDATER_ROLE and owns the test feeds.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import warnings
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
+from eth_account import Account  # noqa: E402
 from web3 import Web3  # noqa: E402
 
 DESK = Path(__file__).resolve().parents[1]
@@ -42,15 +44,29 @@ FEEDS = [
 
 def main() -> int:
     rpc = os.environ.get("RPC", "http://127.0.0.1:8545")
-    if "127.0.0.1" not in rpc and "localhost" not in rpc:
-        print("local fork only")
-        return 1
+    local = "127.0.0.1" in rpc or "localhost" in rpc
+    signer = None
+    if not local:
+        if not os.environ.get("KEEPER_KEY_FILE"):
+            print("on a real network set KEEPER_KEY_FILE (the testnet keeper key)")
+            return 1
+        signer = Account.from_key(json.loads(Path(os.environ["KEEPER_KEY_FILE"]).read_text())["key"])
     A = json.loads(Path(os.environ.get("DESK_ADDRESSES", DESK / "rehearsal" / "local-fork-addresses.json")).read_text())
     by_sym = {"tAAPL": A["taapl"], "tMSFT": A["tmsft"], "tNVDA": A["tnvda"]}
     sym_of = {v.lower(): k for k, v in by_sym.items()}
     w3 = Web3(Web3.HTTPProvider(rpc))
     reg = w3.eth.contract(address=Web3.to_checksum_address(A["registry"]), abi=REGISTRY)
     sid = int(A["strategyId"])
+
+    def transact(fn):
+        if signer:
+            tx = fn.build_transaction({"from": signer.address, "nonce": w3.eth.get_transaction_count(signer.address),
+                                       "chainId": w3.eth.chain_id})
+            signed = signer.sign_transaction(tx)
+            raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
+            return w3.eth.wait_for_transaction_receipt(w3.eth.send_raw_transaction(raw))
+        return w3.eth.wait_for_transaction_receipt(w3.eth.send_transaction(
+            fn.build_transaction({"from": Web3.to_checksum_address(A["deployer"])})))
 
     def show() -> tuple[dict, int]:
         t, w, e = reg.functions.getBasket(sid).call()
@@ -75,9 +91,7 @@ def main() -> int:
             feed = w3.eth.contract(address=booster.functions.stockFeed(Web3.to_checksum_address(by_sym[sym])).call(), abi=FEEDS)
             now = feed.functions.latestRoundData().call()[1] / 1e8
             new = now * (1 + float(v[:-1]) / 100) if v.endswith("%") else float(v)
-            tx = feed.functions.setAnswer(int(round(new * 1e8))).build_transaction(
-                {"from": Web3.to_checksum_address(A["deployer"])})
-            w3.eth.wait_for_transaction_receipt(w3.eth.send_transaction(tx))
+            transact(feed.functions.setAnswer(int(round(new * 1e8))))
             print(f"{sym}: ${now:,.2f} -> ${new:,.2f}")
         return 0
     if sys.argv[1] != "set":
@@ -98,9 +112,7 @@ def main() -> int:
         return 1
     tokens = [Web3.to_checksum_address(by_sym[k]) for k in want]
     weights = [round(v * 100) for v in want.values()]
-    h = w3.eth.send_transaction(reg.functions.setStrategy(sid, tokens, weights).build_transaction(
-        {"from": Web3.to_checksum_address(A["deployer"])}))
-    rc = w3.eth.wait_for_transaction_receipt(h)
+    rc = transact(reg.functions.setStrategy(sid, tokens, weights))
     print("posted" if rc.status == 1 else "reverted")
     show()
     return 0 if rc.status == 1 else 1

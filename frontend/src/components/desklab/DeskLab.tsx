@@ -22,9 +22,10 @@ import { short } from "@/lib/format";
 import { coatRouterAbi, deskAccountAbi, deskNftAbi, depositRouterAbi, erc20Abi } from "./labAbi";
 import { readLab, type Activity, type DeskView, type LabConfig, type LabState } from "./labData";
 
-// Local Desk lab: a working surface for the Desk contracts on an anvil fork of testnet,
-// started by desk/script/local_env.py. Nothing here reaches a real network: the page talks
-// only to the fork's RPC, and the "local test wallet" is an address anvil impersonates.
+// Desk lab: a working surface for the Desk contracts. By default it talks to the local anvil
+// fork started by desk/script/local_env.py (a "local test wallet" anvil impersonates, a faucet).
+// With ?net=testnet it talks to the real Robinhood Chain testnet deployment instead: browser
+// wallet only, and the faucet mints test USDG from the connected wallet (the deployer owns it).
 
 const E6 = 1_000_000n;
 const POLL_MS = 3_000;
@@ -34,7 +35,8 @@ export function DeskLabRoot() {
   const [cfg, setCfg] = useState<LabConfig | null>(null);
   const [missing, setMissing] = useState(false);
   useEffect(() => {
-    fetch("/desk-local.json", { cache: "no-store" })
+    const net = new URLSearchParams(window.location.search).get("net");
+    fetch(net === "testnet" ? "/desk-testnet.json" : "/desk-local.json", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("missing"))))
       .then((j: LabConfig) => setCfg(j))
       .catch(() => setMissing(true));
@@ -74,16 +76,19 @@ function Shell({ children }: { children: ReactNode }) {
 function makeLab(cfg: LabConfig) {
   const chain = defineChain({
     id: cfg.chainId,
-    name: "Desk lab (local fork)",
+    name: cfg.mode === "testnet" ? "Robinhood Chain Testnet" : "Desk lab (local fork)",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     rpcUrls: { default: { http: [cfg.rpc] } },
     testnet: true,
   });
-  const base = mock({ accounts: [cfg.testWallet], features: { reconnect: true } });
-  const testWallet: CreateConnectorFn = (config) => ({ ...base(config), id: TEST_WALLET_ID, name: "Local test wallet" });
+  const connectors: CreateConnectorFn[] = [injected()];
+  if (cfg.mode !== "testnet" && cfg.testWallet) {
+    const base = mock({ accounts: [cfg.testWallet], features: { reconnect: true } });
+    connectors.unshift((config) => ({ ...base(config), id: TEST_WALLET_ID, name: "Local test wallet" }));
+  }
   const wagmi = createConfig({
     chains: [chain],
-    connectors: [testWallet, injected()],
+    connectors,
     transports: { [chain.id]: http(cfg.rpc) },
     // ssr: true defers wagmi's reconnect to an effect; with false it runs during render and
     // updates the Header mid-render (React warns). The config is client-only either way.
@@ -164,7 +169,12 @@ function Lab({ cfg, client, faucet }: { cfg: LabConfig; client: PublicClient; fa
 
   const topUp = () =>
     me &&
-    run("Top up", [
+    (cfg.mode === "testnet"
+      // real testnet: no impersonation; test USDG is minted by its owner (the deployer's wallet)
+      ? run("Mint 2,000 test USDG", [
+        () => writeContractAsync({ address: cfg.usdg, abi: erc20Abi, functionName: "mint", args: [me, 2_000n * E6] }),
+      ])
+      : run("Top up", [
       async () => {
         await (client.request as (a: { method: string; params: unknown[] }) => Promise<unknown>)({
           method: "anvil_setBalance",
@@ -173,7 +183,7 @@ function Lab({ cfg, client, faucet }: { cfg: LabConfig; client: PublicClient; fa
         return faucet.writeContract({ address: cfg.coat, abi: erc20Abi, functionName: "transfer", args: [me, parseUnits("200000", 18)], chain: null });
       },
       () => faucet.writeContract({ address: cfg.usdg, abi: erc20Abi, functionName: "mint", args: [me, 2_000n * E6], chain: null }),
-    ]);
+    ]));
 
   const mintDesk = () =>
     s &&
@@ -187,11 +197,19 @@ function Lab({ cfg, client, faucet }: { cfg: LabConfig; client: PublicClient; fa
       <LabHeader cfg={cfg} s={s} now={now} connected={isConnected} busy={busy} onTopUp={topUp} status={status} />
 
       {!isConnected ? (
-        <p className="max-w-2xl text-base text-ink leading-relaxed">
-          The Desk contracts on a local copy of testnet. Connect with <b className="text-ink-strong">Local test wallet</b> in the
-          header (already funded), then mint, deposit, withdraw and hand a Desk over as a user would. The keeper buys and
-          rebalances in the background. Nothing here touches a real network.
-        </p>
+        cfg.mode === "testnet" ? (
+          <p className="max-w-2xl text-base text-ink leading-relaxed">
+            The Desk contracts on Robinhood Chain testnet. Connect a browser wallet on chain {cfg.chainId}, then mint, deposit,
+            withdraw and hand a Desk over as a user would; every step is a real testnet transaction. The keeper buys and
+            rebalances in the background. Test USDG is minted by the deployer&rsquo;s wallet.
+          </p>
+        ) : (
+          <p className="max-w-2xl text-base text-ink leading-relaxed">
+            The Desk contracts on a local copy of testnet. Connect with <b className="text-ink-strong">Local test wallet</b> in the
+            header (already funded), then mint, deposit, withdraw and hand a Desk over as a user would. The keeper buys and
+            rebalances in the background. Nothing here touches a real network.
+          </p>
+        )
       ) : (
         <>
           <DeskTabs owned={s?.owned ?? []} selected={desk?.id} mintPrice={s?.mintPrice} busy={busy}
@@ -261,7 +279,7 @@ function LabHeader({ cfg, s, now, connected, busy, onTopUp, status }: {
     <header className="grid gap-4 pb-6 border-b border-line">
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div className="min-w-0">
-          <span className="chip">Local fork · not a real network</span>
+          <span className="chip">{cfg.mode === "testnet" ? "Robinhood Chain testnet" : "Local fork · not a real network"}</span>
           <h1 className="font-pixel text-2xl text-ink-strong mt-3">Desk lab</h1>
           <p className="text-sm text-ink-soft mt-1.5 inline-flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="tabular-nums">chain {cfg.chainId} · block {s ? s.block.toLocaleString("en-US") : "…"}</span>
@@ -276,7 +294,9 @@ function LabHeader({ cfg, s, now, connected, busy, onTopUp, status }: {
             <Figure label="ETH" value={num(s.eth, 18, 3)} />
             <Figure label="COAT" value={num(s.coat, 18, 0)} />
             <Figure label="Test USDG" value={num(s.usdg, 6, 2)} />
-            <button type="button" className="btn btn-ghost" disabled={busy} onClick={onTopUp}>Top up</button>
+            <button type="button" className="btn btn-ghost" disabled={busy} onClick={onTopUp}>
+              {cfg.mode === "testnet" ? "Mint test USDG" : "Top up"}
+            </button>
           </div>
         )}
       </div>
