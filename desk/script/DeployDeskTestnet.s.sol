@@ -42,8 +42,8 @@ interface IWETH9 {
 /// canonical 6551 registry) plus a test venue, because testnet has no USDG and no v3 pools.
 ///
 /// The Desk gets its OWN strategy slot on the testnet registry, so the Booster's strategy 0
-/// is never touched. The one change to shared testnet state is a feed entry for the extra
-/// test stock (tMSFT) on the testnet Booster, which only matters for tokens in its basket.
+/// is never touched. The one change to shared testnet state is feed entries for the extra
+/// test stocks (tMSFT, tNVDA) on the testnet Booster, which only matters for tokens in its basket.
 ///
 /// Every transaction here is the deployer's (the testnet owner of the core). Output:
 /// rehearsal/testnet-46630.json with every address, read by script/rehearse-local.sh.
@@ -71,9 +71,12 @@ contract DeployDeskTestnet is Script {
         address usdg;
         address tmsft;
         address msftFeed;
+        address tnvda;
+        address nvdaFeed;
         address ethFeed;
         address aaplPool;
         address msftPool;
+        address nvdaPool;
         address ethPool;
         uint256 strategyId;
         address bonus;
@@ -97,15 +100,21 @@ contract DeployDeskTestnet is Script {
         o.usdg = address(new DeskTestAsset("Test USDG", "tUSDG", 6, deployer));
         o.tmsft = address(new DeskTestAsset("Test Microsoft", "tMSFT", 18, deployer));
         o.msftFeed = address(new DeskTestFeed(deployer, 500e8));
+        o.tnvda = address(new DeskTestAsset("Test Nvidia", "tNVDA", 18, deployer));
+        o.nvdaFeed = address(new DeskTestFeed(deployer, 180e8));
         o.ethFeed = address(new DeskTestFeed(deployer, 2700e8));
         ITestnetOwned(TAAPL_FEED).setAnswer(200e8); // the staging feed is weeks old; refresh it
         IBoosterAdmin(BOOSTER).setStockFeed(o.tmsft, o.msftFeed);
+        IBoosterAdmin(BOOSTER).setStockFeed(o.tnvda, o.nvdaFeed);
 
         o.aaplPool = address(new DeskTestPool(o.usdg, TAAPL, IDeskTestFeed(TAAPL_FEED), SPREAD_BPS));
         o.msftPool = address(new DeskTestPool(o.usdg, o.tmsft, IDeskTestFeed(o.msftFeed), SPREAD_BPS));
+        o.nvdaPool = address(new DeskTestPool(o.usdg, o.tnvda, IDeskTestFeed(o.nvdaFeed), SPREAD_BPS));
         o.ethPool = address(new DeskTestPool(o.usdg, WETH, IDeskTestFeed(o.ethFeed), SPREAD_BPS));
         ITestnetOwned(TAAPL).mint(o.aaplPool, 100e18);
         DeskTestAsset(o.tmsft).mint(o.msftPool, 100e18);
+        DeskTestAsset(o.tnvda).mint(o.nvdaPool, 100e18);
+        DeskTestAsset(o.usdg).mint(o.nvdaPool, 100_000e6);
         DeskTestAsset(o.usdg).mint(o.aaplPool, 100_000e6);
         DeskTestAsset(o.usdg).mint(o.msftPool, 100_000e6);
         DeskTestAsset(o.usdg).mint(o.ethPool, 100_000e6); // ETH/COAT deposits come out as USDG here
@@ -160,6 +169,7 @@ contract DeployDeskTestnet is Script {
         // --- engine routes, then open the mint at the real pilot price ---
         DeskEngine(payable(o.engine)).setPool(TAAPL, o.aaplPool);
         DeskEngine(payable(o.engine)).setPool(o.tmsft, o.msftPool);
+        DeskEngine(payable(o.engine)).setPool(o.tnvda, o.nvdaPool);
         DeskEngine(payable(o.engine)).setEthPool(o.ethPool);
         DeskNFT(o.desks).setMintOpen(true);
 
@@ -203,6 +213,9 @@ contract DeployDeskTestnet is Script {
         vm.serializeAddress(k, "usdg", o.usdg);
         vm.serializeAddress(k, "tmsft", o.tmsft);
         vm.serializeAddress(k, "msftFeed", o.msftFeed);
+        vm.serializeAddress(k, "tnvda", o.tnvda);
+        vm.serializeAddress(k, "nvdaFeed", o.nvdaFeed);
+        vm.serializeAddress(k, "nvdaPool", o.nvdaPool);
         vm.serializeAddress(k, "ethFeed", o.ethFeed);
         vm.serializeAddress(k, "aaplPool", o.aaplPool);
         vm.serializeAddress(k, "msftPool", o.msftPool);
