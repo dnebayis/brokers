@@ -6,12 +6,20 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DeskNFT, IERC6551RegistryDesk} from "../src/DeskNFT.sol";
 import {DeskAccount} from "../src/DeskAccount.sol";
 import {IDeskNFTView, IAggregatorV3Desk} from "../src/DeskEngine.sol";
-import {DeskDepositRouter, ICoatRouterSell} from "../src/DeskDepositRouter.sol";
+import {DeskDepositRouter, ICoatRouterSell, IDeskDepositBook} from "../src/DeskDepositRouter.sol";
 
 /// The deposit router against the REAL mainnet venues: ETH through the WETH/USDG v3 pool with
 /// the Chainlink ETH/USD feed the Booster uses, COAT through the live COAT router (hooked v4).
 ///
 ///   forge test --match-path test/ForkDeskDepositRouter.t.sol -vv
+contract ForkBook is IDeskDepositBook {
+    mapping(uint256 => uint256) public booked;
+
+    function recordDeposit(uint256 deskId, uint256 amount) external {
+        booked[deskId] += amount;
+    }
+}
+
 contract ForkDeskDepositRouterTest is Test {
     address constant USDG = 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168;
     address constant WETH = 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73;
@@ -23,6 +31,7 @@ contract ForkDeskDepositRouterTest is Test {
 
     DeskNFT desks;
     DeskDepositRouter router;
+    ForkBook book;
     address alice = address(0xA11CE);
 
     function setUp() public {
@@ -34,11 +43,13 @@ contract ForkDeskDepositRouterTest is Test {
         );
         desks.setMintOpen(true);
         desks.setMintPrice(0);
+        book = new ForkBook();
         router = new DeskDepositRouter(
             IERC20(USDG),
             WETH,
             IERC20(COAT),
             IDeskNFTView(address(desks)),
+            IDeskDepositBook(address(book)),
             ICoatRouterSell(COAT_ROUTER),
             MID_POOL,
             IAggregatorV3Desk(ETH_USD),

@@ -83,10 +83,12 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     // --- settable levers (the 36,750 lesson) ---
     address public keeper;
     uint256 public feeBps = 50; // 0.5% — community vote
-    /// @notice Per-Desk ceiling on the stock the engine may build up, measured at today's
-    ///         Chainlink prices (raw USDG units). Value-based on purpose: a stock the owner takes
-    ///         out frees cap at once, a price rise uses it up, a fall frees it.
+    /// @notice Per-Desk ceiling on the money the OWNER may put in, net of what they take out
+    ///         (raw USDG). Enforced when a deposit is recorded; profits and losses never count
+    ///         against it. A pilot value, settable.
     uint256 public pilotCapUsdg;
+    /// @notice The only address that may record deposits (the DeskDepositRouter).
+    address public depositRouter;
     uint256 public boosterShareBps = 8000; // 80/20 — user decision 2026-08-26
     address public boosterSink; // receives the ETH share (Booster's receive())
     address public treasury;
@@ -102,8 +104,22 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     }
 
     mapping(address stock => Route) public routes;
-    /// @notice Every stock that ever got a route: the set a Desk's stock value is read over.
+    /// @notice Every stock that ever got a route: the set a Desk's cost basis is summed over.
     address[] public routedStocks;
+
+    /// @notice The engine's book for one Desk. `principal` is what the owner put in through the
+    ///         deposit router, less what they took out (at the value it had when it left).
+    ///         `usdg` is the USDG in the Desk wallet the engine may invest: recorded deposits and
+    ///         the proceeds of its own sells, minus its buys. USDG sent to the wallet any other
+    ///         way is not in the book: it stays idle and is never invested.
+    struct Book {
+        uint128 principal;
+        uint128 usdg;
+    }
+
+    mapping(uint256 deskId => Book) public books;
+    /// @notice Shares of each stock the engine delivered to a Desk and still counts as there.
+    mapping(uint256 deskId => mapping(address stock => uint256)) public heldQty;
     /// @notice Service fees accrued (USDG), awaiting flush to Booster/treasury.
     uint256 public feesAccrued;
     address public ethPool; // WETH/USDG v3 pool used to convert fees to native ETH
@@ -128,6 +144,11 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         uint256 indexed deskId, address indexed stock, uint256 stockIn, uint256 usdgOut, uint256 fee
     );
     event FeesFlushed(uint256 usdgIn, uint256 ethOut, uint256 toBooster, uint256 toTreasury);
+    event DepositRouterSet(address router);
+    event DepositRecorded(uint256 indexed deskId, uint256 amount, uint256 principal);
+    /// @notice The owner took `amount` of `token` out of the Desk wallet, worth `value` USDG;
+    ///         principal went down by it (never below zero).
+    event WithdrawalSeen(uint256 indexed deskId, address indexed token, uint256 amount, uint256 value);
 
     error NotKeeper();
     error ZeroAddress();
@@ -140,7 +161,8 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     error GuardMissing(address stock);
     error BadFeed();
     error BadCallback();
-    error CapExceeded(uint256 want, uint256 capLeft);
+    error NotRouter();
+    error DepositOverCap(uint256 amount, uint256 room);
     error EthSendFailed();
 
     modifier onlyKeeper() {
@@ -185,6 +207,12 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         if (keeper_ == address(0)) revert ZeroAddress();
         keeper = keeper_;
         emit KeeperSet(keeper_);
+    }
+
+    function setDepositRouter(address router) external onlyOwner {
+        if (router == address(0)) revert ZeroAddress();
+        depositRouter = router;
+        emit DepositRouterSet(router);
     }
 
     function setFeeBps(uint256 bps) external onlyOwner {
@@ -242,6 +270,21 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         emit EthPoolSet(pool);
     }
 
+    // --- deposits (router) ---
+
+    /// @notice Book a deposit the router just delivered to a Desk wallet. Reverts when it would
+    ///         take the Desk's principal over the pilot cap, which undoes the whole deposit.
+    function recordDeposit(uint256 deskId, uint256 amount) external nonReentrant {
+        if (msg.sender != depositRouter) revert NotRouter();
+        _sync(deskId, desks.accountOf(deskId));
+        Book storage b = books[deskId];
+        uint256 room = pilotCapUsdg > b.principal ? pilotCapUsdg - b.principal : 0;
+        if (amount > room) revert DepositOverCap(amount, room);
+        b.principal += uint128(amount);
+        b.usdg += uint128(amount);
+        emit DepositRecorded(deskId, amount, b.principal);
+    }
+
     // --- execution (keeper) ---
 
     /// @notice Put a Desk's idle USDG to work on the live basket. Stock lands directly in the
@@ -256,12 +299,15 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         for (uint256 i; i < tokens.length; ++i) {
             uint256 slice = (net * weights[i]) / BPS;
             if (slice == 0) continue;
-            _swapUsdgForStock(tokens[i], slice, acct);
+            heldQty[deskId][tokens[i]] += _swapUsdgForStock(tokens[i], slice, acct);
             spent += slice;
         }
         // rounding dust from slicing goes back to the desk, never stays here
         uint256 dust = net - spent;
-        if (dust > 0) usdg.safeTransfer(acct, dust);
+        if (dust > 0) {
+            usdg.safeTransfer(acct, dust);
+            books[deskId].usdg += uint128(dust);
+        }
 
         emit BasketBought(deskId, spend, fee, epoch);
     }
@@ -281,7 +327,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         }
         if (!listed) revert NotInBasket(stock);
         (address acct, uint256 spend, uint256 fee) = _pullForBuy(deskId, maxSpend);
-        _swapUsdgForStock(stock, spend - fee, acct);
+        heldQty[deskId][stock] += _swapUsdgForStock(stock, spend - fee, acct);
         emit StockBought(deskId, stock, spend, fee, epoch);
     }
 
@@ -290,6 +336,9 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     function sellStock(uint256 deskId, address stock, uint256 amount) external nonReentrant onlyKeeper {
         if (amount == 0) revert NothingToDo();
         address acct = desks.accountOf(deskId);
+        _sync(deskId, acct);
+        uint256 q = heldQty[deskId][stock];
+        heldQty[deskId][stock] = amount < q ? q - amount : 0;
         DeskAccount(payable(acct)).enginePull(stock, amount);
 
         uint256 usdgOut = _swapStockForUsdg(stock, amount);
@@ -297,6 +346,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         feesAccrued += fee;
         uint256 net = usdgOut - fee;
         usdg.safeTransfer(acct, net);
+        books[deskId].usdg += uint128(net); // proceeds, profit included, are always reinvestable
         emit StockSold(deskId, stock, amount, usdgOut, fee);
     }
 
@@ -322,27 +372,30 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
 
     // --- views ---
 
-    /// @notice The stock a Desk holds, valued at the Chainlink prices the guards use, in raw
-    ///         USDG units. This is what the pilot cap is measured against. Names the Desk does
-    ///         not hold are skipped without touching their feed.
-    function deployedUsdg(uint256 deskId) public view returns (uint256 value) {
-        address acct = desks.accountOf(deskId);
-        uint256 n = routedStocks.length;
-        for (uint256 i; i < n; ++i) {
-            address stock = routedStocks[i];
-            uint256 bal = IERC20(stock).balanceOf(acct);
-            if (bal == 0) continue;
-            value += Math.mulDiv(bal, _stockUsd8(stock) * _usdgUnit, 10 ** 26); // 18-dec stock, 8-dec price
-        }
+    /// @notice What the owner has put in, net of what they took out, in raw USDG. The pilot cap
+    ///         is measured against this. Takes into account withdrawals not yet booked.
+    function principalOf(uint256 deskId) public view returns (uint256 principal) {
+        (principal,,) = _scan(deskId, desks.accountOf(deskId));
+    }
+
+    /// @notice How much more the owner may deposit into this Desk right now.
+    function depositRoomOf(uint256 deskId) external view returns (uint256) {
+        uint256 p = principalOf(deskId);
+        return pilotCapUsdg > p ? pilotCapUsdg - p : 0;
+    }
+
+    /// @notice USDG in the Desk the engine may invest now: booked deposits and sell proceeds.
+    function investableOf(uint256 deskId) external view returns (uint256 usdgBook) {
+        (, usdgBook,) = _scan(deskId, desks.accountOf(deskId));
+    }
+
+    /// @notice Kept for the renderer's "Deployed USDG" trait: the Desk's principal.
+    function deployedUsdg(uint256 deskId) external view returns (uint256) {
+        return principalOf(deskId);
     }
 
     function routedStockCount() external view returns (uint256) {
         return routedStocks.length;
-    }
-
-    function capLeftOf(uint256 deskId) public view returns (uint256) {
-        uint256 dep = deployedUsdg(deskId);
-        return pilotCapUsdg > dep ? pilotCapUsdg - dep : 0;
     }
 
     /// @notice Chainlink floor for buying `stock` with `usdgIn` (raw USDG units).
@@ -362,20 +415,18 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
 
     // --- internal ---
 
-    /// @dev Shared buy prologue: clip to the Desk's idle USDG and to what its stock value leaves
-    ///      of the pilot cap, pull the spend into the engine, book the fee. A buy adds at most its
-    ///      spend in value (fee and spread shave it), so a Desk never ends above the cap from a buy.
+    /// @dev Shared buy prologue: book any withdrawal first, then clip the spend to the Desk's
+    ///      booked USDG (never to unbooked money in the wallet), pull it and take the fee.
     function _pullForBuy(uint256 deskId, uint256 maxSpend)
         internal
         returns (address acct, uint256 spend, uint256 fee)
     {
         acct = desks.accountOf(deskId);
-        spend = Math.min(usdg.balanceOf(acct), maxSpend);
+        _sync(deskId, acct);
+        Book storage b = books[deskId];
+        spend = Math.min(b.usdg, maxSpend);
         if (spend == 0) revert NothingToDo();
-        uint256 capLeft = capLeftOf(deskId);
-        if (capLeft == 0) revert CapExceeded(spend, 0);
-        spend = Math.min(spend, capLeft);
-
+        b.usdg -= uint128(spend);
         DeskAccount(payable(acct)).enginePull(address(usdg), spend);
         fee = (spend * feeBps) / BPS;
         feesAccrued += fee;
@@ -394,11 +445,66 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         return a / (10 ** (dec - 8));
     }
 
-    function _swapUsdgForStock(address stock, uint256 usdgIn, address recipient) internal {
+    function _swapUsdgForStock(address stock, uint256 usdgIn, address recipient)
+        internal
+        returns (uint256 out)
+    {
         Route memory r = routes[stock];
         if (r.pool == address(0)) revert RouteMissing(stock);
-        uint256 out = _v3Swap(r.pool, address(usdg), r.usdgIsToken0, usdgIn, recipient);
+        out = _v3Swap(r.pool, address(usdg), r.usdgIsToken0, usdgIn, recipient);
         if (out < minStockOut(stock, usdgIn)) revert BadFeed();
+    }
+
+    /// @dev The book as it stands now: anything the wallet holds below what the engine booked
+    ///      was taken out by the owner. USDG counts one for one, stock at the guard's price.
+    function _scan(uint256 deskId, address acct)
+        internal
+        view
+        returns (uint256 principal, uint256 usdgBook, uint256 outValue)
+    {
+        Book memory b = books[deskId];
+        usdgBook = b.usdg;
+        uint256 bal = usdg.balanceOf(acct);
+        if (bal < usdgBook) {
+            outValue = usdgBook - bal;
+            usdgBook = bal;
+        }
+        uint256 n = routedStocks.length;
+        for (uint256 i; i < n; ++i) {
+            address stock = routedStocks[i];
+            uint256 q = heldQty[deskId][stock];
+            if (q == 0) continue;
+            uint256 sb = IERC20(stock).balanceOf(acct);
+            if (sb < q) outValue += Math.mulDiv(q - sb, _stockUsd8(stock) * _usdgUnit, 10 ** 26);
+        }
+        principal = outValue >= b.principal ? 0 : b.principal - outValue;
+    }
+
+    /// @dev Write what `_scan` sees: shrink the book to the wallet and lower the principal.
+    function _sync(uint256 deskId, address acct) internal {
+        Book storage b = books[deskId];
+        uint256 outValue;
+        uint256 bal = usdg.balanceOf(acct);
+        if (bal < b.usdg) {
+            uint256 gone = b.usdg - bal;
+            outValue = gone;
+            b.usdg = uint128(bal);
+            emit WithdrawalSeen(deskId, address(usdg), gone, gone);
+        }
+        uint256 n = routedStocks.length;
+        for (uint256 i; i < n; ++i) {
+            address stock = routedStocks[i];
+            uint256 q = heldQty[deskId][stock];
+            if (q == 0) continue;
+            uint256 sb = IERC20(stock).balanceOf(acct);
+            if (sb < q) {
+                uint256 v = Math.mulDiv(q - sb, _stockUsd8(stock) * _usdgUnit, 10 ** 26);
+                outValue += v;
+                heldQty[deskId][stock] = sb;
+                emit WithdrawalSeen(deskId, stock, q - sb, v);
+            }
+        }
+        if (outValue > 0) b.principal = outValue >= b.principal ? 0 : uint128(b.principal - outValue);
     }
 
     function _swapStockForUsdg(address stock, uint256 amount) internal returns (uint256 out) {

@@ -339,7 +339,8 @@ function DeskTabs({ owned, selected, mintPrice, busy, onSelect, onMint }: {
 
 function Hero({ desk, busy, run, write }: { desk: DeskView; busy: boolean; run: Run; write: Write }) {
   const L = desk.ledger;
-  const capPct = desk.cap > 0n ? Math.min(100, Number((desk.deployed * 1000n) / desk.cap) / 10) : 0;
+  const capPct = desk.cap > 0n ? Math.min(100, Number((desk.principal * 1000n) / desk.cap) / 10) : 0;
+  const unbooked = desk.idle > desk.investable ? desk.idle - desk.investable : 0n;
   return (
     <section className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-12 lg:gap-6 items-center">
       <div className="lg:col-span-5">
@@ -395,17 +396,18 @@ function Hero({ desk, busy, run, write }: { desk: DeskView; busy: boolean; run: 
 
         <div className="mt-8">
           <div className="flex justify-between text-[11px] uppercase tracking-widest text-ink-soft">
-            <span>Pilot cap · stock at today&rsquo;s prices</span>
+            <span>Pilot cap · money put in</span>
             <span className="tabular-nums normal-case tracking-normal text-ink">
-              {usd(Number(desk.deployed) / 1e6, 0)} of {usd(Number(desk.cap) / 1e6, 0)}
+              {usd(Number(desk.principal) / 1e6)} of {usd(Number(desk.cap) / 1e6, 0)}
             </span>
           </div>
           <div className="h-1.5 bg-line mt-2" aria-hidden="true">
             <div className="h-full bg-accent" style={{ width: `${capPct}%` }} />
           </div>
-          <p className="text-xs text-ink-soft mt-2">
-            {usd(Number(desk.idle) / 1e6)} idle USDG in the Desk wallet.
-            {desk.idle > 0n && desk.deployed * 100n >= desk.cap * 99n ? " The cap is full, so it waits." : ""}
+          <p className="text-xs text-ink-soft mt-2 leading-relaxed">
+            You can add {usd(Number(desk.room) / 1e6)} more. Profit and loss never count toward the cap, and taking money
+            out frees room by what it is worth when it leaves.
+            {unbooked > 0n ? ` ${usd(Number(unbooked) / 1e6)} in the wallet was sent around the deposit router, so the engine leaves it alone.` : ""}
           </p>
         </div>
       </div>
@@ -530,8 +532,10 @@ function Deposit({ cfg, client, desk, ethUsd, busy, run, write }: {
     : cur === "ETH" ? (Number(raw) / 1e18) * ethUsd * 0.997
     : coatQuote.data !== undefined ? (Number(coatQuote.data) / 1e18) * ethUsd * 0.997 : null;
 
+  const roomUsd = Number(desk.room) / 1e6;
+  const overRoom = raw > 0n && estimate !== null && estimate > roomUsd + 1e-9;
   const go = () => {
-    if (raw === 0n) return;
+    if (raw === 0n || overRoom) return;
     if (cur === "USDG") {
       return run(`Deposit ${amount} USDG`, [
         () => write({ address: cfg.usdg, abi: erc20Abi, functionName: "approve", args: [cfg.depositRouter, raw] }),
@@ -564,6 +568,13 @@ function Deposit({ cfg, client, desk, ethUsd, busy, run, write }: {
         <input id="lab-dep" className="fld tabular-nums" inputMode="decimal"
           placeholder={cur === "USDG" ? "500" : cur === "ETH" ? "0.1" : "10000"} value={amount} onChange={(e) => setAmount(e.target.value)} />
       </div>
+      <div className="flex items-baseline justify-between text-xs -mt-2">
+        <span className="text-ink-soft">Room under the pilot cap</span>
+        <button type="button" className="underline text-ink-strong tabular-nums" disabled={cur !== "USDG"}
+          onClick={() => setAmount((Math.floor(roomUsd * 100) / 100).toString())}>
+          {usd(roomUsd)}
+        </button>
+      </div>
       <div className="flex items-baseline justify-between border-t border-line pt-4 text-sm">
         <span className="text-ink-soft">Lands in the Desk</span>
         <span className="font-pixel text-ink-strong tabular-nums">{raw > 0n && estimate !== null ? `≈ ${usd(estimate)}` : "–"}</span>
@@ -573,7 +584,10 @@ function Deposit({ cfg, client, desk, ethUsd, busy, run, write }: {
           : cur === "ETH" ? "Swapped to USDG at the WETH/USDG pool, floored by the ETH/USD feed."
             : "Sold for ETH on the COAT pool (its fee skim funds the Booster), then swapped to USDG. The testnet COAT pool is thin."}
       </p>
-      <button type="button" className="btn btn-accent w-full" disabled={busy || raw === 0n} onClick={go}>Deposit {cur}</button>
+      {overRoom && (
+        <p className="text-xs text-accent -mt-2">That is more than the {usd(roomUsd)} of room left; the deposit would be refused.</p>
+      )}
+      <button type="button" className="btn btn-accent w-full" disabled={busy || raw === 0n || overRoom} onClick={go}>Deposit {cur}</button>
     </div>
   );
 }

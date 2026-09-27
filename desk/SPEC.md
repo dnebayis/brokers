@@ -26,7 +26,7 @@ Desk NFT whole with the portfolio inside.
 | Service fee | **0.5%** per engine-executed trade, settable | community vote 6/7 |
 | Fee split | **80% Booster / 20% treasury**, settable (no buyback slice) | user 2026-08-26 |
 | Booster share | converted to **native ETH** before sending (Booster ignores ERC-20) | Zia lesson |
-| Pilot cap | **$1,000 of stock per Desk, measured at today's Chainlink prices**, settable. Value-based since 2026-09-27 (user chose option A): stock the owner withdraws frees cap at once, a price rise uses it, a fall frees it. The first version counted cumulative spend and never released it on an owner withdrawal, so a Desk could be left holding idle USDG it could never invest | community vote 6/7, user 2026-09-27 |
+| Pilot cap | **$1,000 put in per Desk**, settable (a pilot value). Enforced when a deposit is booked: the engine keeps a book per Desk (`principal` = deposits through the router minus what the owner takes out, valued when it leaves; `usdg` = booked deposits plus the engine's own sell proceeds). A deposit that would take principal over the cap reverts. Profit and loss never count: sell proceeds, gains included, are always reinvested. USDG sent around the router is never booked, so never invested. History: v1 counted cumulative spend (a withdrawal never freed it), v2 counted value (profit ate the cap), v3 counted cost (realized profit could not be reinvested); the user rejected each, v4 is the rule they stated on 2026-09-28 | community vote 6/7, user 2026-09-28 |
 | Pilot access | **Open to everyone from day one** | user 2026-08-26 (overrides the 5/7 holders-first vote; communicate in next community update — holders still gain via mint-COAT bonus) |
 | Holder fee discount | **None** (fee stream stays whole) | community vote 4/7 |
 | Deposit minimum | **None** ($20 desks welcome) | thread promise |
@@ -109,7 +109,7 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
    on testnet BEFORE any mainnet transaction (user gate, 2026-08-26)
    ← **dress run done 2026-09-27 on an anvil fork of 46630** (`script/rehearse_local.py`,
    report `rehearsal/local-rehearsal.md`): 34 deployer txs (`script/DeployDeskTestnet.s.sol`)
-   + user/keeper txs incl. ETH and COAT deposits, 37 on-chain checks, all green. Testnet has no USDG and no v3 pools,
+   + user/keeper txs incl. ETH and COAT deposits, 40 on-chain checks, all green. Testnet has no USDG and no v3 pools,
    so the script also deploys a testnet-only venue (`src/testnet/DeskTestVenue.sol`: test
    USDG, tMSFT, oracle-priced pools at feed minus 0.30%) and gives the Desk its own
    StrategyRegistry slot (Booster slot 0 untouched). Real testnet broadcast still pending

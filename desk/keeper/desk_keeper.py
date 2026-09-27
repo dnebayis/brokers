@@ -4,7 +4,8 @@
 Each tick, for every Desk whose owner has not paused the engine:
   1. sells any stock that is no longer in the basket;
   2. on a basket epoch change, sells the part of each name that sits above its new weight;
-  3. puts idle USDG (up to the pilot cap) into the names that sit below their weight, with
+  3. puts the Desk's investable USDG (booked deposits and sell proceeds) into the names that
+     sit below their weight, with
      one buyStock per name, or one buyBasket when the Desk holds no stock yet;
 and flushes the engine's fees (80/20 Booster/treasury as native ETH) once they pass a floor.
 
@@ -180,8 +181,7 @@ class Keeper:
         if self.seen_epoch.get(desk_id) != epoch:
             b = bal()
             v = val(b)
-            spendable = min(self.usdg.functions.balanceOf(acct).call(),
-                            self.engine.functions.capLeftOf(desk_id).call()) / E6
+            spendable = self.engine.functions.investableOf(desk_id).call() / E6
             total = sum(v[t] for t in weight) + spendable
             for t, w in weight.items():
                 excess = v[t] - w * total
@@ -192,8 +192,9 @@ class Keeper:
             self.seen_epoch[desk_id] = epoch
 
         # 3. idle USDG into the names below their weight
-        idle = self.usdg.functions.balanceOf(acct).call()
-        spend = min(idle, self.engine.functions.capLeftOf(desk_id).call())
+        # only USDG the engine booked (router deposits and its own sell proceeds) is invested;
+        # the pilot cap is enforced when a deposit is booked, so there is no cap check here
+        spend = self.engine.functions.investableOf(desk_id).call()
         if spend / E6 < MIN_TRADE_USD:
             return
         v = val(bal())

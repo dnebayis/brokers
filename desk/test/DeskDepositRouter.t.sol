@@ -6,7 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DeskNFT} from "../src/DeskNFT.sol";
 import {DeskAccount} from "../src/DeskAccount.sol";
 import {IDeskNFTView, IAggregatorV3Desk} from "../src/DeskEngine.sol";
-import {DeskDepositRouter, ICoatRouterSell} from "../src/DeskDepositRouter.sol";
+import {DeskDepositRouter, ICoatRouterSell, IDeskDepositBook} from "../src/DeskDepositRouter.sol";
 import {TestERC6551Registry} from "./Helpers6551.sol";
 import {Token, MockWETH, MockV3Pool, MockFeed} from "./DeskEngine.t.sol";
 
@@ -38,6 +38,21 @@ contract MockCoatRouter {
     receive() external payable {}
 }
 
+/// Stands in for the engine's deposit book: records what the router books, refuses over a cap.
+contract MockBook is IDeskDepositBook {
+    mapping(uint256 => uint256) public booked;
+    uint256 public cap = type(uint256).max;
+
+    function setCap(uint256 c) external {
+        cap = c;
+    }
+
+    function recordDeposit(uint256 deskId, uint256 amount) external {
+        require(booked[deskId] + amount <= cap, "over cap");
+        booked[deskId] += amount;
+    }
+}
+
 contract DeskDepositRouterTest is Test {
     Token coat;
     Token usdg;
@@ -47,6 +62,7 @@ contract DeskDepositRouterTest is Test {
     MockCoatRouter coatRouter;
     DeskNFT desks;
     DeskDepositRouter router;
+    MockBook book;
 
     address ownerA = address(0xA11CE);
     address alice = address(0xAA);
@@ -72,11 +88,13 @@ contract DeskDepositRouterTest is Test {
         vm.deal(address(coatRouter), 100 ether);
         vm.deal(address(weth), 0); // deposits mint WETH against real ETH
 
+        book = new MockBook();
         router = new DeskDepositRouter(
             IERC20(address(usdg)),
             address(weth),
             IERC20(address(coat)),
             IDeskNFTView(address(desks)),
+            IDeskDepositBook(address(book)),
             ICoatRouterSell(address(coatRouter)),
             address(ethPool),
             IAggregatorV3Desk(address(ethFeed)),
@@ -99,6 +117,7 @@ contract DeskDepositRouterTest is Test {
         uint256 out = router.depositEth{value: 0.4 ether}(id, 0);
         assertEq(out, 1_000 * U);
         assertEq(usdg.balanceOf(acct), 1_000 * U);
+        assertEq(book.booked(id), 1_000 * U); // booked with the engine in the same tx
         assertEq(usdg.balanceOf(address(router)), 0);
         assertEq(weth.balanceOf(address(router)), 0);
         assertEq(address(router).balance, 0);
@@ -150,6 +169,22 @@ contract DeskDepositRouterTest is Test {
         router.depositUsdg(id, 250 * U);
         vm.stopPrank();
         assertEq(usdg.balanceOf(acct), 250 * U);
+        assertEq(book.booked(id), 250 * U);
+    }
+
+    /// When the engine refuses a deposit (pilot cap), nothing moves: the whole tx reverts.
+    function test_depositOverTheCapRevertsWhole() public {
+        (uint256 id, address acct) = _desk();
+        book.setCap(100 * U);
+        vm.startPrank(alice);
+        usdg.approve(address(router), 250 * U);
+        vm.expectRevert(bytes("over cap"));
+        router.depositUsdg(id, 250 * U);
+        vm.expectRevert(bytes("over cap"));
+        router.depositEth{value: 0.4 ether}(id, 0);
+        vm.stopPrank();
+        assertEq(usdg.balanceOf(acct), 0);
+        assertEq(alice.balance, 10 ether);
     }
 
     function test_strayEthIsRefused() public {

@@ -14,6 +14,11 @@ interface IWETHDeposit {
     function deposit() external payable;
 }
 
+/// @notice The engine's deposit book: enforces the per-Desk pilot cap on what owners put in.
+interface IDeskDepositBook {
+    function recordDeposit(uint256 deskId, uint256 amount) external;
+}
+
 /// @notice The live COAT router (native ETH/COAT v4 pool behind the fee hook).
 interface ICoatRouterSell {
     function sell(uint256 coatIn, uint256 minEthOut, address to) external returns (uint256 out);
@@ -24,6 +29,8 @@ interface ICoatRouterSell {
 ///         in the same transaction and lands in the Desk's own 6551 wallet, where the engine
 ///         picks it up like any USDG deposit. The router holds nothing between transactions and
 ///         has no path to any Desk's assets: it only ever sends USDG INTO a Desk wallet.
+///         Every deposit is booked with the engine in the same transaction; a deposit that would
+///         take the Desk's principal over the pilot cap reverts as a whole.
 /// @dev ETH -> USDG goes through the WETH/USDG v3 pool with a Chainlink ETH/USD floor (the same
 ///      guard shape as the engine). COAT -> ETH goes through the COAT router, so the fee hook's
 ///      skim still funds the Booster; COAT has no Chainlink feed, so that leg's floor is the
@@ -41,6 +48,7 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
     address public immutable weth;
     IERC20 public immutable coat;
     IDeskNFTView public immutable desks;
+    IDeskDepositBook public engine;
 
     ICoatRouterSell public coatRouter;
     address public ethPool; // WETH/USDG v3 pool
@@ -59,6 +67,7 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
     event CoatRouterSet(address router);
     event EthPoolSet(address pool);
     event EthUsdFeedSet(address feed);
+    event EngineSet(address engine);
     event GuardsSet(uint256 maxSlippageBps, uint256 feedStaleAfter);
 
     error ZeroAddress();
@@ -75,6 +84,7 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
         address weth_,
         IERC20 coat_,
         IDeskNFTView desks_,
+        IDeskDepositBook engine_,
         ICoatRouterSell coatRouter_,
         address ethPool_,
         IAggregatorV3Desk ethUsdFeed_,
@@ -89,6 +99,7 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
         coat = coat_;
         desks = desks_;
         _usdgUnit = 10 ** IERC20Metadata(address(usdg_)).decimals();
+        _setEngine(engine_);
         _setCoatRouter(coatRouter_);
         _setEthPool(ethPool_);
         _setEthUsdFeed(ethUsdFeed_);
@@ -101,6 +112,10 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
     }
 
     // --- admin ---
+
+    function setEngine(IDeskDepositBook engine_) external onlyOwner {
+        _setEngine(engine_);
+    }
 
     function setCoatRouter(ICoatRouterSell router) external onlyOwner {
         _setCoatRouter(router);
@@ -129,6 +144,7 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
         if (amount == 0) revert ZeroAmount();
         address acct = desks.accountOf(deskId);
         usdg.safeTransferFrom(msg.sender, acct, amount);
+        engine.recordDeposit(deskId, amount);
         emit Deposited(deskId, msg.sender, address(usdg), amount, amount);
     }
 
@@ -191,6 +207,7 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
         out = output.toUint256();
         uint256 floor = Math.max(minUsdgOut, minUsdgForEth(ethIn));
         if (out < floor) revert BelowFloor(out, floor);
+        engine.recordDeposit(deskId, out);
     }
 
     function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata) external {
@@ -198,6 +215,12 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
         int256 owed = amount0Delta > 0 ? amount0Delta : amount1Delta;
         if (owed <= 0) revert BadCallback();
         IERC20(weth).safeTransfer(msg.sender, owed.toUint256());
+    }
+
+    function _setEngine(IDeskDepositBook engine_) internal {
+        if (address(engine_) == address(0)) revert ZeroAddress();
+        engine = engine_;
+        emit EngineSet(address(engine_));
     }
 
     function _setCoatRouter(ICoatRouterSell router) internal {

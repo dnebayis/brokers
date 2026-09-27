@@ -33,7 +33,9 @@ export const deskAccountAbi = [
 ] as const;
 
 export const deskEngineAbi = [
-  { type: "function", name: "deployedUsdg", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "principalOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "depositRoomOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "investableOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "uint256" }] },
   { type: "function", name: "pilotCapUsdg", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "feesAccrued", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "event", name: "BasketBought", inputs: [{ name: "deskId", type: "uint256", indexed: true }, u("usdgSpent"), u("fee"), { name: "epoch", type: "uint64" }] },

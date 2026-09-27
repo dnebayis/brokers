@@ -14,13 +14,14 @@ import {
     IStrategyRegistryView,
     IBoosterFeedView
 } from "../src/DeskEngine.sol";
-import {DeskDepositRouter, ICoatRouterSell} from "../src/DeskDepositRouter.sol";
+import {DeskDepositRouter, ICoatRouterSell, IDeskDepositBook} from "../src/DeskDepositRouter.sol";
 import {IAggregatorV3Desk} from "../src/DeskEngine.sol";
 import {DeskTestAsset, DeskTestFeed, DeskTestPool, IDeskTestFeed} from "../src/testnet/DeskTestVenue.sol";
 
 interface ITestnetOwned {
     function mint(address to, uint256 amount) external; // testnet tAAPL (TestnetAsset)
     function setAnswer(int256 answer) external; // testnet tAAPL feed (TestnetFeed)
+    function owner() external view returns (address);
 }
 
 interface IBoosterAdmin {
@@ -49,6 +50,7 @@ interface IWETH9 {
 /// rehearsal/testnet-46630.json with every address, read by script/rehearse-local.sh.
 ///
 ///   local rehearsal (anvil fork):   script/rehearse-local.sh
+///   redeploy next to the same venue: DESK_REUSE=rehearsal/testnet-46630.json DESK_KEEPER=0x… \
 ///   real testnet:                   forge script script/DeployDeskTestnet.s.sol \
 ///                                     --rpc-url https://rpc.testnet.chain.robinhood.com \
 ///                                     --broadcast --account <deployer keystore>
@@ -96,37 +98,14 @@ contract DeployDeskTestnet is Script {
 
         vm.startBroadcast(deployer);
 
-        // --- test venue ---
-        o.usdg = address(new DeskTestAsset("Test USDG", "tUSDG", 6, deployer));
-        o.tmsft = address(new DeskTestAsset("Test Microsoft", "tMSFT", 18, deployer));
-        o.msftFeed = address(new DeskTestFeed(deployer, 500e8));
-        o.tnvda = address(new DeskTestAsset("Test Nvidia", "tNVDA", 18, deployer));
-        o.nvdaFeed = address(new DeskTestFeed(deployer, 180e8));
-        o.ethFeed = address(new DeskTestFeed(deployer, 2700e8));
-        ITestnetOwned(TAAPL_FEED).setAnswer(200e8); // the staging feed is weeks old; refresh it
-        IBoosterAdmin(BOOSTER).setStockFeed(o.tmsft, o.msftFeed);
-        IBoosterAdmin(BOOSTER).setStockFeed(o.tnvda, o.nvdaFeed);
-
-        o.aaplPool = address(new DeskTestPool(o.usdg, TAAPL, IDeskTestFeed(TAAPL_FEED), SPREAD_BPS));
-        o.msftPool = address(new DeskTestPool(o.usdg, o.tmsft, IDeskTestFeed(o.msftFeed), SPREAD_BPS));
-        o.nvdaPool = address(new DeskTestPool(o.usdg, o.tnvda, IDeskTestFeed(o.nvdaFeed), SPREAD_BPS));
-        o.ethPool = address(new DeskTestPool(o.usdg, WETH, IDeskTestFeed(o.ethFeed), SPREAD_BPS));
-        ITestnetOwned(TAAPL).mint(o.aaplPool, 100e18);
-        DeskTestAsset(o.tmsft).mint(o.msftPool, 100e18);
-        DeskTestAsset(o.tnvda).mint(o.nvdaPool, 100e18);
-        DeskTestAsset(o.usdg).mint(o.nvdaPool, 100_000e6);
-        DeskTestAsset(o.usdg).mint(o.aaplPool, 100_000e6);
-        DeskTestAsset(o.usdg).mint(o.msftPool, 100_000e6);
-        DeskTestAsset(o.usdg).mint(o.ethPool, 100_000e6); // ETH/COAT deposits come out as USDG here
-        IWETH9(WETH).deposit{value: 0.015 ether}();
-        IWETH9(WETH).transfer(o.ethPool, 0.015 ether);
-
-        // --- the Desk's own basket slot (epoch 1: tAAPL 100%) ---
-        o.strategyId = IRegistryAdmin(REGISTRY).createStrategy("desk rehearsal");
-        address[] memory t = new address[](1);
-        uint16[] memory w = new uint16[](1);
-        (t[0], w[0]) = (TAAPL, 10_000);
-        IRegistryAdmin(REGISTRY).setStrategy(o.strategyId, t, w);
+        string memory reuse = vm.envOr("DESK_REUSE", string(""));
+        if (bytes(reuse).length > 0) {
+            // Redeploy only the Desk contracts next to an existing test venue (tokens, pools,
+            // feeds, basket slot): no new WETH inventory, no feed or Booster changes.
+            _loadVenue(o, vm.readFile(reuse));
+        } else {
+            _deployVenue(o, deployer);
+        }
 
         // --- desk contracts ---
         o.bonus = address(new CoatBonusPool(IERC20(COAT), ICoattailBrokerView(BROKERS), deployer, deployer));
@@ -172,6 +151,8 @@ contract DeployDeskTestnet is Script {
         DeskEngine(payable(o.engine)).setPool(o.tnvda, o.nvdaPool);
         DeskEngine(payable(o.engine)).setEthPool(o.ethPool);
         DeskNFT(o.desks).setMintOpen(true);
+        address keeper = vm.envOr("DESK_KEEPER", address(0));
+        if (keeper != address(0)) DeskEngine(payable(o.engine)).setKeeper(keeper);
 
         // --- deposits in ETH and COAT as well as USDG ---
         o.depositRouter = address(
@@ -180,16 +161,67 @@ contract DeployDeskTestnet is Script {
                 WETH,
                 IERC20(COAT),
                 IDeskNFTView(o.desks),
+                IDeskDepositBook(o.engine),
                 ICoatRouterSell(COAT_ROUTER),
                 o.ethPool,
                 IAggregatorV3Desk(o.ethFeed),
                 deployer
             )
         );
+        // deposits are only booked (and capped) through the router
+        DeskEngine(payable(o.engine)).setDepositRouter(o.depositRouter);
 
         vm.stopBroadcast();
 
         _write(o, deployer, treasury);
+    }
+
+    function _deployVenue(Out memory o, address deployer) internal {
+        o.usdg = address(new DeskTestAsset("Test USDG", "tUSDG", 6, deployer));
+        o.tmsft = address(new DeskTestAsset("Test Microsoft", "tMSFT", 18, deployer));
+        o.msftFeed = address(new DeskTestFeed(deployer, 500e8));
+        o.tnvda = address(new DeskTestAsset("Test Nvidia", "tNVDA", 18, deployer));
+        o.nvdaFeed = address(new DeskTestFeed(deployer, 180e8));
+        o.ethFeed = address(new DeskTestFeed(deployer, 2700e8));
+        // the staging feed may be weeks old; refresh it while the deployer still owns it
+        if (ITestnetOwned(TAAPL_FEED).owner() == deployer) ITestnetOwned(TAAPL_FEED).setAnswer(200e8);
+        IBoosterAdmin(BOOSTER).setStockFeed(o.tmsft, o.msftFeed);
+        IBoosterAdmin(BOOSTER).setStockFeed(o.tnvda, o.nvdaFeed);
+
+        o.aaplPool = address(new DeskTestPool(o.usdg, TAAPL, IDeskTestFeed(TAAPL_FEED), SPREAD_BPS));
+        o.msftPool = address(new DeskTestPool(o.usdg, o.tmsft, IDeskTestFeed(o.msftFeed), SPREAD_BPS));
+        o.nvdaPool = address(new DeskTestPool(o.usdg, o.tnvda, IDeskTestFeed(o.nvdaFeed), SPREAD_BPS));
+        o.ethPool = address(new DeskTestPool(o.usdg, WETH, IDeskTestFeed(o.ethFeed), SPREAD_BPS));
+        ITestnetOwned(TAAPL).mint(o.aaplPool, 100e18);
+        DeskTestAsset(o.tmsft).mint(o.msftPool, 100e18);
+        DeskTestAsset(o.tnvda).mint(o.nvdaPool, 100e18);
+        DeskTestAsset(o.usdg).mint(o.nvdaPool, 100_000e6);
+        DeskTestAsset(o.usdg).mint(o.aaplPool, 100_000e6);
+        DeskTestAsset(o.usdg).mint(o.msftPool, 100_000e6);
+        DeskTestAsset(o.usdg).mint(o.ethPool, 100_000e6); // ETH/COAT deposits come out as USDG here
+        IWETH9(WETH).deposit{value: 0.015 ether}();
+        IWETH9(WETH).transfer(o.ethPool, 0.015 ether);
+
+        // --- the Desk's own basket slot (epoch 1: tAAPL 100%) ---
+        o.strategyId = IRegistryAdmin(REGISTRY).createStrategy("desk rehearsal");
+        address[] memory t = new address[](1);
+        uint16[] memory w = new uint16[](1);
+        (t[0], w[0]) = (TAAPL, 10_000);
+        IRegistryAdmin(REGISTRY).setStrategy(o.strategyId, t, w);
+    }
+
+    function _loadVenue(Out memory o, string memory json) internal pure {
+        o.usdg = vm.parseJsonAddress(json, ".usdg");
+        o.tmsft = vm.parseJsonAddress(json, ".tmsft");
+        o.msftFeed = vm.parseJsonAddress(json, ".msftFeed");
+        o.tnvda = vm.parseJsonAddress(json, ".tnvda");
+        o.nvdaFeed = vm.parseJsonAddress(json, ".nvdaFeed");
+        o.ethFeed = vm.parseJsonAddress(json, ".ethFeed");
+        o.aaplPool = vm.parseJsonAddress(json, ".aaplPool");
+        o.msftPool = vm.parseJsonAddress(json, ".msftPool");
+        o.nvdaPool = vm.parseJsonAddress(json, ".nvdaPool");
+        o.ethPool = vm.parseJsonAddress(json, ".ethPool");
+        o.strategyId = vm.parseJsonUint(json, ".strategyId");
     }
 
     function _word(bytes memory blob, uint256 w) internal pure returns (bytes32 word) {

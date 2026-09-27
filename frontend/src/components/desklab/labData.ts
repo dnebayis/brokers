@@ -71,8 +71,10 @@ export type DeskView = {
   image: string;
   traits: Trait[];
   paused: boolean;
-  idle: bigint;
-  deployed: bigint;
+  idle: bigint; // USDG in the Desk wallet
+  investable: bigint; // the part the engine booked (deposits through the router, sell proceeds)
+  principal: bigint; // what the owner put in, net of what they took out
+  room: bigint; // how much more may be deposited under the pilot cap
   cap: bigint;
   holdings: Holding[];
   stockUsd: number;
@@ -200,11 +202,13 @@ export async function readLab(
   const id = selected && owned.some((o) => o.id === selected) ? selected : owned[0]?.id;
   if (!id) return state;
   const account = await client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "accountOf", args: [id] });
-  const [uri, paused, idle, deployed, cap, amounts] = await Promise.all([
+  const [uri, paused, idle, principal, room, investable, cap, amounts] = await Promise.all([
     client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "tokenURI", args: [id] }),
     client.readContract({ address: account, abi: deskAccountAbi, functionName: "enginePaused" }),
     client.readContract({ address: cfg.usdg, abi: erc20Abi, functionName: "balanceOf", args: [account] }),
-    client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "deployedUsdg", args: [id] }),
+    client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "principalOf", args: [id] }),
+    client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "depositRoomOf", args: [id] }),
+    client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "investableOf", args: [id] }),
     client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "pilotCapUsdg" }),
     Promise.all(stocks.map((t) => client.readContract({ address: t, abi: erc20Abi, functionName: "balanceOf", args: [account] }))),
   ]);
@@ -235,7 +239,7 @@ export async function readLab(
   const pnl = totalUsd + books.withdrawn - books.deposited;
   const { image, traits } = decodeUri(uri);
   state.desk = {
-    id, account, image, traits, paused, idle, deployed, cap, holdings, stockUsd, totalUsd,
+    id, account, image, traits, paused, idle, investable, principal, room, cap, holdings, stockUsd, totalUsd,
     ledger: {
       deposited: books.deposited,
       withdrawn: books.withdrawn,

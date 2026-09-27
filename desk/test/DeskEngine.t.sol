@@ -217,15 +217,28 @@ contract DeskEngineTest is Test {
         engine.setPool(address(intc), address(intcPool));
         engine.setPool(address(spcx), address(spcxPool));
         engine.setEthPool(address(ethPool));
+        engine.setDepositRouter(address(this)); // this test plays the deposit router
         desks.setMintOpen(true);
         desks.setMintPrice(0);
         vm.stopPrank();
     }
 
+    /// Mint a Desk and deposit through the "router" (this test): transfer, then book it.
     function _openDesk(uint256 fundUsdg) internal returns (uint256 id, address acct) {
         vm.prank(alice);
         (id, acct) = desks.mint();
-        usdg.transfer(acct, fundUsdg);
+        if (fundUsdg > 0) _deposit(id, acct, fundUsdg);
+    }
+
+    function _deposit(uint256 id, address acct, uint256 amount) internal {
+        usdg.transfer(acct, amount);
+        engine.recordDeposit(id, amount);
+    }
+
+    function _withdraw(address acct, Token token, uint256 amount) internal {
+        vm.prank(alice);
+        DeskAccount(payable(acct))
+            .execute(address(token), 0, abi.encodeCall(IERC20.transfer, (alice, amount)), 0);
     }
 
     function test_buyBasket_endToEnd() public {
@@ -238,54 +251,112 @@ contract DeskEngineTest is Test {
         // net 597: 60% INTC ($100) = 3.582 INTC, 40% SPCX ($200) = 1.194 SPCX
         assertApproxEqRel(intc.balanceOf(acct), 3.582 ether, 1e15);
         assertApproxEqRel(spcx.balanceOf(acct), 1.194 ether, 1e15);
-        assertEq(usdg.balanceOf(acct), 0); // fully deployed (no dust at these numbers)
-        assertEq(engine.deployedUsdg(id), 597 * U); // stock value at oracle: the net that was bought
+        assertEq(usdg.balanceOf(acct), 0);
+        assertEq(engine.principalOf(id), 600 * U); // what the owner put in; buying does not change it
+        assertEq(engine.investableOf(id), 0);
         assertEq(usdg.balanceOf(address(engine)), 3 * U); // engine holds only its fee
     }
 
-    function test_buyBasket_capClipsAndBlocks() public {
-        (uint256 id, address acct) = _openDesk(1500 * U);
-        vm.prank(keeper);
-        engine.buyBasket(id, type(uint256).max);
-        // spend clipped to the $1,000 pilot cap; the stock it bought is worth the net 995
-        assertEq(engine.deployedUsdg(id), 995 * U);
-        assertEq(usdg.balanceOf(acct), 500 * U); // remainder untouched in the desk
-        assertEq(engine.capLeftOf(id), 5 * U);
+    // --- the pilot cap: at most $1,000 put in, profit and loss outside it ---
 
-        vm.prank(keeper);
-        engine.buyBasket(id, type(uint256).max); // tops up only what value leaves of the cap
-        assertEq(usdg.balanceOf(acct), 495 * U);
-        assertLe(engine.deployedUsdg(id), 1000 * U);
+    function test_deposit_overTheCapReverts() public {
+        (uint256 id, address acct) = _openDesk(1000 * U);
+        assertEq(engine.depositRoomOf(id), 0);
+        usdg.transfer(acct, 1 * U);
+        vm.expectRevert(abi.encodeWithSelector(DeskEngine.DepositOverCap.selector, 1 * U, 0));
+        engine.recordDeposit(id, 1 * U);
+
+        (uint256 id2, address acct2) = _openDesk(0);
+        usdg.transfer(acct2, 1500 * U);
+        vm.expectRevert(abi.encodeWithSelector(DeskEngine.DepositOverCap.selector, 1500 * U, 1000 * U));
+        engine.recordDeposit(id2, 1500 * U);
     }
 
-    /// Limit A: the cap is measured on value, so stock the owner takes out frees it at once.
-    /// Under the old cumulative-spend accounting this desk was stuck with idle USDG forever.
-    function test_cap_freedWhenTheOwnerWithdrawsStock() public {
-        (uint256 id, address acct) = _openDesk(2000 * U);
-        vm.prank(keeper);
-        engine.buyBasket(id, type(uint256).max);
-        assertEq(engine.capLeftOf(id), 5 * U);
-
-        uint256 intcBal = intc.balanceOf(acct);
+    function test_deposit_onlyTheRouterBooks() public {
+        (uint256 id,) = _openDesk(0);
         vm.prank(alice);
-        DeskAccount(payable(acct))
-            .execute(address(intc), 0, abi.encodeCall(IERC20.transfer, (alice, intcBal)), 0);
-        assertEq(engine.capLeftOf(id), 5 * U + 597 * U); // the INTC leg (60% of 995) is free again
-
-        vm.prank(keeper);
-        engine.buyBasket(id, type(uint256).max);
-        assertLe(engine.deployedUsdg(id), 1000 * U);
-        assertEq(usdg.balanceOf(acct), 1000 * U - 602 * U);
+        vm.expectRevert(DeskEngine.NotRouter.selector);
+        engine.recordDeposit(id, 100 * U);
     }
 
-    function test_cap_followsPrices() public {
-        (uint256 id,) = _openDesk(2000 * U);
+    /// USDG that reaches the wallet without going through the router is never invested.
+    function test_unbookedUsdgStaysIdle() public {
+        (uint256 id, address acct) = _openDesk(500 * U);
+        usdg.transfer(acct, 700 * U); // straight to the wallet
         vm.prank(keeper);
-        engine.buyBasket(id, 500 * U); // $497.50 of stock
-        intcFeed.set(200e8); // INTC doubles: the INTC leg (60%) is now worth $597
-        spcxFeed.set(200e8);
-        assertEq(engine.deployedUsdg(id), 597 * U + 199 * U);
-        assertEq(engine.capLeftOf(id), 1000 * U - 796 * U);
+        engine.buyBasket(id, type(uint256).max);
+        assertEq(usdg.balanceOf(acct), 700 * U);
+        assertEq(engine.investableOf(id), 0);
+        assertEq(engine.principalOf(id), 500 * U);
+    }
+
+    /// Profit is not capped: sell proceeds, gains included, are always reinvested in full,
+    /// even when the Desk is worth far more than the cap.
+    function test_profitIsReinvestedBeyondTheCap() public {
+        (uint256 id, address acct) = _openDesk(1000 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max); // $597 INTC, $398 SPCX
+        intcFeed.set(300e8); // INTC triples
+        intcPool.setPrice(1e10, 3);
+        uint256 bal = intc.balanceOf(acct);
+        vm.prank(keeper);
+        engine.sellStock(id, address(intc), bal); // ~ $1,791 before fee
+        uint256 proceeds = engine.investableOf(id);
+        assertGt(proceeds, 1780 * U);
+        vm.prank(keeper);
+        engine.buyStock(id, address(spcx), type(uint256).max); // all of it goes back to work
+        assertEq(engine.investableOf(id), 0);
+        assertEq(usdg.balanceOf(acct), 0);
+        assertEq(engine.principalOf(id), 1000 * U); // still what the owner put in
+        assertEq(engine.depositRoomOf(id), 0);
+    }
+
+    function test_pricesNeverMoveThePrincipal() public {
+        (uint256 id,) = _openDesk(800 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max);
+        intcFeed.set(200e8);
+        spcxFeed.set(50e8);
+        assertEq(engine.principalOf(id), 800 * U);
+        assertEq(engine.depositRoomOf(id), 200 * U);
+    }
+
+    /// Taking stock out frees room by what it is worth when it leaves.
+    function test_withdrawal_freesRoomByItsValue() public {
+        (uint256 id, address acct) = _openDesk(1000 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max);
+        _withdraw(acct, intc, intc.balanceOf(acct)); // $597 of INTC at $100
+        assertEq(engine.principalOf(id), 403 * U);
+        assertEq(engine.depositRoomOf(id), 597 * U);
+
+        usdg.transfer(acct, 598 * U);
+        vm.expectRevert(abi.encodeWithSelector(DeskEngine.DepositOverCap.selector, 598 * U, 597 * U));
+        engine.recordDeposit(id, 598 * U);
+        engine.recordDeposit(id, 597 * U);
+        assertEq(engine.principalOf(id), 1000 * U);
+    }
+
+    function test_withdrawal_atAProfitCanFreeTheWholeCap() public {
+        (uint256 id, address acct) = _openDesk(1000 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max);
+        intcFeed.set(200e8); // INTC doubles: the INTC leg is worth $1,194
+        _withdraw(acct, intc, intc.balanceOf(acct));
+        assertEq(engine.principalOf(id), 0); // never below zero
+        assertEq(engine.depositRoomOf(id), 1000 * U);
+    }
+
+    function test_withdrawal_ofUsdgCountsOneForOne() public {
+        (uint256 id, address acct) = _openDesk(1000 * U);
+        _withdraw(acct, usdg, 300 * U);
+        assertEq(engine.principalOf(id), 700 * U);
+        assertEq(engine.investableOf(id), 700 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max); // books the withdrawal on chain as well
+        (uint128 principal, uint128 booked) = engine.books(id);
+        assertEq(principal, 700 * U);
+        assertEq(booked, 0);
     }
 
     function test_buyBasket_keeperOnly_andPauseBlocks() public {
@@ -320,8 +391,9 @@ contract DeskEngineTest is Test {
         // proceeds ~358.2 USDG minus 0.5% fee, back in the desk
         assertApproxEqRel(usdg.balanceOf(acct), 3564 * U / 10, 1e15);
         assertEq(intc.balanceOf(acct), 0);
-        // what is left deployed is the SPCX still held (40% of 597)
-        assertApproxEqRel(engine.deployedUsdg(id), 2388 * U / 10, 1e15);
+        // the proceeds are booked and reinvestable; the principal did not move
+        assertEq(engine.investableOf(id), usdg.balanceOf(acct));
+        assertEq(engine.principalOf(id), 600 * U);
     }
 
     function test_flushFees_splits8020inEth() public {
@@ -349,7 +421,7 @@ contract DeskEngineTest is Test {
         assertApproxEqRel(spcx.balanceOf(acct), 0.995 ether, 1e15);
         assertEq(intc.balanceOf(acct), 0);
         assertEq(usdg.balanceOf(acct), 0);
-        assertEq(engine.deployedUsdg(id), 199 * U); // same value-based cap as buyBasket
+        assertEq(engine.heldQty(id, address(spcx)), spcx.balanceOf(acct));
     }
 
     function test_buyStock_rejectsNamesOutsideTheBasket() public {
@@ -360,15 +432,15 @@ contract DeskEngineTest is Test {
         engine.buyStock(id, address(other), type(uint256).max);
     }
 
-    function test_buyStock_sharesThePilotCap() public {
-        (uint256 id, address acct) = _openDesk(1500 * U);
+    function test_buyStock_spendsOnlyBookedUsdg() public {
+        (uint256 id, address acct) = _openDesk(300 * U);
+        usdg.transfer(acct, 200 * U); // unbooked
         vm.prank(keeper);
-        engine.buyBasket(id, 800 * U); // $796 of stock
+        engine.buyStock(id, address(intc), type(uint256).max);
+        assertEq(usdg.balanceOf(acct), 200 * U);
         vm.prank(keeper);
-        engine.buyStock(id, address(intc), type(uint256).max); // only $204 of cap left
-        assertEq(usdg.balanceOf(acct), 1500 * U - 800 * U - 204 * U);
-        assertLe(engine.deployedUsdg(id), 1000 * U);
-        assertGt(engine.deployedUsdg(id), 998 * U);
+        vm.expectRevert(DeskEngine.NothingToDo.selector);
+        engine.buyStock(id, address(intc), type(uint256).max);
     }
 
     function test_buyStock_keeperOnly_pauseAndSlippageGuard() public {

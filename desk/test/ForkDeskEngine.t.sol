@@ -73,6 +73,7 @@ contract ForkDeskEngineTest is Test {
         engine.setEthPool(MID_POOL);
         desks.setMintOpen(true);
         desks.setMintPrice(0);
+        engine.setDepositRouter(address(this)); // this test plays the deposit router
     }
 
     function _openDesk(uint256 fundUsdg) internal returns (uint256 id, address acct) {
@@ -80,6 +81,7 @@ contract ForkDeskEngineTest is Test {
         (id, acct) = desks.mint();
         deal(USDG, acct, fundUsdg);
         assertEq(IERC20(USDG).balanceOf(acct), fundUsdg, "usdg funded");
+        engine.recordDeposit(id, fundUsdg);
     }
 
     function test_live_basket_is_intc_and_msft_with_feeds_and_pools() public view {
@@ -103,8 +105,8 @@ contract ForkDeskEngineTest is Test {
         uint256 fee = (500 * U * engine.feeBps()) / engine.BPS();
         uint256 net = 500 * U - fee;
         assertEq(engine.feesAccrued(), fee, "0.5% fee kept by the engine");
-        // cap is measured on value: the stock bought is worth about the net spend at oracle
-        assertApproxEqRel(engine.deployedUsdg(id), 4975 * U / 10, 0.03e18, "stock value near the net spend");
+        assertEq(engine.principalOf(id), 500 * U, "principal is what was put in");
+        assertEq(engine.investableOf(id), 0, "all booked USDG went to work");
         assertEq(IERC20(USDG).balanceOf(address(engine)), fee, "engine holds only its fee");
         assertLt(IERC20(USDG).balanceOf(acct), 10, "desk spent down to slicing dust");
 
@@ -136,7 +138,10 @@ contract ForkDeskEngineTest is Test {
         uint256 usdgBack = IERC20(USDG).balanceOf(acct) - usdgBefore;
         assertGt(usdgBack, engine.minUsdgOut(INTC, intcHeld / 2), "sell above the chainlink floor");
         assertEq(IERC20(INTC).balanceOf(acct), intcHeld - intcHeld / 2, "half the position left");
-        assertLt(engine.deployedUsdg(id), 300 * U, "selling half the INTC freed that much cap");
+        assertEq(
+            engine.investableOf(id), IERC20(USDG).balanceOf(acct), "sell proceeds are booked, reinvestable"
+        );
+        assertEq(engine.principalOf(id), 400 * U, "a sell never moves the principal");
 
         uint256 fees = engine.feesAccrued();
         uint256 boosterEth = BOOSTER.balance;
@@ -152,14 +157,15 @@ contract ForkDeskEngineTest is Test {
         assertGt(fees, 0);
     }
 
-    function test_pilot_cap_holds_against_real_fills() public {
-        (uint256 id,) = _openDesk(1_500 * U);
-        engine.buyBasket(id, 1_500 * U);
-        assertEq(IERC20(USDG).balanceOf(desks.accountOf(id)), 500 * U, "spend clipped to the $1,000 cap");
-        assertLe(engine.deployedUsdg(id), 1_000 * U, "never above the cap after a buy");
-        engine.buyBasket(id, 500 * U); // tops up only what value leaves of the cap
-        assertLe(engine.deployedUsdg(id), 1_000 * U, "still inside the cap");
-        assertGt(IERC20(USDG).balanceOf(desks.accountOf(id)), 450 * U, "the top-up was small");
+    function test_pilot_cap_holds_on_deposits() public {
+        (uint256 id, address acct) = _openDesk(1_000 * U);
+        engine.buyBasket(id, 1_000 * U);
+        assertEq(engine.depositRoomOf(id), 0, "the $1,000 pilot cap is used");
+        deal(USDG, acct, 500 * U);
+        vm.expectRevert(abi.encodeWithSelector(DeskEngine.DepositOverCap.selector, 500 * U, 0));
+        engine.recordDeposit(id, 500 * U);
+        vm.expectRevert(DeskEngine.NothingToDo.selector);
+        engine.buyBasket(id, 500 * U); // the unbooked 500 is never invested
     }
 
     function test_owner_can_pause_the_engine_and_pull_out() public {
@@ -179,7 +185,7 @@ contract ForkDeskEngineTest is Test {
         uint256 floor = engine.minStockOut(MSFT, net);
         assertGe(got, floor, "fill above the chainlink floor");
         assertEq(IERC20(INTC).balanceOf(acct), 0, "only the named stock was bought");
-        assertApproxEqRel(engine.deployedUsdg(id), 2985 * U / 10, 0.03e18, "shares the value-based cap");
+        assertEq(engine.principalOf(id), 300 * U, "principal unchanged by the buy");
         console2.log("buyStock MSFT vs oracle, bps", (got * 10_000) / ((floor * 10_000) / 9_500));
     }
 }

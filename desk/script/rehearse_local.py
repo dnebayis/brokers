@@ -63,7 +63,12 @@ BROKER = [
         {"name": "tokenId", "type": "uint256", "indexed": True}]},
 ]
 BOOSTER = [{"type": "function", "name": "isActive", "stateMutability": "view",
-            "inputs": [{"name": "id", "type": "uint256"}], "outputs": [{"type": "bool"}]}]
+            "inputs": [{"name": "id", "type": "uint256"}], "outputs": [{"type": "bool"}]},
+           {"type": "function", "name": "stockFeed", "stateMutability": "view",
+            "inputs": [{"name": "t", "type": "address"}], "outputs": [{"type": "address"}]}]
+FEED = [{"type": "function", "name": "latestRoundData", "stateMutability": "view", "inputs": [],
+         "outputs": [{"type": "uint80"}, {"type": "int256"}, {"type": "uint256"}, {"type": "uint256"},
+                     {"type": "uint80"}]}]
 REGISTRY = [
     {"type": "function", "name": "setStrategy", "stateMutability": "nonpayable",
      "inputs": [{"name": "id", "type": "uint256"}, {"name": "t", "type": "address[]"},
@@ -229,10 +234,10 @@ def rehearse(w3: Web3) -> int:
     r.check("3 mint", uri.startswith("data:application/json;base64,"), "tokenURI renders on chain")
 
     # ---------- deposit ----------
-    print("step 4: deposit")
-    send(alice, usdg.functions.transfer(acct_addr, 1_200 * E6), step="4 deposit", what="alice deposits 1,200 USDG")
-    r.check("4 deposit", usdg.functions.balanceOf(acct_addr).call() == 1_200 * E6, "Desk wallet holds 1,200 USDG")
+    print("step 4: deposit (USDG, ETH, COAT) through the router, capped at $1,000 put in")
     router = c(A["depositRouter"], abi("DeskDepositRouter"))
+    send(alice, usdg.functions.approve(A["depositRouter"], 1_500 * E6), step="4 deposit", what="approve USDG deposit")
+    send(alice, router.functions.depositUsdg(desk_id, 900 * E6), step="4 deposit", what="alice deposits 900 USDG")
     before = usdg.functions.balanceOf(acct_addr).call()
     floor_eth = router.functions.minUsdgForEth(E18 // 100).call()
     send(alice, router.functions.depositEth(desk_id, 0), value=E18 // 100, step="4 deposit",
@@ -245,29 +250,37 @@ def rehearse(w3: Web3) -> int:
          what="alice deposits 10,000 COAT (COAT -> ETH on the live testnet v4 pool -> USDG)")
     coat_in = usdg.functions.balanceOf(acct_addr).call() - before
     r.check("4 deposit", coat_in > 0, f"10,000 COAT arrived as {coat_in / E6:.4f} USDG (thin testnet COAT pool)")
+    principal = engine.functions.principalOf(desk_id).call()
+    room = engine.functions.depositRoomOf(desk_id).call()
+    r.check("4 deposit", principal == 900 * E6 + eth_in + coat_in and room == 1_000 * E6 - principal,
+            f"principal ${principal / E6:,.2f} booked, ${room / E6:,.2f} of room left under the $1,000 pilot cap")
+    r.check("4 deposit", reverts(alice.address, router.functions.depositUsdg(desk_id, room + E6)),
+            "a deposit over the pilot cap reverts")
+    send(alice, usdg.functions.transfer(acct_addr, 200 * E6), step="4 deposit",
+         what="alice sends 200 USDG straight to the wallet, around the router")
+    r.check("4 deposit", engine.functions.investableOf(desk_id).call() == principal,
+            "USDG sent around the router is not booked, so it is never invested")
     r.check("4 deposit", w3.eth.get_balance(A["depositRouter"]) == 0 and usdg.functions.balanceOf(A["depositRouter"]).call() == 0
             and coat.functions.balanceOf(A["depositRouter"]).call() == 0, "deposit router holds nothing afterwards")
-    deposited = usdg.functions.balanceOf(acct_addr).call()
 
     # ---------- buy ----------
     print("step 5: buy the basket")
-    floor = engine.functions.minStockOut(A["taapl"], 995 * E6).call()
-    send(DEPLOYER, engine.functions.buyBasket(desk_id, 1_200 * E6), step="5 buy", what="keeper buyBasket")
+    floor = engine.functions.minStockOut(A["taapl"], principal * 995 // 1000).call()
+    send(DEPLOYER, engine.functions.buyBasket(desk_id, 10_000 * E6), step="5 buy", what="keeper buyBasket")
     got = taapl.functions.balanceOf(acct_addr).call()
     oracle_amt = floor * 10_000 // 9_500
-    dep = engine.functions.deployedUsdg(desk_id).call()
-    r.check("5 buy", 980 * E6 < dep <= 1_000 * E6,
-            f"spend clipped to the $1,000 pilot cap; the stock is worth ${dep / E6:,.2f} at oracle")
-    r.check("5 buy", usdg.functions.balanceOf(acct_addr).call() == deposited - 1_000 * E6,
-            f"the {(deposited - 1_000 * E6) / E6:.2f} USDG over the cap stays in the Desk")
+    r.check("5 buy", usdg.functions.balanceOf(acct_addr).call() == 200 * E6,
+            "every booked dollar went to work; the 200 sent around the router still sits idle")
     r.check("5 buy", got >= floor, f"tAAPL fill above the Chainlink floor ({got / oracle_amt * 10_000:.0f} bps of oracle)")
-    r.check("5 buy", engine.functions.feesAccrued().call() == 5 * E6, "0.5% fee (5 USDG) held by the engine")
-    r.check("5 buy", engine.functions.capLeftOf(desk_id).call() < 10 * E6, "cap left is only the fee and spread shaved off")
+    r.check("5 buy", engine.functions.principalOf(desk_id).call() == principal, "buying does not move the principal")
+    r.check("5 buy", reverts(DEPLOYER, engine.functions.buyBasket(desk_id, 100 * E6)), "nothing booked left to buy with")
     r.numbers["buy fill vs oracle (bps)"] = f"{got / oracle_amt * 10_000:.0f}"
 
     # ---------- rebalance ----------
     print("step 6: rebalance on an epoch change (tAAPL 100 -> tAAPL 70 / tMSFT 30)")
-    v_before = _desk_value(taapl, tmsft, usdg, acct_addr, 200, 500)
+    feed_px = lambda t: w3.eth.contract(address=booster.functions.stockFeed(t).call(), abi=FEED).functions.latestRoundData().call()[1] / 1e8  # noqa: E731
+    pa, pm = feed_px(A["taapl"]), feed_px(A["tmsft"])
+    v_before = _desk_value(taapl, tmsft, usdg, acct_addr, pa, pm)
     send(DEPLOYER, registry.functions.setStrategy(sid, [A["taapl"], A["tmsft"]], [7000, 3000]),
          step="6 rebalance", what="new basket posted (epoch +1)")
     fees_before = engine.functions.feesAccrued().call()
@@ -278,16 +291,16 @@ def rehearse(w3: Web3) -> int:
     proceeds = usdg.functions.balanceOf(acct_addr).call() - idle
     send(DEPLOYER, engine.functions.buyStock(desk_id, A["tmsft"], proceeds), step="6 rebalance",
          what="keeper buyStock tMSFT with the proceeds")
-    r.check("6 rebalance", usdg.functions.balanceOf(acct_addr).call() == idle, "the idle USDG over the cap was not touched")
+    r.check("6 rebalance", usdg.functions.balanceOf(acct_addr).call() == idle, "the unbooked idle USDG was not touched")
     r.check("6 rebalance", reverts(DEPLOYER, engine.functions.buyStock(desk_id, A["weth"], 1)),
             "buyStock refuses a name outside the basket")
-    a_val = taapl.functions.balanceOf(acct_addr).call() * 200 / E18
-    m_val = tmsft.functions.balanceOf(acct_addr).call() * 500 / E18
-    v_after = _desk_value(taapl, tmsft, usdg, acct_addr, 200, 500)
+    a_val = taapl.functions.balanceOf(acct_addr).call() * pa / E18
+    m_val = tmsft.functions.balanceOf(acct_addr).call() * pm / E18
+    v_after = _desk_value(taapl, tmsft, usdg, acct_addr, pa, pm)
     reb_fees = (engine.functions.feesAccrued().call() - fees_before) / E6
     r.check("6 rebalance", abs(a_val / (a_val + m_val) - 0.70) < 0.005,
             f"stock split {a_val / (a_val + m_val):.1%} tAAPL / {m_val / (a_val + m_val):.1%} tMSFT")
-    r.check("6 rebalance", engine.functions.deployedUsdg(desk_id).call() <= 1_000 * E6, "still inside the pilot cap")
+    r.check("6 rebalance", engine.functions.principalOf(desk_id).call() == principal, "a rebalance never moves the principal")
     r.numbers["rebalance cost (USD)"] = f"{v_before - v_after:.2f} of {v_before:.2f} ({(v_before - v_after) / v_before:.2%})"
     r.numbers["rebalance engine fees (USD)"] = f"{reb_fees:.2f}"
 
@@ -331,6 +344,9 @@ def rehearse(w3: Web3) -> int:
     if u_bal:
         send(alice, acct.functions.execute(A["usdg"], 0, usdg.encodeABI("transfer", [alice.address, u_bal]), 0),
              step="9 withdraw", what="alice pulls leftover USDG out")
+    p_after = engine.functions.principalOf(desk_id).call()
+    r.check("9 withdraw", p_after < principal,
+            f"withdrawals lowered the principal from ${principal / E6:,.2f} to ${p_after / E6:,.2f}, reopening room")
     r.check("9 withdraw", tmsft.functions.balanceOf(alice.address).call() == m_bal and
             tmsft.functions.balanceOf(acct_addr).call() == 0, f"{m_bal / E18:.4f} tMSFT now in alice's wallet")
     r.check("9 withdraw", reverts(bob.address, acct.functions.execute(A["taapl"], 0,
@@ -355,7 +371,10 @@ def rehearse(w3: Web3) -> int:
     r.check("10 sale", reverts(alice.address, acct.functions.execute(A["taapl"], 0,
             taapl.encodeABI("transfer", [alice.address, 1]), 0)), "alice can no longer withdraw")
     send(bob, acct.functions.setEnginePaused(True), step="10 sale", what="bob pauses the engine on his Desk")
-    send(DEPLOYER, usdg.functions.mint(acct_addr, 50 * E6), step="10 sale", what="(test) 50 USDG lands in the Desk")
+    send(DEPLOYER, usdg.functions.mint(bob.address, 50 * E6), step="10 sale", what="(test) bob gets 50 USDG")
+    send(bob, usdg.functions.approve(A["depositRouter"], 50 * E6), step="10 sale", what="approve")
+    send(bob, router.functions.depositUsdg(desk_id, 50 * E6), step="10 sale", what="bob deposits 50 USDG into his Desk")
+    r.check("10 sale", engine.functions.investableOf(desk_id).call() >= 50 * E6, "the deposit is booked")
     r.check("10 sale", reverts(DEPLOYER, engine.functions.buyBasket(desk_id, 50 * E6)), "engine cannot pull while bob has it paused")
     send(bob, acct.functions.execute(A["taapl"], 0, taapl.encodeABI("transfer", [bob.address, a_left]), 0),
          step="10 sale", what="bob withdraws the tAAPL he bought with the Desk")
