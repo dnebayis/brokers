@@ -52,7 +52,9 @@ contract ForkDeskEngineTest is Test {
         uint64 nonce = vm.getNonce(address(this));
         address predictedEngine = vm.computeCreateAddress(address(this), nonce + 2);
         impl = new DeskAccount(predictedEngine);
-        desks = new DeskNFT(IERC20(COAT), address(bonus), IERC6551RegistryDesk(REGISTRY_6551), address(impl), address(this));
+        desks = new DeskNFT(
+            IERC20(COAT), address(bonus), IERC6551RegistryDesk(REGISTRY_6551), address(impl), address(this)
+        );
         engine = new DeskEngine(
             IERC20(USDG),
             IWETHDesk(WETH),
@@ -81,7 +83,8 @@ contract ForkDeskEngineTest is Test {
     }
 
     function test_live_basket_is_intc_and_msft_with_feeds_and_pools() public view {
-        (address[] memory tokens, uint16[] memory weights,) = IStrategyRegistryView(STRATEGY_REGISTRY).getBasket(0);
+        (address[] memory tokens, uint16[] memory weights,) =
+            IStrategyRegistryView(STRATEGY_REGISTRY).getBasket(0);
         assertEq(tokens.length, 2);
         for (uint256 i; i < tokens.length; ++i) {
             assertTrue(tokens[i] == INTC || tokens[i] == MSFT, "basket names covered by the test's pools");
@@ -92,14 +95,16 @@ contract ForkDeskEngineTest is Test {
 
     function test_buys_the_live_basket_into_the_desk_wallet_at_real_pools() public {
         (uint256 id, address acct) = _openDesk(500 * U);
-        (address[] memory tokens, uint16[] memory weights,) = IStrategyRegistryView(STRATEGY_REGISTRY).getBasket(0);
+        (address[] memory tokens, uint16[] memory weights,) =
+            IStrategyRegistryView(STRATEGY_REGISTRY).getBasket(0);
 
         engine.buyBasket(id, 500 * U);
 
         uint256 fee = (500 * U * engine.feeBps()) / engine.BPS();
         uint256 net = 500 * U - fee;
         assertEq(engine.feesAccrued(), fee, "0.5% fee kept by the engine");
-        assertEq(engine.deployedUsdg(id), 500 * U, "gross cap accounting");
+        // cap is measured on value: the stock bought is worth about the net spend at oracle
+        assertApproxEqRel(engine.deployedUsdg(id), 4975 * U / 10, 0.03e18, "stock value near the net spend");
         assertEq(IERC20(USDG).balanceOf(address(engine)), fee, "engine holds only its fee");
         assertLt(IERC20(USDG).balanceOf(acct), 10, "desk spent down to slicing dust");
 
@@ -131,7 +136,7 @@ contract ForkDeskEngineTest is Test {
         uint256 usdgBack = IERC20(USDG).balanceOf(acct) - usdgBefore;
         assertGt(usdgBack, engine.minUsdgOut(INTC, intcHeld / 2), "sell above the chainlink floor");
         assertEq(IERC20(INTC).balanceOf(acct), intcHeld - intcHeld / 2, "half the position left");
-        assertLt(engine.deployedUsdg(id), 400 * U, "cap accounting released the returned usdg");
+        assertLt(engine.deployedUsdg(id), 300 * U, "selling half the INTC freed that much cap");
 
         uint256 fees = engine.feesAccrued();
         uint256 boosterEth = BOOSTER.balance;
@@ -150,10 +155,11 @@ contract ForkDeskEngineTest is Test {
     function test_pilot_cap_holds_against_real_fills() public {
         (uint256 id,) = _openDesk(1_500 * U);
         engine.buyBasket(id, 1_500 * U);
-        assertEq(engine.deployedUsdg(id), 1_000 * U, "clipped to the pilot cap");
-        assertEq(engine.capLeftOf(id), 0);
-        vm.expectRevert(abi.encodeWithSelector(DeskEngine.CapExceeded.selector, 500 * U, 0));
-        engine.buyBasket(id, 500 * U);
+        assertEq(IERC20(USDG).balanceOf(desks.accountOf(id)), 500 * U, "spend clipped to the $1,000 cap");
+        assertLe(engine.deployedUsdg(id), 1_000 * U, "never above the cap after a buy");
+        engine.buyBasket(id, 500 * U); // tops up only what value leaves of the cap
+        assertLe(engine.deployedUsdg(id), 1_000 * U, "still inside the cap");
+        assertGt(IERC20(USDG).balanceOf(desks.accountOf(id)), 450 * U, "the top-up was small");
     }
 
     function test_owner_can_pause_the_engine_and_pull_out() public {
@@ -173,7 +179,7 @@ contract ForkDeskEngineTest is Test {
         uint256 floor = engine.minStockOut(MSFT, net);
         assertGe(got, floor, "fill above the chainlink floor");
         assertEq(IERC20(INTC).balanceOf(acct), 0, "only the named stock was bought");
-        assertEq(engine.deployedUsdg(id), 300 * U, "shares the gross cap accounting");
+        assertApproxEqRel(engine.deployedUsdg(id), 2985 * U / 10, 0.03e18, "shares the value-based cap");
         console2.log("buyStock MSFT vs oracle, bps", (got * 10_000) / ((floor * 10_000) / 9_500));
     }
 }

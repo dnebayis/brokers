@@ -26,7 +26,7 @@ Desk NFT whole with the portfolio inside.
 | Service fee | **0.5%** per engine-executed trade, settable | community vote 6/7 |
 | Fee split | **80% Booster / 20% treasury**, settable (no buyback slice) | user 2026-08-26 |
 | Booster share | converted to **native ETH** before sending (Booster ignores ERC-20) | Zia lesson |
-| Pilot cap | **$1,000 deposit per Desk**, settable | community vote 6/7 |
+| Pilot cap | **$1,000 of stock per Desk, measured at today's Chainlink prices**, settable. Value-based since 2026-09-27 (user chose option A): stock the owner withdraws frees cap at once, a price rise uses it, a fall frees it. The first version counted cumulative spend and never released it on an owner withdrawal, so a Desk could be left holding idle USDG it could never invest | community vote 6/7, user 2026-09-27 |
 | Pilot access | **Open to everyone from day one** | user 2026-08-26 (overrides the 5/7 holders-first vote; communicate in next community update — holders still gain via mint-COAT bonus) |
 | Holder fee discount | **None** (fee stream stays whole) | community vote 4/7 |
 | Deposit minimum | **None** ($20 desks welcome) | thread promise |

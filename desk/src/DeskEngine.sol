@@ -83,7 +83,10 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     // --- settable levers (the 36,750 lesson) ---
     address public keeper;
     uint256 public feeBps = 50; // 0.5% — community vote
-    uint256 public pilotCapUsdg; // per-desk deployed-capital ceiling (raw USDG units)
+    /// @notice Per-Desk ceiling on the stock the engine may build up, measured at today's
+    ///         Chainlink prices (raw USDG units). Value-based on purpose: a stock the owner takes
+    ///         out frees cap at once, a price rise uses it up, a fall frees it.
+    uint256 public pilotCapUsdg;
     uint256 public boosterShareBps = 8000; // 80/20 — user decision 2026-08-26
     address public boosterSink; // receives the ETH share (Booster's receive())
     address public treasury;
@@ -99,8 +102,8 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     }
 
     mapping(address stock => Route) public routes;
-    /// @notice USDG the engine has put to work per Desk, net of what sells returned.
-    mapping(uint256 deskId => uint256) public deployedUsdg;
+    /// @notice Every stock that ever got a route: the set a Desk's stock value is read over.
+    address[] public routedStocks;
     /// @notice Service fees accrued (USDG), awaiting flush to Booster/treasury.
     uint256 public feesAccrued;
     address public ethPool; // WETH/USDG v3 pool used to convert fees to native ETH
@@ -222,6 +225,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         if (t0 == address(usdg) && t1 == stock) usdgIs0 = true;
         else if (t1 == address(usdg) && t0 == stock) usdgIs0 = false;
         else revert InvalidPool();
+        if (routes[stock].pool == address(0)) routedStocks.push(stock);
         routes[stock] = Route({pool: pool, usdgIsToken0: usdgIs0});
         emit PoolSet(stock, pool);
     }
@@ -293,9 +297,6 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         feesAccrued += fee;
         uint256 net = usdgOut - fee;
         usdg.safeTransfer(acct, net);
-
-        uint256 dep = deployedUsdg[deskId];
-        deployedUsdg[deskId] = dep > net ? dep - net : 0;
         emit StockSold(deskId, stock, amount, usdgOut, fee);
     }
 
@@ -321,8 +322,26 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
 
     // --- views ---
 
-    function capLeftOf(uint256 deskId) external view returns (uint256) {
-        uint256 dep = deployedUsdg[deskId];
+    /// @notice The stock a Desk holds, valued at the Chainlink prices the guards use, in raw
+    ///         USDG units. This is what the pilot cap is measured against. Names the Desk does
+    ///         not hold are skipped without touching their feed.
+    function deployedUsdg(uint256 deskId) public view returns (uint256 value) {
+        address acct = desks.accountOf(deskId);
+        uint256 n = routedStocks.length;
+        for (uint256 i; i < n; ++i) {
+            address stock = routedStocks[i];
+            uint256 bal = IERC20(stock).balanceOf(acct);
+            if (bal == 0) continue;
+            value += Math.mulDiv(bal, _stockUsd8(stock) * _usdgUnit, 10 ** 26); // 18-dec stock, 8-dec price
+        }
+    }
+
+    function routedStockCount() external view returns (uint256) {
+        return routedStocks.length;
+    }
+
+    function capLeftOf(uint256 deskId) public view returns (uint256) {
+        uint256 dep = deployedUsdg(deskId);
         return pilotCapUsdg > dep ? pilotCapUsdg - dep : 0;
     }
 
@@ -343,9 +362,9 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
 
     // --- internal ---
 
-    /// @dev Shared buy prologue: clip to the Desk's idle USDG and its pilot cap, pull the spend
-    ///      into the engine, book the fee. Cap accounting is GROSS (what left the desk), so fee
-    ///      shaving can never let a desk creep past the pilot ceiling through repeated buys.
+    /// @dev Shared buy prologue: clip to the Desk's idle USDG and to what its stock value leaves
+    ///      of the pilot cap, pull the spend into the engine, book the fee. A buy adds at most its
+    ///      spend in value (fee and spread shave it), so a Desk never ends above the cap from a buy.
     function _pullForBuy(uint256 deskId, uint256 maxSpend)
         internal
         returns (address acct, uint256 spend, uint256 fee)
@@ -353,14 +372,13 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         acct = desks.accountOf(deskId);
         spend = Math.min(usdg.balanceOf(acct), maxSpend);
         if (spend == 0) revert NothingToDo();
-        uint256 capLeft = pilotCapUsdg > deployedUsdg[deskId] ? pilotCapUsdg - deployedUsdg[deskId] : 0;
+        uint256 capLeft = capLeftOf(deskId);
         if (capLeft == 0) revert CapExceeded(spend, 0);
         spend = Math.min(spend, capLeft);
 
         DeskAccount(payable(acct)).enginePull(address(usdg), spend);
         fee = (spend * feeBps) / BPS;
         feesAccrued += fee;
-        deployedUsdg[deskId] += spend;
     }
 
     function _stockUsd8(address stock) internal view returns (uint256) {

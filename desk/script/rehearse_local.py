@@ -255,13 +255,14 @@ def rehearse(w3: Web3) -> int:
     send(DEPLOYER, engine.functions.buyBasket(desk_id, 1_200 * E6), step="5 buy", what="keeper buyBasket")
     got = taapl.functions.balanceOf(acct_addr).call()
     oracle_amt = floor * 10_000 // 9_500
-    r.check("5 buy", engine.functions.deployedUsdg(desk_id).call() == 1_000 * E6,
-            "clipped to the $1,000 pilot cap (gross)")
+    dep = engine.functions.deployedUsdg(desk_id).call()
+    r.check("5 buy", 980 * E6 < dep <= 1_000 * E6,
+            f"spend clipped to the $1,000 pilot cap; the stock is worth ${dep / E6:,.2f} at oracle")
     r.check("5 buy", usdg.functions.balanceOf(acct_addr).call() == deposited - 1_000 * E6,
             f"the {(deposited - 1_000 * E6) / E6:.2f} USDG over the cap stays in the Desk")
     r.check("5 buy", got >= floor, f"tAAPL fill above the Chainlink floor ({got / oracle_amt * 10_000:.0f} bps of oracle)")
     r.check("5 buy", engine.functions.feesAccrued().call() == 5 * E6, "0.5% fee (5 USDG) held by the engine")
-    r.check("5 buy", reverts(DEPLOYER, engine.functions.buyBasket(desk_id, 100 * E6)), "a second buy reverts: cap used up")
+    r.check("5 buy", engine.functions.capLeftOf(desk_id).call() < 10 * E6, "cap left is only the fee and spread shaved off")
     r.numbers["buy fill vs oracle (bps)"] = f"{got / oracle_amt * 10_000:.0f}"
 
     # ---------- rebalance ----------

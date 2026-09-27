@@ -1,6 +1,6 @@
 # The Desk: local testnet rehearsal (build order step 5, dress run)
 
-Run 2026-09-27 20:11 UTC on an anvil fork of Robinhood Chain testnet (46630) at block 125,341,145.
+Run 2026-09-27 20:30 UTC on an anvil fork of Robinhood Chain testnet (46630) at block 125,347,825.
 Nothing was sent to the real testnet. Deployer transactions were impersonated on the fork;
 alice and bob were fresh throwaway wallets. Re-run: `cd desk && python3 script/rehearse_local.py`.
 
@@ -8,7 +8,7 @@ Test venue (testnet has no USDG and no v3 USDG pools): test USDG, tMSFT, and ora
 pools filling at feed price minus 0.30%. The tAAPL staging feed was refreshed to $200, tMSFT
 feed $500, ETH feed $2,700. The Desk uses its own strategy slot; Booster slot 0 untouched.
 
-Desk #1, bonus Brokers [617, 842].
+Desk #1, bonus Brokers [975, 1010].
 
 ## Checks
 
@@ -16,7 +16,7 @@ Desk #1, bonus Brokers [617, 842].
 - step 1 deploy: PASS desk mint open
 - step 1 deploy: PASS engine at pilot parameters (0.5% fee, $1,000 cap)
 - step 1 deploy: PASS desk strategy slot 1 holds tAAPL 100% (epoch 1); Booster slot 0 untouched
-- step 2 brokers: PASS Brokers [617, 842] active in the Booster
+- step 2 brokers: PASS Brokers [975, 1010] active in the Booster
 - step 3 mint: PASS Desk #1 owned by alice
 - step 3 mint: PASS Desk wallet deployed at mint (0xa018660C8a5CBD132a033a4dBFA80016171B9713)
 - step 3 mint: PASS 120,000 COAT went to the bonus pool, none burned
@@ -25,11 +25,11 @@ Desk #1, bonus Brokers [617, 842].
 - step 4 deposit: PASS 0.01 ETH arrived as 26.92 USDG (Chainlink floor 26.19)
 - step 4 deposit: PASS 10,000 COAT arrived as 0.2650 USDG (thin testnet COAT pool)
 - step 4 deposit: PASS deposit router holds nothing afterwards
-- step 5 buy: PASS clipped to the $1,000 pilot cap (gross)
+- step 5 buy: PASS spend clipped to the $1,000 pilot cap; the stock is worth $992.01 at oracle
 - step 5 buy: PASS the 227.18 USDG over the cap stays in the Desk
 - step 5 buy: PASS tAAPL fill above the Chainlink floor (9970 bps of oracle)
 - step 5 buy: PASS 0.5% fee (5 USDG) held by the engine
-- step 5 buy: PASS a second buy reverts: cap used up
+- step 5 buy: PASS cap left is only the fee and spread shaved off
 - step 6 rebalance: PASS the idle USDG over the cap was not touched
 - step 6 rebalance: PASS buyStock refuses a name outside the basket
 - step 6 rebalance: PASS stock split 70.3% tAAPL / 29.7% tMSFT
@@ -60,27 +60,27 @@ Desk #1, bonus Brokers [617, 842].
 
 | step | what | gas |
 |---|---|---|
-| 1 deploy | 43 deployer transactions | 24,242,227 |
+| 1 deploy | 43 deployer transactions | 24,442,331 |
 | setup | deployer sends alice COAT for a desk mint and two broker activations | 54,155 |
 | setup | alice gets 1,500 test USDG | 53,555 |
 | 2 brokers | alice mints 2 Brokers | 395,003 |
 | 2 brokers | approve activation burn | 46,414 |
-| 2 brokers | activate Broker #617 | 138,458 |
-| 2 brokers | activate Broker #842 | 133,658 |
+| 2 brokers | activate Broker #975 | 138,458 |
+| 2 brokers | activate Broker #1010 | 133,658 |
 | 3 mint | approve mint price | 46,402 |
 | 3 mint | alice mints a Desk | 213,828 |
 | 4 deposit | alice deposits 1,200 USDG | 51,544 |
 | 4 deposit | alice deposits 0.01 ETH through the deposit router | 129,012 |
 | 4 deposit | approve COAT deposit | 46,414 |
 | 4 deposit | alice deposits 10,000 COAT (COAT -> ETH on the live testnet v4 pool -> USDG) | 395,512 |
-| 5 buy | keeper buyBasket | 247,614 |
+| 5 buy | keeper buyBasket | 248,480 |
 | 6 rebalance | new basket posted (epoch +1) | 89,843 |
-| 6 rebalance | keeper sells 30% of the tAAPL | 168,319 |
-| 6 rebalance | keeper buyStock tMSFT with the proceeds | 182,768 |
+| 6 rebalance | keeper sells 30% of the tAAPL | 164,118 |
+| 6 rebalance | keeper buyStock tMSFT with the proceeds | 212,736 |
 | 7 fee split | keeper flushFees | 177,140 |
-| 8 bonus | poster posts round 0 | 120,577 |
-| 8 bonus | bob claims for Broker #617 (permissionless) | 108,576 |
-| 8 bonus | alice claims for Broker #842 | 100,701 |
+| 8 bonus | poster posts round 0 | 120,589 |
+| 8 bonus | bob claims for Broker #975 (permissionless) | 108,576 |
+| 8 bonus | alice claims for Broker #1010 | 83,577 |
 | 9 withdraw | alice pulls tMSFT out | 65,828 |
 | 9 withdraw | alice pulls leftover USDG out | 48,692 |
 | 10 sale | bob pays alice 0.01 ETH (off-market sale stand-in) | 21,000 |
@@ -116,6 +116,6 @@ Desk #1, bonus Brokers [617, 842].
 - taaplFeed: `0x9A1e65F136f69980BEf2Acb307e16b79E1EF5CE4`
 - tmsft: `0xB26F11DEc70fa59F81d66e4dCE0dD81ACD71676D`
 - tnvda: `0x0519C7fAa3dd333A47c33cC9A334ee876fEEbD70`
-- treasury: `0x3C944333b0E728c9d89a57Cb7fC0c160e72F5eE9`
+- treasury: `0x886351CDf47f41b50F6374453E5efeeF6f2D4aA0`
 - usdg: `0xa0a9965A6fD63751E1f854f7beCA37cd5745Da39`
 - weth: `0x7943e237c7F95DA44E0301572D358911207852Fa`
