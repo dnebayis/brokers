@@ -161,7 +161,7 @@ def rehearse(w3: Web3) -> int:
 
     # ---------- deploy ----------
     print("step 1: deploy (forge script as the testnet deployer)")
-    out = DESK / "rehearsal" / "local-fork-addresses.json"
+    out = DESK / "rehearsal" / "rehearsal-fork-addresses.json"  # never the lab's file
     env = dict(os.environ, DESK_TREASURY=treasury.address, DESK_OUT=str(out.relative_to(DESK)))
     p = subprocess.run(
         ["forge", "script", "script/DeployDeskTestnet.s.sol", "--rpc-url", RPC, "--broadcast",
