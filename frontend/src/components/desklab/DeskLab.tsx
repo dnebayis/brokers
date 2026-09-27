@@ -66,7 +66,7 @@ function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 py-5 lg:py-7">{children}</main>
+      <main className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 flex-1 py-8 lg:py-12">{children}</main>
     </div>
   );
 }
@@ -183,47 +183,40 @@ function Lab({ cfg, client, faucet }: { cfg: LabConfig; client: PublicClient; fa
     ]);
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
-      <StatusStrip cfg={cfg} s={s} now={now} connected={isConnected} busy={busy} onTopUp={topUp} />
-      {status.msg && <StatusLine msg={status.msg} kind={status.kind} />}
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-12">
+      <LabHeader cfg={cfg} s={s} now={now} connected={isConnected} busy={busy} onTopUp={topUp} status={status} />
 
       {!isConnected ? (
-        <section className="card max-w-2xl">
-          <h1 className="font-pixel text-xl text-ink-strong">Desk lab</h1>
-          <p className="text-sm text-ink mt-3 leading-relaxed">
-            The Desk contracts on a local copy of testnet. Connect with <b className="text-ink-strong">Local test wallet</b> in
-            the header (already funded), then mint, deposit, withdraw and hand a Desk over as a user would. The keeper buys and
-            rebalances in the background. Nothing here touches a real network.
-          </p>
-        </section>
+        <p className="max-w-2xl text-base text-ink leading-relaxed">
+          The Desk contracts on a local copy of testnet. Connect with <b className="text-ink-strong">Local test wallet</b> in the
+          header (already funded), then mint, deposit, withdraw and hand a Desk over as a user would. The keeper buys and
+          rebalances in the background. Nothing here touches a real network.
+        </p>
       ) : (
         <>
-          <DeskRail owned={s?.owned ?? []} selected={desk?.id} mintPrice={s?.mintPrice} busy={busy}
+          <DeskTabs owned={s?.owned ?? []} selected={desk?.id} mintPrice={s?.mintPrice} busy={busy}
             onSelect={setSelected} onMint={mintDesk} />
           {desk && me ? (
             <>
-              <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:items-start">
-                <Artwork desk={desk} />
-                <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
-                  <Overview desk={desk} busy={busy} run={run} write={writeContractAsync} />
+              <Hero desk={desk} busy={busy} run={run} write={writeContractAsync} />
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-12 lg:grid-cols-12 lg:gap-6">
+                <div className="lg:col-span-8 grid grid-cols-[minmax(0,1fr)] gap-12 content-start">
+                  <Holdings desk={desk} />
+                  <Timeline activity={(s?.activity ?? []).filter((a) => a.deskId === undefined || a.deskId === desk.id)}
+                    now={now} deskId={desk.id} />
+                </div>
+                <aside className="order-first lg:order-none lg:col-span-4 grid grid-cols-[minmax(0,1fr)] gap-12 content-start">
                   <Actions cfg={cfg} client={client} desk={desk} me={me} ethUsd={s?.ethUsd ?? 0} busy={busy} run={run}
                     write={writeContractAsync} />
-                </div>
-              </div>
-              <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2 lg:items-start">
-                <Basket s={s} />
-                <Timeline activity={(s?.activity ?? []).filter((a) => a.deskId === undefined || a.deskId === desk.id)}
-                  now={now} deskId={desk.id} />
+                  <Basket s={s} />
+                </aside>
               </div>
             </>
           ) : (
-            <section className="card max-w-2xl">
-              <h2 className="pixel-title text-[15px]">No Desk yet</h2>
-              <p className="text-sm text-ink mt-2 leading-relaxed">
-                Mint one with the tile above. The COAT price goes to the bonus pool for active Brokers; nothing is burned.
-                The Desk comes with its own wallet, which the engine buys into.
-              </p>
-            </section>
+            <p className="max-w-2xl text-base text-ink leading-relaxed">
+              No Desk yet. Mint one from the row above: the COAT price goes to the bonus pool for active Brokers and nothing
+              is burned. The Desk comes with its own wallet, which the engine buys into.
+            </p>
           )}
         </>
       )}
@@ -231,192 +224,222 @@ function Lab({ cfg, client, faucet }: { cfg: LabConfig; client: PublicClient; fa
   );
 }
 
-// --- top strip -------------------------------------------------------------------------
+// --- layout primitives ---------------------------------------------------------------------
+// Structure follows the Coinbase DESIGN.md (awesome-design-md): most surfaces flat, sections
+// separated by hairlines and small-caps labels, a single elevated object per view (the action
+// panel), 4px spacing base, 24px between blocks and 48px between sections, 12-column body.
+// Colors, type and square corners stay Coattail's.
 
-function StatusStrip({ cfg, s, now, connected, busy, onTopUp }: {
-  cfg: LabConfig; s?: LabState; now: number; connected: boolean; busy: boolean; onTopUp: () => void;
-}) {
-  const ago = s?.keeperLastAt && now ? agoLabel(now - s.keeperLastAt) : null;
+function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="border-2 border-ink bg-cream-2 shadow-pixel-sm px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-      <span className="chip">Local fork</span>
-      <span className="text-xs text-ink-soft tabular-nums">chain {cfg.chainId} · block {s ? s.block.toLocaleString("en-US") : "…"}</span>
-      <span className="text-xs text-ink-soft inline-flex items-center gap-1.5">
-        <span className={`inline-block w-2 h-2 ${ago ? "bg-good" : "bg-ink-soft"}`} aria-hidden="true" />
-        keeper {ago ? `last moved ${ago}` : "waiting for a deposit"}
-      </span>
-      {connected && s && (
-        <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-          <Balance label="ETH" value={num(s.eth, 18, 3)} />
-          <Balance label="COAT" value={num(s.coat, 18, 0)} />
-          <Balance label="USDG" value={num(s.usdg, 6, 2)} />
-          <button type="button" className="btn btn-ghost px-3 py-2 text-[10px]" disabled={busy} onClick={onTopUp}>
-            Top up
-          </button>
-        </div>
-      )}
+    <div className="flex items-baseline justify-between gap-4 pb-3 border-b border-line">
+      <h2 className="font-pixel text-[13px] text-ink-strong tracking-wide">{children}</h2>
+      {aside ? <div className="text-xs text-ink-soft">{aside}</div> : null}
     </div>
   );
 }
 
-function Balance({ label, value }: { label: string; value: string }) {
+function Figure({ label, value, toneValue, big = false }: { label: string; value: string; toneValue?: number; big?: boolean }) {
   return (
-    <span className="tabular-nums">
-      <span className="text-ink-soft uppercase tracking-widest text-[10px] mr-1.5">{label}</span>
-      <span className="font-pixel text-[11px] text-ink-strong">{value}</span>
-    </span>
+    <div className="min-w-0">
+      <div className="text-[11px] uppercase tracking-widest text-ink-soft">{label}</div>
+      <div className={`font-pixel tabular-nums mt-1.5 ${big ? "text-xl" : "text-[15px]"} ${toneValue === undefined ? "text-ink-strong" : tone(toneValue)}`}>
+        {value}
+      </div>
+    </div>
   );
 }
 
-// --- desk switcher ---------------------------------------------------------------------
+// --- page header -----------------------------------------------------------------------------
 
-function DeskRail({ owned, selected, mintPrice, busy, onSelect, onMint }: {
+function LabHeader({ cfg, s, now, connected, busy, onTopUp, status }: {
+  cfg: LabConfig; s?: LabState; now: number; connected: boolean; busy: boolean; onTopUp: () => void;
+  status: { msg: string; kind: StatusKind };
+}) {
+  const ago = s?.keeperLastAt && now ? agoLabel(now - s.keeperLastAt) : null;
+  return (
+    <header className="grid gap-4 pb-6 border-b border-line">
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+        <div className="min-w-0">
+          <span className="chip">Local fork · not a real network</span>
+          <h1 className="font-pixel text-2xl text-ink-strong mt-3">Desk lab</h1>
+          <p className="text-sm text-ink-soft mt-1.5 inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="tabular-nums">chain {cfg.chainId} · block {s ? s.block.toLocaleString("en-US") : "…"}</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className={`inline-block w-2 h-2 ${ago ? "bg-good" : "bg-ink-soft"}`} aria-hidden="true" />
+              keeper {ago ? `last moved ${ago}` : "waiting for a deposit"}
+            </span>
+          </p>
+        </div>
+        {connected && s && (
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+            <Figure label="ETH" value={num(s.eth, 18, 3)} />
+            <Figure label="COAT" value={num(s.coat, 18, 0)} />
+            <Figure label="Test USDG" value={num(s.usdg, 6, 2)} />
+            <button type="button" className="btn btn-ghost" disabled={busy} onClick={onTopUp}>Top up</button>
+          </div>
+        )}
+      </div>
+      {status.msg && <StatusLine msg={status.msg} kind={status.kind} />}
+    </header>
+  );
+}
+
+// --- desk tabs -------------------------------------------------------------------------------
+
+function DeskTabs({ owned, selected, mintPrice, busy, onSelect, onMint }: {
   owned: { id: bigint; image: string }[]; selected?: bigint; mintPrice?: bigint; busy: boolean;
   onSelect: (id: bigint) => void; onMint: () => void;
 }) {
   return (
-    <div className="flex gap-3 overflow-x-auto pb-1" role="tablist" aria-label="Your desks">
+    <nav className="-mt-6 flex items-stretch gap-6 overflow-x-auto border-b border-line" role="tablist" aria-label="Your desks">
       {owned.map((d) => {
         const on = d.id === selected;
         return (
           <button key={d.id.toString()} type="button" role="tab" aria-selected={on} onClick={() => onSelect(d.id)}
-            className={`shrink-0 flex items-center gap-3 border-2 pr-4 bg-cream-2 transition-transform ${on
-              ? "border-accent shadow-pixel" : "border-ink hover:-translate-y-0.5"}`}>
+            className={`shrink-0 flex items-center gap-3 pb-3 -mb-px border-b-2 ${on ? "border-accent" : "border-transparent opacity-70 hover:opacity-100"}`}>
             {d.image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={d.image} alt="" width={56} height={56} className="block [image-rendering:pixelated]" />
-            ) : <span className="w-14 h-14" />}
-            <span className={`font-pixel text-[11px] ${on ? "text-accent" : "text-ink-strong"}`}>Desk #{d.id.toString()}</span>
+              <img src={d.image} alt="" width={40} height={40} className="block [image-rendering:pixelated] border border-line" />
+            ) : <span className="w-10 h-10 border border-line" />}
+            <span className={`font-pixel text-[12px] ${on ? "text-ink-strong" : "text-ink"}`}>Desk #{d.id.toString()}</span>
           </button>
         );
       })}
       <button type="button" onClick={onMint} disabled={busy || mintPrice === undefined}
-        className="shrink-0 flex flex-col justify-center border-2 border-dashed border-ink px-4 h-[60px] text-left hover:bg-cream-2 disabled:opacity-50">
-        <span className="font-pixel text-[11px] text-ink-strong">+ Mint a Desk</span>
-        <span className="text-[11px] text-ink-soft">{mintPrice !== undefined ? `${num(mintPrice, 18, 0)} COAT` : "…"}</span>
+        className="shrink-0 ml-auto flex items-center gap-2 pb-3 text-left text-sm text-ink-soft hover:text-ink-strong disabled:opacity-50">
+        <span className="font-pixel text-[12px] text-accent">+ Mint a Desk</span>
+        <span className="tabular-nums">{mintPrice !== undefined ? `${num(mintPrice, 18, 0)} COAT` : ""}</span>
       </button>
-    </div>
+    </nav>
   );
 }
 
-// --- the desk ----------------------------------------------------------------------------
+// --- hero: the NFT and the balance -----------------------------------------------------------
 
-function Artwork({ desk }: { desk: DeskView }) {
+function Hero({ desk, busy, run, write }: { desk: DeskView; busy: boolean; run: Run; write: Write }) {
+  const L = desk.ledger;
+  const capPct = desk.cap > 0n ? Math.min(100, Number((desk.deployed * 1000n) / desk.cap) / 10) : 0;
   return (
-    <section className="card p-0 overflow-hidden">
-      {desk.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={desk.image} alt={`Desk #${desk.id} artwork`} width={420} height={420}
-          className="block w-full aspect-square [image-rendering:pixelated] border-b-2 border-ink" />
-      ) : <div className="w-full aspect-square border-b-2 border-ink bg-cream" />}
-      <div className="p-5">
-        <div className="flex items-baseline justify-between">
-          <h2 className="font-pixel text-lg text-ink-strong">Desk #{desk.id.toString()}</h2>
-          <span className="text-[11px] text-ink-soft">wallet {short(desk.account)}</span>
+    <section className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-12 lg:gap-6 items-center">
+      <div className="lg:col-span-5">
+        {desk.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={desk.image} alt={`Desk #${desk.id} artwork`} width={480} height={480}
+            className="block w-full max-w-[480px] aspect-square [image-rendering:pixelated] border-2 border-ink shadow-pixel" />
+        ) : <div className="w-full max-w-[480px] aspect-square border-2 border-ink" />}
+      </div>
+      <div className="lg:col-span-7 lg:pl-6 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="font-pixel text-[13px] text-ink-strong">
+            Desk #{desk.id.toString()} <span className="font-sans text-xs text-ink-soft ml-2">wallet {short(desk.account)}</span>
+          </span>
+          <button type="button" disabled={busy}
+            onClick={() => run(desk.paused ? "Turn the engine on" : "Pause the engine", [
+              () => write({ address: desk.account, abi: deskAccountAbi, functionName: "setEnginePaused", args: [!desk.paused] }),
+            ])}
+            className="inline-flex items-center gap-2 text-xs text-ink-soft hover:text-ink-strong"
+            aria-pressed={!desk.paused} title={desk.paused ? "The keeper cannot touch this Desk" : "The keeper may trade this Desk"}>
+            <span className={`inline-block w-2 h-2 ${desk.paused ? "bg-ink-soft" : "bg-good"}`} aria-hidden="true" />
+            <span className="text-ink-strong">{desk.paused ? "Engine paused" : "Engine on"}</span>
+            <span className="underline">{desk.paused ? "turn on" : "pause"}</span>
+          </button>
         </div>
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4">
+        <dl className="flex flex-wrap gap-x-5 gap-y-2 mt-4 pb-5 border-b border-line">
           {desk.traits.map((t) => (
-            <div key={t.name} className="border-t border-line pt-1.5">
+            <div key={t.name}>
               <dt className="text-[10px] uppercase tracking-widest text-ink-soft">{t.name}</dt>
               <dd className="text-sm text-ink-strong">{t.value}</dd>
             </div>
           ))}
         </dl>
-        <p className="text-[11px] text-ink-soft mt-4">Traits are fixed at mint. The artwork and wallet move with the NFT.</p>
+        <div className="text-[11px] uppercase tracking-widest text-ink-soft mt-6">Value now</div>
+        <div className="font-pixel text-4xl sm:text-5xl text-ink-strong tabular-nums mt-2">{usd(desk.totalUsd)}</div>
+        <div className={`font-pixel text-lg tabular-nums mt-3 ${tone(L.pnl)}`}>
+          {signed(L.pnl)} <span className="text-sm">({signedPct(L.pnlPct)})</span>
+          <span className="font-sans text-xs text-ink-soft ml-3">all time</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 mt-8 border-t border-line">
+          {[
+            { label: "Put in", value: usd(L.deposited) },
+            { label: "Taken out", value: usd(L.withdrawn) },
+            { label: "Realized", value: signed(L.realized), toneValue: L.realized },
+            { label: "Fees paid", value: usd(L.fees) },
+          ].map((f, i) => (
+            <div key={f.label} className={`pt-4 pb-1 ${i > 0 ? "sm:pl-5 sm:border-l border-line" : ""} ${i % 2 === 1 ? "pl-5 border-l border-line sm:pl-5" : ""}`}>
+              <Figure label={f.label} value={f.value} toneValue={f.toneValue} />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8">
+          <div className="flex justify-between text-[11px] uppercase tracking-widest text-ink-soft">
+            <span>Pilot cap · stock at today&rsquo;s prices</span>
+            <span className="tabular-nums normal-case tracking-normal text-ink">
+              {usd(Number(desk.deployed) / 1e6, 0)} of {usd(Number(desk.cap) / 1e6, 0)}
+            </span>
+          </div>
+          <div className="h-1.5 bg-line mt-2" aria-hidden="true">
+            <div className="h-full bg-accent" style={{ width: `${capPct}%` }} />
+          </div>
+          <p className="text-xs text-ink-soft mt-2">
+            {usd(Number(desk.idle) / 1e6)} idle USDG in the Desk wallet.
+            {desk.idle > 0n && desk.deployed * 100n >= desk.cap * 99n ? " The cap is full, so it waits." : ""}
+          </p>
+        </div>
       </div>
     </section>
   );
 }
 
-function Overview({ desk, busy, run, write }: { desk: DeskView; busy: boolean; run: Run; write: Write }) {
-  const L = desk.ledger;
-  const capPct = desk.cap > 0n ? Math.min(100, Number((desk.deployed * 1000n) / desk.cap) / 10) : 0;
+// --- holdings: asset rows ------------------------------------------------------------------
+
+function Holdings({ desk }: { desk: DeskView }) {
   return (
-    <section className="card">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-[11px] uppercase tracking-widest text-ink-soft">Value now</span>
-        <button type="button" disabled={busy}
-          onClick={() => run(desk.paused ? "Turn the engine on" : "Pause the engine", [
-            () => write({ address: desk.account, abi: deskAccountAbi, functionName: "setEnginePaused", args: [!desk.paused] }),
-          ])}
-          className={`badge inline-flex items-center gap-2 hover:shadow-pixel-sm ${desk.paused ? "text-ink-soft" : "text-good"}`}
-          aria-pressed={!desk.paused} title={desk.paused ? "The keeper cannot touch this Desk" : "The keeper may trade this Desk"}>
-          <span className={`inline-block w-2 h-2 ${desk.paused ? "bg-ink-soft" : "bg-good"}`} aria-hidden="true" />
-          {desk.paused ? "Engine paused · turn on" : "Engine on · pause"}
-        </button>
-      </div>
-      <div className="flex flex-wrap items-end gap-x-6 gap-y-2 mt-1">
-        <div className="font-pixel text-3xl text-ink-strong tabular-nums">{usd(desk.totalUsd)}</div>
-        <div className={`font-pixel text-lg tabular-nums ${tone(L.pnl)}`}>
-          {signed(L.pnl)} <span className="text-sm">({signedPct(L.pnlPct)})</span>
-        </div>
-      </div>
-      <p className="text-[11px] text-ink-soft mt-1">Profit and loss = value now + everything taken out − everything put in.</p>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-        <Stat label="Put in" value={usd(L.deposited)} />
-        <Stat label="Taken out" value={usd(L.withdrawn)} />
-        <Stat label="Realized" value={signed(L.realized)} toneValue={L.realized} />
-        <Stat label="Fees paid" value={usd(L.fees)} />
-      </div>
-
-      <div className="overflow-x-auto mt-5">
-        <table className="w-full text-sm tabular-nums min-w-[520px]">
+    <section>
+      <SectionTitle aside={`${desk.holdings.length} names`}>Holdings</SectionTitle>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm tabular-nums min-w-[560px]">
           <thead>
-            <tr className="text-[10px] text-ink-soft uppercase tracking-widest text-left">
-              <th className="py-1.5 font-normal">Stock</th>
-              <th className="py-1.5 font-normal">Weight · now vs target</th>
-              <th className="py-1.5 font-normal text-right">Value</th>
-              <th className="py-1.5 font-normal text-right">Cost</th>
-              <th className="py-1.5 font-normal text-right">P&amp;L</th>
+            <tr className="text-[11px] text-ink-soft uppercase tracking-widest text-left">
+              <th className="py-3 font-normal">Asset</th>
+              <th className="py-3 font-normal">Weight now · target</th>
+              <th className="py-3 font-normal text-right">Value</th>
+              <th className="py-3 font-normal text-right">Cost</th>
+              <th className="py-3 font-normal text-right">P&amp;L</th>
             </tr>
           </thead>
           <tbody>
             {desk.holdings.map((h) => (
-              <tr key={h.token} className="border-t border-line align-middle">
-                <td className="py-2 pr-3">
-                  <div className="font-pixel text-[11px] text-ink-strong">{h.symbol}</div>
-                  <div className="text-[11px] text-ink-soft">{num(h.amount, 18, 4)} @ {usd(h.price)}</div>
+              <tr key={h.token} className="border-t border-line">
+                <td className="py-4 pr-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 shrink-0 grid place-items-center bg-cream-2 border border-line font-pixel text-[10px] text-ink-strong">
+                      {h.symbol.replace(/^t/, "").slice(0, 2)}
+                    </span>
+                    <div>
+                      <div className="text-ink-strong font-medium">{h.symbol}</div>
+                      <div className="text-xs text-ink-soft">{num(h.amount, 18, 4)} · {usd(h.price)}</div>
+                    </div>
+                  </div>
                 </td>
-                <td className="py-2 pr-3 w-[38%]">
-                  <WeightBar now={h.weightNow} target={h.target} />
-                </td>
-                <td className="py-2 text-right">{usd(h.usd)}</td>
-                <td className="py-2 text-right text-ink-soft">{h.amount > 0n ? usd(h.cost) : "–"}</td>
-                <td className={`py-2 text-right ${tone(h.pnl)}`}>
+                <td className="py-4 pr-6 w-[34%]"><WeightBar now={h.weightNow} target={h.target} /></td>
+                <td className="py-4 text-right text-ink-strong">{usd(h.usd)}</td>
+                <td className="py-4 text-right text-ink-soft">{h.amount > 0n ? usd(h.cost) : "–"}</td>
+                <td className={`py-4 text-right ${tone(h.pnl)}`}>
                   {h.amount > 0n && h.cost > 0 ? (
                     <>
                       <div>{signed(h.pnl)}</div>
-                      <div className="text-[11px]">{signedPct((h.pnl / h.cost) * 100)}</div>
+                      <div className="text-xs">{signedPct((h.pnl / h.cost) * 100)}</div>
                     </>
-                  ) : "–"}
+                  ) : <span className="text-ink-soft">–</span>}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      <div className="grid sm:grid-cols-2 gap-4 mt-5">
-        <div>
-          <div className="flex justify-between text-[10px] text-ink-soft uppercase tracking-widest">
-            <span>Pilot cap used</span>
-            <span className="tabular-nums">{usd(Number(desk.deployed) / 1e6, 0)} of {usd(Number(desk.cap) / 1e6, 0)}</span>
-          </div>
-          <div className="h-2.5 border-2 border-ink mt-1 bg-cream" aria-hidden="true">
-            <div className="h-full bg-accent" style={{ width: `${capPct}%` }} />
-          </div>
-        </div>
-        <div className="flex items-end justify-between sm:justify-end gap-3 text-sm">
-          <span className="text-ink-soft">Idle USDG</span>
-          <span className="font-pixel text-ink-strong tabular-nums">{usd(Number(desk.idle) / 1e6)}</span>
-        </div>
-      </div>
-      {desk.deployed >= desk.cap && desk.idle > 0n && (
-        <p className="text-[11px] text-ink-soft mt-2">
-          The cap is full, so idle USDG waits. Only money freed by sells is reinvested.
-        </p>
-      )}
     </section>
   );
 }
@@ -424,19 +447,19 @@ function Overview({ desk, busy, run, write }: { desk: DeskView; busy: boolean; r
 function WeightBar({ now, target }: { now: number; target: number }) {
   return (
     <div>
-      <div className="relative h-2.5 border border-ink bg-cream" aria-hidden="true">
+      <div className="relative h-1.5 bg-line" aria-hidden="true">
         <div className="absolute inset-y-0 left-0 bg-ink-strong" style={{ width: `${Math.min(100, now)}%` }} />
-        {target > 0 && <div className="absolute -top-1 -bottom-1 w-0.5 bg-accent" style={{ left: `calc(${target}% - 1px)` }} />}
+        {target > 0 && <div className="absolute -top-1.5 -bottom-1.5 w-0.5 bg-accent" style={{ left: `calc(${target}% - 1px)` }} />}
       </div>
-      <div className="flex justify-between text-[11px] mt-1">
+      <div className="flex justify-between text-xs mt-2">
         <span className="text-ink-strong">{now.toFixed(1)}%</span>
-        <span className="text-accent">target {target}%</span>
+        <span className="text-accent">{target}%</span>
       </div>
     </div>
   );
 }
 
-// --- actions -----------------------------------------------------------------------------
+// --- actions: the one elevated object ---------------------------------------------------------
 
 type Tab = "deposit" | "withdraw" | "handover";
 
@@ -446,19 +469,21 @@ function Actions(props: {
   const [tab, setTab] = useState<Tab>("deposit");
   const tabs: [Tab, string][] = [["deposit", "Deposit"], ["withdraw", "Withdraw"], ["handover", "Hand over"]];
   return (
-    <section className="card">
-      <div className="flex border-b-2 border-ink -mx-5 sm:-mx-6 -mt-5 sm:-mt-6 mb-5" role="tablist" aria-label="Desk actions">
+    <section className="border-2 border-ink bg-cream-2 shadow-pixel">
+      <div className="grid grid-cols-3 border-b-2 border-ink" role="tablist" aria-label="Desk actions">
         {tabs.map(([k, label]) => (
           <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-            className={`flex-1 font-pixel text-[11px] py-3.5 border-r-2 last:border-r-0 border-ink ${tab === k
-              ? "bg-ink text-cream" : "bg-cream-2 text-ink-strong hover:bg-cream"}`}>
+            className={`font-pixel text-[11px] py-3.5 border-r-2 last:border-r-0 border-ink ${tab === k
+              ? "bg-ink text-cream" : "text-ink-strong hover:bg-cream"}`}>
             {label}
           </button>
         ))}
       </div>
-      {tab === "deposit" && <Deposit {...props} />}
-      {tab === "withdraw" && <Withdraw {...props} />}
-      {tab === "handover" && <HandOver {...props} />}
+      <div className="p-6">
+        {tab === "deposit" && <Deposit {...props} />}
+        {tab === "withdraw" && <Withdraw {...props} />}
+        {tab === "handover" && <HandOver {...props} />}
+      </div>
     </section>
   );
 }
@@ -505,26 +530,30 @@ function Deposit({ cfg, client, desk, ethUsd, busy, run, write }: {
     ]);
   };
   return (
-    <div>
-      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Currency">
+    <div className="grid gap-5">
+      <div className="grid grid-cols-3 border border-line" role="radiogroup" aria-label="Currency">
         {(["USDG", "ETH", "COAT"] as const).map((c) => (
-          <button key={c} type="button" role="radio" aria-checked={cur === c}
-            className={`btn ${cur === c ? "btn-accent" : "btn-ghost"}`} onClick={() => setCur(c)}>{c}</button>
+          <button key={c} type="button" role="radio" aria-checked={cur === c} onClick={() => setCur(c)}
+            className={`font-pixel text-[11px] py-2.5 border-r last:border-r-0 border-line ${cur === c ? "bg-accent text-white" : "text-ink-strong hover:bg-cream"}`}>
+            {c}
+          </button>
         ))}
       </div>
-      <label className="label mt-4" htmlFor="lab-dep">Amount in {cur}</label>
-      <input id="lab-dep" className="fld tabular-nums" inputMode="decimal"
-        placeholder={cur === "USDG" ? "500" : cur === "ETH" ? "0.1" : "10000"} value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <div className="flex items-baseline justify-between mt-2 text-sm">
-        <span className="text-ink-soft">Lands in the Desk as</span>
-        <span className="font-pixel text-ink-strong tabular-nums">{raw > 0n && estimate !== null ? `≈ ${usd(estimate)} USDG` : "–"}</span>
+      <div>
+        <label className="label" htmlFor="lab-dep">Amount in {cur}</label>
+        <input id="lab-dep" className="fld tabular-nums" inputMode="decimal"
+          placeholder={cur === "USDG" ? "500" : cur === "ETH" ? "0.1" : "10000"} value={amount} onChange={(e) => setAmount(e.target.value)} />
       </div>
-      <p className="text-[11px] text-ink-soft mt-1">
+      <div className="flex items-baseline justify-between border-t border-line pt-4 text-sm">
+        <span className="text-ink-soft">Lands in the Desk</span>
+        <span className="font-pixel text-ink-strong tabular-nums">{raw > 0n && estimate !== null ? `≈ ${usd(estimate)}` : "–"}</span>
+      </div>
+      <p className="text-xs text-ink-soft -mt-2 leading-relaxed">
         {cur === "USDG" ? "Goes into the Desk wallet as is."
           : cur === "ETH" ? "Swapped to USDG at the WETH/USDG pool, floored by the ETH/USD feed."
             : "Sold for ETH on the COAT pool (its fee skim funds the Booster), then swapped to USDG. The testnet COAT pool is thin."}
       </p>
-      <button type="button" className="btn btn-accent w-full mt-4" disabled={busy || raw === 0n} onClick={go}>Deposit {cur}</button>
+      <button type="button" className="btn btn-accent w-full" disabled={busy || raw === 0n} onClick={go}>Deposit {cur}</button>
     </div>
   );
 }
@@ -551,25 +580,35 @@ function Withdraw({ cfg, desk, me, busy, run, write }: { cfg: LabConfig; desk: D
     ]);
   };
   return (
-    <div>
-      <span className="label">From the Desk wallet</span>
-      <div className="grid gap-1.5" role="radiogroup" aria-label="Asset to withdraw">
-        {options.map((x, i) => (
-          <button key={x.token} type="button" role="radio" aria-checked={pick === i} onClick={() => { setPick(i); setAmount(""); }}
-            className={`flex items-center justify-between border-2 px-3 py-2 text-sm ${pick === i ? "border-accent bg-cream" : "border-line bg-cream-2 hover:border-ink"}`}>
-            <span className="font-pixel text-[11px] text-ink-strong">{x.symbol}</span>
-            <span className="tabular-nums text-ink">{num(x.amount, x.decimals, x.decimals === 6 ? 2 : 4)} <span className="text-ink-soft">· {usd(x.usd)}</span></span>
-          </button>
-        ))}
+    <div className="grid gap-5">
+      <div>
+        <span className="label">From the Desk wallet</span>
+        <div className="border border-line" role="radiogroup" aria-label="Asset to withdraw">
+          {options.map((x, i) => (
+            <button key={x.token} type="button" role="radio" aria-checked={pick === i} onClick={() => { setPick(i); setAmount(""); }}
+              className={`w-full flex items-center justify-between px-3 py-2.5 text-sm border-t first:border-t-0 border-line ${pick === i ? "bg-cream" : "hover:bg-cream"}`}>
+              <span className="inline-flex items-center gap-2">
+                <span className={`w-2 h-2 ${pick === i ? "bg-accent" : "bg-line"}`} aria-hidden="true" />
+                <span className="text-ink-strong">{x.symbol}</span>
+              </span>
+              <span className="tabular-nums text-ink">{num(x.amount, x.decimals, x.decimals === 6 ? 2 : 4)} <span className="text-ink-soft">· {usd(x.usd)}</span></span>
+            </button>
+          ))}
+        </div>
       </div>
-      <label className="label mt-4" htmlFor="lab-wd">Amount of {o.symbol}</label>
-      <div className="flex gap-2">
-        <input id="lab-wd" className="fld tabular-nums" inputMode="decimal" placeholder="0" value={amount}
-          onChange={(e) => setAmount(e.target.value)} />
-        <button type="button" className="btn btn-ghost" onClick={() => setAmount(formatUnits(o.amount, o.decimals))}>Max</button>
+      <div>
+        <label className="label" htmlFor="lab-wd">Amount of {o.symbol}</label>
+        <div className="flex gap-2">
+          <input id="lab-wd" className="fld tabular-nums" inputMode="decimal" placeholder="0" value={amount}
+            onChange={(e) => setAmount(e.target.value)} />
+          <button type="button" className="btn btn-ghost" onClick={() => setAmount(formatUnits(o.amount, o.decimals))}>Max</button>
+        </div>
       </div>
-      <p className="text-[11px] text-ink-soft mt-2">Only the Desk&rsquo;s owner can move assets out. Taking stock out counts in profit and loss at that moment&rsquo;s price.</p>
-      <button type="button" className="btn btn-accent w-full mt-4" disabled={busy || raw === 0n || raw > o.amount} onClick={go}>
+      <p className="text-xs text-ink-soft leading-relaxed">
+        Only the Desk&rsquo;s owner can move assets out. Stock taken out frees the pilot cap and counts in profit and loss at
+        that moment&rsquo;s price.
+      </p>
+      <button type="button" className="btn btn-accent w-full" disabled={busy || raw === 0n || raw > o.amount} onClick={go}>
         Withdraw to my wallet
       </button>
     </div>
@@ -580,14 +619,16 @@ function HandOver({ cfg, desk, me, busy, run, write }: { cfg: LabConfig; desk: D
   const [to, setTo] = useState("");
   const valid = /^0x[0-9a-fA-F]{40}$/.test(to) && to.toLowerCase() !== me.toLowerCase();
   return (
-    <div>
+    <div className="grid gap-5">
       <p className="text-sm text-ink leading-relaxed">
-        A sale in miniature: Desk #{desk.id.toString()} and everything in its wallet ({usd(desk.totalUsd)} right now) move to
-        the new owner. From then on only they can withdraw or pause the engine.
+        A sale in miniature: Desk #{desk.id.toString()} and everything in its wallet ({usd(desk.totalUsd)} right now) move to the
+        new owner. From then on only they can withdraw or pause the engine.
       </p>
-      <label className="label mt-4" htmlFor="lab-to">New owner</label>
-      <input id="lab-to" className="fld font-mono text-sm" placeholder="0x…" value={to} onChange={(e) => setTo(e.target.value.trim())} />
-      <button type="button" className="btn btn-ghost w-full mt-4" disabled={busy || !valid}
+      <div>
+        <label className="label" htmlFor="lab-to">New owner</label>
+        <input id="lab-to" className="fld font-mono text-sm" placeholder="0x…" value={to} onChange={(e) => setTo(e.target.value.trim())} />
+      </div>
+      <button type="button" className="btn btn-ghost w-full" disabled={busy || !valid}
         onClick={() => run(`Hand over Desk #${desk.id}`, [
           () => write({ address: cfg.desks, abi: deskNftAbi, functionName: "transferFrom", args: [me, to as Address, desk.id] }),
         ])}>
@@ -597,29 +638,26 @@ function HandOver({ cfg, desk, me, busy, run, write }: { cfg: LabConfig; desk: D
   );
 }
 
-// --- basket and keeper -------------------------------------------------------------------
+// --- basket, traits, keeper -----------------------------------------------------------------
 
 function Basket({ s }: { s?: LabState }) {
   return (
-    <section className="card">
-      <div className="flex items-center justify-between">
-        <h2 className="pixel-title text-[15px]">Basket</h2>
-        <span className="badge">epoch {s ? s.epoch.toString() : "…"}</span>
-      </div>
-      <div className="grid gap-3 mt-4">
+    <section>
+      <SectionTitle aside={`epoch ${s ? s.epoch.toString() : "…"}`}>Basket</SectionTitle>
+      <ul>
         {(s?.basket ?? []).map((b) => (
-          <div key={b.token}>
+          <li key={b.token} className="py-3 border-b border-line">
             <div className="flex justify-between text-sm">
-              <span className="font-pixel text-[11px] text-ink-strong">{b.symbol}</span>
+              <span className="text-ink-strong">{b.symbol}</span>
               <span className="tabular-nums text-ink">{b.weight}% <span className="text-ink-soft">· {usd(b.price)}</span></span>
             </div>
-            <div className="h-2.5 border border-ink mt-1 bg-cream" aria-hidden="true">
+            <div className="h-1.5 bg-line mt-2" aria-hidden="true">
               <div className="h-full bg-ink-strong" style={{ width: `${b.weight}%` }} />
             </div>
-          </div>
+          </li>
         ))}
-      </div>
-      <p className="text-[11px] text-ink-soft mt-4">
+      </ul>
+      <p className="text-xs text-ink-soft mt-3 leading-relaxed">
         Changed from the terminal. On a new epoch the keeper sells only what sits above its weight and buys what sits below.
       </p>
     </section>
@@ -627,29 +665,25 @@ function Basket({ s }: { s?: LabState }) {
 }
 
 const KIND: Record<Activity["kind"], { label: string; cls: string }> = {
-  buy: { label: "Buy", cls: "text-good border-good" },
-  sell: { label: "Sell", cls: "text-accent border-accent" },
-  fees: { label: "Fees", cls: "text-ink-soft border-ink-soft" },
+  buy: { label: "Buy", cls: "text-good" },
+  sell: { label: "Sell", cls: "text-accent" },
+  fees: { label: "Fees", cls: "text-ink-soft" },
 };
 
 function Timeline({ activity, now, deskId }: { activity: Activity[]; now: number; deskId: bigint }) {
   return (
-    <section className="card">
-      <div className="flex items-center justify-between">
-        <h2 className="pixel-title text-[15px]">Keeper activity</h2>
-        <span className="text-[11px] text-ink-soft">Desk #{deskId.toString()} and fee flushes</span>
-      </div>
+    <section>
+      <SectionTitle aside={`Desk #${deskId.toString()} and fee flushes`}>Keeper activity</SectionTitle>
       {activity.length === 0 ? (
-        <p className="text-sm text-ink-soft mt-3">Nothing yet. Deposit and the keeper buys within a few seconds.</p>
+        <p className="text-sm text-ink-soft py-4">Nothing yet. Deposit and the keeper buys within a few seconds.</p>
       ) : (
-        <ol className="mt-3 grid">
-          {activity.slice(0, 16).map((a) => (
-            <li key={`${a.tx}-${a.text}`} className="grid grid-cols-[52px_minmax(0,1fr)_auto] items-center gap-3 py-2 border-t border-line first:border-t-0">
-              <span className={`font-pixel text-[9px] border-[1.5px] px-1.5 py-0.5 text-center ${KIND[a.kind].cls}`}>{KIND[a.kind].label}</span>
-              <span className="text-sm text-ink truncate">
-                {a.text} <span className="font-pixel text-[11px] text-ink-strong tabular-nums">{usd(a.usd)}</span>
-              </span>
-              <span className="text-[11px] text-ink-soft tabular-nums text-right whitespace-nowrap" title={`block ${a.block} · ${a.tx}`}>
+        <ol>
+          {activity.slice(0, 14).map((a) => (
+            <li key={`${a.tx}-${a.text}`} className="grid grid-cols-[48px_minmax(0,1fr)_auto_72px] items-baseline gap-4 py-3 border-b border-line text-sm">
+              <span className={`font-pixel text-[10px] ${KIND[a.kind].cls}`}>{KIND[a.kind].label}</span>
+              <span className="text-ink truncate">{a.text}</span>
+              <span className="text-ink-strong tabular-nums text-right">{usd(a.usd)}</span>
+              <span className="text-xs text-ink-soft tabular-nums text-right whitespace-nowrap" title={`block ${a.block} · ${a.tx}`}>
                 {now && a.at ? agoLabel(now - a.at) : `#${a.block}`}
               </span>
             </li>
@@ -661,15 +695,6 @@ function Timeline({ activity, now, deskId }: { activity: Activity[]; now: number
 }
 
 // --- bits ----------------------------------------------------------------------------------
-
-function Stat({ label, value, toneValue }: { label: string; value: string; toneValue?: number }) {
-  return (
-    <div className="stat">
-      <div className="text-[10px] text-ink-soft uppercase tracking-widest">{label}</div>
-      <div className={`font-pixel text-[13px] mt-1 tabular-nums ${toneValue === undefined ? "text-ink-strong" : tone(toneValue)}`}>{value}</div>
-    </div>
-  );
-}
 
 function num(v: bigint, decimals: number, precision: number): string {
   const n = Number(formatUnits(v, decimals));
