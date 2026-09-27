@@ -746,7 +746,7 @@ export function ActivateTab() {
   const offOwned = brokers.length - activeOwned;
 
   return (
-    <div className="grid gap-5">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
       {/* ── 1. The portfolio: the numbers that matter, then the list. Nothing else here. ── */}
       <div className="card">
         <div className="flex items-center justify-between mb-1">
@@ -819,7 +819,7 @@ export function ActivateTab() {
 
       {/* ── 2. The open Broker: one card, top to bottom = switch on → what's inside → claim → extras ── */}
       {info && (
-        <div className="card border-l-[3px] border-l-accent">
+        <div className="panel">
           <div className="flex items-center gap-3 mb-3">
             <div className="border border-line bg-cream shrink-0">
               <BrokerArtwork tokenId={info.id} size={72} />
@@ -1042,7 +1042,7 @@ export function ActivateTab() {
              the panel's slot rather than rebuilt there; before the slot exists it stays in
              the flow here, so nothing depends on render order. ── */}
       {address && portalTo((
-        <div className="card !p-4">
+        <div className="card">
           <h2 className="font-pixel text-[11px] text-ink-strong mb-1">More tools</h2>
           <p className="text-ink-soft text-[12px] mb-3">Nothing here is required. Your stock is already yours inside each Broker.</p>
           {brokers.length > 0 && (

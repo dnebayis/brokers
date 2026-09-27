@@ -73,7 +73,7 @@ export function BasketScorecard() {
             </div>
           </div>
           {data.benchmarks && (
-            <div className="mb-4 border border-line bg-cream p-3">
+            <div className="mb-5 border-l-2 border-line pl-4 py-1">
               <div className="label">Same dollars, same hours</div>
               <div className={`grid gap-2 text-center ${data.benchmarks.smartCapped ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>
                 {([

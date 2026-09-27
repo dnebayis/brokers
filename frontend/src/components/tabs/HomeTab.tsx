@@ -26,7 +26,7 @@ const FACTS: { k: string; v: string }[] = [
 
 export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       {/* Hero */}
       <section className="card">
         <p className="chip mb-4 inline-block">Ride the coattails of smart money</p>
@@ -94,7 +94,7 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
       </section>
 
       {/* The Floor — the no-NFT path in, one line, straight to the terminal */}
-      <section className="card border-l-[3px] border-l-accent">
+      <section className="card">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="pixel-title text-[15px] mb-1">Just want the basket?</h2>

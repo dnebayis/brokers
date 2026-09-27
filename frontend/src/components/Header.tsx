@@ -88,7 +88,7 @@ export function Header() {
   }
   return (
     <header className="sticky top-0 z-20 bg-cream border-b-2 border-ink">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-[34px] h-[34px] border-2 border-ink bg-cream-2 shadow-pixel-sm grid place-items-center">
             <BrokerMark size={20} />
@@ -118,7 +118,7 @@ export function Header() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="connect-wallet-title"
-            className="card w-full max-w-sm"
+            className="panel w-full max-w-sm"
             onMouseDown={(e) => e.stopPropagation()}
             onKeyDown={onDialogKeyDown}
           >

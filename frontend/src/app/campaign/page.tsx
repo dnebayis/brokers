@@ -138,7 +138,7 @@ function PartnerLogo({ className = "h-9" }: { className?: string }) {
 
 function Stat({ label, value, hint, accent }: { label: string; value: string; hint?: string; accent?: boolean }) {
   return (
-    <div className="card p-4">
+    <div className="card">
       <div className="font-pixel text-[11px] text-ink-soft uppercase tracking-wider">{label}</div>
       <div className="font-pixel text-2xl mt-1.5 break-words" style={accent ? { color: PARTNER_ACCENT } : undefined}>
         <span className={accent ? "" : "text-ink-strong"}>{value}</span>
@@ -150,7 +150,7 @@ function Stat({ label, value, hint, accent }: { label: string; value: string; hi
 
 function Tile({ k, v, accent, wide, sub }: { k: string; v: React.ReactNode; accent?: boolean; wide?: boolean; sub?: string }) {
   return (
-    <div className={`border border-line bg-cream p-3 ${wide ? "col-span-2" : ""}`}>
+    <div className={`border-l-2 border-line pl-4 py-1 ${wide ? "col-span-2" : ""}`}>
       <div className="font-pixel text-[10px] uppercase tracking-wider" style={{ color: accent ? PARTNER_ACCENT : "var(--c-ink-soft)" }}>{k}</div>
       <div className="font-pixel text-[12px] text-ink-strong mt-1 leading-relaxed">{v}</div>
       {sub && <div className="text-[11px] text-ink-soft mt-0.5">{sub}</div>}
@@ -163,7 +163,7 @@ function Tile({ k, v, accent, wide, sub }: { k: string; v: React.ReactNode; acce
 function BothSides({ feed }: { feed: FeedPayload }) {
   const p = feed.purchases, c = feed.counts, e = feed.economics, inv = feed.inventory;
   return (
-    <div className="card p-4 sm:p-5">
+    <div className="card">
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <h2 className="font-pixel text-sm text-ink-strong">Both sides of the desk</h2>
         <span className="text-[11px] text-ink-soft">
@@ -173,7 +173,7 @@ function BothSides({ feed }: { feed: FeedPayload }) {
       <p className="text-ink-soft text-sm mt-1">
         The same totals their campaign page shows, read from their feed once a minute. Their side is in their colour.
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-6 mt-5">
         <Tile accent k="seats taken" v={`${num(c.paidSeats)} / ${num(inv.total)}`} sub={`${num(c.participantWallets)} wallets · ${num(inv.temporarilyBooked)} booked`} />
         <Tile accent k={`${CAMPAIGN.partnerName} activated`} v={num(c.geezActivated)} sub={`${num(e.entryFeePnutz)} $PNUTZ each, ${e.stakingFeePct}% to staking`} />
         <Tile accent k="entry fees" v={`${num(p.entryFeesPnutz)} $PNUTZ`} sub={`${num(p.stakingAllocationPnutz)} $PNUTZ to the staking pool`} />
@@ -293,7 +293,7 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active, feed, byB
   };
 
   return (
-    <div className="card p-4 sm:p-5" id="journey">
+    <div className="card" id="journey">
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <h2 className="font-pixel text-sm text-ink-strong">Your seat, step by step</h2>
         <span className="text-[11px] text-ink-soft">everything here reads from the chain and the campaign feed, nothing to sign</span>
@@ -313,17 +313,17 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active, feed, byB
         })}
       </ol>
 
-      <div className="mt-4 border-l-[3px] border-ink pl-4">
+      <div className="mt-6">
         {step === 0 && (
           <div>
             <h3 className="font-pixel text-[12px] text-ink-strong">A seat is a Broker that works for you.</h3>
-            <div className="grid sm:grid-cols-3 gap-2 mt-3">
+            <div className="grid sm:grid-cols-3 gap-6 mt-4">
               {[
                 { k: `Your ${CAMPAIGN.partnerName}`, v: "stays staked on its own chain. It never moves, never gets wrapped or bridged.", accent: true },
                 { k: "The Broker", v: `is held in the campaign wallet and switched on by burning ${num(PARAMS.activationBurn)} $COAT. That is the only way a Broker turns on.` },
                 { k: "The seat's wallet", v: "is the Broker's own on-chain wallet. Every hour the engine can, it drops tokenized stock in there. It stays there." },
               ].map((c) => (
-                <div key={c.k} className="border border-line bg-cream p-3">
+                <div key={c.k} className="border-t border-line pt-3">
                   <div className="font-pixel text-[10px] uppercase tracking-wider" style={{ color: c.accent ? PARTNER_ACCENT : "var(--c-ink-soft)" }}>{c.k}</div>
                   <p className="text-sm text-ink mt-1 leading-relaxed">{c.v}</p>
                 </div>
@@ -383,7 +383,7 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active, feed, byB
               are yours to watch, neither needs anything from you.
             </p>
             {sc && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-6 mt-5">
                 <Tile k="engine purchases" v={num(sc.purchases)} />
                 <Tile k="last purchase" v={lastBuy ? clock(lastBuy * 1000) : "—"} />
                 <Tile k="names bought so far" wide v={[...sc.names].sort((a, b) => b.buys - a.buys).map((n) => n.symbol).join(" · ")} />
@@ -403,7 +403,7 @@ function Journey({ seatId, onSeat, seat, reloadSeat, calendar, active, feed, byB
           <div>
             <h3 className="font-pixel text-[12px] text-ink-strong">The seat runs for {CAMPAIGN.weeks} weeks.</h3>
             {feed ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-6 mt-5">
                 <Tile k="opened" v={dayLabel(feed.campaign.startsAt)} />
                 <Tile k="activations close" v={stampUtc(feed.campaign.activationClosesAt)} />
                 <Tile accent k="claims open" v={stampUtc(feed.campaign.claimOpensAt)} sub="on their side, once the final check is done" />
@@ -467,7 +467,7 @@ function Desks({ roster, selected, onSelect, byBroker }: { roster: RosterRow[]; 
     (filter === "all" || (filter === "on") === r.active) && (q === "" || String(r.id).includes(q) || (byBroker.get(r.id)?.geez ?? "") === q)), [roster, filter, q, byBroker]);
   const counts = { all: roster.length, on: roster.filter((r) => r.active).length, off: roster.filter((r) => !r.active).length };
   return (
-    <div className="card p-4 sm:p-5">
+    <div className="card">
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <h2 className="font-pixel text-sm text-ink-strong">The desks</h2>
         <span className="text-[11px] text-ink-soft">every Broker in the campaign wallet, drawn from the chain · tap one to open it above</span>
@@ -584,7 +584,7 @@ function CampaignInner() {
 
   if (!showLive) {
     return (
-      <div className="card mt-6 p-5">
+      <div className="card mt-6">
         <p className="text-ink leading-relaxed">
           A sponsored campaign is in preparation. The desks, which seats are switched on and
           what that burned will appear here, all read live from the chain, once it starts.
@@ -627,7 +627,7 @@ function CampaignInner() {
       {error && !(roster && roster.length > 0) && <p className="text-accent text-sm">Could not read the roster just now. It retries every minute.</p>}
       {roster && roster.length > 0 && <Desks roster={roster} selected={seatId} onSelect={(id) => openSeat(id, true)} byBroker={byBroker} />}
 
-      <div className="card p-4 sm:p-5">
+      <div className="card">
         <h2 className="font-pixel text-sm text-ink-strong">Who does what</h2>
         <ul className="list-disc ml-5 space-y-1.5 text-ink text-sm mt-2">
           <li><b>{CAMPAIGN.partnerName}</b> holds the Brokers, switches them on, assigns the seats, runs eligibility
@@ -656,7 +656,7 @@ export default function CampaignPage() {
   return (
     <>
       <Header />
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+      <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <NavLinks current="campaign" />
         <p className="chip inline-block mt-8">SPONSORED DESK</p>
         {live ? (

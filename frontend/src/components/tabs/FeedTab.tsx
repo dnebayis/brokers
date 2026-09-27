@@ -73,7 +73,7 @@ export function FeedTab() {
   const isExport = data?.source === "indexer";
 
   return (
-    <div className="grid gap-5">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
     <BasketNow />
     <BasketScorecard />
 
@@ -81,9 +81,9 @@ export function FeedTab() {
       <div className="card">
         <h2 className="pixel-title text-[15px] mb-1">Who is buying the most</h2>
         <p className="text-ink-soft text-sm mb-3">Members ranked by disclosed buying in the basket window. Open one for their full record.</p>
-        <div className="grid sm:grid-cols-2 gap-2">
+        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
           {top.data.members.map((m) => (
-            <Link key={m.slug} href={`/member/${m.slug}`} className="border border-line bg-cream p-2.5 hover:border-ink transition-colors block">
+            <Link key={m.slug} href={`/member/${m.slug}`} className="border-t border-line pt-2.5 hover:border-ink transition-colors block">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-ink-strong text-sm">{m.name}</span>
                 <span className="text-[10px] text-ink-soft uppercase">{m.chamber.includes("senat") ? "Senate" : "House"}</span>

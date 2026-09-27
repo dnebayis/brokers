@@ -410,7 +410,7 @@ export function PlaybookPanel({
           const daysLeft =
             w !== undefined && w < RUN_AT && rate !== null && rate > 0 ? Math.ceil((RUN_AT - w) / rate) : null;
           return (
-            <div key={key} className="flex items-center justify-between gap-3 border border-line px-3 py-2 text-sm">
+            <div key={key} className="flex items-center justify-between gap-3 border-b border-line py-2.5 text-sm">
               <span className="min-w-0">
                 <b className="text-ink-strong">#{key}</b>{" "}
                 {orphaned ? (

@@ -40,22 +40,22 @@ export function LeadersTab() {
       </p>
 
       <div className="card mt-6 !p-0 overflow-hidden">
-        <div className="px-4 py-3 border-b border-line">
+        <div className="py-3 border-b border-line">
           <h2 className="pixel-title text-[13px]">Top wallets</h2>
           <p className="text-[12px] text-ink-soft mt-0.5">
             Ranked by Brokers switched on, which is the same as ranked by earnings.
           </p>
         </div>
         {wLoading ? (
-          <p className="text-ink-soft text-sm p-5">Replaying transfers from the chain…</p>
+          <p className="text-ink-soft text-sm py-5">Replaying transfers from the chain…</p>
         ) : wError ? (
-          <p className="text-ink-soft text-sm p-5">Couldn&rsquo;t load wallets right now — try again shortly.</p>
+          <p className="text-ink-soft text-sm py-5">Couldn&rsquo;t load wallets right now — try again shortly.</p>
         ) : leaders.length === 0 ? (
-          <p className="text-ink-soft text-sm p-5">No holders yet.</p>
+          <p className="text-ink-soft text-sm py-5">No holders yet.</p>
         ) : (
           <ul className="divide-y divide-line">
             {leaders.map((w) => (
-              <li key={w.address} className="flex items-center gap-4 px-4 py-2.5">
+              <li key={w.address} className="flex items-center gap-4 py-2.5">
                 <span
                   className={`font-pixel text-sm w-8 shrink-0 text-center ${
                     w.rank <= 3 ? "text-accent" : "text-ink-soft"
@@ -76,7 +76,7 @@ export function LeadersTab() {
             ))}
           </ul>
         )}
-        <p className="text-[11px] text-ink-soft px-4 py-3 border-t border-line">
+        <p className="text-[11px] text-ink-soft py-3 border-t border-line">
           The percentage is the wallet&rsquo;s share of every purchase the engine makes. A Broker that
           is held but switched off earns nothing and is counted separately.
         </p>
@@ -89,15 +89,15 @@ export function LeadersTab() {
 
       <div className="card mt-3 !p-0 overflow-hidden">
         {loading ? (
-          <p className="text-ink-soft text-sm p-5">Reading activation history from the chain…</p>
+          <p className="text-ink-soft text-sm py-5">Reading activation history from the chain…</p>
         ) : error ? (
-          <p className="text-ink-soft text-sm p-5">Couldn&rsquo;t load the leaderboard right now — try again shortly.</p>
+          <p className="text-ink-soft text-sm py-5">Couldn&rsquo;t load the leaderboard right now — try again shortly.</p>
         ) : entries.length === 0 ? (
-          <p className="text-ink-soft text-sm p-5">No active Brokers yet.</p>
+          <p className="text-ink-soft text-sm py-5">No active Brokers yet.</p>
         ) : (
           <ul className="divide-y divide-line">
             {entries.map((e) => (
-              <li key={e.id.toString()} className="flex items-center gap-4 px-4 py-3">
+              <li key={e.id.toString()} className="flex items-center gap-4 py-3">
                 <span
                   className={`font-pixel text-sm w-8 shrink-0 text-center ${
                     e.rank <= 3 ? "text-accent" : "text-ink-soft"

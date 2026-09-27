@@ -16,7 +16,7 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 py-8 lg:py-10">
+      <main className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 flex-1 py-8 lg:py-10">
         <div className="grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
           <aside className="lg:sticky lg:top-24">
             <p className="chip inline-block">Terms</p>
@@ -42,7 +42,7 @@ export default function TermsPage() {
         </div>
       </main>
       <footer className="border-t-2 border-ink">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-ink-soft flex flex-wrap justify-between gap-2">
+        <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-ink-soft flex flex-wrap justify-between gap-2">
           <span>Coattail Brokers · fully on-chain on Robinhood Chain</span>
           <span>Not financial or legal advice · participation involves risk</span>
         </div>

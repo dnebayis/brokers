@@ -35,7 +35,7 @@ export default function Page() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1">
+      <main className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 flex-1">
         <Tabs active={tab} onChange={selectTab} />
         {/* key remounts the panel per tab so the entrance animation replays */}
         {tab === "home" ? (
@@ -48,7 +48,7 @@ export default function Page() {
             id={tabPanelId(tab)}
             role="tabpanel"
             aria-labelledby={tabButtonId(tab)}
-            className="tab-panel py-6 lg:py-8 grid gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
+            className="tab-panel py-6 lg:py-8 grid grid-cols-[minmax(0,1fr)] gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
           >
             <div className="min-w-0">
               {tab === "trade" && TRADE_TAB_ENABLED && <TradeTab />}
@@ -64,7 +64,7 @@ export default function Page() {
         )}
       </main>
       <footer className="border-t-2 border-ink">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 grid gap-4">
+        <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-5 grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <SocialLinks variant="labels" />
             <CoatAddress />

@@ -126,8 +126,8 @@ export function DocsTab() {
             ["Fee split", "80/10/10 constants; buyback and treasury sinks both point at the Booster — effective 100% stock"],
           ].map(([k, v]) => (
             <tr key={k}>
-              <td className="border border-line px-2.5 py-2 font-medium w-40">{k}</td>
-              <td className="border border-line px-2.5 py-2">{v}</td>
+              <td className="border-b border-line pr-4 py-2.5 font-medium w-40 align-top">{k}</td>
+              <td className="border-b border-line pr-4 py-2.5">{v}</td>
             </tr>
           ))}
         </tbody>
@@ -169,8 +169,8 @@ export function DocsTab() {
       <table className="w-full border-collapse text-[13px] my-2">
         <thead>
           <tr>
-            <th className="border border-line bg-cream-3 px-2.5 py-2 text-left font-pixel text-[10px] uppercase">Contract</th>
-            <th className="border border-line bg-cream-3 px-2.5 py-2 text-left font-pixel text-[10px] uppercase">Address</th>
+            <th className="border-b border-line pr-4 py-2.5 text-left font-pixel text-[10px] uppercase text-ink-soft">Contract</th>
+            <th className="border-b border-line pr-4 py-2.5 text-left font-pixel text-[10px] uppercase text-ink-soft">Address</th>
           </tr>
         </thead>
         <tbody>
@@ -178,8 +178,8 @@ export function DocsTab() {
             const a = ADDR[key] as string;
             return (
               <tr key={name}>
-                <td className="border border-line px-2.5 py-2">{name}</td>
-                <td className="border border-line px-2.5 py-2 font-pixel text-[11px] break-all">
+                <td className="border-b border-line pr-4 py-2.5">{name}</td>
+                <td className="border-b border-line py-2.5 font-pixel text-[11px] break-all">
                   {a}{" "}
                   <button onClick={() => copy(a)} className="text-ink-soft hover:text-accent align-middle" aria-label="copy address">
                     <Icon name={copied === a ? "check" : "copy"} className="w-3.5 h-3.5 inline" />
@@ -205,7 +205,7 @@ export function DocsTab() {
         anything real-time. No authentication, no rate keys, JSON only.
       </P>
       <div className="space-y-4 my-3">
-        <div className="border border-line bg-cream-2 p-3">
+        <div className="border-t border-line pt-3">
           <div className="font-pixel text-[12px] text-ink-strong">GET /api/broker/{"{id}"}</div>
           <p className="text-sm text-ink mt-1.5">
             One Broker&apos;s full state: current <Code>owner</Code>, its ERC-6551 <Code>wallet</Code>,{" "}
@@ -214,7 +214,7 @@ export function DocsTab() {
             (string) plus a <Code>formatted</Code> decimal. <Code>404</Code> if the token doesn&apos;t exist.
           </p>
         </div>
-        <div className="border border-line bg-cream-2 p-3">
+        <div className="border-t border-line pt-3">
           <div className="font-pixel text-[12px] text-ink-strong">GET /api/wallet/{"{address}"}/brokers</div>
           <p className="text-sm text-ink mt-1.5">
             Every Broker a wallet currently holds: <Code>id</Code>, <Code>active</Code> status and each
@@ -288,7 +288,7 @@ function TokenomicsCharts() {
     <div className="grid sm:grid-cols-2 gap-3 my-5" aria-label="Tokenomics charts">
       <Chart title="Initial COAT allocation" rows={[["Permanent LP", 100, "1B"], ["Team / reserve", 0, "0"]]} />
       <Chart title="Sell-side fee flow (post-vote)" rows={[["Stock rewards", 100, "100%"], ["Treasury", 0, "0%"]]} />
-      <div className="border border-line bg-cream-2 p-3 sm:col-span-2">
+      <div className="border-t border-line pt-3 sm:col-span-2">
         <div className="font-pixel text-[11px] mb-3">Supply so far — burns only ever remove</div>
         <svg viewBox="0 0 600 150" className="w-full" role="img"
           aria-label={supply !== null ? `COAT supply has fallen from one billion to ${fmtInt(supply)}` : "COAT supply chart"}>
@@ -308,7 +308,7 @@ function TokenomicsCharts() {
 
 function Chart({ title, rows }: { title: string; rows: [string, number, string][] }) {
   return (
-    <div className="border border-line bg-cream-2 p-3">
+    <div className="border-t border-line pt-3">
       <div className="font-pixel text-[11px] mb-3">{title}</div>
       <div className="space-y-2">
         {rows.map(([label, width, value]) => (

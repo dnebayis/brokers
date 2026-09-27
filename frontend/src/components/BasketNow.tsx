@@ -73,9 +73,9 @@ export function BasketNow() {
       </p>
       {isLoading && !data && <p className="text-ink-soft text-sm">Reading the latest basket…</p>}
       {rows.length > 0 && (
-        <div className="grid gap-3">
+        <div className="border-t border-line">
           {rows.map(({ ticker, bps, info }) => (
-            <div key={ticker} className="border border-line bg-cream p-3">
+            <div key={ticker} className="border-b border-line py-4">
               <div className="flex items-center gap-3 mb-1.5">
                 <span className="badge">{ticker}</span>
                 <div className="flex-1 h-2 bg-cream-3 border border-line">
@@ -134,7 +134,7 @@ export function BasketNow() {
         </div>
       )}
       {data?.commentary?.text && (
-        <div className="mt-4 border-2 border-ink bg-cream-2 p-3 shadow-pixel-sm">
+        <div className="mt-5 border-l-2 border-accent pl-4 py-1">
           <div className="flex items-center justify-between mb-1.5">
             <span className="font-pixel text-[10px] text-accent">AI NOTE</span>
             <span className="text-[10px] text-ink-soft">written from the filings above · not advice</span>

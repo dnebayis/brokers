@@ -178,7 +178,7 @@ export function CoatSwap() {
               : `SELL ${rawSellAmount} COAT`;
 
   return (
-    <div className="card">
+    <div className="panel">
       <h2 className="pixel-title text-[15px] mb-1">Swap $COAT</h2>
       <p className="text-ink-soft text-sm mb-5">
         Buy $COAT with ETH or sell it back, straight against the hooked v4 pool that holds the

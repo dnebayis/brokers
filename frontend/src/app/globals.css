@@ -65,15 +65,24 @@
   }
 }
 
+/* Page structure follows the Coinbase DESIGN.md (VoltAgent/awesome-design-md): most surfaces are
+   flat and separated by hairlines, and each view lifts ONE interactive object. Coattail's colors,
+   pixel type and square corners stay.
+     .card  - a flat section: hairline on top, no fill, no frame
+     .panel - the view's single elevated object (forms, terminals, dialogs): the framed pixel card
+     .stat  - a figure: small-caps label and value behind a hairline rule, no box */
 @layer components {
   .card {
+    @apply border-t border-line pt-6 pb-2;
+  }
+  .panel {
     @apply bg-cream-2 border-2 border-ink shadow-pixel p-5 sm:p-6;
   }
   .pixel-title {
     @apply font-pixel text-ink-strong;
   }
   .stat {
-    @apply border border-line bg-cream px-3 py-2.5;
+    @apply border-l-2 border-line pl-4 py-1;
   }
   .btn {
     @apply font-pixel text-xs inline-flex items-center justify-center gap-2 border-2 border-ink bg-ink text-cream px-4 py-3 shadow-pixel transition-transform active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none;

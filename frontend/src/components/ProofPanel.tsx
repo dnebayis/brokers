@@ -205,18 +205,14 @@ export function ProofPanel() {
             : "No buyback or stock-buy transactions yet. They appear here as the flywheel runs."}
         </p>
       ) : (
-        <ul className="grid gap-2">
+        <ul className="border-t border-line">
           {rows.map((r) => (
             <li
               key={`${r.tx}-${r.logIndex}`}
-              className="flex items-center gap-3 border-2 border-ink bg-cream px-3 py-2"
+              className="flex items-center gap-4 border-b border-line py-3"
             >
               <span
-                className={`font-pixel text-[9px] px-2 py-1 border-2 shrink-0 ${
-                  r.kind === "burn"
-                    ? "bg-accent border-accent text-white"
-                    : "bg-cream-3 border-ink text-ink-strong"
-                }`}
+                className={`font-pixel text-[10px] w-10 shrink-0 ${r.kind === "burn" ? "text-accent" : "text-good"}`}
               >
                 {r.kind === "burn" ? "BURN" : "BUY"}
               </span>
@@ -231,7 +227,7 @@ export function ProofPanel() {
                 href={explorerTx(r.tx)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-ghost text-[11px] px-2.5 py-1 shrink-0"
+                className="text-xs text-ink-soft underline hover:text-ink-strong shrink-0"
               >
                 tx ↗
               </a>

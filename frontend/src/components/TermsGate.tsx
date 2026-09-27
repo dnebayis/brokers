@@ -66,7 +66,7 @@ export function TermsGate() {
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={boxId}
-        className="card w-full max-w-2xl max-h-full overflow-hidden flex flex-col gap-4"
+        className="panel w-full max-w-2xl max-h-full overflow-hidden flex flex-col gap-4"
         onKeyDown={onKeyDown}
       >
         <div className="flex flex-wrap items-baseline justify-between gap-2">

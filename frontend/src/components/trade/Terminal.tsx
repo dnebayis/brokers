@@ -509,7 +509,7 @@ export function Terminal() {
         </div>
       )}
 
-      <section className="card max-w-xl">
+      <section className="panel max-w-xl">
         {/* top panel */}
         <div className="bg-cream-2 border-2 border-ink p-3">
           {dir === "buy" ? (

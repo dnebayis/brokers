@@ -48,7 +48,7 @@ export function SidePanel() {
     <aside className="lg:sticky lg:top-24 grid gap-4 content-start">
       <div id={SIDE_PANEL_SLOT_ID} className="contents" />
 
-      <div className="card !p-4">
+      <div className="card">
         <div className="font-pixel text-[11px] text-ink-strong mb-3">Your wallet</div>
         {!address ? (
           <p className="text-ink-soft text-sm">Connect to see your balances.</p>
@@ -61,7 +61,7 @@ export function SidePanel() {
         )}
       </div>
 
-      <div className="card !p-4">
+      <div className="card">
         <div className="font-pixel text-[11px] text-ink-strong mb-2">How it works</div>
         <ol className="text-[13px] text-ink-soft leading-relaxed list-decimal ml-4 space-y-1">
           <li>Get a Broker on the secondary market</li>
@@ -71,7 +71,7 @@ export function SidePanel() {
       </div>
 
       {/* The social links and the $COAT address live in the page footer; the panel ends on the protocol. */}
-      <div className="card !p-4">
+      <div className="card">
         <div className="font-pixel text-[11px] text-ink-strong mb-3">Protocol</div>
         <Row k="Minted" v={`${minted} / ${max}`} />
         <div className="h-2 bg-cream-3 border border-ink my-2"><span className="block h-full bg-ink" style={{ width: `${pct}%` }} /></div>

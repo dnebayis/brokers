@@ -366,7 +366,7 @@ function DataSet() {
     <Section eyebrow="the data set" title="Take the whole thing."
       blurb={<>Every chart above is drawn from files the indexer publishes on every pass, plus the contracts&rsquo; own events. The files are public and the API is open, no key.</>}>
       <ChartTitle>Published files</ChartTitle>
-      <ul className="divide-y divide-line border border-line">
+      <ul className="divide-y divide-line border-y border-line">
         {files.map((f) => (
           <li key={f.name} className="px-3 py-2 flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4">
             <a className="font-pixel text-[11px] text-ink-strong underline shrink-0" href={`${raw}/${f.name}`} target="_blank" rel="noreferrer">{f.name}</a>
@@ -375,7 +375,7 @@ function DataSet() {
         ))}
       </ul>
       <ChartTitle>Open API</ChartTitle>
-      <ul className="divide-y divide-line border border-line">
+      <ul className="divide-y divide-line border-y border-line">
         {api.map((a) => (
           <li key={a.path} className="px-3 py-2 flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4">
             <a className="font-pixel text-[11px] text-ink-strong underline shrink-0" href={a.path.includes("{") ? "#docs" : a.path} target={a.path.includes("{") ? undefined : "_blank"} rel="noreferrer">{a.path}</a>
@@ -404,7 +404,7 @@ export function StatsTab() {
         how the basket shifted, who switched on, what Congress filed. Read from the chain and the indexer&rsquo;s
         published files, nothing hand-entered.
       </p>
-      <div className="grid gap-6 mt-8">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 mt-8">
         {isLoading && !data && <p className="text-ink-soft text-sm">Reading the data set…</p>}
         {isError && !data && <Unavailable what="The indexer's data" />}
         {data?.scorecard ? <Payroll sc={data.scorecard} /> : data && <Unavailable what="The scorecard" />}
