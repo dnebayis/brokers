@@ -30,7 +30,7 @@ Desk NFT whole with the portfolio inside.
 | Pilot access | **Open to everyone from day one** | user 2026-08-26 (overrides the 5/7 holders-first vote; communicate in next community update — holders still gain via mint-COAT bonus) |
 | Holder fee discount | **None** (fee stream stays whole) | community vote 4/7 |
 | Deposit minimum | **None** ($20 desks welcome) | thread promise |
-| Deposit currency | **USDG** (stock pools are USDG-paired; single-hop buys) | design |
+| Deposit currency | **USDG, ETH or COAT** via `DeskDepositRouter` (converted to USDG in the same tx, lands in the Desk wallet; ETH floored by Chainlink ETH/USD, COAT sold through the live COAT router so the hook skim still funds the Booster). COAT deposits are sell pressure on COAT, accepted knowingly | user 2026-09-27 |
 | Custody | per-Desk **ERC-6551 wallet** bound to the Desk NFT | user |
 | Art | on-chain SVG pixel desk; visual traits FIXED at mint; live data as `display_type: number`, rounded | user + rarity-churn lesson |
 | Rebalance | on deposit + on epoch change (not hourly) | design |
@@ -109,7 +109,7 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
    on testnet BEFORE any mainnet transaction (user gate, 2026-08-26)
    ← **dress run done 2026-09-27 on an anvil fork of 46630** (`script/rehearse_local.py`,
    report `rehearsal/local-rehearsal.md`): 34 deployer txs (`script/DeployDeskTestnet.s.sol`)
-   + 25 user/keeper txs, 34 on-chain checks, all green. Testnet has no USDG and no v3 pools,
+   + user/keeper txs incl. ETH and COAT deposits, 37 on-chain checks, all green. Testnet has no USDG and no v3 pools,
    so the script also deploys a testnet-only venue (`src/testnet/DeskTestVenue.sol`: test
    USDG, tMSFT, oracle-priced pools at feed minus 0.30%) and gives the Desk its own
    StrategyRegistry slot (Booster slot 0 untouched). Real testnet broadcast still pending

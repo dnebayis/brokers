@@ -5,7 +5,8 @@ Starts anvil forked from Robinhood Chain testnet, runs script/DeployDeskTestnet.
 testnet deployer (impersonated, fork only), then drives every user flow with real
 transactions and checks each result on chain:
 
-    mint -> deposit -> buy -> rebalance -> fee split -> bonus round -> withdraw -> desk sale
+    mint -> deposit (USDG, ETH, COAT) -> buy -> rebalance -> fee split -> bonus round -> withdraw
+    -> desk sale
 
 Nothing reaches the real testnet. Two fresh throwaway wallets play the buyer (alice) and the
 second-hand buyer (bob). Output: rehearsal/local-rehearsal.md (step log + numbers).
@@ -198,7 +199,7 @@ def rehearse(w3: Web3) -> int:
 
     # ---------- fund the actors (what a user would buy on the market) ----------
     mint_price = desks.functions.mintPrice().call()
-    send(DEPLOYER, coat.functions.transfer(alice.address, mint_price + 2 * 36_750 * E18), step="setup",
+    send(DEPLOYER, coat.functions.transfer(alice.address, mint_price + 2 * 36_750 * E18 + 10_000 * E18), step="setup",
          what="deployer sends alice COAT for a desk mint and two broker activations")
     send(DEPLOYER, usdg.functions.mint(alice.address, 1_500 * E6), step="setup", what="alice gets 1,500 test USDG")
 
@@ -231,6 +232,22 @@ def rehearse(w3: Web3) -> int:
     print("step 4: deposit")
     send(alice, usdg.functions.transfer(acct_addr, 1_200 * E6), step="4 deposit", what="alice deposits 1,200 USDG")
     r.check("4 deposit", usdg.functions.balanceOf(acct_addr).call() == 1_200 * E6, "Desk wallet holds 1,200 USDG")
+    router = c(A["depositRouter"], abi("DeskDepositRouter"))
+    before = usdg.functions.balanceOf(acct_addr).call()
+    floor_eth = router.functions.minUsdgForEth(E18 // 100).call()
+    send(alice, router.functions.depositEth(desk_id, 0), value=E18 // 100, step="4 deposit",
+         what="alice deposits 0.01 ETH through the deposit router")
+    eth_in = usdg.functions.balanceOf(acct_addr).call() - before
+    r.check("4 deposit", eth_in >= floor_eth, f"0.01 ETH arrived as {eth_in / E6:.2f} USDG (Chainlink floor {floor_eth / E6:.2f})")
+    send(alice, coat.functions.approve(A["depositRouter"], 10_000 * E18), step="4 deposit", what="approve COAT deposit")
+    before = usdg.functions.balanceOf(acct_addr).call()
+    send(alice, router.functions.depositCoat(desk_id, 10_000 * E18, 1, 0), step="4 deposit",
+         what="alice deposits 10,000 COAT (COAT -> ETH on the live testnet v4 pool -> USDG)")
+    coat_in = usdg.functions.balanceOf(acct_addr).call() - before
+    r.check("4 deposit", coat_in > 0, f"10,000 COAT arrived as {coat_in / E6:.4f} USDG (thin testnet COAT pool)")
+    r.check("4 deposit", w3.eth.get_balance(A["depositRouter"]) == 0 and usdg.functions.balanceOf(A["depositRouter"]).call() == 0
+            and coat.functions.balanceOf(A["depositRouter"]).call() == 0, "deposit router holds nothing afterwards")
+    deposited = usdg.functions.balanceOf(acct_addr).call()
 
     # ---------- buy ----------
     print("step 5: buy the basket")
@@ -240,7 +257,8 @@ def rehearse(w3: Web3) -> int:
     oracle_amt = floor * 10_000 // 9_500
     r.check("5 buy", engine.functions.deployedUsdg(desk_id).call() == 1_000 * E6,
             "clipped to the $1,000 pilot cap (gross)")
-    r.check("5 buy", usdg.functions.balanceOf(acct_addr).call() == 200 * E6, "the 200 USDG over the cap stays in the Desk")
+    r.check("5 buy", usdg.functions.balanceOf(acct_addr).call() == deposited - 1_000 * E6,
+            f"the {(deposited - 1_000 * E6) / E6:.2f} USDG over the cap stays in the Desk")
     r.check("5 buy", got >= floor, f"tAAPL fill above the Chainlink floor ({got / oracle_amt * 10_000:.0f} bps of oracle)")
     r.check("5 buy", engine.functions.feesAccrued().call() == 5 * E6, "0.5% fee (5 USDG) held by the engine")
     r.check("5 buy", reverts(DEPLOYER, engine.functions.buyBasket(desk_id, 100 * E6)), "a second buy reverts: cap used up")
@@ -259,7 +277,7 @@ def rehearse(w3: Web3) -> int:
     proceeds = usdg.functions.balanceOf(acct_addr).call() - idle
     send(DEPLOYER, engine.functions.buyStock(desk_id, A["tmsft"], proceeds), step="6 rebalance",
          what="keeper buyStock tMSFT with the proceeds")
-    r.check("6 rebalance", usdg.functions.balanceOf(acct_addr).call() == idle, "the 200 idle USDG was not touched")
+    r.check("6 rebalance", usdg.functions.balanceOf(acct_addr).call() == idle, "the idle USDG over the cap was not touched")
     r.check("6 rebalance", reverts(DEPLOYER, engine.functions.buyStock(desk_id, A["weth"], 1)),
             "buyStock refuses a name outside the basket")
     a_val = taapl.functions.balanceOf(acct_addr).call() * 200 / E18

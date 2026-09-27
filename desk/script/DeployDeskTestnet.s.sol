@@ -14,6 +14,8 @@ import {
     IStrategyRegistryView,
     IBoosterFeedView
 } from "../src/DeskEngine.sol";
+import {DeskDepositRouter, ICoatRouterSell} from "../src/DeskDepositRouter.sol";
+import {IAggregatorV3Desk} from "../src/DeskEngine.sol";
 import {DeskTestAsset, DeskTestFeed, DeskTestPool, IDeskTestFeed} from "../src/testnet/DeskTestVenue.sol";
 
 interface ITestnetOwned {
@@ -60,6 +62,7 @@ contract DeployDeskTestnet is Script {
     address constant WETH = 0x7943e237c7F95DA44E0301572D358911207852Fa;
     address constant TAAPL = 0xd70A1Cc63a99Aa0bD8C27c7bd43f46d6700586aE;
     address constant TAAPL_FEED = 0x9A1e65F136f69980BEf2Acb307e16b79E1EF5CE4;
+    address constant COAT_ROUTER = 0x995A4dd800EF2d99550B81097F82fDa79A43208b; // live testnet COAT/ETH v4
 
     uint256 constant SPREAD_BPS = 30; // test venue fills at feed price minus 0.30%
     uint256 constant CHUNK = 50; // trait words per upload tx
@@ -78,6 +81,7 @@ contract DeployDeskTestnet is Script {
         address desks;
         address renderer;
         address engine;
+        address depositRouter;
     }
 
     function run() external returns (Out memory o) {
@@ -104,6 +108,7 @@ contract DeployDeskTestnet is Script {
         DeskTestAsset(o.tmsft).mint(o.msftPool, 100e18);
         DeskTestAsset(o.usdg).mint(o.aaplPool, 100_000e6);
         DeskTestAsset(o.usdg).mint(o.msftPool, 100_000e6);
+        DeskTestAsset(o.usdg).mint(o.ethPool, 100_000e6); // ETH/COAT deposits come out as USDG here
         IWETH9(WETH).deposit{value: 0.015 ether}();
         IWETH9(WETH).transfer(o.ethPool, 0.015 ether);
 
@@ -158,6 +163,20 @@ contract DeployDeskTestnet is Script {
         DeskEngine(payable(o.engine)).setEthPool(o.ethPool);
         DeskNFT(o.desks).setMintOpen(true);
 
+        // --- deposits in ETH and COAT as well as USDG ---
+        o.depositRouter = address(
+            new DeskDepositRouter(
+                IERC20(o.usdg),
+                WETH,
+                IERC20(COAT),
+                IDeskNFTView(o.desks),
+                ICoatRouterSell(COAT_ROUTER),
+                o.ethPool,
+                IAggregatorV3Desk(o.ethFeed),
+                deployer
+            )
+        );
+
         vm.stopBroadcast();
 
         _write(o, deployer, treasury);
@@ -193,6 +212,8 @@ contract DeployDeskTestnet is Script {
         vm.serializeAddress(k, "accountImpl", o.accountImpl);
         vm.serializeAddress(k, "desks", o.desks);
         vm.serializeAddress(k, "renderer", o.renderer);
+        vm.serializeAddress(k, "coatRouter", COAT_ROUTER);
+        vm.serializeAddress(k, "depositRouter", o.depositRouter);
         string memory json = vm.serializeAddress(k, "engine", o.engine);
         string memory path = vm.envOr("DESK_OUT", string("rehearsal/testnet-46630.json"));
         vm.writeJson(json, path);
