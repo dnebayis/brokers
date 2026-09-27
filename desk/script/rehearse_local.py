@@ -252,9 +252,16 @@ def rehearse(w3: Web3) -> int:
     send(DEPLOYER, registry.functions.setStrategy(sid, [A["taapl"], A["tmsft"]], [7000, 3000]),
          step="6 rebalance", what="new basket posted (epoch +1)")
     fees_before = engine.functions.feesAccrued().call()
-    send(DEPLOYER, engine.functions.sellStock(desk_id, A["taapl"], got), step="6 rebalance", what="keeper sells all tAAPL")
-    left = usdg.functions.balanceOf(acct_addr).call()
-    send(DEPLOYER, engine.functions.buyBasket(desk_id, left), step="6 rebalance", what="keeper buys the new basket")
+    # targeted: sell only the 30% that moves, buy only the new name with the proceeds
+    idle = usdg.functions.balanceOf(acct_addr).call()
+    send(DEPLOYER, engine.functions.sellStock(desk_id, A["taapl"], got * 3 // 10), step="6 rebalance",
+         what="keeper sells 30% of the tAAPL")
+    proceeds = usdg.functions.balanceOf(acct_addr).call() - idle
+    send(DEPLOYER, engine.functions.buyStock(desk_id, A["tmsft"], proceeds), step="6 rebalance",
+         what="keeper buyStock tMSFT with the proceeds")
+    r.check("6 rebalance", usdg.functions.balanceOf(acct_addr).call() == idle, "the 200 idle USDG was not touched")
+    r.check("6 rebalance", reverts(DEPLOYER, engine.functions.buyStock(desk_id, A["weth"], 1)),
+            "buyStock refuses a name outside the basket")
     a_val = taapl.functions.balanceOf(acct_addr).call() * 200 / E18
     m_val = tmsft.functions.balanceOf(acct_addr).call() * 500 / E18
     v_after = _desk_value(taapl, tmsft, usdg, acct_addr, 200, 500)

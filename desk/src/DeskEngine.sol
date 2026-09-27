@@ -88,7 +88,10 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     address public boosterSink; // receives the ETH share (Booster's receive())
     address public treasury;
     uint256 public maxSlippageBps = 500;
-    uint256 public feedStaleAfter = 1 days; // equities update slowly; Booster's default
+    /// @notice Oldest stock price the guard accepts. 96h matches the live Booster since weekend
+    ///         trading opened (community vote): equity feeds stop Friday close, so a 1-day window
+    ///         would freeze every Desk from Saturday to Monday.
+    uint256 public feedStaleAfter = 96 hours;
 
     struct Route {
         address pool;
@@ -115,6 +118,9 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     event PoolSet(address indexed stock, address pool);
     event EthPoolSet(address pool);
     event BasketBought(uint256 indexed deskId, uint256 usdgSpent, uint256 fee, uint64 epoch);
+    event StockBought(
+        uint256 indexed deskId, address indexed stock, uint256 usdgSpent, uint256 fee, uint64 epoch
+    );
     event StockSold(
         uint256 indexed deskId, address indexed stock, uint256 stockIn, uint256 usdgOut, uint256 fee
     );
@@ -127,6 +133,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     error InvalidPool();
     error RouteMissing(address stock);
     error NothingToDo();
+    error NotInBasket(address stock);
     error GuardMissing(address stock);
     error BadFeed();
     error BadCallback();
@@ -236,20 +243,9 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     /// @notice Put a Desk's idle USDG to work on the live basket. Stock lands directly in the
     ///         Desk's wallet; the engine keeps only the service fee.
     function buyBasket(uint256 deskId, uint256 maxSpend) external nonReentrant onlyKeeper {
-        address acct = desks.accountOf(deskId);
-        uint256 bal = usdg.balanceOf(acct);
-        uint256 spend = Math.min(bal, maxSpend);
-        if (spend == 0) revert NothingToDo();
-        uint256 capLeft = pilotCapUsdg > deployedUsdg[deskId] ? pilotCapUsdg - deployedUsdg[deskId] : 0;
-        if (capLeft == 0) revert CapExceeded(spend, 0);
-        spend = Math.min(spend, capLeft);
-
         (address[] memory tokens, uint16[] memory weights, uint64 epoch) = registry.getBasket(strategyId);
         if (tokens.length == 0) revert NothingToDo();
-
-        DeskAccount(payable(acct)).enginePull(address(usdg), spend);
-        uint256 fee = (spend * feeBps) / BPS;
-        feesAccrued += fee;
+        (address acct, uint256 spend, uint256 fee) = _pullForBuy(deskId, maxSpend);
         uint256 net = spend - fee;
 
         uint256 spent;
@@ -263,10 +259,26 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         uint256 dust = net - spent;
         if (dust > 0) usdg.safeTransfer(acct, dust);
 
-        // Cap accounting is GROSS (what left the desk), so fee shaving can never let a desk
-        // creep past the pilot ceiling through repeated buys.
-        deployedUsdg[deskId] += spend;
         emit BasketBought(deskId, spend, fee, epoch);
+    }
+
+    /// @notice Targeted rebalance leg: buy ONE name of the live basket with a Desk's idle USDG.
+    ///         Paired with `sellStock`, it moves a Desk to new weights by trading only the
+    ///         difference, instead of selling everything and rebuying the full basket. Names
+    ///         outside the current basket cannot be bought, so the keeper cannot pick stocks.
+    function buyStock(uint256 deskId, address stock, uint256 maxSpend) external nonReentrant onlyKeeper {
+        (address[] memory tokens,, uint64 epoch) = registry.getBasket(strategyId);
+        bool listed;
+        for (uint256 i; i < tokens.length; ++i) {
+            if (tokens[i] == stock) {
+                listed = true;
+                break;
+            }
+        }
+        if (!listed) revert NotInBasket(stock);
+        (address acct, uint256 spend, uint256 fee) = _pullForBuy(deskId, maxSpend);
+        _swapUsdgForStock(stock, spend - fee, acct);
+        emit StockBought(deskId, stock, spend, fee, epoch);
     }
 
     /// @notice Sell part of a Desk's stock back to USDG (rebalance / cash-out leg). Proceeds
@@ -330,6 +342,26 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     }
 
     // --- internal ---
+
+    /// @dev Shared buy prologue: clip to the Desk's idle USDG and its pilot cap, pull the spend
+    ///      into the engine, book the fee. Cap accounting is GROSS (what left the desk), so fee
+    ///      shaving can never let a desk creep past the pilot ceiling through repeated buys.
+    function _pullForBuy(uint256 deskId, uint256 maxSpend)
+        internal
+        returns (address acct, uint256 spend, uint256 fee)
+    {
+        acct = desks.accountOf(deskId);
+        spend = Math.min(usdg.balanceOf(acct), maxSpend);
+        if (spend == 0) revert NothingToDo();
+        uint256 capLeft = pilotCapUsdg > deployedUsdg[deskId] ? pilotCapUsdg - deployedUsdg[deskId] : 0;
+        if (capLeft == 0) revert CapExceeded(spend, 0);
+        spend = Math.min(spend, capLeft);
+
+        DeskAccount(payable(acct)).enginePull(address(usdg), spend);
+        fee = (spend * feeBps) / BPS;
+        feesAccrued += fee;
+        deployedUsdg[deskId] += spend;
+    }
 
     function _stockUsd8(address stock) internal view returns (uint256) {
         address feed = boosterFeeds.stockFeed(stock);

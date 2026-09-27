@@ -307,5 +307,83 @@ contract DeskEngineTest is Test {
         assertApproxEqRel(treasury.balance - tBefore, 0.0004 ether, 1e15);
         assertEq(engine.feesAccrued(), 0);
     }
+
+    function test_buyStock_buysOnlyThatName() public {
+        (uint256 id, address acct) = _openDesk(200 * U);
+        vm.prank(keeper);
+        engine.buyStock(id, address(spcx), type(uint256).max);
+        // fee 1 USDG, net 199 at $200 = 0.995 SPCX, no INTC touched
+        assertEq(engine.feesAccrued(), 1 * U);
+        assertApproxEqRel(spcx.balanceOf(acct), 0.995 ether, 1e15);
+        assertEq(intc.balanceOf(acct), 0);
+        assertEq(usdg.balanceOf(acct), 0);
+        assertEq(engine.deployedUsdg(id), 200 * U); // same gross cap accounting as buyBasket
+    }
+
+    function test_buyStock_rejectsNamesOutsideTheBasket() public {
+        (uint256 id,) = _openDesk(100 * U);
+        Token other = new Token("OTHER", 18);
+        vm.prank(keeper);
+        vm.expectRevert(abi.encodeWithSelector(DeskEngine.NotInBasket.selector, address(other)));
+        engine.buyStock(id, address(other), type(uint256).max);
+    }
+
+    function test_buyStock_sharesThePilotCap() public {
+        (uint256 id, address acct) = _openDesk(1500 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, 800 * U);
+        vm.prank(keeper);
+        engine.buyStock(id, address(intc), type(uint256).max); // only $200 of cap left
+        assertEq(engine.deployedUsdg(id), 1000 * U);
+        assertEq(usdg.balanceOf(acct), 500 * U);
+        vm.prank(keeper);
+        vm.expectRevert(abi.encodeWithSelector(DeskEngine.CapExceeded.selector, 500 * U, 0));
+        engine.buyStock(id, address(intc), type(uint256).max);
+    }
+
+    function test_buyStock_keeperOnly_pauseAndSlippageGuard() public {
+        (uint256 id, address acct) = _openDesk(100 * U);
+        vm.prank(alice);
+        vm.expectRevert(DeskEngine.NotKeeper.selector);
+        engine.buyStock(id, address(intc), type(uint256).max);
+
+        spcxPool.setPrice(5e9 / 2, 1); // bad price
+        vm.prank(keeper);
+        vm.expectRevert(DeskEngine.BadFeed.selector);
+        engine.buyStock(id, address(spcx), type(uint256).max);
+
+        vm.prank(alice);
+        DeskAccount(payable(acct)).setEnginePaused(true);
+        vm.prank(keeper);
+        vm.expectRevert(DeskAccount.EnginePausedError.selector);
+        engine.buyStock(id, address(intc), type(uint256).max);
+    }
+
+    /// The reason buyStock exists: moving a desk from 60/40 to 50/50 by trading only the
+    /// difference costs a fraction of selling everything and rebuying the basket.
+    function test_targetedRebalance_tradesOnlyTheDifference() public {
+        (uint256 id, address acct) = _openDesk(1000 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max); // 60/40 of $995
+        uint256 feesBefore = engine.feesAccrued();
+
+        address[] memory t = new address[](2);
+        uint16[] memory w = new uint16[](2);
+        (t[0], t[1], w[0], w[1]) = (address(intc), address(spcx), 5000, 5000);
+        strat.setBasket(t, w);
+
+        // sell 1/6 of the INTC (60% -> 50%), put the proceeds into SPCX
+        uint256 sellAmt = intc.balanceOf(acct) / 6;
+        vm.startPrank(keeper);
+        engine.sellStock(id, address(intc), sellAmt);
+        engine.buyStock(id, address(spcx), type(uint256).max);
+        vm.stopPrank();
+
+        uint256 intcUsd = intc.balanceOf(acct) * 100 / 1e18;
+        uint256 spcxUsd = spcx.balanceOf(acct) * 200 / 1e18;
+        assertApproxEqRel(intcUsd * 1e18 / (intcUsd + spcxUsd), 0.5e18, 5e15); // within 0.5% of 50/50
+        // two legs on ~$166 of turnover: about $1.65 of fees, vs ~$9.9 for a full round trip
+        assertLt(engine.feesAccrued() - feesBefore, 2 * U);
+    }
 }
 

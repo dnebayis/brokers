@@ -164,4 +164,16 @@ contract ForkDeskEngineTest is Test {
         engine.buyBasket(id, 100 * U);
         assertEq(IERC20(USDG).balanceOf(acct), 100 * U, "nothing moved while paused");
     }
+
+    function test_buyStock_single_name_at_the_real_pool() public {
+        (uint256 id, address acct) = _openDesk(300 * U);
+        engine.buyStock(id, MSFT, 300 * U);
+        uint256 net = 300 * U - (300 * U * engine.feeBps()) / engine.BPS();
+        uint256 got = IERC20(MSFT).balanceOf(acct);
+        uint256 floor = engine.minStockOut(MSFT, net);
+        assertGe(got, floor, "fill above the chainlink floor");
+        assertEq(IERC20(INTC).balanceOf(acct), 0, "only the named stock was bought");
+        assertEq(engine.deployedUsdg(id), 300 * U, "shares the gross cap accounting");
+        console2.log("buyStock MSFT vs oracle, bps", (got * 10_000) / ((floor * 10_000) / 9_500));
+    }
 }
