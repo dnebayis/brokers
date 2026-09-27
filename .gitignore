@@ -55,3 +55,4 @@ desk/rehearsal/keeper.log
 desk/rehearsal/rehearsal-fork-addresses.json
 desk/keeper/.testnet-keeper.json
 frontend/public/desk-testnet.json
+desk/rehearsal/testnet-keeper.log

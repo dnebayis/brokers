@@ -54,7 +54,7 @@ def main() -> int:
     A = json.loads(Path(os.environ.get("DESK_ADDRESSES", DESK / "rehearsal" / "local-fork-addresses.json")).read_text())
     by_sym = {"tAAPL": A["taapl"], "tMSFT": A["tmsft"], "tNVDA": A["tnvda"]}
     sym_of = {v.lower(): k for k, v in by_sym.items()}
-    w3 = Web3(Web3.HTTPProvider(rpc))
+    w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 30}))
     reg = w3.eth.contract(address=Web3.to_checksum_address(A["registry"]), abi=REGISTRY)
     sid = int(A["strategyId"])
 
@@ -64,7 +64,7 @@ def main() -> int:
                                        "chainId": w3.eth.chain_id})
             signed = signer.sign_transaction(tx)
             raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
-            return w3.eth.wait_for_transaction_receipt(w3.eth.send_raw_transaction(raw))
+            return w3.eth.wait_for_transaction_receipt(w3.eth.send_raw_transaction(raw), timeout=120, poll_latency=1)
         return w3.eth.wait_for_transaction_receipt(w3.eth.send_transaction(
             fn.build_transaction({"from": Web3.to_checksum_address(A["deployer"])})))
 

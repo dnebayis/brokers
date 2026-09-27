@@ -108,7 +108,7 @@ class Keeper:
                 h = self.w3.eth.send_raw_transaction(_raw(self.signer.sign_transaction(tx)))
             else:
                 h = self.w3.eth.send_transaction(fn.build_transaction({"from": self.sender}))
-            rc = self.w3.eth.wait_for_transaction_receipt(h)
+            rc = self.w3.eth.wait_for_transaction_receipt(h, timeout=120, poll_latency=1)
         except Exception as e:  # a revert must not stop the loop; the next tick retries
             self.say(f"  ! {what}: {str(e)[:160]}")
             return False
@@ -225,9 +225,15 @@ if __name__ == "__main__":
     rpc = os.environ.get("RPC", "http://127.0.0.1:8545")
     path = Path(os.environ.get("DESK_ADDRESSES", DESK / "rehearsal" / "local-fork-addresses.json"))
     A, stocks, symbols = load(path)
-    k = Keeper(Web3(Web3.HTTPProvider(rpc)), A, stocks, symbols)
+    # web3 6 sends HTTP requests with no timeout by default: one stalled connection would hang
+    # the keeper forever (it did, on its first testnet buy), so every request gets one.
+    k = Keeper(Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 30})), A, stocks, symbols,
+               log_path=Path(os.environ["KEEPER_LOG"]) if os.environ.get("KEEPER_LOG") else None)
     every = float(os.environ.get("EVERY", "6"))
     k.say(f"desk keeper on {rpc}, every {every:.0f}s")
     while True:
-        k.tick()
+        try:
+            k.tick()
+        except Exception as e:  # an RPC hiccup must not kill the loop; the next tick retries
+            k.say(f"tick failed: {str(e)[:160]}")
         time.sleep(every)
