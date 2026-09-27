@@ -107,5 +107,17 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
 5. **Full testnet deployment (chain 46630)**: every contract deployed and every flow
    (mint, deposit, buy, rebalance, fee split, bonus round, withdraw, desk sale) exercised
    on testnet BEFORE any mainnet transaction (user gate, 2026-08-26)
+   ← **dress run done 2026-09-27 on an anvil fork of 46630** (`script/rehearse_local.py`,
+   report `rehearsal/local-rehearsal.md`): 34 deployer txs (`script/DeployDeskTestnet.s.sol`)
+   + 25 user/keeper txs, 32 on-chain checks, all green. Testnet has no USDG and no v3 pools,
+   so the script also deploys a testnet-only venue (`src/testnet/DeskTestVenue.sol`: test
+   USDG, tMSFT, oracle-priced pools at feed minus 0.30%) and gives the Desk its own
+   StrategyRegistry slot (Booster slot 0 untouched). Real testnet broadcast still pending
+   (deployer signs; needs ~0.02 testnet ETH, the deployer holds ~0.029).
+   **Finding: rebalancing is expensive with today's engine.** It only has `buyBasket` (all
+   weights at once) and `sellStock`, so moving 30% of the weight (tAAPL 100 → 70/30) meant
+   selling the whole position and rebuying: 1.32% of the desk's value ($15.78 of $1,192),
+   two 0.5% fees plus two spreads. A targeted `buyStock(deskId, stock, usdg)` leg would do the
+   same move for roughly a third of that. Open design decision before mainnet.
 6. Lawyer one-pager BEFORE any mainnet deploy (open item)
 7. Mainnet only after 5 + 6 are signed off
