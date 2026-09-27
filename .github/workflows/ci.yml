@@ -39,6 +39,25 @@ jobs:
       - run: forge coverage --ir-minimum --report lcov --report-file lcov.info --no-match-test 'test_allCanonicalPayloadsUploadAndRender'
       - run: python3 scripts/check_branch_coverage.py
 
+  desk:
+    # The Desk contracts (not deployed yet). They compile against contracts/lib, so the same
+    # pinned libraries are installed there first. Fork suites are skipped by contract name:
+    # on forge 1.5.1 a --no-match-path 'test/Fork*' pattern matches nothing.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.5.1
+      - run: forge install foundry-rs/forge-std@467ffd422ca01fed5797a4c766a1e4e3a5327902
+        working-directory: contracts
+      - run: forge install OpenZeppelin/openzeppelin-contracts@v5.1.0
+        working-directory: contracts
+      - run: forge fmt --check
+        working-directory: desk
+      - run: forge test --no-match-contract Fork
+        working-directory: desk
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

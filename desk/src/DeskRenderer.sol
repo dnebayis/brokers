@@ -103,32 +103,71 @@ contract DeskRenderer is Ownable2Step {
     function _palette() private pure returns (string[64] memory p) {
         p[0] = "#1b1d22";
         // walls in axis order: navy teal sage cream lavender grey sand burgundy midnight
-        p[1] = "#33506b"; p[2] = "#26374a";
-        p[3] = "#2f6360"; p[4] = "#234a48";
-        p[5] = "#5d7a4d"; p[6] = "#485e3b";
-        p[7] = "#c9b58f"; p[8] = "#a5906c";
-        p[9] = "#6b5a7d"; p[10] = "#524561";
-        p[11] = "#7d838c"; p[12] = "#5f646c";
-        p[13] = "#a3814a"; p[14] = "#7f6438";
-        p[15] = "#6e3a3f"; p[16] = "#532b2f";
-        p[17] = "#23262d"; p[18] = "#191c22";
+        p[1] = "#33506b";
+        p[2] = "#26374a";
+        p[3] = "#2f6360";
+        p[4] = "#234a48";
+        p[5] = "#5d7a4d";
+        p[6] = "#485e3b";
+        p[7] = "#c9b58f";
+        p[8] = "#a5906c";
+        p[9] = "#6b5a7d";
+        p[10] = "#524561";
+        p[11] = "#7d838c";
+        p[12] = "#5f646c";
+        p[13] = "#a3814a";
+        p[14] = "#7f6438";
+        p[15] = "#6e3a3f";
+        p[16] = "#532b2f";
+        p[17] = "#23262d";
+        p[18] = "#191c22";
         // woods in axis order: oak walnut birch mahogany dark
-        p[19] = "#c99a62"; p[20] = "#a87c4a"; p[21] = "#835d34";
-        p[22] = "#9a6b45"; p[23] = "#7d5334"; p[24] = "#5d3c24";
-        p[25] = "#e0c9a2"; p[26] = "#c4ab82"; p[27] = "#9b845f";
-        p[28] = "#8a4a3a"; p[29] = "#6e372b"; p[30] = "#51261d";
-        p[31] = "#6b5140"; p[32] = "#4f3a2c"; p[33] = "#38281d";
-        p[34] = "#2b2f36"; p[35] = "#0d1b2e"; p[36] = "#43d17c"; p[37] = "#e0564f";
-        p[38] = "#b9bdc4"; p[39] = "#7e838b"; p[40] = "#f2c53d"; p[41] = "#a67c1a";
-        p[42] = "#1c2620"; p[43] = "#ffe98a";
-        p[44] = "#e9ecef"; p[45] = "#f6f8fa"; p[46] = "#a9b0b8";
-        p[47] = "#5d4634"; p[48] = "#c9cfd8";
-        p[49] = "#57c274"; p[50] = "#2e7a44"; p[51] = "#8a4527";
-        p[52] = "#3a3d44"; p[53] = "#caa84a"; p[54] = "#f5e6a8";
-        p[55] = "#e8933a"; p[56] = "#b56b21"; p[57] = "#1d232b";
+        p[19] = "#c99a62";
+        p[20] = "#a87c4a";
+        p[21] = "#835d34";
+        p[22] = "#9a6b45";
+        p[23] = "#7d5334";
+        p[24] = "#5d3c24";
+        p[25] = "#e0c9a2";
+        p[26] = "#c4ab82";
+        p[27] = "#9b845f";
+        p[28] = "#8a4a3a";
+        p[29] = "#6e372b";
+        p[30] = "#51261d";
+        p[31] = "#6b5140";
+        p[32] = "#4f3a2c";
+        p[33] = "#38281d";
+        p[34] = "#2b2f36";
+        p[35] = "#0d1b2e";
+        p[36] = "#43d17c";
+        p[37] = "#e0564f";
+        p[38] = "#b9bdc4";
+        p[39] = "#7e838b";
+        p[40] = "#f2c53d";
+        p[41] = "#a67c1a";
+        p[42] = "#1c2620";
+        p[43] = "#ffe98a";
+        p[44] = "#e9ecef";
+        p[45] = "#f6f8fa";
+        p[46] = "#a9b0b8";
+        p[47] = "#5d4634";
+        p[48] = "#c9cfd8";
+        p[49] = "#57c274";
+        p[50] = "#2e7a44";
+        p[51] = "#8a4527";
+        p[52] = "#3a3d44";
+        p[53] = "#caa84a";
+        p[54] = "#f5e6a8";
+        p[55] = "#e8933a";
+        p[56] = "#b56b21";
+        p[57] = "#1d232b";
         // accents in axis order: crimson forest azure amber violet mono
-        p[58] = "#c94a42"; p[59] = "#3f9d5a"; p[60] = "#4a7fc9";
-        p[61] = "#d9a83f"; p[62] = "#8a6fc0"; p[63] = "#8b9099";
+        p[58] = "#c94a42";
+        p[59] = "#3f9d5a";
+        p[60] = "#4a7fc9";
+        p[61] = "#d9a83f";
+        p[62] = "#8a6fc0";
+        p[63] = "#8b9099";
     }
 
     // --- pixel canvas ---
@@ -298,11 +337,14 @@ contract DeskRenderer is Ownable2Step {
         _rect(s, 30, 30, 31, 30, accent);
 
         // screens (centered; dual pairs a big and a small)
-        if (t[2] == 0) _monitor(s, 5, 8, 14, 10, up);
-        else if (t[2] == 1) {
+        if (t[2] == 0) {
+            _monitor(s, 5, 8, 14, 10, up);
+        } else if (t[2] == 1) {
             _monitor(s, 4, 9, 12, 9, up);
             _monitor(s, 17, 12, 9, 6, up);
-        } else _monitor(s, 8, 11, 10, 7, up);
+        } else {
+            _monitor(s, 8, 11, 10, 7, up);
+        }
 
         // gadget slot at x=24
         if (t[4] == 0) _calculator(s, 24, false);
@@ -355,10 +397,15 @@ contract DeskRenderer is Ownable2Step {
                 if (c != base) {
                     rects = abi.encodePacked(
                         rects,
-                        '<rect x="', x.toString(),
-                        '" y="', y.toString(),
-                        '" width="', run.toString(),
-                        '" height="1" fill="', pal[c], '"/>'
+                        '<rect x="',
+                        x.toString(),
+                        '" y="',
+                        y.toString(),
+                        '" width="',
+                        run.toString(),
+                        '" height="1" fill="',
+                        pal[c],
+                        '"/>'
                     );
                 }
                 x += run;
@@ -369,9 +416,13 @@ contract DeskRenderer is Ownable2Step {
             Anim memory a = s.anims[i];
             anims = abi.encodePacked(
                 anims,
-                '<rect x="', uint256(a.x).toString(),
-                '" y="', uint256(a.y).toString(),
-                '" width="1" height="1" fill="', pal[a.color], '">',
+                '<rect x="',
+                uint256(a.x).toString(),
+                '" y="',
+                uint256(a.y).toString(),
+                '" width="1" height="1" fill="',
+                pal[a.color],
+                '">',
                 _animBody(a.kind),
                 "</rect>"
             );
@@ -379,7 +430,9 @@ contract DeskRenderer is Ownable2Step {
         return string(
             abi.encodePacked(
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" shape-rendering="crispEdges">',
-                '<rect width="40" height="40" fill="', pal[base], '"/>',
+                '<rect width="40" height="40" fill="',
+                pal[base],
+                '"/>',
                 rects,
                 anims,
                 "</svg>"
@@ -391,7 +444,8 @@ contract DeskRenderer is Ownable2Step {
 
     function _axisOption(uint256 axis, uint8 v) private pure returns (string memory) {
         if (axis == 0) {
-            string[9] memory o = ["navy", "teal", "sage", "cream", "lavender", "grey", "sand", "burgundy", "midnight"];
+            string[9] memory o =
+                ["navy", "teal", "sage", "cream", "lavender", "grey", "sand", "burgundy", "midnight"];
             return o[v];
         }
         if (axis == 1) {
@@ -423,9 +477,7 @@ contract DeskRenderer is Ownable2Step {
         bytes memory out;
         for (uint256 a; a < 7; ++a) {
             out = abi.encodePacked(
-                out,
-                a == 0 ? "" : ",",
-                '{"trait_type":"', names[a], '","value":"', _axisOption(a, t[a]), '"}'
+                out, a == 0 ? "" : ",", '{"trait_type":"', names[a], '","value":"', _axisOption(a, t[a]), '"}'
             );
         }
         if (address(engine) != address(0)) {
@@ -450,14 +502,18 @@ contract DeskRenderer is Ownable2Step {
     /// @notice The raw metadata JSON, un-encoded — same body tokenURI wraps in base64.
     function renderJSON(uint256 id) public view returns (string memory) {
         uint8[7] memory t = traitsOf(id);
-        string memory image = string.concat(
-            "data:image/svg+xml;base64,", Base64.encode(bytes(_svg(_compose(t))))
-        );
+        string memory image =
+            string.concat("data:image/svg+xml;base64,", Base64.encode(bytes(_svg(_compose(t)))));
         return string.concat(
-            '{"name":"Desk #', id.toString(),
+            '{"name":"Desk #',
+            id.toString(),
             '","description":"A working desk on Robinhood Chain. Deposit USDG and the engine buys the live Congress basket into its own wallet. Visual traits are fixed at mint; the full 2,000-id table was committed on-chain before wave one.",',
-            '"image":"', image, '",',
-            '"attributes":[', _attributes(id, t), "]}"
+            '"image":"',
+            image,
+            '",',
+            '"attributes":[',
+            _attributes(id, t),
+            "]}"
         );
     }
 
