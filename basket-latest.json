@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-10-01T19:46:17.947986+00:00",
+  "generatedAt": "2026-10-01T20:10:26.810465+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 4777,
+    "rows": 4783,
     "distinctTraders": 82,
-    "latestDisclosure": "2026-09-28",
-    "ageDays": 3,
+    "latestDisclosure": "2026-10-01",
+    "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.02125809031544168,
+  "coverage": 0.021270969164682862,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -41,84 +41,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 77636087,
+    "block": 77650474,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.11075736121838677
+      "shareOfBuying": 0.11082446166514921
     },
     {
       "ticker": "MRVL",
       "netNotional": 3150501.0,
-      "shareOfBuying": 0.04652547789665772
+      "shareOfBuying": 0.04655366455909135
     },
     {
       "ticker": "INTU",
       "netNotional": 3133502.0,
-      "shareOfBuying": 0.04627444271248692
+      "shareOfBuying": 0.04630247728956184
     },
     {
       "ticker": "CRM",
       "netNotional": 3126499.5,
-      "shareOfBuying": 0.04617103228380547
+      "shareOfBuying": 0.04619900421144663
     },
     {
       "ticker": "CHD",
       "netNotional": 3065001.5,
-      "shareOfBuying": 0.04526285169929251
+      "shareOfBuying": 0.045290273421310395
     },
     {
       "ticker": "IWB",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.04430294005706144
+      "shareOfBuying": 0.0443297802330824
     },
     {
       "ticker": "VIG",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.04430294005706144
+      "shareOfBuying": 0.0443297802330824
     },
     {
       "ticker": "FCOM",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.04430294005706144
+      "shareOfBuying": 0.0443297802330824
     },
     {
       "ticker": "BSV",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.04430294005706144
+      "shareOfBuying": 0.0443297802330824
     },
     {
       "ticker": "BWX",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.04430294005706144
+      "shareOfBuying": 0.0443297802330824
     },
     {
       "ticker": "NOW",
       "netNotional": 892500.5,
-      "shareOfBuying": 0.013180129854110812
+      "shareOfBuying": 0.013188114809619584
     },
     {
       "ticker": "ADBE",
       "netNotional": 818999.5,
-      "shareOfBuying": 0.012094693235972225
+      "shareOfBuying": 0.012102020598331356
     },
     {
       "ticker": "CRWD",
       "netNotional": 806502.5,
-      "shareOfBuying": 0.011910141986099734
+      "shareOfBuying": 0.011917357541250923
     },
     {
       "ticker": "TYL",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.011193889089749361
+      "shareOfBuying": 0.011200670715373779
     },
     {
       "ticker": "DDOG",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.011193889089749361
+      "shareOfBuying": 0.011200670715373779
     }
   ],
   "missedAttribution": {
@@ -718,6 +718,7 @@
       "JCI",
       "JD",
       "JOE",
+      "JPM",
       "JXN",
       "KAI",
       "KFY",
