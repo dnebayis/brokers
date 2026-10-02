@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { WagmiProvider, createConfig, useAccount, useConnect, useWriteContract, type CreateConnectorFn } from "wagmi";
+import { WagmiProvider, createConfig, useAccount, useConnect, useSwitchChain, useWriteContract, type CreateConnectorFn } from "wagmi";
 import { injected, mock } from "wagmi/connectors";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -104,9 +104,17 @@ type Run = (label: string, steps: (() => Promise<Hex>)[]) => Promise<void>;
 type Faucet = ReturnType<typeof makeLab>["faucet"];
 
 function Lab({ cfg, client, faucet }: { cfg: LabConfig; client: PublicClient; faucet: Faucet }) {
-  const { address: me, isConnected } = useAccount();
+  const { address: me, isConnected, chainId: walletChain } = useAccount();
   const { connectors, connect } = useConnect();
-  const { writeContractAsync } = useWriteContract();
+  const { writeContractAsync: writeRaw } = useWriteContract();
+  const { switchChainAsync } = useSwitchChain();
+  // A browser wallet signs on whatever network it has open for this site. Move it to the lab's
+  // chain first (the injected connector adds the network if the wallet does not know it), then
+  // pin the write to that chain so a wallet left elsewhere fails instead of signing there.
+  const writeContractAsync = (async (args: Parameters<Write>[0]) => {
+    if (walletChain !== cfg.chainId) await switchChainAsync({ chainId: cfg.chainId });
+    return writeRaw({ ...args, chainId: cfg.chainId } as Parameters<Write>[0]);
+  }) as Write;
   const [selected, setSelected] = useState<bigint | null>(null);
   const [status, setStatus] = useState<{ msg: string; kind: StatusKind }>({ msg: "", kind: "" });
   const [busy, setBusy] = useState(false);
