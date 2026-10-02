@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-10-02T12:58:45.284418+00:00",
+  "generatedAt": "2026-10-02T13:11:37.814666+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 4783,
+    "rows": 4793,
     "distinctTraders": 82,
-    "latestDisclosure": "2026-10-01",
-    "ageDays": 1,
+    "latestDisclosure": "2026-10-02",
+    "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.021270969164682862,
+  "coverage": 0.021265941040654546,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -41,84 +41,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 78249065,
+    "block": 78256757,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.11082446166514921
+      "shareOfBuying": 0.1107982644978124
     },
     {
       "ticker": "MRVL",
       "netNotional": 3150501.0,
-      "shareOfBuying": 0.04655366455909135
+      "shareOfBuying": 0.04654266000177366
     },
     {
       "ticker": "INTU",
       "netNotional": 3133502.0,
-      "shareOfBuying": 0.04630247728956184
+      "shareOfBuying": 0.04629153210898132
     },
     {
       "ticker": "CRM",
       "netNotional": 3126499.5,
-      "shareOfBuying": 0.04619900421144663
+      "shareOfBuying": 0.046188083490281494
     },
     {
       "ticker": "CHD",
       "netNotional": 3065001.5,
-      "shareOfBuying": 0.045290273421310395
+      "shareOfBuying": 0.045279567509874226
     },
     {
       "ticker": "IWB",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.0443297802330824
+      "shareOfBuying": 0.04431930136719556
     },
     {
       "ticker": "VIG",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.0443297802330824
+      "shareOfBuying": 0.04431930136719556
     },
     {
       "ticker": "FCOM",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.0443297802330824
+      "shareOfBuying": 0.04431930136719556
     },
     {
       "ticker": "BSV",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.0443297802330824
+      "shareOfBuying": 0.04431930136719556
     },
     {
       "ticker": "BWX",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.0443297802330824
+      "shareOfBuying": 0.04431930136719556
     },
     {
       "ticker": "NOW",
       "netNotional": 892500.5,
-      "shareOfBuying": 0.013188114809619584
+      "shareOfBuying": 0.013184997345791349
     },
     {
       "ticker": "ADBE",
       "netNotional": 818999.5,
-      "shareOfBuying": 0.012102020598331356
+      "shareOfBuying": 0.012099159870167514
     },
     {
       "ticker": "CRWD",
       "netNotional": 806502.5,
-      "shareOfBuying": 0.011917357541250923
+      "shareOfBuying": 0.011914540464542135
     },
     {
       "ticker": "TYL",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.011200670715373779
+      "shareOfBuying": 0.011198023052208026
     },
     {
       "ticker": "DDOG",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.011200670715373779
+      "shareOfBuying": 0.011198023052208026
     }
   ],
   "missedAttribution": {
@@ -467,7 +467,6 @@
     ],
     "vetoed": [
       "AAP",
-      "AAPL",
       "ABM",
       "ACAD",
       "ACHR",
@@ -491,7 +490,6 @@
       "ALHC",
       "ALKS",
       "ALL",
-      "AMGN",
       "AMR",
       "AMSF",
       "AMT",
@@ -999,35 +997,35 @@
     "basket": [
       {
         "ticker": "INTC",
-        "bps": 4484
+        "bps": 4460
       },
       {
         "ticker": "AAPL",
-        "bps": 1953
+        "bps": 1995
       },
       {
         "ticker": "SPCX",
-        "bps": 1243
+        "bps": 1237
       },
       {
         "ticker": "TSLA",
-        "bps": 536
+        "bps": 533
       },
       {
         "ticker": "MU",
-        "bps": 514
+        "bps": 511
       },
       {
         "ticker": "AMD",
-        "bps": 485
+        "bps": 482
       },
       {
         "ticker": "ASML",
-        "bps": 221
+        "bps": 219
       },
       {
         "ticker": "MSTR",
-        "bps": 199
+        "bps": 198
       },
       {
         "ticker": "PLTR",
@@ -1046,7 +1044,7 @@
         "bps": 64
       }
     ],
-    "divergenceBps": 3063
+    "divergenceBps": 3094
   },
   "commentary": {
     "text": "The basket's largest position is Intel, reflecting two buys by Nancy Pelosi with a notional value of $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Other notable buys include Donald J Trump's $750K in Nvidia and Gilbert Cisneros's $8K in AMD. The basket also includes positions from three other members. Bloom Energy, with a $7.5M notional value from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 2.1% of the disclosed buying dollars.",
