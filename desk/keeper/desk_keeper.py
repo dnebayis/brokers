@@ -17,7 +17,7 @@ the key in KEEPER_KEY_FILE (or KEEPER_KEY); without one it refuses to run anywhe
 When it owns the test price feeds (testnet), it also re-posts their prices before they go stale:
 the engine rejects prices older than 96h and the deposit router older than 24h.
 
-    RPC=https://rpc.testnet.chain.robinhood.com DESK_ADDRESSES=rehearsal/testnet-46630.json \
+    RPC=https://rpc.testnet.chain.robinhood.com DESK_ADDRESSES=rehearsal/testnet-46630-v2.json \
       KEEPER_KEY_FILE=keeper/.testnet-keeper.json python3 keeper/desk_keeper.py
 """
 
