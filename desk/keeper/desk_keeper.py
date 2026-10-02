@@ -36,6 +36,7 @@ from web3 import Web3  # noqa: E402
 
 DESK = Path(__file__).resolve().parents[1]
 E18, E6, BPS = 10**18, 10**6, 10_000
+ZERO = "0x0000000000000000000000000000000000000000"
 MIN_TRADE_USD = 1.0
 FLUSH_MIN_USDG = 5 * E6
 FEED_REFRESH_AFTER = 12 * 3600  # well inside the router's 24h window
@@ -147,7 +148,12 @@ class Keeper:
             self.refresh_feeds()
         n = self.desks.functions.totalMinted().call()
         tokens, weights, epoch = self.registry.functions.getBasket(self.sid).call()
-        weight = {Web3.to_checksum_address(t): w / BPS for t, w in zip(tokens, weights)}
+        # names the engine has no pool for are skipped and the rest scaled up to the whole,
+        # the same rule buyBasket applies on chain
+        routed = {Web3.to_checksum_address(t): w for t, w in zip(tokens, weights)
+                  if self.engine.functions.routes(t).call()[0] != ZERO}
+        total_w = sum(routed.values())
+        weight = {t: w / total_w for t, w in routed.items()} if total_w else {}
         px = {t: self.price(t) for t in set(self.stocks) | set(weight)}
         fee = self.engine.functions.feeBps().call() / BPS
         for desk_id in range(1, n + 1):
@@ -167,7 +173,13 @@ class Keeper:
         if self.w3.eth.contract(address=acct, abi=self.acct_abi).functions.enginePaused().call():
             return
         erc = lambda t: self.w3.eth.contract(address=t, abi=ERC20)  # noqa: E731
-        bal = lambda: {t: erc(t).functions.balanceOf(acct).call() for t in px}  # noqa: E731
+        # only shares the engine bought count (and can be sold): what it booked, capped by what
+        # is still in the wallet, exactly as the engine's own sync sees it. Shares the owner put
+        # in themselves are never traded.
+        bal = lambda: {  # noqa: E731
+            t: min(self.engine.functions.heldQty(desk_id, t).call(), erc(t).functions.balanceOf(acct).call())
+            for t in px
+        }
         val = lambda b: {t: b[t] / E18 * px[t] for t in b}  # noqa: E731
 
         # 1. names that left the basket
@@ -191,6 +203,8 @@ class Keeper:
                     self.send(self.engine.functions.sellStock(desk_id, t, amount), f"sellStock {self.sym(t)}")
             self.seen_epoch[desk_id] = epoch
 
+        if not weight:
+            return
         # 3. idle USDG into the names below their weight
         # only USDG the engine booked (router deposits and its own sell proceeds) is invested;
         # the pilot cap is enforced when a deposit is booked, so there is no cap check here

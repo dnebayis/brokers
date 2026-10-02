@@ -124,9 +124,12 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     uint256 public feesAccrued;
     address public ethPool; // WETH/USDG v3 pool used to convert fees to native ETH
     bool private _ethPoolUsdgIsToken0;
+    /// @notice Chainlink ETH/USD, the floor under the fee conversion (the same feed the Booster uses).
+    IAggregatorV3Desk public ethUsdFeed;
 
     address private _expectedPool;
     address private _payToken;
+    uint256 private _payAmount;
 
     event KeeperSet(address keeper);
     event FeeBpsSet(uint256 bps);
@@ -136,6 +139,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     event StaleWindowSet(uint256 secondsAfter);
     event PoolSet(address indexed stock, address pool);
     event EthPoolSet(address pool);
+    event EthUsdFeedSet(address feed);
     event BasketBought(uint256 indexed deskId, uint256 usdgSpent, uint256 fee, uint64 epoch);
     event StockBought(
         uint256 indexed deskId, address indexed stock, uint256 usdgSpent, uint256 fee, uint64 epoch
@@ -164,6 +168,8 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     error NotRouter();
     error DepositOverCap(uint256 amount, uint256 room);
     error EthSendFailed();
+    error NotHeld(address stock, uint256 amount, uint256 held);
+    error PartialFill(uint256 paid, uint256 amountIn);
 
     modifier onlyKeeper() {
         if (msg.sender != keeper && msg.sender != owner()) revert NotKeeper();
@@ -270,6 +276,12 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         emit EthPoolSet(pool);
     }
 
+    function setEthUsdFeed(IAggregatorV3Desk feed) external onlyOwner {
+        if (address(feed) == address(0)) revert ZeroAddress();
+        ethUsdFeed = feed;
+        emit EthUsdFeedSet(address(feed));
+    }
+
     // --- deposits (router) ---
 
     /// @notice Book a deposit the router just delivered to a Desk wallet. Reverts when it would
@@ -280,24 +292,31 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         Book storage b = books[deskId];
         uint256 room = pilotCapUsdg > b.principal ? pilotCapUsdg - b.principal : 0;
         if (amount > room) revert DepositOverCap(amount, room);
-        b.principal += uint128(amount);
-        b.usdg += uint128(amount);
+        b.principal += amount.toUint128();
+        b.usdg += amount.toUint128();
         emit DepositRecorded(deskId, amount, b.principal);
     }
 
     // --- execution (keeper) ---
 
     /// @notice Put a Desk's idle USDG to work on the live basket. Stock lands directly in the
-    ///         Desk's wallet; the engine keeps only the service fee.
+    ///         Desk's wallet; the engine keeps only the service fee. A basket name the engine has
+    ///         no pool for is skipped and the rest are bought at their weights scaled up to the
+    ///         whole (the same rule as the keeper's), so one unroutable name never blocks a Desk.
     function buyBasket(uint256 deskId, uint256 maxSpend) external nonReentrant onlyKeeper {
         (address[] memory tokens, uint16[] memory weights, uint64 epoch) = registry.getBasket(strategyId);
-        if (tokens.length == 0) revert NothingToDo();
+        uint256 routedWeight;
+        for (uint256 i; i < tokens.length; ++i) {
+            if (routes[tokens[i]].pool != address(0)) routedWeight += weights[i];
+        }
+        if (routedWeight == 0) revert NothingToDo();
         (address acct, uint256 spend, uint256 fee) = _pullForBuy(deskId, maxSpend);
         uint256 net = spend - fee;
 
         uint256 spent;
         for (uint256 i; i < tokens.length; ++i) {
-            uint256 slice = (net * weights[i]) / BPS;
+            if (routes[tokens[i]].pool == address(0)) continue;
+            uint256 slice = (net * weights[i]) / routedWeight;
             if (slice == 0) continue;
             heldQty[deskId][tokens[i]] += _swapUsdgForStock(tokens[i], slice, acct);
             spent += slice;
@@ -306,7 +325,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         uint256 dust = net - spent;
         if (dust > 0) {
             usdg.safeTransfer(acct, dust);
-            books[deskId].usdg += uint128(dust);
+            books[deskId].usdg += dust.toUint128();
         }
 
         emit BasketBought(deskId, spend, fee, epoch);
@@ -332,13 +351,16 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     }
 
     /// @notice Sell part of a Desk's stock back to USDG (rebalance / cash-out leg). Proceeds
-    ///         return to the Desk net of the service fee.
+    ///         return to the Desk net of the service fee. Only stock the engine itself delivered
+    ///         can be sold: shares the owner put in the wallet some other way are theirs alone,
+    ///         and selling them would turn them into investable USDG outside the pilot cap.
     function sellStock(uint256 deskId, address stock, uint256 amount) external nonReentrant onlyKeeper {
         if (amount == 0) revert NothingToDo();
         address acct = desks.accountOf(deskId);
         _sync(deskId, acct);
         uint256 q = heldQty[deskId][stock];
-        heldQty[deskId][stock] = amount < q ? q - amount : 0;
+        if (amount > q) revert NotHeld(stock, amount, q);
+        heldQty[deskId][stock] = q - amount;
         DeskAccount(payable(acct)).enginePull(stock, amount);
 
         uint256 usdgOut = _swapStockForUsdg(stock, amount);
@@ -346,20 +368,21 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         feesAccrued += fee;
         uint256 net = usdgOut - fee;
         usdg.safeTransfer(acct, net);
-        books[deskId].usdg += uint128(net); // proceeds, profit included, are always reinvestable
+        books[deskId].usdg += net.toUint128(); // proceeds, profit included, are always reinvestable
         emit StockSold(deskId, stock, amount, usdgOut, fee);
     }
 
     /// @notice Convert accrued USDG fees to native ETH and split: boosterShare to the Booster's
     ///         receive() (native ETH is the only asset it accounts — the Zia lesson), rest to
-    ///         treasury. `minEthOut` is the keeper's explicit sandwich floor.
+    ///         treasury. The fill must clear both the Chainlink ETH/USD floor and the keeper's
+    ///         own `minEthOut`, so this swap is guarded like every other one.
     function flushFees(uint256 minEthOut) external nonReentrant onlyKeeper {
         uint256 amount = feesAccrued;
         if (amount == 0 || ethPool == address(0)) revert NothingToDo();
         feesAccrued = 0;
 
         uint256 wethOut = _v3Swap(ethPool, address(usdg), _ethPoolUsdgIsToken0, amount, address(this));
-        if (wethOut < minEthOut) revert BadFeed();
+        if (wethOut < Math.max(minEthOut, minEthForUsdg(amount))) revert BadFeed();
         weth.withdraw(wethOut);
 
         uint256 toBooster = (wethOut * boosterShareBps) / BPS;
@@ -406,6 +429,17 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         return (expected * (BPS - maxSlippageBps)) / BPS;
     }
 
+    /// @notice Chainlink floor for converting `usdgIn` of fees into ETH (wei).
+    function minEthForUsdg(uint256 usdgIn) public view returns (uint256) {
+        if (address(ethUsdFeed) == address(0)) revert GuardMissing(address(weth));
+        (, int256 answer,, uint256 updatedAt,) = ethUsdFeed.latestRoundData();
+        if (answer <= 0 || block.timestamp - updatedAt > feedStaleAfter) revert BadFeed();
+        uint256 expected = Math.mulDiv(
+            usdgIn * (10 ** 18), 10 ** uint256(ethUsdFeed.decimals()), _usdgUnit * answer.toUint256()
+        );
+        return (expected * (BPS - maxSlippageBps)) / BPS;
+    }
+
     /// @notice Chainlink floor for selling `amount` of `stock` into USDG (raw units).
     function minUsdgOut(address stock, uint256 amount) public view returns (uint256) {
         uint256 stockUsd8 = _stockUsd8(stock);
@@ -426,7 +460,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         Book storage b = books[deskId];
         spend = Math.min(b.usdg, maxSpend);
         if (spend == 0) revert NothingToDo();
-        b.usdg -= uint128(spend);
+        b.usdg -= spend.toUint128();
         DeskAccount(payable(acct)).enginePull(address(usdg), spend);
         fee = (spend * feeBps) / BPS;
         feesAccrued += fee;
@@ -443,6 +477,24 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         if (dec == 8) return a;
         if (dec < 8) return a * (10 ** (8 - dec));
         return a / (10 ** (dec - 8));
+    }
+
+    /// @dev USDG value of `qty` shares that left a Desk. Unlike the swap guard this never
+    ///      reverts: the price only sizes the room a withdrawal frees, so a stale feed still
+    ///      counts, and a name with no feed at all frees nothing. A broken feed can therefore
+    ///      never lock a Desk out of deposits, buys or sells, or break its metadata.
+    function _withdrawnValue(address stock, uint256 qty) internal view returns (uint256) {
+        address feed = boosterFeeds.stockFeed(stock);
+        if (feed == address(0)) return 0;
+        try IAggregatorV3Desk(feed).latestRoundData() returns (
+            uint80, int256 answer, uint256, uint256, uint80
+        ) {
+            if (answer <= 0) return 0;
+            uint8 dec = IAggregatorV3Desk(feed).decimals();
+            return Math.mulDiv(qty, answer.toUint256() * _usdgUnit, 10 ** (18 + uint256(dec)));
+        } catch {
+            return 0;
+        }
     }
 
     function _swapUsdgForStock(address stock, uint256 usdgIn, address recipient)
@@ -475,7 +527,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
             uint256 q = heldQty[deskId][stock];
             if (q == 0) continue;
             uint256 sb = IERC20(stock).balanceOf(acct);
-            if (sb < q) outValue += Math.mulDiv(q - sb, _stockUsd8(stock) * _usdgUnit, 10 ** 26);
+            if (sb < q) outValue += _withdrawnValue(stock, q - sb);
         }
         principal = outValue >= b.principal ? 0 : b.principal - outValue;
     }
@@ -488,7 +540,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         if (bal < b.usdg) {
             uint256 gone = b.usdg - bal;
             outValue = gone;
-            b.usdg = uint128(bal);
+            b.usdg = bal.toUint128();
             emit WithdrawalSeen(deskId, address(usdg), gone, gone);
         }
         uint256 n = routedStocks.length;
@@ -498,13 +550,13 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
             if (q == 0) continue;
             uint256 sb = IERC20(stock).balanceOf(acct);
             if (sb < q) {
-                uint256 v = Math.mulDiv(q - sb, _stockUsd8(stock) * _usdgUnit, 10 ** 26);
+                uint256 v = _withdrawnValue(stock, q - sb);
                 outValue += v;
                 heldQty[deskId][stock] = sb;
                 emit WithdrawalSeen(deskId, stock, q - sb, v);
             }
         }
-        if (outValue > 0) b.principal = outValue >= b.principal ? 0 : uint128(b.principal - outValue);
+        if (outValue > 0) b.principal = outValue >= b.principal ? 0 : (b.principal - outValue).toUint128();
     }
 
     function _swapStockForUsdg(address stock, uint256 amount) internal returns (uint256 out) {
@@ -514,12 +566,18 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         if (out < minUsdgOut(stock, amount)) revert BadFeed();
     }
 
+    /// @dev Exact-in swap. The pool must take all of `amountIn` (a pool that runs out of range
+    ///      would leave the rest stranded here), and the output is what actually reached the
+    ///      recipient, measured on its balance, never the pool's own report of it.
     function _v3Swap(address pool, address payToken, bool zeroForOne, uint256 amountIn, address recipient)
         internal
         returns (uint256 amountOut)
     {
+        IERC20 outToken = IERC20(zeroForOne ? IV3PoolDesk(pool).token1() : IV3PoolDesk(pool).token0());
+        uint256 before = outToken.balanceOf(recipient);
         _expectedPool = pool;
         _payToken = payToken;
+        _payAmount = amountIn;
         (int256 a0, int256 a1) = IV3PoolDesk(pool)
             .swap(
                 recipient,
@@ -530,15 +588,21 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
             );
         _expectedPool = address(0);
         _payToken = address(0);
-        int256 output = -(zeroForOne ? a1 : a0);
-        if (output <= 0) revert InvalidPool();
-        amountOut = output.toUint256();
+        _payAmount = 0;
+        int256 paid = zeroForOne ? a0 : a1;
+        if (paid != amountIn.toInt256()) revert PartialFill(paid > 0 ? paid.toUint256() : 0, amountIn);
+        amountOut = outToken.balanceOf(recipient) - before;
+        if (amountOut == 0) revert InvalidPool();
     }
 
     function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata) external {
         if (msg.sender != _expectedPool || _expectedPool == address(0)) revert BadCallback();
         int256 positive = amount0Delta > 0 ? amount0Delta : amount1Delta;
-        if (positive <= 0) revert BadCallback();
-        IERC20(_payToken).safeTransfer(msg.sender, positive.toUint256());
+        // exactly the input, once: a pool can neither take more nor leave part of it here
+        if (positive.toUint256() != _payAmount) {
+            revert PartialFill(positive > 0 ? positive.toUint256() : 0, _payAmount);
+        }
+        _expectedPool = address(0);
+        IERC20(_payToken).safeTransfer(msg.sender, _payAmount);
     }
 }

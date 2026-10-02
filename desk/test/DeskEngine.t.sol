@@ -11,7 +11,8 @@ import {
     IWETHDesk,
     IDeskNFTView,
     IStrategyRegistryView,
-    IBoosterFeedView
+    IBoosterFeedView,
+    IAggregatorV3Desk
 } from "../src/DeskEngine.sol";
 import {TestERC6551Registry} from "./Helpers6551.sol";
 
@@ -127,7 +128,8 @@ contract MockRegistryStrat {
 
 // --- tests ---
 
-contract DeskEngineTest is Test {
+/// Shared fixture: two stocks, a 60/40 basket, mock v3 pools at the feed price.
+abstract contract DeskEngineBase is Test {
     Token coat;
     Token usdg; // 6 decimals, like mainnet stables
     Token intc; // 18-dec stock
@@ -142,6 +144,7 @@ contract DeskEngineTest is Test {
     MockV3Pool ethPool;
     MockFeed intcFeed;
     MockFeed spcxFeed;
+    MockFeed ethFeed;
     MockBoosterFeeds feeds;
     MockRegistryStrat strat;
 
@@ -154,7 +157,7 @@ contract DeskEngineTest is Test {
 
     uint256 constant U = 1e6; // 1 USDG
 
-    function setUp() public {
+    function setUp() public virtual {
         coat = new Token("COAT", 18);
         usdg = new Token("USDG", 6);
         intc = new Token("INTC", 18);
@@ -203,6 +206,7 @@ contract DeskEngineTest is Test {
         spcxFeed = new MockFeed(200e8);
         feeds.set(address(intc), address(intcFeed));
         feeds.set(address(spcx), address(spcxFeed));
+        ethFeed = new MockFeed(2500e8);
 
         address[] memory t = new address[](2);
         uint16[] memory w = new uint16[](2);
@@ -217,6 +221,7 @@ contract DeskEngineTest is Test {
         engine.setPool(address(intc), address(intcPool));
         engine.setPool(address(spcx), address(spcxPool));
         engine.setEthPool(address(ethPool));
+        engine.setEthUsdFeed(IAggregatorV3Desk(address(ethFeed)));
         engine.setDepositRouter(address(this)); // this test plays the deposit router
         desks.setMintOpen(true);
         desks.setMintPrice(0);
@@ -240,7 +245,9 @@ contract DeskEngineTest is Test {
         DeskAccount(payable(acct))
             .execute(address(token), 0, abi.encodeCall(IERC20.transfer, (alice, amount)), 0);
     }
+}
 
+contract DeskEngineTest is DeskEngineBase {
     function test_buyBasket_endToEnd() public {
         (uint256 id, address acct) = _openDesk(600 * U);
         vm.prank(keeper);

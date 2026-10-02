@@ -52,6 +52,7 @@ contract CoatBonusPool is Ownable2Step, ReentrancyGuard {
     error AlreadyClaimed();
     error BadProof();
     error RoundOverclaimed();
+    error CoatNotSweepable();
 
     constructor(IERC20 coat_, ICoattailBrokerView brokers_, address poster_, address owner_) Ownable(owner_) {
         if (address(coat_) == address(0) || address(brokers_) == address(0) || poster_ == address(0)) {
@@ -140,12 +141,13 @@ contract CoatBonusPool is Ownable2Step, ReentrancyGuard {
         emit BonusClaimed(roundId, tokenId, to, amount);
     }
 
-    /// @notice Recover tokens that are NOT owed to any round: stray airdrops fully, COAT only
-    ///         above `outstanding`. Mirrors Booster.sweepToken's conservation rule.
+    /// @notice Recover stray tokens sent here by mistake. COAT is never sweepable: every COAT
+    ///         the pool receives (Desk mints, partner flows) leaves only through posted rounds to
+    ///         active Brokers, so "100% to active Brokers" holds on chain, not just on trust.
     function sweep(address token, address to) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
-        uint256 bal = IERC20(token).balanceOf(address(this));
-        uint256 amount = token == address(coat) ? bal - outstanding : bal;
+        if (token == address(coat)) revert CoatNotSweepable();
+        uint256 amount = IERC20(token).balanceOf(address(this));
         if (amount == 0) return;
         IERC20(token).safeTransfer(to, amount);
         emit Swept(token, to, amount);

@@ -121,19 +121,35 @@ contract CoatBonusPoolTest is Test {
         pool.claim(id, 300, 100e18, _proofFor(leaf2));
     }
 
-    function test_sweep_neverTouchesOutstanding() public {
+    /// COAT leaves only through rounds: not the escrow, not even unallocated COAT on top of it.
+    function test_sweep_neverTouchesCoat() public {
         uint256 id = _fundAndPost(150e18);
-        coat.transfer(address(pool), 40e18); // stray COAT on top of the escrow
+        coat.transfer(address(pool), 40e18); // unallocated COAT on top of the escrow
 
         vm.prank(ownerAddr);
+        vm.expectRevert(CoatBonusPool.CoatNotSweepable.selector);
         pool.sweep(address(coat), ownerAddr);
-        assertEq(coat.balanceOf(ownerAddr), 40e18); // only the excess left the pool
-        assertEq(coat.balanceOf(address(pool)), 150e18); // escrow intact
+        assertEq(coat.balanceOf(address(pool)), 190e18);
 
-        // rounds still fully claimable after the sweep
+        // the 40 goes out the only way COAT can: a round
+        vm.prank(poster);
+        uint256 next = pool.postRound(root, 40e18);
+        assertEq(pool.unallocated(), 0);
         pool.claim(id, 1, 100e18, _proofFor(leaf2));
         pool.claim(id, 2, 50e18, _proofFor(leaf1));
-        assertEq(coat.balanceOf(address(pool)), 0);
+        assertEq(coat.balanceOf(address(pool)), 40e18); // round 1 escrow, claimable by its Brokers
+        assertEq(next, 1);
+    }
+
+    function test_sweep_recoversOtherTokens() public {
+        MockCoat stray = new MockCoat();
+        stray.transfer(address(pool), 7e18);
+        vm.prank(address(0xBAD));
+        vm.expectRevert();
+        pool.sweep(address(stray), address(0xBAD));
+        vm.prank(ownerAddr);
+        pool.sweep(address(stray), ownerAddr);
+        assertEq(stray.balanceOf(ownerAddr), 7e18);
     }
 
     function test_secondRound_isolatedBitmaps() public {

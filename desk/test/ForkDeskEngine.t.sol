@@ -11,7 +11,8 @@ import {
     IWETHDesk,
     IDeskNFTView,
     IStrategyRegistryView,
-    IBoosterFeedView
+    IBoosterFeedView,
+    IAggregatorV3Desk
 } from "../src/DeskEngine.sol";
 
 /// Build order step 4: the engine against the REAL mainnet venues. Deploys the four Desk
@@ -30,6 +31,7 @@ contract ForkDeskEngineTest is Test {
     address constant STRATEGY_REGISTRY = 0xA20f9D47E0c41e52a57d65feA9A9322732aF86Aa;
     address constant REGISTRY_6551 = 0x000000006551c19487814612e58FE06813775758;
     address constant MID_POOL = 0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca; // WETH/USDG, 1 bp
+    address constant ETH_USD = 0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9; // Booster.ethUsdFeed
     address constant INTC = 0xc72b96e0E48ecd4DC75E1e45396e26300BC39681;
     address constant INTC_POOL = 0x2e5a92f5013a64661A49312111be2e8aBd33F56a;
     address constant MSFT = 0xe93237C50D904957Cf27E7B1133b510C669c2e74;
@@ -71,6 +73,7 @@ contract ForkDeskEngineTest is Test {
         engine.setPool(INTC, INTC_POOL);
         engine.setPool(MSFT, MSFT_POOL);
         engine.setEthPool(MID_POOL);
+        engine.setEthUsdFeed(IAggregatorV3Desk(ETH_USD));
         desks.setMintOpen(true);
         desks.setMintPrice(0);
         engine.setDepositRouter(address(this)); // this test plays the deposit router

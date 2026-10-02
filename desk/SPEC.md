@@ -42,7 +42,9 @@ Desk NFT whole with the portfolio inside.
    ACTIVE Broker set at distribution time; anyone can claim a Broker's share into that
    Broker's existing 6551 wallet (assets follow the NFT, same as salary). Owner can sweep
    only COAT that is not allocated to any round. Also a permanent rail for future COAT
-   flows to active Brokers (partner contributions, campaigns).
+   flows to active Brokers (partner contributions, campaigns). COAT can never be swept: it
+   leaves only through posted rounds (audit 2026-10-02; the owner may still recover other
+   stray tokens).
 2. **DeskNFT** — ERC-721, settable `mintCap` (pilot 500) under a constant `MAX_DESKS = 2000`
    ceiling, mint pulls COAT to the bonus pool, deploys the Desk's
    6551 account (canonical registry), renders on-chain SVG via DeskRenderer.
@@ -84,7 +86,15 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
 - User funds live only in the user's Desk wallet; no pooled custody anywhere.
 - The engine can only: pull USDG within the user-set cap, deliver purchased stock back
   to the same Desk, and take the published fee. It can never redirect assets elsewhere.
-- Every price-sensitive swap is guarded by Chainlink-derived `minOut` (Booster's math).
+- Every price-sensitive swap is guarded by Chainlink-derived `minOut` (Booster's math),
+  including the fee conversion to ETH (Chainlink ETH/USD, `setEthUsdFeed`).
+- Every swap is exact-in: the pool must take the whole input in one callback payment, and the
+  output is measured on the recipient's balance, never taken from the pool's report.
+- The engine only sells shares it bought (`heldQty`). Shares or USDG the owner puts in the
+  wallet any other way are never traded, so the pilot cap cannot be walked around.
+- A stale or missing price never locks a Desk: withdrawals are valued leniently (stale counts,
+  no feed frees nothing); only buying waits for a fresh price.
+- A basket name without a USDG pool is skipped and the rest keep their relative weights.
 - Every parameter that could need tuning ships settable (the 36,750 lesson); the 2,000
   hard ceiling and the "no pooled custody" model are the only constants.
 - CoatBonusPool can never touch COAT already allocated to a posted round.

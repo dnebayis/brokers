@@ -201,6 +201,96 @@ contract DeskDepositRouterTest is Test {
         vm.expectRevert(DeskDepositRouter.SlippageTooHigh.selector);
         router.setGuards(1_001, 1 days);
     }
+
+    // --- audit: the ETH leg against hostile pools ---
+
+    function _useEthPool(address pool) internal {
+        usdg.transfer(pool, 1e6 * U);
+        vm.prank(ownerA);
+        router.setEthPool(pool);
+    }
+
+    function test_audit_partialFillReverts_noWethLeftBehind() public {
+        (uint256 id, address acct) = _desk();
+        _useEthPool(address(new HalfEthPool(address(usdg), address(weth))));
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(DeskDepositRouter.PartialFill.selector, 0.2 ether, 0.4 ether));
+        router.depositEth{value: 0.4 ether}(id, 0);
+        assertEq(usdg.balanceOf(acct), 0);
+        assertEq(weth.balanceOf(address(router)), 0);
+        assertEq(alice.balance, 10 ether);
+    }
+
+    function test_audit_poolThatLiesAboutTheFill_reverts() public {
+        (uint256 id,) = _desk();
+        _useEthPool(address(new LyingEthPool(address(usdg), address(weth))));
+        vm.prank(alice);
+        vm.expectRevert(DeskDepositRouter.InvalidPool.selector);
+        router.depositEth{value: 0.4 ether}(id, 0);
+        assertEq(book.booked(id), 0); // nothing booked for USDG that never arrived
+    }
+
+    function test_audit_strangerCannotCallTheSwapCallback() public {
+        vm.prank(address(ethPool));
+        vm.expectRevert(DeskDepositRouter.BadCallback.selector);
+        router.uniswapV3SwapCallback(0, 1, "");
+    }
+
+    /// The router books exactly the USDG that reached the Desk, for the Desk it reached.
+    function testFuzz_audit_bookedEqualsDelivered(uint256 wei_) public {
+        wei_ = bound(wei_, 1e12, 3 ether);
+        (uint256 id, address acct) = _desk();
+        vm.prank(alice);
+        uint256 out = router.depositEth{value: wei_}(id, 0);
+        assertEq(usdg.balanceOf(acct), out);
+        assertEq(book.booked(id), out);
+        assertEq(
+            weth.balanceOf(address(router)) + usdg.balanceOf(address(router)) + address(router).balance, 0
+        );
+    }
+}
+
+/// Takes only half of the WETH it is given, at the fair $2,500.
+contract HalfEthPool {
+    address public token0;
+    address public token1;
+
+    constructor(address usdg_, address weth_) {
+        (token0, token1) = (usdg_, weth_);
+    }
+
+    function swap(address recipient, bool, int256 amountSpecified, uint160, bytes calldata data)
+        external
+        returns (int256 amount0, int256 amount1)
+    {
+        uint256 half = uint256(amountSpecified) / 2;
+        uint256 out = half / 4e8;
+        IERC20(token0).transfer(recipient, out);
+        (amount0, amount1) = (-int256(out), int256(half));
+        ICallbackRouter(msg.sender).uniswapV3SwapCallback(amount0, amount1, data);
+    }
+}
+
+/// Reports a fill, delivers nothing.
+contract LyingEthPool {
+    address public token0;
+    address public token1;
+
+    constructor(address usdg_, address weth_) {
+        (token0, token1) = (usdg_, weth_);
+    }
+
+    function swap(address, bool, int256 amountSpecified, uint160, bytes calldata data)
+        external
+        returns (int256 amount0, int256 amount1)
+    {
+        (amount0, amount1) = (int256(-1e12), amountSpecified);
+        ICallbackRouter(msg.sender).uniswapV3SwapCallback(amount0, amount1, data);
+    }
+}
+
+interface ICallbackRouter {
+    function uniswapV3SwapCallback(int256, int256, bytes calldata) external;
 }
 
 contract MockFeedStale {

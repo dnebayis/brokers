@@ -1,6 +1,6 @@
 # The Desk: local testnet rehearsal (build order step 5, dress run)
 
-Run 2026-09-27 21:47 UTC on an anvil fork of Robinhood Chain testnet (46630) at block 125,375,617.
+Run 2026-10-02 07:18 UTC on an anvil fork of Robinhood Chain testnet (46630) at block 127,471,071.
 Nothing was sent to the real testnet. Deployer transactions were impersonated on the fork;
 alice and bob were fresh throwaway wallets. Re-run: `cd desk && python3 script/rehearse_local.py`.
 
@@ -8,7 +8,7 @@ Test venue (testnet has no USDG and no v3 USDG pools): test USDG, tMSFT, and ora
 pools filling at feed price minus 0.30%. The tAAPL staging feed was refreshed to $200, tMSFT
 feed $500, ETH feed $2,700. The Desk uses its own strategy slot; Booster slot 0 untouched.
 
-Desk #1, bonus Brokers [1078, 1091].
+Desk #1, bonus Brokers [1124, 104].
 
 ## Checks
 
@@ -16,9 +16,9 @@ Desk #1, bonus Brokers [1078, 1091].
 - step 1 deploy: PASS desk mint open
 - step 1 deploy: PASS engine at pilot parameters (0.5% fee, $1,000 cap)
 - step 1 deploy: PASS desk strategy slot 2 holds tAAPL 100% (epoch 1); Booster slot 0 untouched
-- step 2 brokers: PASS Brokers [1078, 1091] active in the Booster
+- step 2 brokers: PASS Brokers [1124, 104] active in the Booster
 - step 3 mint: PASS Desk #1 owned by alice
-- step 3 mint: PASS Desk wallet deployed at mint (0xEF5a9Ade5548075BD6f9BCf16f38890286731648)
+- step 3 mint: PASS Desk wallet deployed at mint (0xf44472D523149F0B8D2774E202339876a8aebc0C)
 - step 3 mint: PASS 120,000 COAT went to the bonus pool, none burned
 - step 3 mint: PASS tokenURI renders on chain
 - step 4 deposit: PASS 0.01 ETH arrived as 26.92 USDG (Chainlink floor 26.19)
@@ -45,7 +45,7 @@ Desk #1, bonus Brokers [1078, 1091].
 - step 9 withdraw: PASS 0.5431 tMSFT now in alice's wallet
 - step 9 withdraw: PASS a stranger cannot move Desk assets
 - step 10 sale: PASS bob owns the Desk
-- step 10 sale: PASS 3.0659 tAAPL stayed in the Desk wallet
+- step 10 sale: PASS 2.8388 tAAPL stayed in the Desk wallet
 - step 10 sale: PASS control moved: bob signs, alice cannot
 - step 10 sale: PASS alice can no longer withdraw
 - step 10 sale: PASS the deposit is booked
@@ -63,29 +63,29 @@ Desk #1, bonus Brokers [1078, 1091].
 
 | step | what | gas |
 |---|---|---|
-| 1 deploy | 43 deployer transactions | 25,188,407 |
+| 1 deploy | 44 deployer transactions | 25,782,379 |
 | setup | deployer sends alice COAT for a desk mint and two broker activations | 54,155 |
 | setup | alice gets 1,500 test USDG | 53,555 |
 | 2 brokers | alice mints 2 Brokers | 395,003 |
 | 2 brokers | approve activation burn | 46,414 |
-| 2 brokers | activate Broker #1078 | 138,458 |
-| 2 brokers | activate Broker #1091 | 133,658 |
+| 2 brokers | activate Broker #1124 | 138,458 |
+| 2 brokers | activate Broker #104 | 133,646 |
 | 3 mint | approve mint price | 46,402 |
 | 3 mint | alice mints a Desk | 213,828 |
 | 4 deposit | approve USDG deposit | 46,331 |
-| 4 deposit | alice deposits 900 USDG | 131,444 |
-| 4 deposit | alice deposits 0.01 ETH through the deposit router | 163,187 |
+| 4 deposit | alice deposits 900 USDG | 131,583 |
+| 4 deposit | alice deposits 0.01 ETH through the deposit router | 183,058 |
 | 4 deposit | approve COAT deposit | 46,414 |
-| 4 deposit | alice deposits 10,000 COAT (COAT -> ETH on the live testnet v4 pool -> USDG) | 429,588 |
+| 4 deposit | alice deposits 10,000 COAT (COAT -> ETH on the live testnet v4 pool -> USDG) | 451,031 |
 | 4 deposit | alice sends 200 USDG straight to the wallet, around the router | 34,456 |
-| 5 buy | keeper buyBasket | 265,100 |
+| 5 buy | keeper buyBasket | 271,372 |
 | 6 rebalance | new basket posted (epoch +1) | 89,843 |
-| 6 rebalance | keeper sells 30% of the tAAPL | 185,868 |
-| 6 rebalance | keeper buyStock tMSFT with the proceeds | 222,722 |
-| 7 fee split | keeper flushFees | 177,157 |
+| 6 rebalance | keeper sells 30% of the tAAPL | 206,139 |
+| 6 rebalance | keeper buyStock tMSFT with the proceeds | 232,452 |
+| 7 fee split | keeper flushFees | 206,152 |
 | 8 bonus | poster posts round 0 | 120,589 |
-| 8 bonus | bob claims for Broker #1078 (permissionless) | 108,586 |
-| 8 bonus | alice claims for Broker #1091 | 83,591 |
+| 8 bonus | bob claims for Broker #1124 (permissionless) | 108,576 |
+| 8 bonus | alice claims for Broker #104 | 100,689 |
 | 9 withdraw | alice pulls tMSFT out | 65,840 |
 | 9 withdraw | alice pulls leftover USDG out | 48,680 |
 | 10 sale | bob pays alice 0.01 ETH (off-market sale stand-in) | 21,000 |
@@ -93,36 +93,36 @@ Desk #1, bonus Brokers [1078, 1091].
 | 10 sale | bob pauses the engine on his Desk | 58,714 |
 | 10 sale | (test) bob gets 50 USDG | 53,567 |
 | 10 sale | approve | 46,343 |
-| 10 sale | bob deposits 50 USDG into his Desk | 133,283 |
+| 10 sale | bob deposits 50 USDG into his Desk | 131,685 |
 | 10 sale | bob withdraws the tAAPL he bought with the Desk | 65,840 |
 
 ## Addresses (fork only, not deployed anywhere)
 
-- aaplPool: `0xF71474cb54268AbB080a9E09B0b47b0FbfD8410d`
-- accountImpl: `0xbCA0D0014c2389c7cC852b8297bf63107eBbd78c`
-- bonus: `0x490B05945B5F27EAF8b678Ef0ADFcc1678f7792C`
+- aaplPool: `0xA90D9E633bec3D429D9c17f0432a79E67f3B53E0`
+- accountImpl: `0x04a9F9129a3A3B74e661a6412aF4432A5fB3dDb1`
+- bonus: `0x1e3C8d4F16AFc60a29d4257124926Af9383d9268`
 - booster: `0xE683Db9bbb74a6296Cd24F4e1B8E540C19d6BeA7`
 - brokers: `0x2Dc7BAD968061bBb5B19066F3769EC90271e09C7`
 - chainId: `46630`
 - coat: `0x1fa24Ce38f1B956ADfe1ffF87d2f1d234844203E`
 - coatRouter: `0x995A4dd800EF2d99550B81097F82fDa79A43208b`
 - deployer: `0x9e643731dc9D8795573Aa34C410664407FfDC440`
-- depositRouter: `0x5114CaCD2d1b4D31D572e45E7187B3C2ebB60203`
-- desks: `0xFB57C693E7C4e06D06e7f8edb470D2Aa7Ae162F2`
-- engine: `0xc462195cfc7B054BEC6eA5a5797C74AA02de226a`
-- ethFeed: `0x537ceDE15e84badae0485c9e03e9a314bCdd203F`
-- ethPool: `0x4053d395d8c1f72280695dc27733b98026d9BBA4`
-- msftFeed: `0xd547bCFCd14dBb4e75ae6440e0806fc3367d1157`
-- msftPool: `0xfC5f05Cb0cfAA7e5619b1aB8052020F943321bb0`
-- nvdaFeed: `0xA8079C24178717c4AFDD0B1064Eb685b14028a45`
-- nvdaPool: `0xd65Bf714c14067fDD7404611940c6D8761be2f54`
+- depositRouter: `0x67e1d743034b8D926dB25F741e4bACbfa2F4D6C7`
+- desks: `0xd5Db94e38E4B200bb914CC7e711866a8ff78C949`
+- engine: `0xa404a78bBB583Df4201763b557f904d04f607c9d`
+- ethFeed: `0x755a80057031b25240619F2D531fCB7ee53120D1`
+- ethPool: `0x406B4F692baAB3c25B3E4e8A5e3165A61cfB08EE`
+- msftFeed: `0xd9Dba4Bf99822075bdf83d057424B290Af2cdc06`
+- msftPool: `0x55fa44eb949e52d9f8262EFC07Dc4430efBd3C1e`
+- nvdaFeed: `0x64344d23D882e50f7C9BBB84848884858aE8A90E`
+- nvdaPool: `0x6598dF01C1bA81C0f814a94b200AC7df99028c4c`
 - registry: `0x90252Ef04cC9b40d3E684edff9b7ae213e454e6A`
-- renderer: `0x9A25f370faAB0eb5B2584cc27E9a30429e6BbcCF`
+- renderer: `0xd43cE92b8243260eE2068Cc69A7D2218Fd659099`
 - strategyId: `2`
 - taapl: `0xd70A1Cc63a99Aa0bD8C27c7bd43f46d6700586aE`
 - taaplFeed: `0x9A1e65F136f69980BEf2Acb307e16b79E1EF5CE4`
-- tmsft: `0x3E8E965934255d4c6B104579C5c2BFc8f32e8d2C`
-- tnvda: `0xCd18e020B744b8aB351df81166430206D001bCee`
-- treasury: `0x56EeB274f0871BB57Ff53eCCE8c6b98FFEFAf1D8`
-- usdg: `0xE998Ec8A796a91913FFeCED3495F0444aa827034`
+- tmsft: `0x45EDbE846AC99017DB6E4730B06e13E81aBaec2B`
+- tnvda: `0x5d59c70C7bB4d4Aa295B73a189d4b2AC061936e7`
+- treasury: `0xd168A0B2D6c1152fef5A8Aae8b51f25f65035144`
+- usdg: `0xDF98BcBBFf2232B2769E75b7c5299b672a947f66`
 - weth: `0x7943e237c7F95DA44E0301572D358911207852Fa`

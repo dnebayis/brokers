@@ -59,6 +59,7 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
     uint256 private immutable _usdgUnit;
 
     address private _expectedPool;
+    uint256 private _payAmount;
     bool private _awaitingEth;
 
     event Deposited(
@@ -78,6 +79,7 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
     error BelowFloor(uint256 got, uint256 floor);
     error BadCallback();
     error UnexpectedEth();
+    error PartialFill(uint256 paid, uint256 amountIn);
 
     constructor(
         IERC20 usdg_,
@@ -198,13 +200,18 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
         address acct = desks.accountOf(deskId);
         IWETHDeposit(weth).deposit{value: ethIn}();
         bool zeroForOne = !_usdgIsToken0; // WETH in
+        // the USDG that actually reached the Desk, not the pool's report of it
+        uint256 before = usdg.balanceOf(acct);
         _expectedPool = ethPool;
+        _payAmount = ethIn;
         (int256 a0, int256 a1) = IV3PoolDesk(ethPool)
             .swap(acct, zeroForOne, ethIn.toInt256(), zeroForOne ? MIN_SQRT_PLUS_ONE : MAX_SQRT_MINUS_ONE, "");
         _expectedPool = address(0);
-        int256 output = -(zeroForOne ? a1 : a0);
-        if (output <= 0) revert InvalidPool();
-        out = output.toUint256();
+        _payAmount = 0;
+        int256 paid = zeroForOne ? a0 : a1;
+        if (paid != ethIn.toInt256()) revert PartialFill(paid > 0 ? paid.toUint256() : 0, ethIn);
+        out = usdg.balanceOf(acct) - before;
+        if (out == 0) revert InvalidPool();
         uint256 floor = Math.max(minUsdgOut, minUsdgForEth(ethIn));
         if (out < floor) revert BelowFloor(out, floor);
         engine.recordDeposit(deskId, out);
@@ -214,7 +221,10 @@ contract DeskDepositRouter is Ownable2Step, ReentrancyGuard {
         if (msg.sender != _expectedPool || _expectedPool == address(0)) revert BadCallback();
         int256 owed = amount0Delta > 0 ? amount0Delta : amount1Delta;
         if (owed <= 0) revert BadCallback();
-        IERC20(weth).safeTransfer(msg.sender, owed.toUint256());
+        // exactly the WETH wrapped for this deposit, once: none of it can be left behind
+        if (owed.toUint256() != _payAmount) revert PartialFill(owed.toUint256(), _payAmount);
+        _expectedPool = address(0);
+        IERC20(weth).safeTransfer(msg.sender, _payAmount);
     }
 
     function _setEngine(IDeskDepositBook engine_) internal {

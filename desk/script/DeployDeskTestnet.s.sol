@@ -150,6 +150,7 @@ contract DeployDeskTestnet is Script {
         DeskEngine(payable(o.engine)).setPool(o.tmsft, o.msftPool);
         DeskEngine(payable(o.engine)).setPool(o.tnvda, o.nvdaPool);
         DeskEngine(payable(o.engine)).setEthPool(o.ethPool);
+        DeskEngine(payable(o.engine)).setEthUsdFeed(IAggregatorV3Desk(o.ethFeed));
         DeskNFT(o.desks).setMintOpen(true);
         address keeper = vm.envOr("DESK_KEEPER", address(0));
         if (keeper != address(0)) DeskEngine(payable(o.engine)).setKeeper(keeper);
