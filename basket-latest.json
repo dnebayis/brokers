@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-03T10:10:11.266199+00:00",
+  "generatedAt": "2026-10-03T11:10:28.813203+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -38,12 +38,12 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 79002348,
+    "block": 79037644,
     "dropped": [
       {
         "ticker": "RKLB",
         "bps": 492,
-        "reason": "fills below the Chainlink guard (16908615604339448 < minOut 16948959018036883)"
+        "reason": "fills below the Chainlink guard (16901740811122588 < minOut 16948959018036883)"
       }
     ]
   },
