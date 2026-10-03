@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-03T15:04:39.522468+00:00",
+  "generatedAt": "2026-10-03T16:04:58.825675+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -9,7 +9,7 @@
     "ageDays": 1,
     "errors": []
   },
-  "coverage": 0.02078580796931521,
+  "coverage": 0.021265941040654546,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -17,7 +17,8 @@
     "TSLA",
     "MSTR",
     "AMD",
-    "SPCX"
+    "SPCX",
+    "RKLB"
   ],
   "tokens": [
     "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681",
@@ -25,27 +26,23 @@
     "0x322F0929c4625eD5bAd873c95208D54E1c003b2d",
     "0xec262a75e413fAfD0dF80480274532C79D42da09",
     "0x86923f96303D656E4aa86D9d42D1e57ad2023fdC",
-    "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa"
+    "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa",
+    "0x3b14C39E89D60D627b42a1A4CA45b5bb45Fc12e2"
   ],
   "weightsBps": [
-    3231,
-    1860,
-    1737,
-    1213,
-    1153,
-    806
+    3069,
+    1769,
+    1652,
+    1154,
+    1097,
+    767,
+    492
   ],
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 79175968,
-    "dropped": [
-      {
-        "ticker": "RKLB",
-        "bps": 492,
-        "reason": "fills below the Chainlink guard (16603855675642714 < minOut 16948959018036883)"
-      }
-    ]
+    "block": 79211708,
+    "dropped": []
   },
   "missedCoverage": [
     {
@@ -342,6 +339,23 @@
       ],
       "buyerCount": 2,
       "sellCount": 7
+    },
+    "RKLB": {
+      "buyers": [
+        {
+          "member": "Donald J Trump",
+          "chamber": "executive",
+          "buys": 1,
+          "notionalUsd": 32500.5,
+          "latestTraded": "2026-07-27",
+          "latestFiled": "2026-09-22",
+          "ranges": [
+            "$15,001 - $50,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 0
     },
     "SPCX": {
       "buyers": [
@@ -1033,10 +1047,10 @@
     "divergenceBps": 3094
   },
   "commentary": {
-    "text": "This basket is led by Intel, with Nancy Pelosi's buys totaling $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Other notable positions include NVIDIA and TSLA, with Donald J Trump and Gilbert Cisneros making purchases. The basket includes a total of 6 tokenized stocks based on buying activity from 8 members. The largest name that could not be bought was BE, due to it not being tokenized or tradable on this chain. This basket represents 2.1% of the disclosed buying dollars.",
+    "text": "The current basket is led by Nancy Pelosi's $1.1M purchase of INTC, traded on 2026-07-24 and filed on 2026-08-21. Donald J Trump and Gilbert Cisneros also contributed to the basket, along with 4 other members. BE, with a net notional of $7.5M from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 2.1% of disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-10-03T06:08:24+00:00",
-    "inputHash": "22de8067ec6ec674",
+    "generatedAt": "2026-10-03T16:04:58+00:00",
+    "inputHash": "f78b7044e2e12822",
     "promptVersion": 2
   }
 }
