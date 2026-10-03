@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-10-02T23:05:03.822170+00:00",
+  "generatedAt": "2026-10-03T00:05:32.721715+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 4793,
     "distinctTraders": 82,
     "latestDisclosure": "2026-10-02",
-    "ageDays": 0,
+    "ageDays": 1,
     "errors": []
   },
   "coverage": 0.021265941040654546,
@@ -41,7 +41,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 78610504,
+    "block": 78646545,
     "dropped": []
   },
   "missedCoverage": [
