@@ -42,7 +42,17 @@ FLUSH_MIN_USDG = 5 * E6
 FEED_REFRESH_AFTER = 12 * 3600  # well inside the router's 24h window
 
 ERC20 = [{"type": "function", "name": "balanceOf", "stateMutability": "view",
-          "inputs": [{"name": "a", "type": "address"}], "outputs": [{"type": "uint256"}]}]
+          "inputs": [{"name": "a", "type": "address"}], "outputs": [{"type": "uint256"}]},
+         {"type": "function", "name": "symbol", "stateMutability": "view", "inputs": [],
+          "outputs": [{"type": "string"}]}]
+# canonical Multicall3 (present on Robinhood Chain mainnet and testnet, and on any fork of them)
+MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11"
+MULTICALL_ABI = [{"type": "function", "name": "aggregate3", "stateMutability": "payable",
+                  "inputs": [{"name": "calls", "type": "tuple[]", "components": [
+                      {"name": "target", "type": "address"}, {"name": "allowFailure", "type": "bool"},
+                      {"name": "callData", "type": "bytes"}]}],
+                  "outputs": [{"name": "r", "type": "tuple[]", "components": [
+                      {"name": "success", "type": "bool"}, {"name": "returnData", "type": "bytes"}]}]}]
 FEED = [{"type": "function", "name": "latestRoundData", "stateMutability": "view", "inputs": [],
          "outputs": [{"type": "uint80"}, {"type": "int256"}, {"type": "uint256"}, {"type": "uint256"},
                      {"type": "uint80"}]},
@@ -72,6 +82,7 @@ class Keeper:
     symbols: dict[str, str]
     log_path: Path | None = None
     seen_epoch: dict[int, int] = field(default_factory=dict)
+    feeds_checked_at: float = 0.0
 
     def __post_init__(self) -> None:
         c = lambda a, x: self.w3.eth.contract(address=Web3.to_checksum_address(a), abi=x)  # noqa: E731
@@ -92,6 +103,8 @@ class Keeper:
             if "127.0.0.1" not in rpc and "localhost" not in rpc:
                 raise SystemExit("no KEEPER_KEY: the impersonated keeper only runs against a local fork")
         self.sender = self.signer.address if self.signer else Web3.to_checksum_address(self.A["deployer"])
+        self.routed: list[str] = []
+        self.multicall = self.w3.eth.contract(address=MULTICALL3, abi=MULTICALL_ABI)
 
     # --- plumbing ---
 
@@ -119,12 +132,41 @@ class Keeper:
         return ok
 
     def price(self, token: str) -> float:
+        """Feed price in USD; 0 for a name without a feed (the engine cannot trade it anyway)."""
         feed = self.booster.functions.stockFeed(token).call()
+        if int(feed, 16) == 0:
+            return 0.0
         answer = self.w3.eth.contract(address=feed, abi=FEED).functions.latestRoundData().call()[1]
         return answer / 1e8
 
     def sym(self, t: str) -> str:
         return self.symbols.get(t.lower(), t[:8])
+
+    def investable_all(self, n: int) -> dict[int, int]:
+        """investableOf for every Desk in a few Multicall3 reads instead of one call per Desk."""
+        out: dict[int, int] = {}
+        for start in range(1, n + 1, 250):
+            ids = list(range(start, min(n, start + 249) + 1))
+            calls = [(self.engine.address, True, self.engine.functions.investableOf(i)._encode_transaction_data())
+                     for i in ids]
+            for i, (ok, data) in zip(ids, self.multicall.functions.aggregate3(calls).call()):
+                out[i] = int.from_bytes(data, "big") if ok and len(data) == 32 else 0
+        return out
+
+    def sync_stocks(self) -> None:
+        """Every name the engine can hold (its routed stocks; mainnet has 26), with symbols read
+        from the tokens. New routes are picked up on the next tick."""
+        n = self.engine.functions.routedStockCount().call()
+        if n == len(self.routed):
+            return
+        self.routed = [Web3.to_checksum_address(self.engine.functions.routedStocks(i).call()) for i in range(n)]
+        for t in self.routed:
+            if t.lower() not in self.symbols:
+                try:
+                    self.symbols[t.lower()] = self.w3.eth.contract(address=t, abi=ERC20).functions.symbol().call()
+                except Exception:
+                    pass
+        self.stocks = sorted(set(self.stocks) | set(self.routed))
 
     # --- one pass ---
 
@@ -144,8 +186,11 @@ class Keeper:
                 self.send(feed.functions.setAnswer(answer), f"refresh feed {addr[:8]}… (${answer / 1e8:,.2f})")
 
     def tick(self) -> None:
-        if self.signer:
+        self.sync_stocks()
+        # only test feeds need re-posting; checking every ten minutes is plenty against a 12h refresh
+        if self.signer and time.time() - self.feeds_checked_at > 600:
             self.refresh_feeds()
+            self.feeds_checked_at = time.time()
         n = self.desks.functions.totalMinted().call()
         tokens, weights, epoch = self.registry.functions.getBasket(self.sid).call()
         # names the engine has no pool for are skipped and the rest scaled up to the whole,
@@ -156,7 +201,12 @@ class Keeper:
         weight = {t: w / total_w for t, w in routed.items()} if total_w else {}
         px = {t: self.price(t) for t in set(self.stocks) | set(weight)}
         fee = self.engine.functions.feeBps().call() / BPS
+        investable = self.investable_all(n) if n else {}
         for desk_id in range(1, n + 1):
+            # a Desk needs a look only when it has booked USDG to put to work or the basket moved
+            # (a new epoch also covers names that left it); everything else is a quiet Desk
+            if self.seen_epoch.get(desk_id) == epoch and investable.get(desk_id, 0) < MIN_TRADE_USD * E6:
+                continue
             try:
                 self.desk(desk_id, weight, epoch, px, fee)
             except Exception as e:
@@ -215,8 +265,11 @@ class Keeper:
         held = sum(v[t] for t in weight)
         if held < MIN_TRADE_USD:
             self.say(f"desk #{desk_id}: ${spend / E6:,.2f} idle, buying the basket")
-            self.send(self.engine.functions.buyBasket(desk_id, spend), "buyBasket")
-            return
+            if self.send(self.engine.functions.buyBasket(desk_id, spend), "buyBasket"):
+                return
+            # one name whose pool cannot fill inside the Chainlink floor fails the whole basket
+            # buy; buy name by name instead, so only that name waits
+            self.say(f"desk #{desk_id}: basket buy failed, buying name by name")
         total = held + spend / E6 * (1 - fee)
         deficit = {t: max(0.0, w * total - v[t]) for t, w in weight.items()}
         gap = sum(deficit.values())
@@ -231,8 +284,10 @@ class Keeper:
 
 def load(path: Path) -> tuple[dict, list[str], dict[str, str]]:
     A = json.loads(path.read_text())
-    stocks = [Web3.to_checksum_address(A[k]) for k in ("taapl", "tmsft", "tnvda") if k in A]
-    symbols = {A["taapl"].lower(): "tAAPL", A.get("tmsft", "").lower(): "tMSFT", A.get("tnvda", "").lower(): "tNVDA"}
+    # the testnet venue's names; anywhere else (mainnet) the keeper reads the universe from the engine
+    names = {"taapl": "tAAPL", "tmsft": "tMSFT", "tnvda": "tNVDA"}
+    stocks = [Web3.to_checksum_address(A[k]) for k in names if k in A]
+    symbols = {A[k].lower(): v for k, v in names.items() if k in A}
     return A, stocks, symbols
 
 
@@ -242,7 +297,11 @@ if __name__ == "__main__":
     A, stocks, symbols = load(path)
     # web3 6 sends HTTP requests with no timeout by default: one stalled connection would hang
     # the keeper forever (it did, on its first testnet buy), so every request gets one.
-    k = Keeper(Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 30})), A, stocks, symbols,
+    # the metered mainnet endpoint answers only the site's origin (RPC_ORIGIN), like the Booster keeper's
+    kwargs: dict = {"timeout": 30}
+    if os.environ.get("RPC_ORIGIN"):
+        kwargs["headers"] = {"Origin": os.environ["RPC_ORIGIN"]}
+    k = Keeper(Web3(Web3.HTTPProvider(rpc, request_kwargs=kwargs)), A, stocks, symbols,
                log_path=Path(os.environ["KEEPER_LOG"]) if os.environ.get("KEEPER_LOG") else None)
     every = float(os.environ.get("EVERY", "6"))
     # RUN_SECONDS bounds a scheduled run (GitHub Actions: the next cron slot takes over);
