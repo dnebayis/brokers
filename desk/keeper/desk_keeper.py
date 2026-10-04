@@ -245,10 +245,17 @@ if __name__ == "__main__":
     k = Keeper(Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 30})), A, stocks, symbols,
                log_path=Path(os.environ["KEEPER_LOG"]) if os.environ.get("KEEPER_LOG") else None)
     every = float(os.environ.get("EVERY", "6"))
-    k.say(f"desk keeper on {rpc}, every {every:.0f}s")
-    while True:
+    # RUN_SECONDS bounds a scheduled run (GitHub Actions: the next cron slot takes over);
+    # unset, the keeper runs until stopped.
+    run_for = float(os.environ.get("RUN_SECONDS", "0"))
+    stop_at = time.time() + run_for if run_for > 0 else float("inf")
+    k.say(f"desk keeper on {rpc}, every {every:.0f}s" + (f", for {run_for / 3600:.1f}h" if run_for else ""))
+    while time.time() < stop_at:
         try:
             k.tick()
         except Exception as e:  # an RPC hiccup must not kill the loop; the next tick retries
             k.say(f"tick failed: {str(e)[:160]}")
+            if os.environ.get("GITHUB_ACTIONS"):
+                print(f"::warning::desk keeper tick failed: {str(e)[:160]}", flush=True)
         time.sleep(every)
+    k.say("desk keeper: run window over, exiting")
