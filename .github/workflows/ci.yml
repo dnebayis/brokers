@@ -76,7 +76,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      - run: npm audit --audit-level=high
+      - run: node scripts/audit-gate.mjs
       - name: Mainnet placeholders must fail
         run: '! NEXT_PUBLIC_NETWORK=mainnet node scripts/validate-config.mjs'
 
