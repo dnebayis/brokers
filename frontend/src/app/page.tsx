@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Tabs, tabButtonId, tabPanelId, type TabId } from "@/components/Tabs";
 import { TRADE_TAB_ENABLED } from "@/lib/floor";
+import { DESK_TAB_ENABLED } from "@/lib/desk";
 import { SidePanel } from "@/components/SidePanel";
 import { HomeTab } from "@/components/tabs/HomeTab";
 import { TradeTab } from "@/components/tabs/TradeTab";
+import { DeskTab } from "@/components/tabs/DeskTab";
 import { ActivateTab } from "@/components/tabs/ActivateTab";
 import { FeedTab } from "@/components/tabs/FeedTab";
 import { LeadersTab } from "@/components/tabs/LeadersTab";
@@ -20,7 +22,7 @@ export default function Page() {
   const [tab, setTab] = useState<TabId>("home");
   useEffect(() => {
     const saved = window.location.hash.slice(1) || window.localStorage.getItem("coattail.activeTab") || "";
-    const allowed = ["home", "activate", "feed", "leaders", "stats", "roadmap", "docs", ...(TRADE_TAB_ENABLED ? ["trade"] : [])];
+    const allowed = ["home", "activate", "feed", "leaders", "stats", "roadmap", "docs", ...(TRADE_TAB_ENABLED ? ["trade"] : []), ...(DESK_TAB_ENABLED ? ["desk"] : [])];
     if (allowed.includes(saved)) setTab(saved as TabId);
   }, []);
 
@@ -38,9 +40,10 @@ export default function Page() {
       <main className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 flex-1">
         <Tabs active={tab} onChange={selectTab} />
         {/* key remounts the panel per tab so the entrance animation replays */}
-        {tab === "home" ? (
+        {tab === "home" || tab === "desk" ? (
+          // full width: home has its own layout, the Desk its own 12-column grid
           <div key={tab} id={tabPanelId(tab)} role="tabpanel" aria-labelledby={tabButtonId(tab)} className="tab-panel py-6 lg:py-8">
-            <HomeTab onNavigate={selectTab} />
+            {tab === "home" ? <HomeTab onNavigate={selectTab} /> : DESK_TAB_ENABLED && <DeskTab />}
           </div>
         ) : (
           <div

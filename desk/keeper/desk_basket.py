@@ -39,6 +39,7 @@ FEEDS = [
      "outputs": [{"type": "uint80"}, {"type": "int256"}, {"type": "uint256"}, {"type": "uint256"}, {"type": "uint80"}]},
     {"type": "function", "name": "setAnswer", "stateMutability": "nonpayable", "inputs": [{"name": "a", "type": "int256"}],
      "outputs": []},
+    {"type": "function", "name": "owner", "stateMutability": "view", "inputs": [], "outputs": [{"type": "address"}]},
 ]
 
 
@@ -58,15 +59,17 @@ def main() -> int:
     reg = w3.eth.contract(address=Web3.to_checksum_address(A["registry"]), abi=REGISTRY)
     sid = int(A["strategyId"])
 
-    def transact(fn):
+    def transact(fn, local_sender: str | None = None):
         if signer:
             tx = fn.build_transaction({"from": signer.address, "nonce": w3.eth.get_transaction_count(signer.address),
                                        "chainId": w3.eth.chain_id})
             signed = signer.sign_transaction(tx)
             raw = getattr(signed, "raw_transaction", None) or signed.rawTransaction
             return w3.eth.wait_for_transaction_receipt(w3.eth.send_raw_transaction(raw), timeout=120, poll_latency=1)
+        # local fork: impersonate whoever holds the role (the deployer, or the feed's owner once
+        # the test feeds were handed to the testnet keeper)
         return w3.eth.wait_for_transaction_receipt(w3.eth.send_transaction(
-            fn.build_transaction({"from": Web3.to_checksum_address(A["deployer"])})))
+            fn.build_transaction({"from": Web3.to_checksum_address(local_sender or A["deployer"])})))
 
     def show() -> tuple[dict, int]:
         t, w, e = reg.functions.getBasket(sid).call()
@@ -91,7 +94,7 @@ def main() -> int:
             feed = w3.eth.contract(address=booster.functions.stockFeed(Web3.to_checksum_address(by_sym[sym])).call(), abi=FEEDS)
             now = feed.functions.latestRoundData().call()[1] / 1e8
             new = now * (1 + float(v[:-1]) / 100) if v.endswith("%") else float(v)
-            transact(feed.functions.setAnswer(int(round(new * 1e8))))
+            transact(feed.functions.setAnswer(int(round(new * 1e8))), local_sender=feed.functions.owner().call())
             print(f"{sym}: ${now:,.2f} -> ${new:,.2f}")
         return 0
     if sys.argv[1] != "set":

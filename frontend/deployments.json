@@ -13,7 +13,15 @@
     "feeHook": "0x72541564B8496E1adD14145cd268f7E1bbc9E044",
     "router": "0x995A4dd800EF2d99550B81097F82fDa79A43208b",
     "buybackBurner": "0x7FCA13D8baa643310C50BaeDf84BDBaa2Ca227c4",
-    "poolId": "0x335dbf1ee4929ae204ef8d318c80392ab043299802b8ae1ed1443fe140fab4bd"
+    "poolId": "0x335dbf1ee4929ae204ef8d318c80392ab043299802b8ae1ed1443fe140fab4bd",
+    "desk": {
+      "usdg": "0xa0a9965A6fD63751E1f854f7beCA37cd5745Da39",
+      "desks": "0xd9Dba4Bf99822075bdf83d057424B290Af2cdc06",
+      "engine": "0x64344d23D882e50f7C9BBB84848884858aE8A90E",
+      "depositRouter": "0x16D89Bd3ac2B36f8fE799409cf87a7136a29e1f8",
+      "strategyId": 1,
+      "deployBlock": 127474633
+    }
   },
   "mainnet": {
     "broker": "0x1122dB21998707F8c2eD8182734356C947fA5e98",

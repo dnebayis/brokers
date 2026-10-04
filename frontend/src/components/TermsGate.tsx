@@ -8,8 +8,9 @@ import { TERMS_VERSION, readAcceptedVersion, writeAccepted } from "@/lib/terms";
 // One-time acceptance window. It opens on the first visit (and again whenever TERMS_VERSION
 // moves), sits over the whole app, cannot be dismissed with Escape or a click outside, and
 // only closes on the button. The terms page itself and the public share cards stay open so a
-// link to them still reads without the window in the way.
-const OPEN_PATHS = [/^\/terms(\/|$)/, /^\/card\//];
+// link to them still reads without the window in the way. The Desk lab is a local working
+// surface (404 in production), so it stays open too.
+const OPEN_PATHS = [/^\/terms(\/|$)/, /^\/card\//, /^\/desk-lab(\/|$)/];
 
 export function TermsGate() {
   const pathname = usePathname();

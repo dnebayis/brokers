@@ -9,33 +9,35 @@ import {
   erc20Abi,
   feedAbi,
   registryAbi,
-} from "./labAbi";
+} from "./abi";
 
-// Everything the Desk lab shows, read from the local fork in one pass.
+// Everything the Desk tab (and the local lab) shows, read from the chain in one pass.
 
-export type LabConfig = {
-  /** "fork": local anvil fork (impersonated test wallet, faucet); "testnet": the real testnet */
+export type DeskConfig = {
+  /** lab only: "fork" = local anvil fork (impersonated test wallet, faucet); "testnet" */
   mode?: "fork" | "testnet";
-  rpc: string;
+  rpc?: string;
   chainId: number;
+  /** first block worth scanning for Desk events (the engine's deployment) */
   forkBlock?: number;
   testWallet?: Address;
-  deployer: Address;
-  symbols: Record<string, string>;
+  deployer?: Address;
+  /** optional display names by token address; anything missing is read from the token */
+  symbols?: Record<string, string>;
   usdg: Address;
   coat: Address;
-  weth: Address;
   desks: Address;
   engine: Address;
   registry: Address;
   booster: Address;
   depositRouter: Address;
   coatRouter: Address;
-  taapl: Address;
-  tmsft: Address;
-  tnvda: Address;
   strategyId: number;
 };
+
+/** The lab's config file: the same fields with its own RPC and faucet wallet (plus test-venue
+ *  addresses it ignores). */
+export type LabConfig = DeskConfig & { rpc: string; deployer: Address };
 
 export type Holding = {
   token: Address;
@@ -82,12 +84,17 @@ export type DeskView = {
   ledger: Ledger;
 };
 
-export type LabState = {
+export type DeskState = {
   block: bigint;
   eth: bigint;
   coat: bigint;
   usdg: bigint;
   mintPrice: bigint;
+  totalMinted: bigint;
+  mintCap: bigint;
+  mintOpen: boolean;
+  feeBps: number;
+  cap: bigint;
   owned: { id: bigint; image: string }[];
   basket: { token: Address; symbol: string; weight: number; price: number }[];
   epoch: bigint;
@@ -97,9 +104,32 @@ export type LabState = {
   keeperLastAt: number;
 };
 
-export const symbolOf = (cfg: LabConfig, t: string) =>
-  cfg.symbols[t] ?? cfg.symbols[t.toLowerCase()] ??
-  Object.entries(cfg.symbols).find(([k]) => k.toLowerCase() === t.toLowerCase())?.[1] ?? short(t);
+/** @deprecated the lab's name for DeskState */
+export type LabState = DeskState;
+
+// token symbols read on chain, kept for the session (they never change)
+const SYMBOLS = new Map<string, string>();
+
+export const symbolOf = (cfg: DeskConfig, t: string) =>
+  Object.entries(cfg.symbols ?? {}).find(([k]) => k.toLowerCase() === t.toLowerCase())?.[1] ??
+  SYMBOLS.get(t.toLowerCase()) ?? short(t);
+
+async function learnSymbols(client: PublicClient, cfg: DeskConfig, tokens: Address[]) {
+  const unknown = tokens.filter((t) => symbolOf(cfg, t) === short(t));
+  const names = await Promise.all(
+    unknown.map((t) => client.readContract({ address: t, abi: erc20Abi, functionName: "symbol" }).catch(() => "")),
+  );
+  unknown.forEach((t, i) => names[i] && SYMBOLS.set(t.toLowerCase(), names[i]));
+}
+
+/** Every stock the engine can hold: the names it ever got a pool for. */
+async function engineStocks(client: PublicClient, cfg: DeskConfig): Promise<Address[]> {
+  const n = await client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "routedStockCount" });
+  return Promise.all(
+    Array.from({ length: Number(n) }, (_, i) =>
+      client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "routedStocks", args: [BigInt(i)] })),
+  );
+}
 
 function decodeUri(uri: string): { image: string; traits: Trait[] } {
   try {
@@ -116,27 +146,36 @@ function decodeUri(uri: string): { image: string; traits: Trait[] } {
   }
 }
 
-export async function readLab(
+export async function readDesk(
   client: PublicClient,
-  cfg: LabConfig,
+  cfg: DeskConfig,
   me: Address | undefined,
   selected: bigint | null,
-): Promise<LabState> {
-  const stocks = [cfg.taapl, cfg.tmsft, cfg.tnvda];
-  const [block, mintPrice, totalMinted, basketRaw, ethFloor, slip] = await Promise.all([
+): Promise<DeskState> {
+  const [block, mintPrice, totalMinted, mintCap, mintOpen, feeBps, cap, basketRaw, ethFloor, slip, routed] = await Promise.all([
     client.getBlockNumber(),
     client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "mintPrice" }),
     client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "totalMinted" }),
+    client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "mintCap" }),
+    client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "mintOpen" }),
+    client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "feeBps" }),
+    client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "pilotCapUsdg" }),
     client.readContract({ address: cfg.registry, abi: registryAbi, functionName: "getBasket", args: [BigInt(cfg.strategyId)] }),
     client.readContract({ address: cfg.depositRouter, abi: depositRouterAbi, functionName: "minUsdgForEth", args: [10n ** 18n] }),
     client.readContract({ address: cfg.depositRouter, abi: depositRouterAbi, functionName: "maxSlippageBps" }),
+    engineStocks(client, cfg),
   ]);
   const ethUsd = Number(ethFloor) / 1e6 / (1 - Number(slip) / 10_000);
+  // what a Desk can hold: the names the engine has pools for (basket names without one are
+  // skipped by the engine and shown at weight 0 here)
+  const stocks = routed;
+  await learnSymbols(client, cfg, [...new Set([...stocks, ...basketRaw[0]])]);
 
   const prices: Record<string, number> = {};
   await Promise.all(
-    stocks.map(async (t) => {
+    [...new Set([...stocks, ...basketRaw[0]])].map(async (t) => {
       const feed = await client.readContract({ address: cfg.booster, abi: boosterFeedAbi, functionName: "stockFeed", args: [t] });
+      if (feed === "0x0000000000000000000000000000000000000000") return;
       const round = await client.readContract({ address: feed, abi: feedAbi, functionName: "latestRoundData" });
       prices[t.toLowerCase()] = Number(round[1]) / 1e8;
     }),
@@ -191,28 +230,28 @@ export async function readLab(
     else if (l.eventName === "StockSold")
       activity.push({ ...base, kind: "sell", usd: usd(args.usdgOut), text: `sold ${symbolOf(cfg, args.stock as string)}` });
     else if (l.eventName === "FeesFlushed")
-      activity.push({ ...base, kind: "fees", usd: usd(args.usdgIn), text: "fees sent to the Booster (80%) and treasury as ETH" });
+      activity.push({ ...base, kind: "fees", usd: usd(args.usdgIn), text: "service fees sent on as ETH" });
   }
   const keeperLastAt = activity[0]?.at ?? 0;
 
-  const state: LabState = {
-    block, eth, coat, usdg, mintPrice, owned, basket, epoch: basketRaw[2], ethUsd, activity, keeperLastAt,
+  const state: DeskState = {
+    block, eth, coat, usdg, mintPrice, totalMinted, mintCap, mintOpen, feeBps: Number(feeBps), cap,
+    owned, basket, epoch: basketRaw[2], ethUsd, activity, keeperLastAt,
   };
 
   const id = selected && owned.some((o) => o.id === selected) ? selected : owned[0]?.id;
   if (!id) return state;
   const account = await client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "accountOf", args: [id] });
-  const [uri, paused, idle, principal, room, investable, cap, amounts] = await Promise.all([
+  const [uri, paused, idle, principal, room, investable, amounts] = await Promise.all([
     client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "tokenURI", args: [id] }),
     client.readContract({ address: account, abi: deskAccountAbi, functionName: "enginePaused" }),
     client.readContract({ address: cfg.usdg, abi: erc20Abi, functionName: "balanceOf", args: [account] }),
     client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "principalOf", args: [id] }),
     client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "depositRoomOf", args: [id] }),
     client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "investableOf", args: [id] }),
-    client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "pilotCapUsdg" }),
     Promise.all(stocks.map((t) => client.readContract({ address: t, abi: erc20Abi, functionName: "balanceOf", args: [account] }))),
   ]);
-  const usd = stocks.map((t, i) => (Number(amounts[i]) / 1e18) * prices[t.toLowerCase()]);
+  const usd = stocks.map((t, i) => (Number(amounts[i]) / 1e18) * (prices[t.toLowerCase()] ?? 0));
   const stockUsd = usd.reduce((x, y) => x + y, 0);
   const totalUsd = stockUsd + Number(idle) / 1e6;
   const books = await replayLedger(client, cfg, id, account, from, block, logs, stocks);
@@ -226,7 +265,7 @@ export async function readLab(
         symbol: symbolOf(cfg, t),
         amount: amounts[i],
         usd: usd[i],
-        price: prices[t.toLowerCase()],
+        price: prices[t.toLowerCase()] ?? 0,
         weightNow: stockUsd > 0 ? (usd[i] / stockUsd) * 100 : 0,
         target: targets[t.toLowerCase()] ?? 0,
         cost,
@@ -274,7 +313,7 @@ type EngineLog = {
  */
 async function replayLedger(
   client: PublicClient,
-  cfg: LabConfig,
+  cfg: DeskConfig,
   deskId: bigint,
   acct: Address,
   from: bigint,
@@ -296,7 +335,11 @@ async function replayLedger(
       feed = await client.readContract({ address: cfg.booster, abi: boosterFeedAbi, functionName: "stockFeed", args: [token as Address] });
       feedOf.set(token, feed);
     }
-    const r = await client.readContract({ address: feed, abi: feedAbi, functionName: "latestRoundData", blockNumber: block });
+    if (/^0x0+$/.test(feed)) return 0; // no feed for this name: valued at nothing
+    // the price at that block; an endpoint without historical state answers with today's
+    const r = await client
+      .readContract({ address: feed, abi: feedAbi, functionName: "latestRoundData", blockNumber: block })
+      .catch(() => client.readContract({ address: feed as Address, abi: feedAbi, functionName: "latestRoundData" }));
     return Number(r[1]) / 1e8;
   };
 

@@ -1,5 +1,5 @@
-// Minimal ABIs for the local Desk lab (desk/ contracts on an anvil fork). Only what the page
-// reads or sends; the full ABIs live in desk/out after `forge build`.
+// Minimal ABIs for the Desk contracts (desk/src). Only what the Desk tab and the local lab read
+// or send; the full ABIs live in desk/out after `forge build`.
 
 const u = (name: string) => ({ name, type: "uint256" }) as const;
 const a = (name: string) => ({ name, type: "address" }) as const;
@@ -9,12 +9,15 @@ export const erc20Abi = [
   { type: "function", name: "allowance", stateMutability: "view", inputs: [a("o"), a("s")], outputs: [{ type: "uint256" }] },
   { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [a("s"), u("v")], outputs: [{ type: "bool" }] },
   { type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [a("to"), u("v")], outputs: [{ type: "bool" }] },
+  { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
   { type: "function", name: "mint", stateMutability: "nonpayable", inputs: [a("to"), u("v")], outputs: [] },
 ] as const;
 
 export const deskNftAbi = [
   { type: "function", name: "mintPrice", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalMinted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "mintCap", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "mintOpen", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
   { type: "function", name: "ownerOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "address" }] },
   { type: "function", name: "accountOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "address" }] },
   { type: "function", name: "tokenURI", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "string" }] },
@@ -38,6 +41,9 @@ export const deskEngineAbi = [
   { type: "function", name: "investableOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "uint256" }] },
   { type: "function", name: "pilotCapUsdg", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "feesAccrued", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "feeBps", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "routedStockCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "routedStocks", stateMutability: "view", inputs: [u("i")], outputs: [{ type: "address" }] },
   { type: "event", name: "BasketBought", inputs: [{ name: "deskId", type: "uint256", indexed: true }, u("usdgSpent"), u("fee"), { name: "epoch", type: "uint64" }] },
   { type: "event", name: "StockBought", inputs: [{ name: "deskId", type: "uint256", indexed: true }, { name: "stock", type: "address", indexed: true }, u("usdgSpent"), u("fee"), { name: "epoch", type: "uint64" }] },
   { type: "event", name: "StockSold", inputs: [{ name: "deskId", type: "uint256", indexed: true }, { name: "stock", type: "address", indexed: true }, u("stockIn"), u("usdgOut"), u("fee")] },
