@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T18:59:22.890945+00:00",
+  "generatedAt": "2026-10-06T19:00:18.889345+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -38,7 +38,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 81860307,
+    "block": 81860850,
     "dropped": []
   },
   "missedCoverage": [
