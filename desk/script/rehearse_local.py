@@ -196,8 +196,8 @@ def rehearse(w3: Web3) -> int:
 
     r.check("1 deploy", renderer.functions.frozen().call(), "traits uploaded and frozen against the commit")
     r.check("1 deploy", desks.functions.mintOpen().call(), "desk mint open")
-    r.check("1 deploy", engine.functions.feeBps().call() == 50 and engine.functions.pilotCapUsdg().call() == 1000 * E6,
-            "engine at pilot parameters (0.5% fee, $1,000 cap)")
+    r.check("1 deploy", engine.functions.feeBps().call() == 50 and engine.functions.depositCapUsdg().call() == 2**256 - 1
+            and desks.functions.mintCap().call() == 2000, "engine at launch parameters (0.5% fee, no deposit cap, 2,000 Desks)")
     toks, wts, ep = registry.functions.getBasket(sid).call()
     r.check("1 deploy", toks == [A["taapl"]] and list(wts) == [10000],
             f"desk strategy slot {sid} holds tAAPL 100% (epoch {ep}); Booster slot 0 untouched")
@@ -234,7 +234,7 @@ def rehearse(w3: Web3) -> int:
     r.check("3 mint", uri.startswith("data:application/json;base64,"), "tokenURI renders on chain")
 
     # ---------- deposit ----------
-    print("step 4: deposit (USDG, ETH, COAT) through the router, capped at $1,000 put in")
+    print("step 4: deposit (USDG, ETH, COAT) through the router, booked as money put in (no cap)")
     router = c(A["depositRouter"], abi("DeskDepositRouter"))
     send(alice, usdg.functions.approve(A["depositRouter"], 1_500 * E6), step="4 deposit", what="approve USDG deposit")
     send(alice, router.functions.depositUsdg(desk_id, 900 * E6), step="4 deposit", what="alice deposits 900 USDG")
@@ -251,11 +251,8 @@ def rehearse(w3: Web3) -> int:
     coat_in = usdg.functions.balanceOf(acct_addr).call() - before
     r.check("4 deposit", coat_in > 0, f"10,000 COAT arrived as {coat_in / E6:.4f} USDG (thin testnet COAT pool)")
     principal = engine.functions.principalOf(desk_id).call()
-    room = engine.functions.depositRoomOf(desk_id).call()
-    r.check("4 deposit", principal == 900 * E6 + eth_in + coat_in and room == 1_000 * E6 - principal,
-            f"principal ${principal / E6:,.2f} booked, ${room / E6:,.2f} of room left under the $1,000 pilot cap")
-    r.check("4 deposit", reverts(alice.address, router.functions.depositUsdg(desk_id, room + E6)),
-            "a deposit over the pilot cap reverts")
+    r.check("4 deposit", principal == 900 * E6 + eth_in + coat_in and engine.functions.depositRoomOf(desk_id).call() == 2**256 - 1,
+            f"principal ${principal / E6:,.2f} booked, no cap on what more can go in")
     send(alice, usdg.functions.transfer(acct_addr, 200 * E6), step="4 deposit",
          what="alice sends 200 USDG straight to the wallet, around the router")
     r.check("4 deposit", engine.functions.investableOf(desk_id).call() == principal,
@@ -346,7 +343,7 @@ def rehearse(w3: Web3) -> int:
              step="9 withdraw", what="alice pulls leftover USDG out")
     p_after = engine.functions.principalOf(desk_id).call()
     r.check("9 withdraw", p_after < principal,
-            f"withdrawals lowered the principal from ${principal / E6:,.2f} to ${p_after / E6:,.2f}, reopening room")
+            f"withdrawals lowered the principal from ${principal / E6:,.2f} to ${p_after / E6:,.2f}, by what left")
     r.check("9 withdraw", tmsft.functions.balanceOf(alice.address).call() == m_bal and
             tmsft.functions.balanceOf(acct_addr).call() == 0, f"{m_bal / E18:.4f} tMSFT now in alice's wallet")
     r.check("9 withdraw", reverts(bob.address, acct.functions.execute(A["taapl"], 0,

@@ -39,6 +39,8 @@ export const deskEngineAbi = [
   { type: "function", name: "principalOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "uint256" }] },
   { type: "function", name: "depositRoomOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "uint256" }] },
   { type: "function", name: "investableOf", stateMutability: "view", inputs: [u("id")], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "depositCapUsdg", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  // engines from before the optional cap (testnet v3) call it pilotCapUsdg
   { type: "function", name: "pilotCapUsdg", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "feesAccrued", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "feeBps", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },

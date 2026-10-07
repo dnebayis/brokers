@@ -161,10 +161,11 @@ contract ForkDeskEngineTest is Test {
         assertGt(fees, 0);
     }
 
-    function test_pilot_cap_holds_on_deposits() public {
+    function test_deposit_cap_lever_holds_on_deposits() public {
+        engine.setDepositCap(1_000 * U); // no cap by default; the lever, when set, holds
         (uint256 id, address acct) = _openDesk(1_000 * U);
         engine.buyBasket(id, 1_000 * U);
-        assertEq(engine.depositRoomOf(id), 0, "the $1,000 pilot cap is used");
+        assertEq(engine.depositRoomOf(id), 0, "the $1,000 cap is used");
         deal(USDG, acct, 500 * U);
         vm.expectRevert(abi.encodeWithSelector(DeskEngine.DepositOverCap.selector, 500 * U, 0));
         engine.recordDeposit(id, 500 * U);

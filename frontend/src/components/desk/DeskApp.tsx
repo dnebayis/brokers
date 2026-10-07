@@ -7,7 +7,7 @@ import { encodeFunctionData, formatUnits, parseUnits, type Address, type Hex, ty
 import { StatusLine, type StatusKind } from "@/components/ui/Status";
 import { short } from "@/lib/format";
 import { coatRouterAbi, deskAccountAbi, deskNftAbi, depositRouterAbi, erc20Abi } from "./abi";
-import { readDesk, type Activity, type DeskConfig, type DeskState, type DeskView } from "./data";
+import { hasCap, readDesk, type Activity, type DeskConfig, type DeskState, type DeskView } from "./data";
 
 // The Desk, one component for both surfaces: the site's Desk tab (variant "site") and the
 // local lab (variant "lab", which adds its own test-wallet strip on top). Structure follows the
@@ -140,23 +140,24 @@ export function DeskApp({ cfg, client, variant, top, pollMs }: {
   );
 }
 
-// --- site intro: what a Desk is, the pilot's numbers, and the four steps ----------------------
+// --- site intro: what a Desk is, its numbers, and the four steps -----------------------------
 
 function SiteIntro({ s, compact, status }: { s?: DeskState; compact: boolean; status: { msg: string; kind: StatusKind } }) {
   const figures = [
-    { label: "Desks open", value: s ? `${s.totalMinted.toString()} of ${s.mintCap.toString()}` : "…" },
+    { label: "Desks open", value: s ? `${s.totalMinted.toLocaleString("en-US")} of ${s.mintCap.toLocaleString("en-US")}` : "…" },
     { label: "Mint price", value: s ? `${num(s.mintPrice, 18, 0)} COAT` : "…" },
     { label: "Service fee", value: s ? `${(s.feeBps / 100).toFixed(1)}% a trade` : "…" },
-    { label: "Pilot cap", value: s ? `${usd(Number(s.cap) / 1e6, 0)} a Desk` : "…" },
+    s && hasCap(s.cap)
+      ? { label: "Deposit cap", value: `${usd(Number(s.cap) / 1e6, 0)} a Desk` }
+      : { label: "Deposit in", value: "USDG · ETH · COAT" },
   ];
   return (
     <header className="grid gap-10 pb-8 border-b border-line">
       <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-12 lg:items-end">
         <div className="lg:col-span-7 min-w-0">
-          <span className="chip">Pilot</span>
           <h1 className="font-pixel text-2xl text-ink-strong mt-3">The Desk</h1>
           <p className="text-base text-ink leading-relaxed mt-3 max-w-[60ch]">
-            Your own seat on the Congress basket. Put in up to $1,000 and the engine buys the live basket, the one Broker
+            Your own seat on the Congress basket. Put in what you like and the engine buys the live basket, the one Broker
             salaries are paid in, into your Desk&rsquo;s own wallet. Take money out or pause the engine whenever you like, or
             sell the Desk with everything inside.
           </p>
@@ -177,9 +178,9 @@ function SiteIntro({ s, compact, status }: { s?: DeskState; compact: boolean; st
 
 const STEPS: { title: string; text: string }[] = [
   { title: "Mint", text: "Pay the mint price in COAT. All of it goes to active Brokers and none is burned. The Desk comes with its own wallet." },
-  { title: "Deposit", text: "Put in USDG, ETH or COAT, up to the pilot cap. ETH and COAT are swapped to USDG on the way in." },
+  { title: "Deposit", text: "Put in USDG, ETH or COAT, any amount. ETH and COAT are swapped to USDG on the way in." },
   { title: "The engine buys", text: "The keeper buys the basket into the Desk’s wallet, every fill floored by Chainlink, and trades only the difference when the basket changes." },
-  { title: "Yours to move", text: "Withdraw any part at any time, pause the engine, or sell the Desk whole. Profit never counts toward the cap." },
+  { title: "Yours to move", text: "Withdraw any part at any time, pause the engine, or sell the Desk whole." },
 ];
 
 function HowItWorks() {
@@ -217,7 +218,7 @@ function MintPanel({ s, busy, onMint, lab }: { s?: DeskState; busy: boolean; onM
         <p className="text-sm text-accent mt-3">Not enough COAT for the mint. Get some on the Floor.</p>
       )}
       {s && !s.mintOpen && <p className="text-sm text-ink-soft mt-3">Minting is closed right now.</p>}
-      {soldOut && <p className="text-sm text-ink-soft mt-3">All {s?.mintCap.toString()} Desks of this wave are open.</p>}
+      {soldOut && <p className="text-sm text-ink-soft mt-3">All {s?.mintCap.toLocaleString("en-US")} Desks are open.</p>}
       <button type="button" className="btn btn-accent w-full mt-5" onClick={onMint}
         disabled={busy || !s || !s.mintOpen || soldOut || (!lab && short_)}>
         {s ? `Mint for ${num(s.mintPrice, 18, 0)} COAT` : "Mint"}
@@ -341,9 +342,10 @@ function Hero({ desk, busy, run, write }: { desk: DeskView; busy: boolean; run: 
           ))}
         </div>
 
+        {hasCap(desk.cap) ? (
         <div className="mt-8">
           <div className="flex justify-between text-[11px] uppercase tracking-widest text-ink-soft">
-            <span>Pilot cap · money put in</span>
+            <span>Deposit cap · money put in</span>
             <span className="tabular-nums normal-case tracking-normal text-ink">
               {usd(Number(desk.principal) / 1e6)} of {usd(Number(desk.cap) / 1e6, 0)}
             </span>
@@ -357,6 +359,11 @@ function Hero({ desk, busy, run, write }: { desk: DeskView; busy: boolean; run: 
             {unbooked > 0n ? ` ${usd(Number(unbooked) / 1e6)} in the wallet was sent around the deposit router, so the engine leaves it alone.` : ""}
           </p>
         </div>
+        ) : unbooked > 0n ? (
+          <p className="text-xs text-ink-soft mt-6 leading-relaxed">
+            {usd(Number(unbooked) / 1e6)} in the wallet was sent around the deposit router, so the engine leaves it alone.
+          </p>
+        ) : null}
       </div>
     </section>
   );
@@ -480,8 +487,9 @@ function Deposit({ cfg, client, desk, ethUsd, busy, run, write, lab }: {
     : cur === "ETH" ? (Number(raw) / 1e18) * ethUsd * 0.997
     : coatQuote.data !== undefined ? (Number(coatQuote.data) / 1e18) * ethUsd * 0.997 : null;
 
+  const capped = hasCap(desk.cap);
   const roomUsd = Number(desk.room) / 1e6;
-  const overRoom = raw > 0n && estimate !== null && estimate > roomUsd + 1e-9;
+  const overRoom = capped && raw > 0n && estimate !== null && estimate > roomUsd + 1e-9;
   const go = async () => {
     if (raw === 0n || overRoom) return;
     if (await send()) setAmount("");
@@ -523,13 +531,15 @@ function Deposit({ cfg, client, desk, ethUsd, busy, run, write, lab }: {
         <input id="desk-dep" className="fld tabular-nums" inputMode="decimal"
           placeholder={cur === "USDG" ? "500" : cur === "ETH" ? "0.1" : "10000"} value={amount} onChange={(e) => setAmount(e.target.value)} />
       </div>
-      <div className="flex items-baseline justify-between text-xs -mt-2">
-        <span className="text-ink-soft">Room under the pilot cap</span>
-        <button type="button" className="underline text-ink-strong tabular-nums" disabled={cur !== "USDG"}
-          onClick={() => setAmount((Math.floor(roomUsd * 100) / 100).toString())}>
-          {usd(roomUsd)}
-        </button>
-      </div>
+      {capped && (
+        <div className="flex items-baseline justify-between text-xs -mt-2">
+          <span className="text-ink-soft">Room under the deposit cap</span>
+          <button type="button" className="underline text-ink-strong tabular-nums" disabled={cur !== "USDG"}
+            onClick={() => setAmount((Math.floor(roomUsd * 100) / 100).toString())}>
+            {usd(roomUsd)}
+          </button>
+        </div>
+      )}
       <div className="flex items-baseline justify-between border-t border-line pt-4 text-sm">
         <span className="text-ink-soft">Lands in the Desk</span>
         <span className="font-pixel text-ink-strong tabular-nums">{raw > 0n && estimate !== null ? `≈ ${usd(estimate)}` : "–"}</span>
@@ -596,8 +606,8 @@ function Withdraw({ cfg, desk, me, busy, run, write }: { cfg: DeskConfig; desk: 
         </div>
       </div>
       <p className="text-xs text-ink-soft leading-relaxed">
-        Only the Desk&rsquo;s owner can move assets out. Stock taken out frees the pilot cap and counts in profit and loss at
-        that moment&rsquo;s price.
+        Only the Desk&rsquo;s owner can move assets out. Stock taken out counts in profit and loss at that moment&rsquo;s
+        price.
       </p>
       <button type="button" className="btn btn-accent w-full" disabled={busy || raw === 0n || raw > o.amount} onClick={go}>
         Withdraw to my wallet

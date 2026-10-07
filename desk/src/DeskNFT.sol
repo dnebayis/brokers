@@ -32,14 +32,13 @@ interface IDeskRenderer {
 }
 
 /// @title DeskNFT
-/// @notice The 500 Desks. Minting costs COAT (settable; none of it is burned — 100% flows to
+/// @notice The Desks (2,000 at most, forever). Minting costs COAT (settable; none of it is burned — 100% flows to
 ///         the CoatBonusPool for distribution to active Brokers), and every Desk deploys its
 ///         own ERC-6551 wallet at mint. Open to everyone; no allowlist, no holder gate
 ///         (community-communicated decision, 2026-08-26).
-/// @dev Supply is waved (user decision 2026-08-26): the pilot mints up to `mintCap` = 500,
-///      then mint closes; if demand justifies it the owner can raise the cap in later waves,
-///      but never above the constant `MAX_DESKS` = 2,000 — that ceiling is the scarcity
-///      promise and is not a lever. Everything else (price, cap-within-ceiling, renderer,
+/// @dev Supply: all 2,000 Desks are mintable from day one (user decision 2026-10-07; the first
+///      plan was waves of 500). `mintCap` stays a lever below the constant `MAX_DESKS` = 2,000,
+///      which is the scarcity promise and is not a lever. Everything else (price, cap-within-ceiling, renderer,
 ///      open/closed) ships settable — the 36,750 lesson. Trait assignments for ALL 2,000 ids
 ///      are curated and digest-committed before wave 1, so later waves cannot be rigged.
 contract DeskNFT is ERC721, Ownable2Step, ReentrancyGuard {
@@ -56,9 +55,9 @@ contract DeskNFT is ERC721, Ownable2Step, ReentrancyGuard {
     address public immutable accountImpl;
 
     uint256 public mintPrice = 120_000e18;
-    /// @notice Current wave ceiling. Pilot = 500; owner may raise toward MAX_DESKS if demand
-    ///         justifies later waves, and may never lower it below what is already minted.
-    uint256 public mintCap = 500;
+    /// @notice Current ceiling: MAX_DESKS by default. The owner may lower it (never below what is
+    ///         already minted) or raise it back, never above MAX_DESKS.
+    uint256 public mintCap = MAX_DESKS;
     bool public mintOpen;
     address public renderer;
     uint256 public totalMinted;

@@ -14,7 +14,8 @@ interface IWETHDeposit {
     function deposit() external payable;
 }
 
-/// @notice The engine's deposit book: enforces the per-Desk pilot cap on what owners put in.
+/// @notice The engine's deposit book: records what owners put in (and enforces a deposit cap if
+///         one is ever set).
 interface IDeskDepositBook {
     function recordDeposit(uint256 deskId, uint256 amount) external;
 }
@@ -30,7 +31,7 @@ interface ICoatRouterSell {
 ///         picks it up like any USDG deposit. The router holds nothing between transactions and
 ///         has no path to any Desk's assets: it only ever sends USDG INTO a Desk wallet.
 ///         Every deposit is booked with the engine in the same transaction; a deposit that would
-///         take the Desk's principal over the pilot cap reverts as a whole.
+///         take the Desk's principal over a deposit cap, if one is set, reverts as a whole.
 /// @dev ETH -> USDG goes through the WETH/USDG v3 pool with a Chainlink ETH/USD floor (the same
 ///      guard shape as the engine). COAT -> ETH goes through the COAT router, so the fee hook's
 ///      skim still funds the Booster; COAT has no Chainlink feed, so that leg's floor is the

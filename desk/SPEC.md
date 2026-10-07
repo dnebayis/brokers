@@ -20,13 +20,13 @@ Desk NFT whole with the portfolio inside.
 
 | Decision | Value | Source |
 |---|---|---|
-| Supply | **Waved: pilot 500, then mint closes; owner may reopen later waves on demand via settable `mintCap`; hard ceiling `MAX_DESKS = 2000` (constant, forever)** | user 2026-08-26 |
+| Supply | **All 2,000 Desks mintable from day one** (no waves); `mintCap` stays settable below the hard ceiling `MAX_DESKS = 2000` (constant, forever). First plan was waves of 500 | user 2026-08-26, 2026-10-07 |
 | Mint price | **120,000 COAT**, settable | user 2026-08-26 (was 100k proposal) |
 | Mint COAT destination | **No burn.** 100% to CoatBonusPool, distributed to ACTIVE Brokers | user |
 | Service fee | **0.5%** per engine-executed trade, settable | community vote 6/7 |
 | Fee split | **100% Booster**, settable (treasury share 0; was 80/20 until 2026-10-07; no buyback slice) | user 2026-08-26, 2026-10-07 |
 | Booster share | converted to **native ETH** before sending (Booster ignores ERC-20) | Zia lesson |
-| Pilot cap | **$1,000 put in per Desk**, settable (a pilot value). Enforced when a deposit is booked: the engine keeps a book per Desk (`principal` = deposits through the router minus what the owner takes out, valued when it leaves; `usdg` = booked deposits plus the engine's own sell proceeds). A deposit that would take principal over the cap reverts. Profit and loss never count: sell proceeds, gains included, are always reinvested. USDG sent around the router is never booked, so never invested. History: v1 counted cumulative spend (a withdrawal never freed it), v2 counted value (profit ate the cap), v3 counted cost (realized profit could not be reinvested); the user rejected each, v4 is the rule they stated on 2026-09-28 | community vote 6/7, user 2026-09-28 |
+| Deposit cap | **None** (user 2026-10-07: "pilot cap olmasın", anyone deposits what they like). The engine still keeps the per-Desk book (`principal` = deposits through the router minus what the owner takes out, valued when it leaves; `usdg` = booked deposits plus the engine's own sell proceeds), and an optional cap stays a lever (`setDepositCap`, default `type(uint256).max` = none); if ever set, a deposit that would take principal over it reverts, profit and loss never count. History: the pilot shipped with $1,000 (community vote 6/7); v1 counted cumulative spend, v2 value, v3 cost, v4 principal (2026-09-28), lifted 2026-10-07 | community vote 6/7, user 2026-09-28, 2026-10-07 |
 | Pilot access | **Open to everyone from day one** | user 2026-08-26 (overrides the 5/7 holders-first vote; communicate in next community update — holders still gain via mint-COAT bonus) |
 | Holder fee discount | **None** (fee stream stays whole) | community vote 4/7 |
 | Deposit minimum | **None** ($20 desks welcome) | thread promise |
@@ -45,7 +45,7 @@ Desk NFT whole with the portfolio inside.
    flows to active Brokers (partner contributions, campaigns). COAT can never be swept: it
    leaves only through posted rounds (audit 2026-10-02; the owner may still recover other
    stray tokens).
-2. **DeskNFT** — ERC-721, settable `mintCap` (pilot 500) under a constant `MAX_DESKS = 2000`
+2. **DeskNFT** — ERC-721, settable `mintCap` (2,000 by default) under a constant `MAX_DESKS = 2000`
    ceiling, mint pulls COAT to the bonus pool, deploys the Desk's
    6551 account (canonical registry), renders on-chain SVG via DeskRenderer.
 3. **DeskAccount** — 6551 account implementation for Desks: identical control model to
@@ -91,7 +91,7 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
 - Every swap is exact-in: the pool must take the whole input in one callback payment, and the
   output is measured on the recipient's balance, never taken from the pool's report.
 - The engine only sells shares it bought (`heldQty`). Shares or USDG the owner puts in the
-  wallet any other way are never traded, so the pilot cap cannot be walked around.
+  wallet any other way are never traded, so the book (and any deposit cap) cannot be walked around.
 - A stale or missing price never locks a Desk: withdrawals are valued leniently (stale counts,
   no feed frees nothing); only buying waits for a fresh price.
 - A basket name without a USDG pool is skipped and the rest keep their relative weights.

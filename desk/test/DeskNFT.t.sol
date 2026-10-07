@@ -75,11 +75,17 @@ contract DeskNFTTest is Test {
         assertEq(coat.balanceOf(pool), 1e18);
     }
 
-    function test_supplyWaves() public {
+    function test_supply_allTwoThousandFromDayOne_capStillALever() public {
+        // no waves: every Desk up to the hard ceiling is mintable from the start
+        assertEq(desks.mintCap(), 2000);
+        assertEq(desks.mintCap(), desks.MAX_DESKS());
+
         vm.prank(ownerAddr);
         desks.setMintPrice(0); // cap test without COAT bookkeeping noise
 
-        // wave 1: pilot cap 500
+        // the lever still works: the owner can hold supply at 500 ...
+        vm.prank(ownerAddr);
+        desks.setMintCap(500);
         vm.startPrank(alice);
         for (uint256 i; i < 500; ++i) {
             desks.mint();
@@ -89,7 +95,7 @@ contract DeskNFTTest is Test {
         vm.stopPrank();
         assertEq(desks.totalMinted(), 500);
 
-        // owner opens wave 2 within the hard ceiling
+        // ... and open more again, within the hard ceiling
         vm.prank(ownerAddr);
         desks.setMintCap(502);
         vm.startPrank(alice);

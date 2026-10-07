@@ -12,9 +12,13 @@ stock's own pool, all on the fork; prices are the real Chainlink feeds, so they 
 
 In both, the keeper's own code makes the buys:
 
-    mint -> deposit (USDG, ETH) -> cap refusal -> keeper buys -> owner's own shares stay
-    untouched -> [testnet: prices move, room unchanged] -> withdrawal frees room by its value
-    -> fill to the cap -> fee flush (Chainlink floor) -> desk sale
+    mint -> deposit (USDG, ETH) -> [no cap: a big deposit is booked | cap: over-cap refused]
+    -> keeper buys -> owner's own shares stay untouched -> [testnet: prices move, principal
+    unchanged] -> withdrawal lowers the principal by its value -> [cap: fill to the cap]
+    -> fee flush (Chainlink floor) -> desk sale
+
+The engine may predate the optional deposit cap (testnet v3 has the old $1,000 pilot cap);
+the cap checks run when a cap is set, the no-cap checks when it is not.
 
 Nothing reaches a real network. Output: rehearsal/deployed-check[-mainnet].md.
 
@@ -55,6 +59,8 @@ ADDRS = FORK_ADDRS if DEPLOY_ON_FORK else DESK / os.environ.get(
 FEED_W = desk_keeper.FEED  # latestRoundData, owner, setAnswer (test feeds)
 POOL = [{"type": "function", "name": n, "stateMutability": "view", "inputs": [], "outputs": [{"type": "address"}]}
         for n in ("token0", "token1")]
+CAP_V3 = [{"type": "function", "name": "pilotCapUsdg", "stateMutability": "view", "inputs": [],
+           "outputs": [{"type": "uint256"}]}]
 ROUTES = [{"type": "function", "name": "routes", "stateMutability": "view",
            "inputs": [{"name": "s", "type": "address"}],
            "outputs": [{"name": "pool", "type": "address"}, {"name": "usdgIsToken0", "type": "bool"}]}]
@@ -148,8 +154,15 @@ def check(w3: Web3) -> int:
     r.check("1 config", c(A["accountImpl"], abi("DeskAccount")).functions.engine().call() == A["engine"],
             "every Desk wallet is bound to this engine")
     r.check("1 config", engine.functions.ethUsdFeed().call() == A["ethFeed"], "fee flush floored by Chainlink ETH/USD")
-    r.check("1 config", engine.functions.pilotCapUsdg().call() == 1000 * E6 and engine.functions.feeBps().call() == 50,
-            "pilot cap $1,000, fee 0.5%")
+    try:
+        cap = engine.functions.depositCapUsdg().call()
+    except Exception:  # an engine from before the optional cap (testnet v3)
+        cap = c(A["engine"], CAP_V3).functions.pilotCapUsdg().call()
+    capped = cap < 2**128
+    r.check("1 config", engine.functions.feeBps().call() == 50,
+            f"fee 0.5%, {f'deposit cap ${cap / E6:,.0f}' if capped else 'no deposit cap'}")
+    if not capped:
+        r.check("1 config", desks.functions.mintCap().call() == 2000, "all 2,000 Desks mintable, no waves")
     r.check("1 config", renderer.functions.frozen().call() and desks.functions.mintOpen().call(),
             "traits frozen, mint open")
     if MAINNET:
@@ -176,27 +189,47 @@ def check(w3: Web3) -> int:
     r.check("2 mint", desks.functions.tokenURI(desk_id).call().startswith("data:application/json;base64,"),
             f"Desk #{desk_id} renders on chain")
 
-    print("step 3: deposits and the $1,000 cap on money put in")
+    print("step 3: deposits, booked as money put in")
     send(alice, usdg.functions.approve(A["depositRouter"], 2_000 * E6), what="approve USDG")
     send(alice, router.functions.depositUsdg(desk_id, 600 * E6), what="alice deposits 600 USDG")
-    r.check("3 cap", engine.functions.principalOf(desk_id).call() == 600 * E6
-            and engine.functions.depositRoomOf(desk_id).call() == 400 * E6, "principal $600, room $400")
-    r.check("3 cap", reverts(alice.address, router.functions.depositUsdg(desk_id, 500 * E6)),
-            "a 500 USDG deposit is refused (only $400 of room)")
+    r.check("3 deposit", engine.functions.principalOf(desk_id).call() == 600 * E6, "principal $600")
+    if capped:
+        room0 = cap - 600 * E6
+        r.check("3 deposit", engine.functions.depositRoomOf(desk_id).call() == room0
+                and reverts(alice.address, router.functions.depositUsdg(desk_id, room0 + 1)),
+                f"over the ${cap / E6:,.0f} cap is refused (room ${room0 / E6:,.2f})")
     before = engine.functions.principalOf(desk_id).call()
     send(alice, router.functions.depositEth(desk_id, 0), value=E18 // 100, what="alice deposits 0.01 ETH")
     eth_in = engine.functions.principalOf(desk_id).call() - before
-    r.check("3 cap", eth_in > 0 and usdg.functions.balanceOf(acct).call() == 600 * E6 + eth_in,
+    r.check("3 deposit", eth_in > 0 and usdg.functions.balanceOf(acct).call() == 600 * E6 + eth_in,
             f"0.01 ETH arrived as {eth_in / E6:.2f} USDG and was booked")
+    if not capped:
+        give_usdg(alice.address, 5_000 * E6, "alice gets 5,000 more USDG")
+        send(alice, usdg.functions.approve(A["depositRouter"], 5_000 * E6), what="approve USDG")
+        send(alice, router.functions.depositUsdg(desk_id, 5_000 * E6), what="alice deposits 5,000 USDG more")
+        r.check("3 deposit", engine.functions.principalOf(desk_id).call() == 5_600 * E6 + eth_in,
+                f"no cap: ${(5_600 * E6 + eth_in) / E6:,.2f} put in and booked")
+
+    def settle(desk: int, ticks: int = 8) -> int:
+        """Keeper ticks until the Desk's booked USDG is at work (big deposits fill in steps)."""
+        n = 0
+        while n < ticks:
+            k.tick()
+            n += 1
+            if engine.functions.investableOf(desk).call() < 5 * E6:
+                break
+        return n
 
     print("step 4: the keeper buys")
-    k.tick()
+    n_ticks = settle(desk_id)
     held = {t: engine.functions.heldQty(desk_id, t).call() for t in names}
     bought = {t: q for t, q in held.items() if q}
     r.check("4 buy", bought and all(q == tok[t].functions.balanceOf(acct).call() for t, q in bought.items()),
             "the keeper bought " + ", ".join(f"{q / E18:.4f} {k.sym(t)}" for t, q in bought.items())
             + " into the Desk wallet")
-    r.check("4 buy", engine.functions.investableOf(desk_id).call() < 5 * E6, "booked USDG is invested")
+    r.check("4 buy", engine.functions.investableOf(desk_id).call() < 5 * E6,
+            f"booked USDG is invested ({n_ticks} keeper tick{'s' if n_ticks > 1 else ''}, at most "
+            f"${desk_keeper.MAX_TRADE_USD:,.0f} a tick)")
     r.check("4 buy", usdg.functions.balanceOf(A["engine"]).call() == engine.functions.feesAccrued().call(),
             "the engine holds only its fees")
     principal0 = engine.functions.principalOf(desk_id).call()
@@ -237,7 +270,7 @@ def check(w3: Web3) -> int:
                 f"managed value ${managed(desk_id):,.2f} against ${principal0 / E6:,.2f} put in: fills within 3% of "
                 "the feeds after the 0.5% fee")
 
-    print("step 7: a withdrawal frees room by what it is worth")
+    print("step 7: a withdrawal lowers the principal by what it is worth")
     w_t = min(bought, key=lambda t: bought[t])
     q = engine.functions.heldQty(desk_id, w_t).call() // 2
     feed = c(c(A["booster"], desk_keeper.BOOSTER).functions.stockFeed(w_t).call(), FEED_W)
@@ -247,23 +280,30 @@ def check(w3: Web3) -> int:
                                          ._encode_transaction_data(), 0),
          what=f"alice takes half the engine's {k.sym(w_t)} out")
     p2 = engine.functions.principalOf(desk_id).call()
-    r.check("7 withdraw", abs((p_before - p2) - worth) <= 1, f"room grew by ${worth / E6:,.2f}, the {k.sym(w_t)}'s value")
-    room = engine.functions.depositRoomOf(desk_id).call()
-    give_usdg(alice.address, room, f"alice gets {room / E6:,.2f} more USDG")
-    send(alice, usdg.functions.approve(A["depositRouter"], room), what="approve USDG")
-    send(alice, router.functions.depositUsdg(desk_id, room), what=f"alice fills the room ({room / E6:,.2f} USDG)")
-    r.check("7 withdraw", engine.functions.principalOf(desk_id).call() == 1000 * E6
-            and reverts(alice.address, router.functions.depositUsdg(desk_id, 1)), "principal at the cap; 1 more USDG is refused")
+    r.check("7 withdraw", abs((p_before - p2) - worth) <= 1,
+            f"principal down by ${worth / E6:,.2f}, the {k.sym(w_t)}'s value")
+    if capped:
+        room = engine.functions.depositRoomOf(desk_id).call()
+        give_usdg(alice.address, room, f"alice gets {room / E6:,.2f} more USDG")
+        send(alice, usdg.functions.approve(A["depositRouter"], room), what="approve USDG")
+        send(alice, router.functions.depositUsdg(desk_id, room), what=f"alice fills the room ({room / E6:,.2f} USDG)")
+        r.check("7 withdraw", engine.functions.principalOf(desk_id).call() == cap
+                and reverts(alice.address, router.functions.depositUsdg(desk_id, 1)), "principal at the cap; 1 more USDG is refused")
+    else:
+        give_usdg(alice.address, 1_000 * E6, "alice gets 1,000 more USDG")
+        send(alice, usdg.functions.approve(A["depositRouter"], 1_000 * E6), what="approve USDG")
+        send(alice, router.functions.depositUsdg(desk_id, 1_000 * E6), what="alice deposits 1,000 USDG after the withdrawal")
     print("step 8: the keeper invests the new USDG; fees reach the Booster as ETH, Chainlink-floored")
     b0 = w3.eth.get_balance(A["booster"])
-    k.tick()  # buys with the new USDG, and flushes once fees pass $5
+    settle(desk_id)  # buys with the new USDG, and flushes once fees pass $5
     left = engine.functions.feesAccrued().call()
     if left:  # under the keeper's $5 floor: flush by hand, with no keeper floor at all
         send(deployer, engine.functions.flushFees(0), what=f"flush {left / E6:.2f} USDG of fees (keeper floor 0)")
     got = w3.eth.get_balance(A["booster"]) - b0
     r.check("8 fees", engine.functions.feesAccrued().call() == 0 and got > 0,
-            f"the Booster received {got / E18:.6f} ETH (all of the fees), every fill above the Chainlink ETH/USD floor")
-    r.check("8 fees", engine.functions.investableOf(desk_id).call() < 5 * E6, "the room filled after the withdrawal is invested")
+            f"the Booster received {got / E18:.6f} ETH ({engine.functions.boosterShareBps().call() / 100:.0f}% of the fees), "
+            "every fill above the Chainlink ETH/USD floor")
+    r.check("8 fees", engine.functions.investableOf(desk_id).call() < 5 * E6, "the deposit after the withdrawal is invested")
 
     print("step 9: the Desk is sold whole")
     send(alice, desks.functions.transferFrom(alice.address, bob.address, desk_id), what="alice transfers the Desk to bob")

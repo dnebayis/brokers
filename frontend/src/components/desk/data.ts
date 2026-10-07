@@ -76,7 +76,7 @@ export type DeskView = {
   idle: bigint; // USDG in the Desk wallet
   investable: bigint; // the part the engine booked (deposits through the router, sell proceeds)
   principal: bigint; // what the owner put in, net of what they took out
-  room: bigint; // how much more may be deposited under the pilot cap
+  room: bigint; // how much more may be deposited (unlimited when there is no cap)
   cap: bigint;
   holdings: Holding[];
   stockUsd: number;
@@ -122,6 +122,10 @@ async function learnSymbols(client: PublicClient, cfg: DeskConfig, tokens: Addre
   unknown.forEach((t, i) => names[i] && SYMBOLS.set(t.toLowerCase(), names[i]));
 }
 
+/** A deposit cap at or above this is "no cap" (the engine's default is the uint256 maximum). */
+export const NO_CAP = 2n ** 128n;
+export const hasCap = (cap: bigint) => cap < NO_CAP;
+
 /** Every stock the engine can hold: the names it ever got a pool for. */
 async function engineStocks(client: PublicClient, cfg: DeskConfig): Promise<Address[]> {
   const n = await client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "routedStockCount" });
@@ -159,7 +163,9 @@ export async function readDesk(
     client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "mintCap" }),
     client.readContract({ address: cfg.desks, abi: deskNftAbi, functionName: "mintOpen" }),
     client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "feeBps" }),
-    client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "pilotCapUsdg" }),
+    client
+      .readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "depositCapUsdg" })
+      .catch(() => client.readContract({ address: cfg.engine, abi: deskEngineAbi, functionName: "pilotCapUsdg" })),
     client.readContract({ address: cfg.registry, abi: registryAbi, functionName: "getBasket", args: [BigInt(cfg.strategyId)] }),
     client.readContract({ address: cfg.depositRouter, abi: depositRouterAbi, functionName: "minUsdgForEth", args: [10n ** 18n] }),
     client.readContract({ address: cfg.depositRouter, abi: depositRouterAbi, functionName: "maxSlippageBps" }),

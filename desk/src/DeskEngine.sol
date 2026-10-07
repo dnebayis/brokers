@@ -83,10 +83,11 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     // --- settable levers (the 36,750 lesson) ---
     address public keeper;
     uint256 public feeBps = 50; // 0.5% — community vote
-    /// @notice Per-Desk ceiling on the money the OWNER may put in, net of what they take out
-    ///         (raw USDG). Enforced when a deposit is recorded; profits and losses never count
-    ///         against it. A pilot value, settable.
-    uint256 public pilotCapUsdg;
+    /// @notice Optional per-Desk ceiling on the money the OWNER may put in, net of what they take
+    ///         out (raw USDG). None by default (user decision 2026-10-07: no pilot cap, anyone
+    ///         deposits what they like); kept as a lever. If ever set, it is enforced when a
+    ///         deposit is recorded and profits and losses never count against it.
+    uint256 public depositCapUsdg = type(uint256).max;
     /// @notice The only address that may record deposits (the DeskDepositRouter).
     address public depositRouter;
     uint256 public boosterShareBps = 10_000; // all of it to the Booster: user decision 2026-10-07 (was 80/20)
@@ -133,7 +134,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
 
     event KeeperSet(address keeper);
     event FeeBpsSet(uint256 bps);
-    event PilotCapSet(uint256 capRaw);
+    event DepositCapSet(uint256 capRaw);
     event SplitSet(uint256 boosterShareBps, address boosterSink, address treasury);
     event SlippageSet(uint256 bps);
     event StaleWindowSet(uint256 secondsAfter);
@@ -202,7 +203,6 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         treasury = treasury_;
         keeper = owner_;
         _usdgUnit = 10 ** IERC20Metadata(address(usdg_)).decimals();
-        pilotCapUsdg = 1000 * _usdgUnit; // $1,000 pilot cap — community vote
     }
 
     receive() external payable {} // WETH.withdraw pays native ETH here during fee flush
@@ -227,9 +227,10 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
         emit FeeBpsSet(bps);
     }
 
-    function setPilotCap(uint256 capRaw) external onlyOwner {
-        pilotCapUsdg = capRaw;
-        emit PilotCapSet(capRaw);
+    /// @notice type(uint256).max = no cap (the default).
+    function setDepositCap(uint256 capRaw) external onlyOwner {
+        depositCapUsdg = capRaw;
+        emit DepositCapSet(capRaw);
     }
 
     function setSplit(uint256 boosterShareBps_, address boosterSink_, address treasury_) external onlyOwner {
@@ -284,13 +285,14 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
 
     // --- deposits (router) ---
 
-    /// @notice Book a deposit the router just delivered to a Desk wallet. Reverts when it would
-    ///         take the Desk's principal over the pilot cap, which undoes the whole deposit.
+    /// @notice Book a deposit the router just delivered to a Desk wallet. Reverts only when a
+    ///         deposit cap is set and this would take the Desk's principal over it, which undoes
+    ///         the whole deposit.
     function recordDeposit(uint256 deskId, uint256 amount) external nonReentrant {
         if (msg.sender != depositRouter) revert NotRouter();
         _sync(deskId, desks.accountOf(deskId));
         Book storage b = books[deskId];
-        uint256 room = pilotCapUsdg > b.principal ? pilotCapUsdg - b.principal : 0;
+        uint256 room = depositCapUsdg > b.principal ? depositCapUsdg - b.principal : 0;
         if (amount > room) revert DepositOverCap(amount, room);
         b.principal += amount.toUint128();
         b.usdg += amount.toUint128();
@@ -353,7 +355,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     /// @notice Sell part of a Desk's stock back to USDG (rebalance / cash-out leg). Proceeds
     ///         return to the Desk net of the service fee. Only stock the engine itself delivered
     ///         can be sold: shares the owner put in the wallet some other way are theirs alone,
-    ///         and selling them would turn them into investable USDG outside the pilot cap.
+    ///         and selling them would turn them into investable USDG outside the book (and outside any deposit cap).
     function sellStock(uint256 deskId, address stock, uint256 amount) external nonReentrant onlyKeeper {
         if (amount == 0) revert NothingToDo();
         address acct = desks.accountOf(deskId);
@@ -398,16 +400,17 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
 
     // --- views ---
 
-    /// @notice What the owner has put in, net of what they took out, in raw USDG. The pilot cap
-    ///         is measured against this. Takes into account withdrawals not yet booked.
+    /// @notice What the owner has put in, net of what they took out, in raw USDG (a deposit cap,
+    ///         if one is ever set, is measured against this). Includes withdrawals not yet booked.
     function principalOf(uint256 deskId) public view returns (uint256 principal) {
         (principal,,) = _scan(deskId, desks.accountOf(deskId));
     }
 
-    /// @notice How much more the owner may deposit into this Desk right now.
+    /// @notice How much more the owner may deposit into this Desk right now (unlimited with no cap).
     function depositRoomOf(uint256 deskId) external view returns (uint256) {
+        if (depositCapUsdg == type(uint256).max) return type(uint256).max;
         uint256 p = principalOf(deskId);
-        return pilotCapUsdg > p ? pilotCapUsdg - p : 0;
+        return depositCapUsdg > p ? depositCapUsdg - p : 0;
     }
 
     /// @notice USDG in the Desk the engine may invest now: booked deposits and sell proceeds.

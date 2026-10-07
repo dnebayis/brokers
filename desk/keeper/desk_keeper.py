@@ -38,6 +38,10 @@ DESK = Path(__file__).resolve().parents[1]
 E18, E6, BPS = 10**18, 10**6, 10_000
 ZERO = "0x0000000000000000000000000000000000000000"
 MIN_TRADE_USD = 1.0
+# With no deposit cap a single deposit can be larger than a thin stock pool can take inside the
+# Chainlink floor in one swap. The keeper puts at most this much of a Desk to work per tick, so a
+# big deposit fills in steps and arbitrage pulls the pool back to the feed in between.
+MAX_TRADE_USD = float(os.environ.get("MAX_TRADE_USD", "2500"))
 FLUSH_MIN_USDG = 5 * E6
 FEED_REFRESH_AFTER = 12 * 3600  # well inside the router's 24h window
 
@@ -260,8 +264,8 @@ class Keeper:
             return
         # 3. idle USDG into the names below their weight
         # only USDG the engine booked (router deposits and its own sell proceeds) is invested;
-        # the pilot cap is enforced when a deposit is booked, so there is no cap check here
-        spend = self.engine.functions.investableOf(desk_id).call()
+        # a deposit cap, if one is ever set, is enforced when a deposit is booked; none here
+        spend = min(self.engine.functions.investableOf(desk_id).call(), int(MAX_TRADE_USD * E6))
         if spend / E6 < MIN_TRADE_USD:
             return
         v = val(bal())

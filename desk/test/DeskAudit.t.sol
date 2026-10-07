@@ -149,7 +149,7 @@ contract DeskAuditTest is DeskEngineBase {
             } else {
                 engine.recordDeposit(id, a);
             }
-            assertLe(engine.principalOf(id), engine.pilotCapUsdg());
+            assertLe(engine.principalOf(id), engine.depositCapUsdg());
         }
     }
 
@@ -388,7 +388,7 @@ contract DeskAuditTest is DeskEngineBase {
         vm.expectRevert();
         engine.setPool(address(intc), address(intcPool));
         vm.expectRevert();
-        engine.setPilotCap(1e30);
+        engine.setDepositCap(1e30);
         vm.expectRevert();
         engine.setDepositRouter(keeper);
         vm.expectRevert();
@@ -555,7 +555,7 @@ contract DeskInvariantTest is DeskEngineBase {
     }
 
     function invariant_principalNeverAboveTheCap() public view {
-        assertLe(engine.principalOf(handler.id()), engine.pilotCapUsdg());
+        assertLe(engine.principalOf(handler.id()), engine.depositCapUsdg());
     }
 
     /// The engine only invests USDG that really sits in the wallet.

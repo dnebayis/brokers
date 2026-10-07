@@ -1,6 +1,6 @@
 # The Desk: local testnet rehearsal (build order step 5, dress run)
 
-Run 2026-10-07 10:58 UTC on an anvil fork of Robinhood Chain testnet (46630) at block 130,459,076.
+Run 2026-10-07 11:12 UTC on an anvil fork of Robinhood Chain testnet (46630) at block 130,464,922.
 Nothing was sent to the real testnet. Deployer transactions were impersonated on the fork;
 alice and bob were fresh throwaway wallets. Re-run: `cd desk && python3 script/rehearse_local.py`.
 
@@ -8,23 +8,22 @@ Test venue (testnet has no USDG and no v3 USDG pools): test USDG, tMSFT, and ora
 pools filling at feed price minus 0.30%. The tAAPL staging feed was refreshed to $200, tMSFT
 feed $500, ETH feed $2,700. The Desk uses its own strategy slot; Booster slot 0 untouched.
 
-Desk #1, bonus Brokers [608, 758].
+Desk #1, bonus Brokers [66, 223].
 
 ## Checks
 
 - step 1 deploy: PASS traits uploaded and frozen against the commit
 - step 1 deploy: PASS desk mint open
-- step 1 deploy: PASS engine at pilot parameters (0.5% fee, $1,000 cap)
+- step 1 deploy: PASS engine at launch parameters (0.5% fee, no deposit cap, 2,000 Desks)
 - step 1 deploy: PASS desk strategy slot 2 holds tAAPL 100% (epoch 1); Booster slot 0 untouched
-- step 2 brokers: PASS Brokers [608, 758] active in the Booster
+- step 2 brokers: PASS Brokers [66, 223] active in the Booster
 - step 3 mint: PASS Desk #1 owned by alice
 - step 3 mint: PASS Desk wallet deployed at mint (0xf4d02c0Ea7b3cf056aA668167Fc9361DCD2aE6Eb)
 - step 3 mint: PASS 120,000 COAT went to the bonus pool, none burned
 - step 3 mint: PASS tokenURI renders on chain
 - step 4 deposit: PASS 0.01 ETH arrived as 26.92 USDG (Chainlink floor 26.19)
 - step 4 deposit: PASS 10,000 COAT arrived as 0.2650 USDG (thin testnet COAT pool)
-- step 4 deposit: PASS principal $927.18 booked, $72.82 of room left under the $1,000 pilot cap
-- step 4 deposit: PASS a deposit over the pilot cap reverts
+- step 4 deposit: PASS principal $927.18 booked, no cap on what more can go in
 - step 4 deposit: PASS USDG sent around the router is not booked, so it is never invested
 - step 4 deposit: PASS deposit router holds nothing afterwards
 - step 5 buy: PASS every booked dollar went to work; the 200 sent around the router still sits idle
@@ -41,7 +40,7 @@ Desk #1, bonus Brokers [608, 758].
 - step 8 bonus: PASS each Broker wallet got 60,000 COAT (paid to the NFT, not the caller)
 - step 8 bonus: PASS round fully paid, pool empty
 - step 8 bonus: PASS double claim reverts
-- step 9 withdraw: PASS withdrawals lowered the principal from $927.18 to $655.64, reopening room
+- step 9 withdraw: PASS withdrawals lowered the principal from $927.18 to $655.64, by what left
 - step 9 withdraw: PASS 0.5431 tMSFT now in alice's wallet
 - step 9 withdraw: PASS a stranger cannot move Desk assets
 - step 10 sale: PASS bob owns the Desk
@@ -63,29 +62,29 @@ Desk #1, bonus Brokers [608, 758].
 
 | step | what | gas |
 |---|---|---|
-| 1 deploy | 44 deployer transactions | 25,784,439 |
+| 1 deploy | 44 deployer transactions | 25,787,619 |
 | setup | deployer sends alice COAT for a desk mint and two broker activations | 54,155 |
 | setup | alice gets 1,500 test USDG | 53,555 |
 | 2 brokers | alice mints 2 Brokers | 395,003 |
 | 2 brokers | approve activation burn | 46,414 |
-| 2 brokers | activate Broker #608 | 138,458 |
-| 2 brokers | activate Broker #758 | 133,658 |
+| 2 brokers | activate Broker #66 | 138,446 |
+| 2 brokers | activate Broker #223 | 133,646 |
 | 3 mint | approve mint price | 46,402 |
 | 3 mint | alice mints a Desk | 213,828 |
 | 4 deposit | approve USDG deposit | 46,331 |
-| 4 deposit | alice deposits 900 USDG | 131,583 |
-| 4 deposit | alice deposits 0.01 ETH through the deposit router | 183,099 |
+| 4 deposit | alice deposits 900 USDG | 131,539 |
+| 4 deposit | alice deposits 0.01 ETH through the deposit router | 183,064 |
 | 4 deposit | approve COAT deposit | 46,414 |
-| 4 deposit | alice deposits 10,000 COAT (COAT -> ETH on the live testnet v4 pool -> USDG) | 451,072 |
+| 4 deposit | alice deposits 10,000 COAT (COAT -> ETH on the live testnet v4 pool -> USDG) | 451,036 |
 | 4 deposit | alice sends 200 USDG straight to the wallet, around the router | 34,456 |
-| 5 buy | keeper buyBasket | 271,353 |
+| 5 buy | keeper buyBasket | 271,331 |
 | 6 rebalance | new basket posted (epoch +1) | 89,843 |
 | 6 rebalance | keeper sells 30% of the tAAPL | 206,154 |
-| 6 rebalance | keeper buyStock tMSFT with the proceeds | 232,436 |
+| 6 rebalance | keeper buyStock tMSFT with the proceeds | 232,488 |
 | 7 fee split | keeper flushFees | 176,950 |
 | 8 bonus | poster posts round 0 | 120,589 |
-| 8 bonus | bob claims for Broker #608 (permissionless) | 108,586 |
-| 8 bonus | alice claims for Broker #758 | 83,591 |
+| 8 bonus | bob claims for Broker #66 (permissionless) | 108,574 |
+| 8 bonus | alice claims for Broker #223 | 83,579 |
 | 9 withdraw | alice pulls tMSFT out | 65,840 |
 | 9 withdraw | alice pulls leftover USDG out | 48,668 |
 | 10 sale | bob pays alice 0.01 ETH (off-market sale stand-in) | 21,000 |
@@ -93,7 +92,7 @@ Desk #1, bonus Brokers [608, 758].
 | 10 sale | bob pauses the engine on his Desk | 58,714 |
 | 10 sale | (test) bob gets 50 USDG | 53,567 |
 | 10 sale | approve | 46,343 |
-| 10 sale | bob deposits 50 USDG into his Desk | 131,685 |
+| 10 sale | bob deposits 50 USDG into his Desk | 131,641 |
 | 10 sale | bob withdraws the tAAPL he bought with the Desk | 65,840 |
 
 ## Addresses (fork only, not deployed anywhere)
@@ -123,6 +122,6 @@ Desk #1, bonus Brokers [608, 758].
 - taaplFeed: `0x9A1e65F136f69980BEf2Acb307e16b79E1EF5CE4`
 - tmsft: `0x1e3C8d4F16AFc60a29d4257124926Af9383d9268`
 - tnvda: `0xd5Db94e38E4B200bb914CC7e711866a8ff78C949`
-- treasury: `0x74C132626ff786e3b9009074ff917A909CC256B0`
+- treasury: `0x8A6f1322d1C53b1133610afEc1c8C4d93F4113C9`
 - usdg: `0x1D3fe2F7dC9c33Fe2e006F5338591d4D937c456e`
 - weth: `0x7943e237c7F95DA44E0301572D358911207852Fa`

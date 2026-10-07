@@ -223,6 +223,9 @@ abstract contract DeskEngineBase is Test {
         engine.setEthPool(address(ethPool));
         engine.setEthUsdFeed(IAggregatorV3Desk(address(ethFeed)));
         engine.setDepositRouter(address(this)); // this test plays the deposit router
+        // there is no deposit cap by default; the fixture sets the lever to $1,000 so the cap
+        // mechanics stay covered (DeskNoCapTest covers the default)
+        engine.setDepositCap(1000 * U);
         desks.setMintOpen(true);
         desks.setMintPrice(0);
         vm.stopPrank();
@@ -525,3 +528,72 @@ contract DeskEngineTest is DeskEngineBase {
     }
 }
 
+/// The default: no deposit cap. Anyone deposits what they like; the principal is still booked.
+contract DeskNoCapTest is DeskEngineBase {
+    function setUp() public override {
+        super.setUp();
+        vm.prank(ownerA);
+        engine.setDepositCap(type(uint256).max); // back to the constructor default
+    }
+
+    function test_freshEngineHasNoCap() public {
+        DeskEngine fresh = new DeskEngine(
+            IERC20(address(usdg)),
+            IWETHDesk(address(wethT)),
+            IDeskNFTView(address(desks)),
+            IStrategyRegistryView(address(strat)),
+            IBoosterFeedView(address(feeds)),
+            0,
+            boosterSink,
+            treasury,
+            ownerA
+        );
+        assertEq(fresh.depositCapUsdg(), type(uint256).max);
+    }
+
+    function test_anyDepositIsBooked_andInvested() public {
+        (uint256 id, address acct) = _openDesk(5_000 * U);
+        _deposit(id, acct, 45_000 * U); // $50,000 in, in two deposits
+        assertEq(engine.principalOf(id), 50_000 * U);
+        assertEq(engine.depositRoomOf(id), type(uint256).max);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max);
+        assertEq(engine.investableOf(id), 0);
+        assertEq(usdg.balanceOf(acct), 0);
+        assertApproxEqRel(intc.balanceOf(acct), 298.5 ether, 1e14); // 60% of $49,750 at $100
+    }
+
+    function testFuzz_noDepositIsRefused(uint256[4] memory amounts) public {
+        (uint256 id, address acct) = _openDesk(0);
+        uint256 total;
+        for (uint256 i; i < amounts.length; ++i) {
+            uint256 a = bound(amounts[i], 1, 1e7 * U); // up to $10M a deposit (the fixture holds ~$48M)
+            _deposit(id, acct, a);
+            total += a;
+        }
+        assertEq(engine.principalOf(id), total);
+    }
+
+    /// The book still works without a cap: a withdrawal lowers the principal by its value.
+    function test_withdrawalStillLowersThePrincipal() public {
+        (uint256 id, address acct) = _openDesk(3_000 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max);
+        _withdraw(acct, intc, intc.balanceOf(acct)); // $1,791 of INTC
+        assertEq(engine.principalOf(id), 1_209 * U);
+    }
+
+    /// The cap is a lever: set, it is enforced exactly as before; lifted, deposits flow again.
+    function test_capLever_canBeSetAndLifted() public {
+        (uint256 id, address acct) = _openDesk(800 * U);
+        vm.prank(ownerA);
+        engine.setDepositCap(1000 * U);
+        usdg.transfer(acct, 300 * U);
+        vm.expectRevert(abi.encodeWithSelector(DeskEngine.DepositOverCap.selector, 300 * U, 200 * U));
+        engine.recordDeposit(id, 300 * U);
+        vm.prank(ownerA);
+        engine.setDepositCap(type(uint256).max);
+        engine.recordDeposit(id, 300 * U);
+        assertEq(engine.principalOf(id), 1_100 * U);
+    }
+}
