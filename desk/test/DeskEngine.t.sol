@@ -403,7 +403,7 @@ contract DeskEngineTest is DeskEngineBase {
         assertEq(engine.principalOf(id), 600 * U);
     }
 
-    function test_flushFees_splits8020inEth() public {
+    function test_flushFees_allToTheBoosterInEth() public {
         (uint256 id,) = _openDesk(1000 * U);
         vm.prank(keeper);
         engine.buyBasket(id, type(uint256).max); // fee 5 USDG
@@ -413,10 +413,39 @@ contract DeskEngineTest is DeskEngineBase {
         uint256 tBefore = treasury.balance;
         vm.prank(keeper);
         engine.flushFees(0);
-        // 5 USDG at $2500 = 0.002 ETH; 80/20
-        assertApproxEqRel(boosterSink.balance - bBefore, 0.0016 ether, 1e15);
-        assertApproxEqRel(treasury.balance - tBefore, 0.0004 ether, 1e15);
+        // 5 USDG at $2500 = 0.002 ETH, all of it to the Booster by default
+        assertEq(engine.boosterShareBps(), 10_000);
+        assertApproxEqRel(boosterSink.balance - bBefore, 0.002 ether, 1e15);
+        assertEq(treasury.balance, tBefore);
         assertEq(engine.feesAccrued(), 0);
+    }
+
+    /// The split stays a lever: a treasury share can be set, and with no share a treasury that
+    /// refuses ETH cannot block the flush.
+    function test_flushFees_splitIsSettable_andAZeroShareSendsNothing() public {
+        (uint256 id,) = _openDesk(1000 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id, type(uint256).max); // fee 5 USDG = 0.002 ETH
+
+        address refuser = address(new MockFeed(0)); // a contract with no receive()
+        vm.prank(ownerA);
+        engine.setSplit(10_000, boosterSink, refuser);
+        vm.prank(keeper);
+        engine.flushFees(0); // nothing goes to the refuser, so nothing fails
+
+        vm.prank(alice);
+        (uint256 id2,) = desks.mint();
+        _deposit(id2, desks.accountOf(id2), 1000 * U);
+        vm.prank(keeper);
+        engine.buyBasket(id2, type(uint256).max);
+        vm.prank(ownerA);
+        engine.setSplit(9_000, boosterSink, treasury);
+        uint256 bBefore = boosterSink.balance;
+        uint256 tBefore = treasury.balance;
+        vm.prank(keeper);
+        engine.flushFees(0);
+        assertApproxEqRel(boosterSink.balance - bBefore, 0.0018 ether, 1e15);
+        assertApproxEqRel(treasury.balance - tBefore, 0.0002 ether, 1e15);
     }
 
     function test_buyStock_buysOnlyThatName() public {

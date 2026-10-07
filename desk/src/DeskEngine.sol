@@ -54,7 +54,7 @@ interface IWETHDesk {
 ///         (through the wallet's narrow, owner-revocable `enginePull`), buys the live basket
 ///         through allowlisted Uniswap v3 USDG pools, and delivers every stock DIRECTLY into
 ///         the same Desk. Charges the service fee (0.5%, settable) and splits it
-///         80% Booster (as native ETH) / 20% treasury — both shares settable.
+///         100% to the Booster (as native ETH) by default; a treasury share is settable.
 /// @dev Price safety mirrors Booster: every swap carries a Chainlink-derived `minOut` floor,
 ///      with feeds READ from the deployed Booster's public `stockFeed` mapping (single source
 ///      of truth, zero core changes). Pool pairs and directions are verified on install, the
@@ -89,7 +89,7 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
     uint256 public pilotCapUsdg;
     /// @notice The only address that may record deposits (the DeskDepositRouter).
     address public depositRouter;
-    uint256 public boosterShareBps = 8000; // 80/20 — user decision 2026-08-26
+    uint256 public boosterShareBps = 10_000; // all of it to the Booster: user decision 2026-10-07 (was 80/20)
     address public boosterSink; // receives the ETH share (Booster's receive())
     address public treasury;
     uint256 public maxSlippageBps = 500;
@@ -387,8 +387,11 @@ contract DeskEngine is Ownable2Step, ReentrancyGuard {
 
         uint256 toBooster = (wethOut * boosterShareBps) / BPS;
         uint256 toTreasury = wethOut - toBooster;
-        (bool ok1,) = boosterSink.call{value: toBooster}("");
-        (bool ok2,) = treasury.call{value: toTreasury}("");
+        // a zero share sends nothing, so a treasury that refuses ETH can never block a flush
+        bool ok1 = toBooster == 0;
+        bool ok2 = toTreasury == 0;
+        if (!ok1) (ok1,) = boosterSink.call{value: toBooster}("");
+        if (!ok2) (ok2,) = treasury.call{value: toTreasury}("");
         if (!ok1 || !ok2) revert EthSendFailed();
         emit FeesFlushed(amount, wethOut, toBooster, toTreasury);
     }

@@ -24,7 +24,7 @@ Desk NFT whole with the portfolio inside.
 | Mint price | **120,000 COAT**, settable | user 2026-08-26 (was 100k proposal) |
 | Mint COAT destination | **No burn.** 100% to CoatBonusPool, distributed to ACTIVE Brokers | user |
 | Service fee | **0.5%** per engine-executed trade, settable | community vote 6/7 |
-| Fee split | **80% Booster / 20% treasury**, settable (no buyback slice) | user 2026-08-26 |
+| Fee split | **100% Booster**, settable (treasury share 0; was 80/20 until 2026-10-07; no buyback slice) | user 2026-08-26, 2026-10-07 |
 | Booster share | converted to **native ETH** before sending (Booster ignores ERC-20) | Zia lesson |
 | Pilot cap | **$1,000 put in per Desk**, settable (a pilot value). Enforced when a deposit is booked: the engine keeps a book per Desk (`principal` = deposits through the router minus what the owner takes out, valued when it leaves; `usdg` = booked deposits plus the engine's own sell proceeds). A deposit that would take principal over the cap reverts. Profit and loss never count: sell proceeds, gains included, are always reinvested. USDG sent around the router is never booked, so never invested. History: v1 counted cumulative spend (a withdrawal never freed it), v2 counted value (profit ate the cap), v3 counted cost (realized profit could not be reinvested); the user rejected each, v4 is the rule they stated on 2026-09-28 | community vote 6/7, user 2026-09-28 |
 | Pilot access | **Open to everyone from day one** | user 2026-08-26 (overrides the 5/7 holders-first vote; communicate in next community update — holders still gain via mint-COAT bonus) |
@@ -53,8 +53,8 @@ Desk NFT whole with the portfolio inside.
    DeskEngine restricted to engine operations (pull USDG up to cap, deliver stocks).
 4. **DeskEngine** — executes buys/rebalances: pulls USDG from a Desk, swaps through the
    allowlisted USDG stock pools with Chainlink `minOut` guards (same guard math as
-   Booster), returns stock to the same Desk, takes the 0.5% fee, splits it 80% Booster /
-   20% treasury (both settable) and converts the Booster share to native ETH.
+   Booster), returns stock to the same Desk, takes the 0.5% fee and sends it to the Booster as
+   native ETH (a treasury share is settable, 0 by default).
 5. **DeskRenderer** — on-chain SVG + metadata (fixed traits; live holdings via
    `display_type: number`).
 

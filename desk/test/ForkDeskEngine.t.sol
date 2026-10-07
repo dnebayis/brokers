@@ -154,7 +154,8 @@ contract ForkDeskEngineTest is Test {
         uint256 toBooster = BOOSTER.balance - boosterEth;
         uint256 toTreasury = treasury.balance - treasuryEth;
         assertGt(toBooster, 0, "booster received native eth");
-        assertEq(toBooster, ((toBooster + toTreasury) * 8000) / 10_000, "80/20 split");
+        assertEq(toTreasury, 0, "all of it to the Booster");
+        assertGt(toBooster, 0, "booster paid");
         assertEq(IERC20(USDG).balanceOf(address(engine)), 0, "no usdg left in the engine");
         assertEq(IERC20(WETH).balanceOf(address(engine)), 0, "no weth left in the engine");
         assertGt(fees, 0);

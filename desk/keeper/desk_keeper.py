@@ -7,7 +7,7 @@ Each tick, for every Desk whose owner has not paused the engine:
   3. puts the Desk's investable USDG (booked deposits and sell proceeds) into the names that
      sit below their weight, with
      one buyStock per name, or one buyBasket when the Desk holds no stock yet;
-and flushes the engine's fees (80/20 Booster/treasury as native ETH) once they pass a floor.
+and flushes the engine's fees (to the Booster as native ETH) once they pass a floor.
 
 Only the difference is traded, so a basket change costs a fraction of a full round trip.
 Trades under MIN_TRADE_USD are skipped so the keeper never churns dust.
@@ -215,7 +215,7 @@ class Keeper:
         if fees >= FLUSH_MIN_USDG:
             eth_usd = self.eth_feed.functions.latestRoundData().call()[1] / 1e8
             min_out = int(fees / E6 / eth_usd * 0.97 * E18)
-            self.say(f"fees {fees / E6:.2f} USDG -> Booster/treasury as ETH")
+            self.say(f"fees {fees / E6:.2f} USDG -> Booster as ETH")
             self.send(self.engine.functions.flushFees(min_out), "flushFees")
 
     def desk(self, desk_id: int, weight: dict, epoch: int, px: dict, fee: float) -> None:

@@ -31,7 +31,8 @@ import {DeskDepositRouter, ICoatRouterSell, IDeskDepositBook} from "../src/DeskD
 /// The mint stays CLOSED unless DESK_OPEN_MINT=true: open it after the post-deploy checks with
 /// one setMintOpen(true) from the deployer.
 ///
-///   env: DEPLOYER (default the core owner), DESK_TREASURY (20% fee share, default DEPLOYER),
+///   env: DEPLOYER (default the core owner), DESK_TREASURY (receives a fee share only if one is set later; the
+///        default sends every fee to the Booster; default DEPLOYER),
 ///        DESK_KEEPER (engine keeper; default DEPLOYER), DESK_POSTER (bonus-round poster;
 ///        default DESK_KEEPER or DEPLOYER), DESK_OPEN_MINT (default false),
 ///        DESK_OUT (default rehearsal/mainnet-4663.json)

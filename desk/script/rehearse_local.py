@@ -305,14 +305,14 @@ def rehearse(w3: Web3) -> int:
     r.numbers["rebalance engine fees (USD)"] = f"{reb_fees:.2f}"
 
     # ---------- fee split ----------
-    print("step 7: fee flush and 80/20 split")
+    print("step 7: fee flush, all of it to the Booster")
     fees = engine.functions.feesAccrued().call()
     quote = eth_pool.functions.quote(A["usdg"], fees).call()
     b0, t0 = w3.eth.get_balance(A["booster"]), w3.eth.get_balance(treasury.address)
     send(DEPLOYER, engine.functions.flushFees(quote * 99 // 100), step="7 fee split", what="keeper flushFees")
     to_b, to_t = w3.eth.get_balance(A["booster"]) - b0, w3.eth.get_balance(treasury.address) - t0
     r.check("7 fee split", to_b + to_t == quote, f"{fees / E6:.2f} USDG -> {quote / E18:.6f} native ETH")
-    r.check("7 fee split", to_b == quote * 8000 // 10_000, f"Booster got {to_b / E18:.6f} ETH (80%), treasury {to_t / E18:.6f} ETH")
+    r.check("7 fee split", to_b > 0 and to_t == 0, f"Booster got {to_b / E18:.6f} ETH (100%), treasury {to_t / E18:.6f} ETH")
     r.check("7 fee split", usdg.functions.balanceOf(A["engine"]).call() == 0 and weth.functions.balanceOf(A["engine"]).call() == 0,
             "engine keeps no USDG or WETH")
 

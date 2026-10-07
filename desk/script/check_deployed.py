@@ -262,7 +262,7 @@ def check(w3: Web3) -> int:
         send(deployer, engine.functions.flushFees(0), what=f"flush {left / E6:.2f} USDG of fees (keeper floor 0)")
     got = w3.eth.get_balance(A["booster"]) - b0
     r.check("8 fees", engine.functions.feesAccrued().call() == 0 and got > 0,
-            f"the Booster received {got / E18:.6f} ETH (its 80%), every fill above the Chainlink ETH/USD floor")
+            f"the Booster received {got / E18:.6f} ETH (all of the fees), every fill above the Chainlink ETH/USD floor")
     r.check("8 fees", engine.functions.investableOf(desk_id).call() < 5 * E6, "the room filled after the withdrawal is invested")
 
     print("step 9: the Desk is sold whole")
