@@ -33,7 +33,7 @@ import {DeskDepositRouter, ICoatRouterSell, IDeskDepositBook} from "../src/DeskD
 ///
 ///   env: DEPLOYER (default the core owner), DESK_TREASURY (receives a fee share only if one is set later; the
 ///        default sends every fee to the Booster; default DEPLOYER),
-///        DESK_KEEPER (engine keeper; default DEPLOYER), DESK_POSTER (bonus-round poster;
+///        DESK_KEEPER (engine keeper; default the Booster's keeper relay), DESK_POSTER (bonus-round poster;
 ///        default DESK_KEEPER or DEPLOYER), DESK_OPEN_MINT (default false),
 ///        DESK_OUT (default rehearsal/mainnet-4663.json)
 ///
@@ -50,6 +50,9 @@ contract DeployDeskMainnet is Script {
     address constant ETH_POOL = 0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca; // WETH/USDG v3, 1 bp
     address constant ETH_USD = 0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9; // Booster.ethUsdFeed
     address constant COAT_ROUTER = 0x740baEEF895444a659fD0fc5Dc213BEDe7d1EaaF;
+    /// The Booster's keeper relay: the Desk shares it (user decision 2026-10-07), so one funded
+    /// key runs both engines; the key stays the existing TESTNET_KEEPER_PRIVATE_KEY secret.
+    address constant KEEPER_RELAY = 0xa492c8fFa033016144B169501D2e428BeDD518CA;
     uint256 constant STRATEGY_ID = 0; // the live basket
     uint256 constant CHUNK = 50; // trait words per upload tx
 
@@ -91,7 +94,7 @@ contract DeployDeskMainnet is Script {
     function _cfg() internal view returns (Cfg memory c) {
         c.deployer = vm.envOr("DEPLOYER", address(0x9e643731dc9D8795573Aa34C410664407FfDC440));
         c.treasury = vm.envOr("DESK_TREASURY", c.deployer);
-        c.keeper = vm.envOr("DESK_KEEPER", c.deployer);
+        c.keeper = vm.envOr("DESK_KEEPER", KEEPER_RELAY);
         c.poster = vm.envOr("DESK_POSTER", c.keeper);
         c.openMint = vm.envOr("DESK_OPEN_MINT", false);
     }

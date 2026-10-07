@@ -118,8 +118,11 @@ class Keeper:
     def send(self, fn, what: str) -> bool:
         try:
             if self.signer:
-                tx = fn.build_transaction({"from": self.sender, "nonce": self.w3.eth.get_transaction_count(self.sender),
-                                           "chainId": self.w3.eth.chain_id})
+                # the mainnet key is shared with the Booster keeper: take the nonce the way it does,
+                # so a transaction of its still in the mempool is never overwritten or duplicated
+                nonce = max(self.w3.eth.get_transaction_count(self.sender, "pending"),
+                            self.w3.eth.get_transaction_count(self.sender, "latest"))
+                tx = fn.build_transaction({"from": self.sender, "nonce": nonce, "chainId": self.w3.eth.chain_id})
                 h = self.w3.eth.send_raw_transaction(_raw(self.signer.sign_transaction(tx)))
             else:
                 h = self.w3.eth.send_transaction(fn.build_transaction({"from": self.sender}))

@@ -6,10 +6,11 @@ name: desk-keeper-mainnet
 # fees to the Booster as ETH. Mainnet feeds are real Chainlink feeds, so there is nothing to
 # refresh.
 #
-# Inert until switched on: set the repository VARIABLE DESK_MAINNET_KEEPER=1 and the SECRET
-# DESK_MAINNET_KEEPER_KEY (the Desk's own mainnet keeper key, set by the owner from their own
-# terminal). Reads go through the metered endpoint (secret RH_MAINNET_RPC_URL, Origin-allowlisted
-# via the RH_RPC_ORIGIN variable), the same as the Booster keeper.
+# Inert until switched on: set the repository VARIABLE DESK_MAINNET_KEEPER=1. The Desk shares the
+# Booster's keeper relay (user decision 2026-10-07), so it signs with the same existing secret,
+# TESTNET_KEEPER_PRIVATE_KEY; both keepers take the nonce as max(pending, latest) so they do not
+# trip over each other. Reads go through the metered endpoint (secret RH_MAINNET_RPC_URL,
+# Origin-allowlisted via the RH_RPC_ORIGIN variable), the same as the Booster keeper.
 #
 # Cadence as the Booster keeper: three cron slots every three hours, five-hour runs, one run
 # queued per group, so a dropped scheduler block does not leave a gap.
@@ -37,7 +38,7 @@ jobs:
       RPC: ${{ secrets.RH_MAINNET_RPC_URL }}
       RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
       DESK_ADDRESSES: rehearsal/mainnet-4663.json
-      KEEPER_KEY: ${{ secrets.DESK_MAINNET_KEEPER_KEY }}
+      KEEPER_KEY: ${{ secrets.TESTNET_KEEPER_PRIVATE_KEY }}
       # five hours of 30-second ticks; a quiet tick is one multicall plus the basket reads
       RUN_SECONDS: "18000"
       EVERY: "30"
