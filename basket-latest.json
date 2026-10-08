@@ -1,121 +1,143 @@
 {
-  "generatedAt": "2026-10-08T15:58:23.179228+00:00",
+  "generatedAt": "2026-10-08T16:58:54.991407+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 4841,
+    "rows": 5300,
     "distinctTraders": 82,
     "latestDisclosure": "2026-10-08",
     "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.024952993885224296,
+  "coverage": 0.1623187426841181,
   "strategyId": 0,
   "tickers": [
-    "INTC",
+    "META",
     "NVDA",
-    "TSLA",
+    "PLTR",
     "MSTR",
-    "RKLB"
+    "INTC",
+    "TSLA"
   ],
   "tokens": [
-    "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681",
+    "0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35",
     "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC",
-    "0x322F0929c4625eD5bAd873c95208D54E1c003b2d",
+    "0x894E1EC2D74FFE5AEF8Dc8A9e84686acCB964F2A",
     "0xec262a75e413fAfD0dF80480274532C79D42da09",
-    "0x3b14C39E89D60D627b42a1A4CA45b5bb45Fc12e2"
+    "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681",
+    "0x322F0929c4625eD5bAd873c95208D54E1c003b2d"
   ],
   "weightsBps": [
-    3723,
-    2153,
-    2003,
-    1524,
-    597
+    5000,
+    3629,
+    590,
+    358,
+    213,
+    210
   ],
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 83436656,
+    "block": 83471957,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.13695359911040808
+      "shareOfBuying": 0.0737745483945096
     },
     {
-      "ticker": "INTU",
-      "netNotional": 3133502.0,
-      "shareOfBuying": 0.0572192349708256
+      "ticker": "MCD",
+      "netNotional": 3626499.0,
+      "shareOfBuying": 0.03567243395110304
+    },
+    {
+      "ticker": "CMCSA",
+      "netNotional": 3557502.5,
+      "shareOfBuying": 0.034993742714980465
     },
     {
       "ticker": "CRM",
-      "netNotional": 3126499.5,
-      "shareOfBuying": 0.05709136599455458
+      "netNotional": 3167000.5,
+      "shareOfBuying": 0.03115252924635035
     },
     {
-      "ticker": "CHD",
-      "netNotional": 3032501.0,
-      "shareOfBuying": 0.05537490873414589
+      "ticker": "ABT",
+      "netNotional": 3159000.0,
+      "shareOfBuying": 0.031073831497412382
     },
     {
-      "ticker": "IWB",
+      "ticker": "INTU",
+      "netNotional": 3125501.5,
+      "shareOfBuying": 0.03074432002402964
+    },
+    {
+      "ticker": "NFLX",
+      "netNotional": 3032002.5,
+      "shareOfBuying": 0.029824607402574574
+    },
+    {
+      "ticker": "CVX",
+      "netNotional": 3008001.0,
+      "shareOfBuying": 0.029588514155760665
+    },
+    {
+      "ticker": "IGOV",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.054781434166020736
+      "shareOfBuying": 0.029509816406822695
+    },
+    {
+      "ticker": "GOVT",
+      "netNotional": 3000000.5,
+      "shareOfBuying": 0.029509816406822695
+    },
+    {
+      "ticker": "XLC",
+      "netNotional": 3000000.5,
+      "shareOfBuying": 0.029509816406822695
+    },
+    {
+      "ticker": "VGK",
+      "netNotional": 3000000.5,
+      "shareOfBuying": 0.029509816406822695
+    },
+    {
+      "ticker": "COP",
+      "netNotional": 2967500.0,
+      "shareOfBuying": 0.029190121864061804
+    },
+    {
+      "ticker": "T",
+      "netNotional": 2908500.5,
+      "shareOfBuying": 0.02860976715642281
     },
     {
       "ticker": "MRVL",
-      "netNotional": 2967500.0,
-      "shareOfBuying": 0.054187959597895574
-    },
-    {
-      "ticker": "NOW",
-      "netNotional": 900501.0,
-      "shareOfBuying": 0.016443576008715943
-    },
-    {
-      "ticker": "ADBE",
-      "netNotional": 835000.5,
-      "shareOfBuying": 0.015247505765197171
-    },
-    {
-      "ticker": "CRWD",
-      "netNotional": 774002.0,
-      "shareOfBuying": 0.014133644180182096
-    },
-    {
-      "ticker": "CDW",
-      "netNotional": 758001.0,
-      "shareOfBuying": 0.01384145831951624
-    },
-    {
-      "ticker": "TYL",
-      "netNotional": 758001.0,
-      "shareOfBuying": 0.01384145831951624
-    },
-    {
-      "ticker": "DDOG",
-      "netNotional": 750000.5,
-      "shareOfBuying": 0.013695365389183313
-    },
-    {
-      "ticker": "WDAY",
-      "netNotional": 750000.5,
-      "shareOfBuying": 0.013695365389183313
-    },
-    {
-      "ticker": "PANW",
-      "netNotional": 750000.5,
-      "shareOfBuying": 0.013695365389183313
-    },
-    {
-      "ticker": "MCHP",
-      "netNotional": 750000.5,
-      "shareOfBuying": 0.013695365389183313
+      "netNotional": 2592499.5,
+      "shareOfBuying": 0.025501390509694792
     }
   ],
   "missedAttribution": {
+    "ABT": {
+      "buyers": [
+        {
+          "member": "Donald J Trump",
+          "chamber": "executive",
+          "buys": 4,
+          "notionalUsd": 3215502.0,
+          "latestTraded": "2026-08-26",
+          "latestFiled": "2026-09-22",
+          "ranges": [
+            "$1,000,001 - $5,000,000",
+            "$100,001 - $250,000",
+            "$15,001 - $50,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 4
+    },
     "BE": {
       "buyers": [
         {
@@ -134,88 +156,73 @@
       "buyerCount": 1,
       "sellCount": 0
     },
-    "CHD": {
+    "CMCSA": {
       "buyers": [
         {
           "member": "Donald J Trump",
           "chamber": "executive",
-          "buys": 2,
-          "notionalUsd": 3032501.0,
-          "latestTraded": "2026-07-23",
+          "buys": 8,
+          "notionalUsd": 3606004.0,
+          "latestTraded": "2026-08-21",
           "latestFiled": "2026-09-22",
           "ranges": [
             "$1,000,001 - $5,000,000",
-            "$15,001 - $50,000"
-          ]
-        }
-      ],
-      "buyerCount": 1,
-      "sellCount": 0
-    },
-    "CRM": {
-      "buyers": [
-        {
-          "member": "Donald J Trump",
-          "chamber": "executive",
-          "buys": 2,
-          "notionalUsd": 3175001.0,
-          "latestTraded": "2026-07-23",
-          "latestFiled": "2026-09-22",
-          "ranges": [
-            "$1,000,001 - $5,000,000",
-            "$100,001 - $250,000"
+            "$250,001 - $500,000",
+            "$50,001 - $100,000"
           ]
         }
       ],
       "buyerCount": 1,
       "sellCount": 3
     },
-    "INTU": {
+    "CRM": {
       "buyers": [
         {
           "member": "Donald J Trump",
           "chamber": "executive",
           "buys": 4,
-          "notionalUsd": 3158002.0,
-          "latestTraded": "2026-07-27",
+          "notionalUsd": 3215502.0,
+          "latestTraded": "2026-08-17",
           "latestFiled": "2026-09-22",
           "ranges": [
             "$1,000,001 - $5,000,000",
-            "$50,001 - $100,000",
-            "$1,001 - $15,000"
+            "$100,001 - $250,000",
+            "$15,001 - $50,000"
+          ]
+        }
+      ],
+      "buyerCount": 1,
+      "sellCount": 3
+    },
+    "MCD": {
+      "buyers": [
+        {
+          "member": "Donald J Trump",
+          "chamber": "executive",
+          "buys": 5,
+          "notionalUsd": 3965502.5,
+          "latestTraded": "2026-08-24",
+          "latestFiled": "2026-09-22",
+          "ranges": [
+            "$1,000,001 - $5,000,000",
+            "$500,001 - $1,000,000",
+            "$100,001 - $250,000"
           ]
         },
         {
-          "member": "Gilbert Cisneros",
+          "member": "Clifford Franklin",
           "chamber": "house",
           "buys": 1,
           "notionalUsd": 8000.5,
-          "latestTraded": "2026-08-18",
-          "latestFiled": "2026-09-11",
+          "latestTraded": "2026-08-26",
+          "latestFiled": "2026-09-18",
           "ranges": [
             "$1,001 - $15,000"
           ]
         }
       ],
       "buyerCount": 2,
-      "sellCount": 1
-    },
-    "IWB": {
-      "buyers": [
-        {
-          "member": "Donald J Trump",
-          "chamber": "executive",
-          "buys": 1,
-          "notionalUsd": 3000000.5,
-          "latestTraded": "2026-07-17",
-          "latestFiled": "2026-09-22",
-          "ranges": [
-            "$1,000,001 - $5,000,000"
-          ]
-        }
-      ],
-      "buyerCount": 1,
-      "sellCount": 0
+      "sellCount": 8
     }
   },
   "attribution": {
@@ -235,16 +242,46 @@
         }
       ],
       "buyerCount": 1,
-      "sellCount": 1
+      "sellCount": 2
+    },
+    "META": {
+      "buyers": [
+        {
+          "member": "Donald J Trump",
+          "chamber": "executive",
+          "buys": 5,
+          "notionalUsd": 15433002.5,
+          "latestTraded": "2026-08-28",
+          "latestFiled": "2026-09-22",
+          "ranges": [
+            "$5,000,001 - $25,000,000",
+            "$100,001 - $250,000",
+            "$50,001 - $100,000"
+          ]
+        },
+        {
+          "member": "Maria Elvira",
+          "chamber": "house",
+          "buys": 2,
+          "notionalUsd": 16001.0,
+          "latestTraded": "2026-09-22",
+          "latestFiled": "2026-10-08",
+          "ranges": [
+            "$1,001 - $15,000"
+          ]
+        }
+      ],
+      "buyerCount": 2,
+      "sellCount": 8
     },
     "MSTR": {
       "buyers": [
         {
           "member": "Donald J Trump",
           "chamber": "executive",
-          "buys": 2,
-          "notionalUsd": 83001.0,
-          "latestTraded": "2026-07-27",
+          "buys": 3,
+          "notionalUsd": 91001.5,
+          "latestTraded": "2026-08-10",
           "latestFiled": "2026-09-22",
           "ranges": [
             "$50,001 - $100,000",
@@ -260,12 +297,14 @@
         {
           "member": "Donald J Trump",
           "chamber": "executive",
-          "buys": 1,
-          "notionalUsd": 750000.5,
-          "latestTraded": "2026-07-20",
+          "buys": 6,
+          "notionalUsd": 1923503.0,
+          "latestTraded": "2026-08-26",
           "latestFiled": "2026-09-22",
           "ranges": [
-            "$500,001 - $1,000,000"
+            "$500,001 - $1,000,000",
+            "$250,001 - $500,000",
+            "$15,001 - $50,000"
           ]
         },
         {
@@ -281,94 +320,117 @@
         }
       ],
       "buyerCount": 2,
-      "sellCount": 6
+      "sellCount": 7
     },
-    "RKLB": {
+    "PLTR": {
       "buyers": [
         {
           "member": "Donald J Trump",
           "chamber": "executive",
-          "buys": 1,
-          "notionalUsd": 32500.5,
-          "latestTraded": "2026-07-27",
+          "buys": 5,
+          "notionalUsd": 131502.5,
+          "latestTraded": "2026-08-24",
           "latestFiled": "2026-09-22",
           "ranges": [
-            "$15,001 - $50,000"
+            "$50,001 - $100,000",
+            "$15,001 - $50,000",
+            "$1,001 - $15,000"
+          ]
+        },
+        {
+          "member": "Gilbert Cisneros",
+          "chamber": "house",
+          "buys": 1,
+          "notionalUsd": 8000.5,
+          "latestTraded": "2026-07-17",
+          "latestFiled": "2026-09-04",
+          "ranges": [
+            "$1,001 - $15,000"
           ]
         }
       ],
-      "buyerCount": 1,
-      "sellCount": 0
+      "buyerCount": 2,
+      "sellCount": 2
     },
     "TSLA": {
       "buyers": [
         {
           "member": "Donald J Trump",
           "chamber": "executive",
-          "buys": 1,
-          "notionalUsd": 175000.5,
-          "latestTraded": "2026-07-27",
+          "buys": 2,
+          "notionalUsd": 183001.0,
+          "latestTraded": "2026-08-24",
           "latestFiled": "2026-09-22",
           "ranges": [
-            "$100,001 - $250,000"
+            "$100,001 - $250,000",
+            "$1,001 - $15,000"
           ]
         }
       ],
       "buyerCount": 1,
-      "sellCount": 4
+      "sellCount": 5
     }
   },
   "smartShadow": {
     "mode": "capped",
     "basket": [
       {
-        "ticker": "INTC",
-        "bps": 3723
+        "ticker": "META",
+        "bps": 5000
       },
       {
         "ticker": "NVDA",
-        "bps": 2153
+        "bps": 3629
       },
       {
-        "ticker": "TSLA",
-        "bps": 2003
+        "ticker": "PLTR",
+        "bps": 590
       },
       {
         "ticker": "MSTR",
-        "bps": 1524
+        "bps": 358
       },
       {
-        "ticker": "RKLB",
-        "bps": 597
+        "ticker": "INTC",
+        "bps": 213
+      },
+      {
+        "ticker": "TSLA",
+        "bps": 210
       }
     ],
     "capped": [
       {
-        "ticker": "INTC",
-        "bps": 3723
+        "ticker": "META",
+        "bps": 5000
       },
       {
         "ticker": "NVDA",
-        "bps": 2153
+        "bps": 3629
       },
       {
-        "ticker": "TSLA",
-        "bps": 2003
+        "ticker": "PLTR",
+        "bps": 590
       },
       {
         "ticker": "MSTR",
-        "bps": 1524
+        "bps": 358
       },
       {
-        "ticker": "RKLB",
-        "bps": 597
+        "ticker": "INTC",
+        "bps": 213
+      },
+      {
+        "ticker": "TSLA",
+        "bps": 210
       }
     ],
     "vetoed": [
+      "AAON",
       "AAP",
+      "AAPL",
       "ABM",
       "ACAD",
-      "ACI",
       "ACLS",
       "ACMR",
       "ACN",
@@ -379,24 +441,27 @@
       "AEO",
       "AGX",
       "AGYS",
-      "AHCO",
+      "AIG",
+      "AIN",
       "AIO",
+      "AKAM",
       "AKR",
       "ALC",
       "ALGT",
       "ALHC",
       "ALKS",
       "ALL",
+      "AMAT",
+      "AMD",
       "AMR",
+      "AMRZ",
       "AMSF",
       "AMT",
       "AMTM",
       "AMZN",
       "ANDE",
-      "APD",
-      "APG",
       "APO",
-      "APTV",
+      "APP",
       "ARCB",
       "ARCC",
       "ARES",
@@ -405,9 +470,9 @@
       "ARR",
       "ASO",
       "ATEN",
-      "ATMU",
       "AUB",
       "AVA",
+      "AVGO",
       "AWI",
       "AWK",
       "BA",
@@ -429,8 +494,10 @@
       "BRC",
       "BRK.B",
       "BRO",
+      "BSV",
       "BTSG",
       "BUD",
+      "BWX",
       "BWXT",
       "C",
       "CACC",
@@ -451,6 +518,7 @@
       "CHRW",
       "CHTR",
       "CI",
+      "CIEN",
       "CINF",
       "CL",
       "CLH",
@@ -458,16 +526,15 @@
       "CLX",
       "CMS",
       "CNM",
+      "CNP",
       "COCO",
       "COLB",
       "COLL",
       "CON",
-      "COP",
       "CORT",
       "COST",
       "CPAY",
       "CPK",
-      "CPNG",
       "CPRT",
       "CRC",
       "CRDO",
@@ -482,7 +549,7 @@
       "CVNA",
       "CVS",
       "CVSA",
-      "CVX",
+      "CW",
       "CWEN",
       "CWK",
       "CWST",
@@ -491,51 +558,60 @@
       "DBD",
       "DCO",
       "DD",
+      "DELL",
       "DEO",
+      "DFH",
       "DGII",
       "DGX",
-      "DHI",
       "DIOD",
-      "DIS",
       "DLR",
       "DLTR",
       "DNOW",
       "DORM",
       "DOV",
       "DVN",
+      "EA",
       "EAT",
       "EBC",
       "ECG",
       "EFC",
+      "EME",
       "EMN",
       "EMR",
       "ENPH",
       "ENR",
       "ENTG",
       "ENVA",
-      "EOG",
       "EPRT",
       "ERIE",
       "ESE",
       "ESI",
+      "ETR",
       "ETSY",
       "ETV",
+      "EXC",
+      "EXPD",
       "EXR",
       "EZPW",
       "F",
       "FA",
+      "FCOM",
       "FCPT",
       "FDX",
       "FELE",
       "FG",
       "FHB",
+      "FICO",
       "FLO",
+      "FLUT",
       "FN",
       "FORM",
+      "FOUR",
       "FOX",
       "FRPT",
       "FSS",
       "FTDR",
+      "FTNT",
       "FTRE",
       "FUL",
       "FUN",
@@ -549,11 +625,12 @@
       "GFF",
       "GKOS",
       "GLW",
+      "GNRC",
       "GNW",
       "GOLF",
-      "GOOG",
       "GOOGL",
       "GPC",
+      "GPI",
       "GRBK",
       "GT",
       "GTES",
@@ -565,6 +642,7 @@
       "HAYW",
       "HCA",
       "HCSG",
+      "HD",
       "HE",
       "HLT",
       "HLX",
@@ -579,6 +657,7 @@
       "HWKN",
       "HWM",
       "HZO",
+      "IAU",
       "IBP",
       "ICE",
       "ICHR",
@@ -592,7 +671,6 @@
       "ITT",
       "ITW",
       "IVV",
-      "JBGS",
       "JBLU",
       "JBSS",
       "JBTM",
@@ -603,11 +681,11 @@
       "JXN",
       "KAI",
       "KFY",
+      "KLAC",
       "KMI",
       "KMPR",
       "KMX",
       "KO",
-      "KR",
       "KRYS",
       "KTB",
       "KVUE",
@@ -622,9 +700,11 @@
       "LEN",
       "LH",
       "LHX",
+      "LII",
       "LIN",
       "LITE",
       "LKQ",
+      "LMAT",
       "LMT",
       "LNC",
       "LQDA",
@@ -638,24 +718,22 @@
       "LYB",
       "LYFT",
       "LYV",
+      "LZ",
+      "LZB",
       "MARA",
       "MATW",
-      "MBC",
       "MC",
-      "MCD",
       "MCRI",
       "MDU",
-      "META",
       "MGEE",
       "MGY",
-      "MHK",
       "MIDD",
       "MIR",
-      "MKC",
       "MKL",
       "MKTX",
       "MLM",
       "MNRO",
+      "MOD",
       "MOH",
       "MPC",
       "MPW",
@@ -665,10 +743,12 @@
       "MRNA",
       "MRSH",
       "MS",
+      "MSCI",
       "MSFT",
       "MSGS",
       "MTCH",
       "MTSI",
+      "MU",
       "MWA",
       "MYRG",
       "NABL",
@@ -677,7 +757,6 @@
       "NEE",
       "NEM",
       "NET",
-      "NFLX",
       "NHI",
       "NIC",
       "NMIH",
@@ -693,7 +772,6 @@
       "O",
       "OFG",
       "OGN",
-      "OI",
       "OII",
       "OKE",
       "OMCL",
@@ -708,6 +786,7 @@
       "OXM",
       "PATK",
       "PAYC",
+      "PB",
       "PBA",
       "PBI",
       "PDFS",
@@ -715,7 +794,6 @@
       "PEGA",
       "PENG",
       "PEP",
-      "PGR",
       "PHR",
       "PI",
       "PIPR",
@@ -727,15 +805,15 @@
       "PLUS",
       "PLXS",
       "PMT",
-      "PNR",
       "POOL",
+      "POST",
       "POWI",
       "PPC",
+      "PPL",
       "PPLI",
       "PRAA",
       "PRG",
       "PRGS",
-      "PRIM",
       "PRU",
       "PRVA",
       "PSKY",
@@ -743,7 +821,6 @@
       "PTCT",
       "PTEN",
       "PTGX",
-      "PTON",
       "PZZA",
       "QCOM",
       "QDEL",
@@ -751,7 +828,10 @@
       "RA",
       "RAL",
       "RAMP",
+      "RBA",
       "RBC",
+      "RBLX",
+      "RCL",
       "RCUS",
       "RDN",
       "RDNT",
@@ -759,6 +839,8 @@
       "RES",
       "REZI",
       "RH",
+      "RKT",
+      "RMD",
       "RNST",
       "ROG",
       "ROK",
@@ -769,6 +851,7 @@
       "SABR",
       "SAFE",
       "SAH",
+      "SAN",
       "SANM",
       "SBAC",
       "SBUX",
@@ -797,6 +880,7 @@
       "SPCX",
       "SPHR",
       "SPXC",
+      "SRE",
       "SRPT",
       "STAA",
       "STC",
@@ -804,13 +888,11 @@
       "STRA",
       "STRL",
       "STX",
-      "STZ",
       "SUPN",
-      "SYK",
-      "T",
       "TDC",
       "TDS",
       "TDY",
+      "TEAM",
       "TEL",
       "TEM",
       "TER",
@@ -820,14 +902,19 @@
       "TJX",
       "TMDX",
       "TMUS",
+      "TPL",
+      "TPR",
       "TR",
+      "TRIP",
       "TRMB",
       "TRNO",
       "TSCO",
       "TSN",
+      "TTWO",
       "TWI",
       "TWO",
       "UA",
+      "UAA",
       "UAL",
       "UBER",
       "UCB",
@@ -839,15 +926,16 @@
       "UNF",
       "UNFI",
       "UNIT",
+      "UPST",
       "URBN",
       "USPH",
-      "UTI",
       "VCYT",
-      "VGNT",
       "VIAV",
       "VICI",
+      "VIG",
       "VIK",
       "VMC",
+      "VRT",
       "VSAT",
       "VSNT",
       "VSXY",
@@ -855,6 +943,7 @@
       "WAB",
       "WAFD",
       "WAY",
+      "WD",
       "WDFC",
       "WEN",
       "WERN",
@@ -862,77 +951,64 @@
       "WHD",
       "WING",
       "WLK",
-      "WMB",
       "WOR",
-      "WRBY",
       "WSBC",
       "WSC",
       "WT",
       "WU",
+      "WWD",
       "WWSYX",
       "XNCR",
       "YUM",
       "Z",
       "ZBH"
     ],
-    "divergenceBps": 2153
+    "divergenceBps": 2522
   },
   "filedWindowShadow": {
     "basket": [
       {
+        "ticker": "META",
+        "bps": 5000
+      },
+      {
         "ticker": "INTC",
-        "bps": 4406
-      },
-      {
-        "ticker": "AAPL",
-        "bps": 2395
-      },
-      {
-        "ticker": "SPCX",
-        "bps": 914
-      },
-      {
-        "ticker": "TSLA",
-        "bps": 527
-      },
-      {
-        "ticker": "AMD",
-        "bps": 476
-      },
-      {
-        "ticker": "MU",
-        "bps": 369
-      },
-      {
-        "ticker": "ASML",
-        "bps": 217
-      },
-      {
-        "ticker": "MSTR",
-        "bps": 196
+        "bps": 1577
       },
       {
         "ticker": "NVDA",
-        "bps": 141
+        "bps": 1465
+      },
+      {
+        "ticker": "AAPL",
+        "bps": 993
+      },
+      {
+        "ticker": "SPCX",
+        "bps": 387
       },
       {
         "ticker": "PLTR",
-        "bps": 128
+        "bps": 256
       },
       {
-        "ticker": "RKLB",
-        "bps": 85
+        "ticker": "TSLA",
+        "bps": 112
       },
       {
-        "ticker": "COIN",
-        "bps": 83
+        "ticker": "MSTR",
+        "bps": 92
+      },
+      {
+        "ticker": "ASML",
+        "bps": 92
       },
       {
         "ticker": "TSM",
-        "bps": 63
+        "bps": 26
       }
     ],
-    "divergenceBps": 4310
+    "divergenceBps": 1532
   },
   "commentary": {
     "text": "This basket is led by Intel, with Nancy Pelosi's $1.1M buy on July 24, 2026, filed August 21, 2026. NVIDIA is also a significant position, with buys from Donald J Trump and Gilbert Cisneros. Donald J Trump also bought Tesla, MicroStrategy, and Rocket Lab. Across the basket, there are 6 total buyers. Bloom Energy, a $7.5M position from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 2.5% of disclosed buying dollars.",
