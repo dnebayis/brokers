@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-10-08T12:55:49.221199+00:00",
+  "generatedAt": "2026-10-08T13:17:16.239461+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
-    "rows": 4799,
+    "rows": 4841,
     "distinctTraders": 82,
-    "latestDisclosure": "2026-10-06",
-    "ageDays": 2,
+    "latestDisclosure": "2026-10-08",
+    "ageDays": 0,
     "errors": []
   },
-  "coverage": 0.025050368517411246,
+  "coverage": 0.024952993885224296,
   "strategyId": 0,
   "tickers": [
     "INTC",
@@ -35,84 +35,84 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 83330196,
+    "block": 83342683,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.13668776687823742
-    },
-    {
-      "ticker": "CRM",
-      "netNotional": 3134500.0,
-      "shareOfBuying": 0.05712635880361567
+      "shareOfBuying": 0.13695359911040808
     },
     {
       "ticker": "INTU",
       "netNotional": 3133502.0,
-      "shareOfBuying": 0.057108170222953364
+      "shareOfBuying": 0.0572192349708256
+    },
+    {
+      "ticker": "CRM",
+      "netNotional": 3126499.5,
+      "shareOfBuying": 0.05709136599455458
     },
     {
       "ticker": "CHD",
       "netNotional": 3032501.0,
-      "shareOfBuying": 0.055267423894823205
+      "shareOfBuying": 0.05537490873414589
     },
     {
       "ticker": "IWB",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.05467510128378574
+      "shareOfBuying": 0.054781434166020736
     },
     {
       "ticker": "MRVL",
-      "netNotional": 2975500.5,
-      "shareOfBuying": 0.0542285880310537
+      "netNotional": 2967500.0,
+      "shareOfBuying": 0.054187959597895574
     },
     {
       "ticker": "NOW",
       "netNotional": 900501.0,
-      "shareOfBuying": 0.016411658391773717
+      "shareOfBuying": 0.016443576008715943
     },
     {
       "ticker": "ADBE",
       "netNotional": 835000.5,
-      "shareOfBuying": 0.015217909766852285
+      "shareOfBuying": 0.015247505765197171
     },
     {
       "ticker": "CRWD",
       "netNotional": 774002.0,
-      "shareOfBuying": 0.014106210230249206
+      "shareOfBuying": 0.014133644180182096
     },
     {
       "ticker": "CDW",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.013814591513638374
+      "shareOfBuying": 0.01384145831951624
     },
     {
       "ticker": "TYL",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.013814591513638374
+      "shareOfBuying": 0.01384145831951624
     },
     {
       "ticker": "DDOG",
-      "netNotional": 758001.0,
-      "shareOfBuying": 0.013814591513638374
+      "netNotional": 750000.5,
+      "shareOfBuying": 0.013695365389183313
     },
     {
       "ticker": "WDAY",
       "netNotional": 750000.5,
-      "shareOfBuying": 0.013668782155332957
+      "shareOfBuying": 0.013695365389183313
     },
     {
       "ticker": "PANW",
       "netNotional": 750000.5,
-      "shareOfBuying": 0.013668782155332957
+      "shareOfBuying": 0.013695365389183313
     },
     {
       "ticker": "MCHP",
       "netNotional": 750000.5,
-      "shareOfBuying": 0.013668782155332957
+      "shareOfBuying": 0.013695365389183313
     }
   ],
   "missedAttribution": {
@@ -168,7 +168,7 @@
         }
       ],
       "buyerCount": 1,
-      "sellCount": 2
+      "sellCount": 3
     },
     "INTU": {
       "buyers": [
@@ -416,6 +416,7 @@
       "BANC",
       "BAX",
       "BCPC",
+      "BEP",
       "BFAM",
       "BFS",
       "BGC",
@@ -426,10 +427,12 @@
       "BKU",
       "BMI",
       "BRC",
+      "BRK.B",
       "BRO",
       "BTSG",
       "BUD",
       "BWXT",
+      "C",
       "CACC",
       "CAG",
       "CALX",
@@ -540,6 +543,7 @@
       "G",
       "GBX",
       "GDYN",
+      "GE",
       "GEHC",
       "GEO",
       "GFF",
@@ -658,6 +662,7 @@
       "MPWR",
       "MRCY",
       "MRK",
+      "MRNA",
       "MRSH",
       "MS",
       "MSFT",
@@ -738,6 +743,7 @@
       "PTCT",
       "PTEN",
       "PTGX",
+      "PTON",
       "PZZA",
       "QCOM",
       "QDEL",
@@ -752,6 +758,7 @@
       "RELY",
       "RES",
       "REZI",
+      "RH",
       "RNST",
       "ROG",
       "ROK",
@@ -787,6 +794,7 @@
       "SNPS",
       "SOLS",
       "SONO",
+      "SPCX",
       "SPHR",
       "SPXC",
       "SRPT",
@@ -873,43 +881,43 @@
     "basket": [
       {
         "ticker": "INTC",
-        "bps": 4383
+        "bps": 4406
       },
       {
         "ticker": "AAPL",
-        "bps": 2383
+        "bps": 2395
       },
       {
         "ticker": "SPCX",
-        "bps": 961
+        "bps": 914
       },
       {
         "ticker": "TSLA",
-        "bps": 524
+        "bps": 527
       },
       {
         "ticker": "AMD",
-        "bps": 474
+        "bps": 476
       },
       {
         "ticker": "MU",
-        "bps": 367
+        "bps": 369
       },
       {
         "ticker": "ASML",
-        "bps": 216
+        "bps": 217
       },
       {
         "ticker": "MSTR",
-        "bps": 195
+        "bps": 196
       },
       {
         "ticker": "NVDA",
-        "bps": 140
+        "bps": 141
       },
       {
         "ticker": "PLTR",
-        "bps": 127
+        "bps": 128
       },
       {
         "ticker": "RKLB",
@@ -921,16 +929,16 @@
       },
       {
         "ticker": "TSM",
-        "bps": 62
+        "bps": 63
       }
     ],
-    "divergenceBps": 4339
+    "divergenceBps": 4310
   },
   "commentary": {
-    "text": "The latest basket is led by Intel, weighted at 37.2%, following two buys by Nancy Pelosi with a notional value of $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Nvidia is also present, with buys from Donald J Trump and Gilbert Cisneros. Donald J Trump also contributed to buys in Tesla, MicroStrategy, and Rocket Lab. In total, 5 members disclosed buys across the basket. Bloom Energy, with a net notional of $7.5M from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 2.5% of disclosed buying dollars.",
+    "text": "This basket is led by Intel, with Nancy Pelosi's $1.1M buy on July 24, 2026, filed August 21, 2026. NVIDIA is also a significant position, with buys from Donald J Trump and Gilbert Cisneros. Donald J Trump also bought Tesla, MicroStrategy, and Rocket Lab. Across the basket, there are 6 total buyers. Bloom Energy, a $7.5M position from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 2.5% of disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-10-08T00:23:27+00:00",
-    "inputHash": "f4b7efae0eef9060",
+    "generatedAt": "2026-10-08T13:17:16+00:00",
+    "inputHash": "560b23ef2c05bc56",
     "promptVersion": 2
   }
 }
