@@ -1,22 +1,21 @@
 {
-  "generatedAt": "2026-10-07T23:26:25.403178+00:00",
+  "generatedAt": "2026-10-08T00:23:27.173615+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
     "rows": 4799,
     "distinctTraders": 82,
     "latestDisclosure": "2026-10-06",
-    "ageDays": 1,
+    "ageDays": 2,
     "errors": []
   },
-  "coverage": 0.025754469319016683,
+  "coverage": 0.025050368517411246,
   "strategyId": 0,
   "tickers": [
     "INTC",
     "NVDA",
     "TSLA",
     "MSTR",
-    "SPCX",
     "RKLB"
   ],
   "tokens": [
@@ -24,98 +23,96 @@
     "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC",
     "0x322F0929c4625eD5bAd873c95208D54E1c003b2d",
     "0xec262a75e413fAfD0dF80480274532C79D42da09",
-    "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa",
     "0x3b14C39E89D60D627b42a1A4CA45b5bb45Fc12e2"
   ],
   "weightsBps": [
-    3408,
-    1964,
-    1834,
-    1396,
-    851,
-    547
+    3723,
+    2153,
+    2003,
+    1524,
+    597
   ],
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 82858841,
+    "block": 82891829,
     "dropped": []
   },
   "missedCoverage": [
     {
       "ticker": "BE",
       "netNotional": 7500002.0,
-      "shareOfBuying": 0.1365073901896169
+      "shareOfBuying": 0.13668776687823742
     },
     {
       "ticker": "CRM",
       "netNotional": 3134500.0,
-      "shareOfBuying": 0.057050973392987654
+      "shareOfBuying": 0.05712635880361567
     },
     {
       "ticker": "INTU",
-      "netNotional": 3125501.5,
-      "shareOfBuying": 0.05688719186991322
+      "netNotional": 3133502.0,
+      "shareOfBuying": 0.057108170222953364
     },
     {
       "ticker": "CHD",
       "netNotional": 3032501.0,
-      "shareOfBuying": 0.05519449158245604
+      "shareOfBuying": 0.055267423894823205
     },
     {
       "ticker": "IWB",
       "netNotional": 3000000.5,
-      "shareOfBuying": 0.05460295061555261
+      "shareOfBuying": 0.05467510128378574
     },
     {
       "ticker": "MRVL",
       "netNotional": 2975500.5,
-      "shareOfBuying": 0.0541570265931796
+      "shareOfBuying": 0.0542285880310537
     },
     {
       "ticker": "NOW",
       "netNotional": 900501.0,
-      "shareOfBuying": 0.016390001145751724
+      "shareOfBuying": 0.016411658391773717
     },
     {
       "ticker": "ADBE",
-      "netNotional": 827000.0,
-      "shareOfBuying": 0.01505221087765219
+      "netNotional": 835000.5,
+      "shareOfBuying": 0.015217909766852285
     },
     {
       "ticker": "CRWD",
       "netNotional": 774002.0,
-      "shareOfBuying": 0.014087595312847099
+      "shareOfBuying": 0.014106210230249206
     },
     {
       "ticker": "CDW",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.013796361423786261
+      "shareOfBuying": 0.013814591513638374
     },
     {
       "ticker": "TYL",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.013796361423786261
+      "shareOfBuying": 0.013814591513638374
     },
     {
       "ticker": "DDOG",
       "netNotional": 758001.0,
-      "shareOfBuying": 0.013796361423786261
+      "shareOfBuying": 0.013814591513638374
     },
     {
       "ticker": "WDAY",
       "netNotional": 750000.5,
-      "shareOfBuying": 0.013650744479255843
+      "shareOfBuying": 0.013668782155332957
+    },
+    {
+      "ticker": "PANW",
+      "netNotional": 750000.5,
+      "shareOfBuying": 0.013668782155332957
     },
     {
       "ticker": "MCHP",
       "netNotional": 750000.5,
-      "shareOfBuying": 0.013650744479255843
-    },
-    {
-      "ticker": "ZBRA",
-      "netNotional": 750000.5,
-      "shareOfBuying": 0.013650744479255843
+      "shareOfBuying": 0.013668782155332957
     }
   ],
   "missedAttribution": {
@@ -201,7 +198,7 @@
         }
       ],
       "buyerCount": 2,
-      "sellCount": 2
+      "sellCount": 1
     },
     "IWB": {
       "buyers": [
@@ -284,7 +281,7 @@
         }
       ],
       "buyerCount": 2,
-      "sellCount": 7
+      "sellCount": 6
     },
     "RKLB": {
       "buyers": [
@@ -302,34 +299,6 @@
       ],
       "buyerCount": 1,
       "sellCount": 0
-    },
-    "SPCX": {
-      "buyers": [
-        {
-          "member": "Donald J Trump",
-          "chamber": "executive",
-          "buys": 1,
-          "notionalUsd": 32500.5,
-          "latestTraded": "2026-07-10",
-          "latestFiled": "2026-09-22",
-          "ranges": [
-            "$15,001 - $50,000"
-          ]
-        },
-        {
-          "member": "Maria Elvira",
-          "chamber": "house",
-          "buys": 2,
-          "notionalUsd": 16001.0,
-          "latestTraded": "2026-08-12",
-          "latestFiled": "2026-09-10",
-          "ranges": [
-            "$1,001 - $15,000"
-          ]
-        }
-      ],
-      "buyerCount": 2,
-      "sellCount": 1
     },
     "TSLA": {
       "buyers": [
@@ -354,53 +323,45 @@
     "basket": [
       {
         "ticker": "INTC",
-        "bps": 3408
+        "bps": 3723
       },
       {
         "ticker": "NVDA",
-        "bps": 1964
+        "bps": 2153
       },
       {
         "ticker": "TSLA",
-        "bps": 1834
+        "bps": 2003
       },
       {
         "ticker": "MSTR",
-        "bps": 1396
-      },
-      {
-        "ticker": "SPCX",
-        "bps": 851
+        "bps": 1524
       },
       {
         "ticker": "RKLB",
-        "bps": 547
+        "bps": 597
       }
     ],
     "capped": [
       {
         "ticker": "INTC",
-        "bps": 3408
+        "bps": 3723
       },
       {
         "ticker": "NVDA",
-        "bps": 1964
+        "bps": 2153
       },
       {
         "ticker": "TSLA",
-        "bps": 1834
+        "bps": 2003
       },
       {
         "ticker": "MSTR",
-        "bps": 1396
-      },
-      {
-        "ticker": "SPCX",
-        "bps": 851
+        "bps": 1524
       },
       {
         "ticker": "RKLB",
-        "bps": 547
+        "bps": 597
       }
     ],
     "vetoed": [
@@ -527,7 +488,6 @@
       "DBD",
       "DCO",
       "DD",
-      "DE",
       "DEO",
       "DGII",
       "DGX",
@@ -567,7 +527,6 @@
       "FG",
       "FHB",
       "FLO",
-      "FMC",
       "FN",
       "FORM",
       "FOX",
@@ -608,7 +567,6 @@
       "HMN",
       "HNI",
       "HON",
-      "HONAV",
       "HOPE",
       "HRL",
       "HTH",
@@ -684,7 +642,6 @@
       "MCRI",
       "MDU",
       "META",
-      "MGA",
       "MGEE",
       "MGY",
       "MHK",
@@ -854,7 +811,6 @@
       "TILE",
       "TJX",
       "TMDX",
-      "TMO",
       "TMUS",
       "TR",
       "TRMB",
@@ -911,7 +867,7 @@
       "Z",
       "ZBH"
     ],
-    "divergenceBps": 2201
+    "divergenceBps": 2153
   },
   "filedWindowShadow": {
     "basket": [
@@ -968,13 +924,13 @@
         "bps": 62
       }
     ],
-    "divergenceBps": 3790
+    "divergenceBps": 4339
   },
   "commentary": {
-    "text": "The latest Coattail Brokers basket is led by Intel, with Nancy Pelosi making two buys totaling $1.1M, traded on July 24, 2026, and filed on August 21, 2026. Donald J Trump is also a significant buyer in Nvidia, Tesla, MicroStrategy, SPCX, and Rocket Lab. Gilbert Cisneros and four other members also made buys. Bloom Energy, with $7.5M in buying from Nancy Pelosi, could not be included as it is not tokenized or tradable on this chain. This basket represents 2.6% of the disclosed buying dollars.",
+    "text": "The latest basket is led by Intel, weighted at 37.2%, following two buys by Nancy Pelosi with a notional value of $1.1M, traded on 2026-07-24 and filed on 2026-08-21. Nvidia is also present, with buys from Donald J Trump and Gilbert Cisneros. Donald J Trump also contributed to buys in Tesla, MicroStrategy, and Rocket Lab. In total, 5 members disclosed buys across the basket. Bloom Energy, with a net notional of $7.5M from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 2.5% of disclosed buying dollars.",
     "model": "gemini-2.5-flash",
-    "generatedAt": "2026-10-06T00:20:02+00:00",
-    "inputHash": "7d6423b391310f9f",
+    "generatedAt": "2026-10-08T00:23:27+00:00",
+    "inputHash": "f4b7efae0eef9060",
     "promptVersion": 2
   }
 }
