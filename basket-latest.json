@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T19:01:35.851967+00:00",
+  "generatedAt": "2026-10-08T20:02:11.420288+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -38,7 +38,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 83544218,
+    "block": 83579833,
     "dropped": []
   },
   "missedCoverage": [
@@ -1010,5 +1010,11 @@
     ],
     "divergenceBps": 1532
   },
-  "commentary": null
+  "commentary": {
+    "text": "This basket is led by META, with Donald J Trump's $15.4M notional buy on August 28, 2026, filed September 22, 2026, and Maria Elvira's $16K buy on September 22, 2026, filed October 8, 2026. Other notable positions include NVDA, PLTR, MSTR, INTC, and TSLA, with Gilbert Cisneros and Nancy Pelosi also making buys, alongside 7 other buyers across the basket. The largest position that could not be bought was BE, due to it not being tokenized or tradable on this chain. This basket represents 16.2% of disclosed buying dollars.",
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-10-08T20:02:11+00:00",
+    "inputHash": "480e0a47104c8ab4",
+    "promptVersion": 2
+  }
 }
