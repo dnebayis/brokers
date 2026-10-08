@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T17:59:29.588961+00:00",
+  "generatedAt": "2026-10-08T19:00:02.856134+00:00",
   "source": "unusual_whales",
   "health": {
     "ok": true,
@@ -38,7 +38,7 @@
   "routePreflight": {
     "bufferWei": 10000000000000000,
     "router": "0x99F3f896B58bcb8A515ED3C7174c017B5a55075a",
-    "block": 83507630,
+    "block": 83543310,
     "dropped": []
   },
   "missedCoverage": [
@@ -1010,11 +1010,5 @@
     ],
     "divergenceBps": 1532
   },
-  "commentary": {
-    "text": "This basket is led by Intel, with Nancy Pelosi's $1.1M buy on July 24, 2026, filed August 21, 2026. NVIDIA is also a significant position, with buys from Donald J Trump and Gilbert Cisneros. Donald J Trump also bought Tesla, MicroStrategy, and Rocket Lab. Across the basket, there are 6 total buyers. Bloom Energy, a $7.5M position from Nancy Pelosi, could not be bought because it is not tokenized or tradable on this chain. This basket covers 2.5% of disclosed buying dollars.",
-    "model": "gemini-2.5-flash",
-    "generatedAt": "2026-10-08T13:17:16+00:00",
-    "inputHash": "560b23ef2c05bc56",
-    "promptVersion": 2
-  }
+  "commentary": null
 }
