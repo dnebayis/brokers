@@ -65,6 +65,12 @@ jobs:
       # honest number is disclosed in the docs and in every run's output.
       MIN_ROUTE_COVERAGE: ${{ vars.MIN_ROUTE_COVERAGE || '0.40' }}
       UNUSUAL_WHALES_API_KEY: ${{ secrets.UNUSUAL_WHALES_API_KEY }}
+      # INDEXER_PAUSED=1 (repository variable, set 2026-10-09) freezes the basket at its current
+      # epoch: no disclosure fetch (the Unusual Whales subscription is off), no post, the last
+      # published basket, feed and member files stay as they are. The chain-derived files
+      # (scorecard, activations) are still rebuilt and published every pass. Set it to 0 (or
+      # delete it) and the next run resumes; the key secret must then be valid again.
+      INDEXER_PAUSED: ${{ vars.INDEXER_PAUSED || '0' }}
       # Route pre-flight for a RialtoLeg-routed name is a sized Rialto quote (the adapter cannot
       # be eth_called unstaged). Empty = such names are dropped at pre-flight with a named cause.
       RIALTO_API_KEY: ${{ secrets.RIALTO_API_KEY }}
@@ -129,6 +135,21 @@ jobs:
           for i in $(seq 1 "$passes"); do
             if [ "$i" -gt 1 ]; then sleep 3600; fi
             echo "::group::indexer pass ${i}/${passes}"
+            if [ "${INDEXER_PAUSED:-0}" = "1" ]; then
+              echo "paused: the basket stays at its current on-chain epoch; no disclosure fetch, no post"
+              if python scorecard.py --out scorecard.json; then
+                bash ../scripts/publish_data.sh scorecard.json basket-scorecard.json || echo "::warning::scorecard publish failed"
+              else
+                echo "::warning::scorecard build failed; the published copy stays"
+              fi
+              if python activations.py --out activations.json; then
+                bash ../scripts/publish_data.sh activations.json activations.json || echo "::warning::activations publish failed"
+              else
+                echo "::warning::activation history build failed; the published copy stays"
+              fi
+              echo "::endgroup::"
+              continue
+            fi
             if python run.py --post --out latest-basket.json; then
               fail=0
               # the site reads this file; publish every pass so the feed is at most an hour old
@@ -159,7 +180,7 @@ jobs:
           done
           exit "$fail"
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && env.INDEXER_PAUSED != '1'
         with:
           name: latest-indexer-basket-mainnet
           path: indexer/latest-basket.json

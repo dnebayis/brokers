@@ -84,7 +84,12 @@ threshold-eligible `poke` (the basket purchase) → TWAP-eligible buyback → Fl
 Playbooks execution → gift draw (open a round when the interval has passed, settle it seconds
 later). Every stage is isolated: a deferred stage retries next hour and never
 strands funds. The Congress indexer republishes the basket hourly; an invalid snapshot can
-never replace the last valid basket. All the value-moving entry points are permissionless —
+never replace the last valid basket. **Paused 2026-10-09** (repository variable
+`INDEXER_PAUSED=1`, founder decision: no demand for the signal yet, the disclosure feed cost
+money every week): the basket is frozen at epoch 59 (META 50%, NVDA 36.3%, PLTR 5.9%, MSTR 3.6%,
+INTC 2.1%, TSLA 2.1%); the engine, Playbooks, the Floor and the Desk keep trading it; the
+scorecard and activation files are still published each pass; the earlier-signal poll is off
+(`UW_SIGNAL_ENABLED=0`). Set `INDEXER_PAUSED=0` with a valid disclosure key to resume. All the value-moving entry points are permissionless —
 if our automation stops, anyone can call them.
 
 Known operational limits, stated plainly:

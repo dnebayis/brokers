@@ -56,6 +56,16 @@ an ops fallback that calls `setStrategy` from a key holding `UPDATER_ROLE` (no s
 > array commitments hash `abi.encodePacked(tokens/weightsBps)` with **elements padded to 32 bytes**
 > (Solidity pads array elements — unlike standalone value types), which is what the contract expects.
 
+## Pausing the basket
+
+`INDEXER_PAUSED=1` (repository variable, read by `indexer-schedule-mainnet.yml`) freezes the
+basket at its current on-chain epoch: no disclosure fetch, no post, the published basket, feed
+and member files stay as last written, while the chain-derived scorecard and activation files
+are still rebuilt every pass. Set on 2026-10-09 when the Unusual Whales subscription was
+stopped; `UW_SIGNAL_ENABLED=0` switched the earlier-signal poll off at the same time. To resume:
+a valid `UNUSUAL_WHALES_API_KEY` (or an `FMP_API_KEY` with the disclosure endpoints and
+`INDEXER_DATA_SOURCE=fmp`), then `INDEXER_PAUSED=0`.
+
 ## Data sources
 
 `INDEXER_DATA_SOURCE=auto` prefers Unusual Whales when

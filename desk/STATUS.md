@@ -6,13 +6,13 @@ its history are in [SPEC.md](SPEC.md); the internal audit is [AUDIT-2026-10-02.m
 ## Current step
 
 **Ready for the mainnet broadcast.** Everything up to and including a rehearsed mainnet deploy
-script is done. One decision and one signature remain:
+script is done. The price is confirmed; the signature remains:
 
-1. **Mint price.** 120,000 COAT is what the contract ships with. On 2026-10-05 that was about
+1. **Mint price.** 120,000 COAT, **confirmed by the founder 2026-10-09**; the contract ships with it, nothing to change. On 2026-10-05 that was about
    $10.60; at the 2026-10-09 quote (ETH/USD from the Booster's feed over the hooked pool's
    COAT per ETH, as the site prices it) it is about $7.92, COAT having fallen about a quarter.
-   About 160,000 COAT would be $10.60 today. Waiting for the founder's number; `mintPrice` is
-   settable after deploy too (`DeskNFT.setMintPrice`).
+   About 160,000 COAT would be $10.60 today; the founder kept 120,000. `mintPrice` stays
+   settable after deploy (`DeskNFT.setMintPrice`).
 2. **The broadcast.** The deployer signs it from their own terminal (command below). The
    deployer wallet holds about 0.0092 ETH on mainnet; the dry run needs about 0.00116 ETH.
 
@@ -44,7 +44,7 @@ After the broadcast, work through [After the deploy](#after-the-deploy) in order
 | Deposit currencies | USDG, ETH (Chainlink-floored), COAT (98% of quote on the site) | 2026-09-27 |
 | Service fee | 0.5% of every engine trade (hard ceiling 1%) | community vote |
 | Fee split | **100% to the Booster** as native ETH (`boosterShareBps` 10,000, settable) | 2026-10-07 |
-| Basket | the live basket, strategy 0 (the one Broker salaries are paid in); names without a v3 USDG pool are skipped and the rest scaled up | design |
+| Basket | the live basket, strategy 0 (the one Broker salaries are paid in); names without a v3 USDG pool are skipped and the rest scaled up. Frozen at epoch 59 since 2026-10-09 (indexer paused, `INDEXER_PAUSED=1`), so no rebalances until it resumes | design; freeze 2026-10-09 |
 | Keeper | the Booster's keeper relay `0xa492c8fFa033016144B169501D2e428BeDD518CA`, signing with the existing `TESTNET_KEEPER_PRIVATE_KEY` secret; it is also the bonus-round poster | 2026-10-07 |
 | Treasury | the deployer (receives nothing while the split is 100% Booster) | 2026-10-07 |
 
