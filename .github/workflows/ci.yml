@@ -33,10 +33,13 @@ jobs:
       - run: forge install OpenZeppelin/openzeppelin-contracts@v5.1.0
       - run: forge fmt --check
       - run: forge lint -D notes
-      - run: forge test --no-match-path 'test/Fork*.t.sol'
+      # Fork suites need a live RPC and stay local. They are skipped by contract name: on forge
+      # 1.5.1 the old --no-match-path 'test/Fork*.t.sol' matched nothing, so they ran here until
+      # the public mainnet RPC started answering GitHub runners with a 403 challenge (2026-10-07).
+      - run: forge test --no-match-contract Fork
       # RendererScale is executed by the normal test gate above. Its 1,776-item
       # payload loop exceeds Foundry coverage instrumentation's 10B gas ceiling.
-      - run: forge coverage --ir-minimum --report lcov --report-file lcov.info --no-match-test 'test_allCanonicalPayloadsUploadAndRender'
+      - run: forge coverage --ir-minimum --report lcov --report-file lcov.info --no-match-test 'test_allCanonicalPayloadsUploadAndRender' --no-match-contract Fork
       - run: python3 scripts/check_branch_coverage.py
 
   desk:
