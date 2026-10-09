@@ -21,6 +21,14 @@ pre-launch remaining-work list; the historical deploy-day sequence is preserved 
 Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
 `robinhoodchain.blockscout.com`; `rh-scan.com` is a lookalike domain and is not ours.
 
+## In progress: The Desk
+
+A Desk is an NFT with its own wallet: the owner deposits USDG, ETH or COAT and the engine buys
+the live basket into that wallet; 0.5% per engine trade goes to the Booster. Built, audited,
+live on testnet, mainnet deploy script rehearsed on a fork; waiting for the mint-price
+confirmation and the broadcast. Current step, launch parameters and runbook:
+[desk/STATUS.md](desk/STATUS.md).
+
 ## Metadata
 
 The collection renders through the original `BrokerRenderer` v1

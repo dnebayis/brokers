@@ -5,10 +5,9 @@
 > Build constraint: everything lives in this `desk/` folder. The deployed core
 > (`contracts/`, indexer, keeper) is not modified; Desk contracts only READ it.
 >
-> **Status 2026-08-28: FROZEN, not cancelled.** Contracts and art are built and tested; work
-> stopped at the on-chain renderer so that Playbooks (`../playbooks/`) could ship first. The
-> vote that approved this product stands, and nothing here is withdrawn — if the Desk is ever
-> dropped for good, that will be said publicly rather than left to silence.
+> **Status 2026-10-09: ready for the mainnet broadcast.** Built, audited, deployed and run on
+> testnet, the mainnet deploy rehearsed on a fork. The current step, the launch parameters and the
+> runbook live in [STATUS.md](STATUS.md). (Frozen 2026-08-28 for Playbooks, resumed 2026-08-31.)
 
 ## Product
 
@@ -114,22 +113,16 @@ Two structural guarantees, designed so the Brokers rarity-churn failure CANNOT r
    0.5% fee flush to the Booster as native ETH (80/20), the $1,000 pilot cap and the owner's
    pause all hold. 5 fork tests, 30 desk tests total.** Note: the 7 Rialto-routed names have no
    v3 USDG pool; the Desk universe is the 26 v3 names until a RialtoLeg-style adapter is added.
-5. **Full testnet deployment (chain 46630)**: every contract deployed and every flow
-   (mint, deposit, buy, rebalance, fee split, bonus round, withdraw, desk sale) exercised
-   on testnet BEFORE any mainnet transaction (user gate, 2026-08-26)
-   ← **dress run done 2026-09-27 on an anvil fork of 46630** (`script/rehearse_local.py`,
-   report `rehearsal/local-rehearsal.md`): 34 deployer txs (`script/DeployDeskTestnet.s.sol`)
-   + user/keeper txs incl. ETH and COAT deposits, 40 on-chain checks, all green. Testnet has no USDG and no v3 pools,
-   so the script also deploys a testnet-only venue (`src/testnet/DeskTestVenue.sol`: test
-   USDG, tMSFT, oracle-priced pools at feed minus 0.30%) and gives the Desk its own
-   StrategyRegistry slot (Booster slot 0 untouched). Real testnet broadcast still pending
-   (deployer signs; needs ~0.02 testnet ETH, the deployer holds ~0.029).
-   **Rebalance cost, found and fixed 2026-09-27.** The first dress run could only use
-   `buyBasket` (all weights at once) and `sellStock`, so moving 30% of the weight (tAAPL 100 →
-   70/30) meant selling the whole position and rebuying: 1.32% of the desk ($15.78 of $1,192).
-   The engine now has `buyStock(deskId, stock, maxSpend)` (current basket names only, same cap,
-   fee, floor and pause rules): sell 30% + buy the new name cost 0.40% ($4.73). Same day: the
-   engine's stock-feed window went from 1 day to 96h to match the live Booster (weekend trading
-   vote); with 1 day every buy failed on a Sunday fork because feeds stop at Friday close.
-6. Lawyer one-pager BEFORE any mainnet deploy (open item)
-7. Mainnet only after 5 + 6 are signed off
+5. **Full testnet deployment (chain 46630)** ← **done.** Dress run on an anvil fork 2026-09-27
+   (`script/rehearse_local.py`, testnet-only venue in `src/testnet/DeskTestVenue.sol`, own
+   StrategyRegistry slot), real broadcasts v1 2026-09-28, v2 2026-10-02 (principal book), v3
+   2026-10-02 (audited); the founder tested mint, deposit, cap, P&L and withdrawals by hand.
+   Along the way: `buyStock` for targeted rebalances (2026-09-27: 0.40% instead of 1.32% for a
+   30% move), the 96h stock-feed window (weekend trading), deposits in ETH and COAT.
+6. ~~Lawyer one-pager~~ dropped by the founder (2026-10-02). Replaced by the **internal audit**
+   ← done 2026-10-02 ([AUDIT-2026-10-02.md](AUDIT-2026-10-02.md)): 7 fixes, invariant suite,
+   `script/check_deployed.py` (23/23 against the deployed testnet set).
+7. **Mainnet** ← script ready and rehearsed (2026-10-07): `script/DeployDeskMainnet.s.sol`,
+   26/26 on a mainnet fork. Launch changes the founder made on 2026-10-07: fee split 100%
+   Booster, no deposit cap, no mint waves (2,000 from day one), the Booster's keeper relay. Next:
+   confirm the mint price, broadcast, then the post-deploy list in [STATUS.md](STATUS.md).
