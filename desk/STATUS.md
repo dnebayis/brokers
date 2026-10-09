@@ -1,6 +1,6 @@
 # The Desk: where it stands
 
-_Updated 2026-10-09. The single place to look before picking the Desk back up. The design and
+_Updated 2026-10-09 (evening). The single place to look before picking the Desk back up. The design and
 its history are in [SPEC.md](SPEC.md); the internal audit is [AUDIT-2026-10-02.md](AUDIT-2026-10-02.md)._
 
 ## Current step
@@ -8,8 +8,11 @@ its history are in [SPEC.md](SPEC.md); the internal audit is [AUDIT-2026-10-02.m
 **Ready for the mainnet broadcast.** Everything up to and including a rehearsed mainnet deploy
 script is done. One decision and one signature remain:
 
-1. **Mint price.** 120,000 COAT, about $10.60 on 2026-10-05. Waiting for the founder's yes
-   (or a new number; `mintPrice` is settable after deploy too).
+1. **Mint price.** 120,000 COAT is what the contract ships with. On 2026-10-05 that was about
+   $10.60; at the 2026-10-09 quote (ETH/USD from the Booster's feed over the hooked pool's
+   COAT per ETH, as the site prices it) it is about $7.92, COAT having fallen about a quarter.
+   About 160,000 COAT would be $10.60 today. Waiting for the founder's number; `mintPrice` is
+   settable after deploy too (`DeskNFT.setMintPrice`).
 2. **The broadcast.** The deployer signs it from their own terminal (command below). The
    deployer wallet holds about 0.0092 ETH on mainnet; the dry run needs about 0.00116 ETH.
 
@@ -28,6 +31,7 @@ After the broadcast, work through [After the deploy](#after-the-deploy) in order
 | Site | Desk tab built (`frontend/src/components/desk/`, `tabs/DeskTab.tsx`), design approved 2026-10-05, hidden behind two keys (mainnet Desk addresses in `frontend/deployments.json` AND `NEXT_PUBLIC_DESK_TAB=1`) |
 | Keeper | `keeper/desk_keeper.py`: universe from the engine, one multicall per tick for every Desk, quiet Desks skipped, at most $2,500 per Desk per tick, name-by-name fallback, nonce = max(pending, latest) |
 | Mainnet keeper workflow | `.github/workflows/desk-keeper-mainnet.yml`, inert until `DESK_MAINNET_KEEPER=1` |
+| Bonus rounds | `keeper/bonus_round.py` + `rounds/` + `desk-bonus-round.yml`; rehearsed on a mainnet fork 21/21 (`rehearsal/bonus-round-check.md`: 1,291 active Brokers, 22 claim batches, ~32k gas per Broker, static-call check before any claim is sent) |
 
 ## Launch parameters (decided)
 
@@ -65,7 +69,8 @@ mint closed. Override with `DESK_KEEPER`, `DESK_POSTER`, `DESK_TREASURY`, `DESK_
    (`FORK_RPC` is `NEXT_PUBLIC_RPC_URL_MAINNET` from `frontend/.env.local`; the script sends the
    coattail.cash Origin header itself. The public node drops old state within minutes, so it
    cannot hold a fork for the whole run.)
-2. **Verify the six contracts on Blockscout** (`robinhoodchain.blockscout.com`, never rh-scan.com).
+2. **Verify the six contracts on Blockscout** (`robinhoodchain.blockscout.com`, never rh-scan.com):
+   `cd desk && bash script/verify_blockscout.sh` (constructor arguments rebuilt from the address file).
 3. **Commit** `rehearsal/mainnet-4663.json` and add `mainnet.desk` to `frontend/deployments.json`
    (`usdg`, `desks`, `engine`, `depositRouter`, `strategyId: 0`, `deployBlock`).
 4. **Open the mint**: deployer calls `DeskNFT.setMintOpen(true)`.
@@ -76,16 +81,33 @@ mint closed. Override with `DESK_KEEPER`, `DESK_POSTER`, `DESK_TREASURY`, `DESK_
 
 ## Open items
 
-- **Bonus rounds tooling is not built.** Mint COAT lands in the CoatBonusPool; paying it out
-  needs a snapshot of active Brokers, a merkle tree, `postRound` (by the keeper relay) and claims.
-  The tranche-drop flow (`COAT_DROPS`, `distribute.sh`) is the model. Needed before the first
-  round, not before launch.
+- **Bonus rounds tooling: built, rehearsed on a mainnet fork (21/21), no round paid yet.** See
+  [Bonus rounds](#bonus-rounds). The first round is due once mints have filled the pool.
 - **Desk promo video** (15 s, HyperFrames) is on another branch:
   `claude/coattail-desk-hyperframes-video-b29455`, `desk/video/`; music track choice open
   (HeyGen catalog only, never MusicGen).
 - **Testnet v3** still has the old 80/20 split and the $1,000 cap (`pilotCapUsdg`); harmless,
   the site and `check_deployed.py` read both shapes.
 - **Rialto names** (7) have no v3 USDG pool, so a Desk cannot hold them; the engine skips them.
+
+## Bonus rounds
+
+Every mint sends its COAT to the CoatBonusPool; the pool pays it out in merkle rounds to the
+Brokers active at a snapshot block, into their 6551 wallets. `keeper/bonus_round.py` is the whole
+flow, `rounds/` holds one committed file per round (see `rounds/README.md`):
+
+1. `cd desk && RPC=<mainnet rpc> python3 keeper/bonus_round.py snapshot --out rounds/round-<n>.json`
+   (reads all 1,776 Brokers at one block, splits the unallocated COAT equally over the active
+   ones, writes root + proofs; refuses a partial read). Review, commit.
+2. `python3 keeper/bonus_round.py verify rounds/round-<n>.json`.
+3. Post and claim from the `desk-bonus-round` workflow (`gh workflow run desk-bonus-round.yml
+   -f round=rounds/round-<n>.json -f step=post-and-claim`): the poster is the keeper relay and
+   its key is already the workflow's secret. Or from a terminal holding that key:
+   `KEEPER_KEY_FILE=... python3 keeper/bonus_round.py post <file>` then `claim <file>`.
+   `claim` asks the node first (static claims) and sends nothing if any leaf would be refused;
+   it is resumable, claimed leaves are skipped.
+4. Commit the updated round file (round id, transactions) as the receipts. `status` shows the
+   pool and every round.
 
 ## How to check things
 
@@ -96,6 +118,8 @@ mint closed. Override with `DESK_KEEPER`, `DESK_POSTER`, `DESK_TREASURY`, `DESK_
 | testnet end-to-end on a fork (fresh deploy) | `python3 script/rehearse_local.py` |
 | a deployed testnet set | `DESK_ADDRESSES=rehearsal/testnet-46630-v3.json python3 script/check_deployed.py` |
 | the mainnet deploy, rehearsed on a fork | `DESK_NETWORK=mainnet FORK_RPC=<metered url> python3 script/check_deployed.py` |
+| bonus rounds end to end on a mainnet fork | `FORK_RPC=<metered url> python3 script/check_bonus_round.py` (report `rehearsal/bonus-round-check.md`) |
+| merkle math of the round files | `cd keeper && python3 -m unittest test_bonus_round` |
 | the site tab locally | `python3 script/local_env.py`, then the `desk-lab` preview (`NEXT_PUBLIC_DESK_LAB=1 NEXT_PUBLIC_DESK_TAB=1`) at `/desk-lab?view=site`, wallet "Local test wallet" |
 | move test prices | `python3 keeper/desk_basket.py price tAAPL=+5%` (testnet: `RPC=… DESK_ADDRESSES=… KEEPER_KEY_FILE=keeper/.testnet-keeper.json`) |
 

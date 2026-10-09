@@ -1,0 +1,71 @@
+name: desk-bonus-round
+
+# Pays a Desk bonus round on Robinhood Chain mainnet (4663) from a committed round file
+# (desk/rounds/round-<n>.json, written by keeper/bonus_round.py snapshot and reviewed before it is
+# committed). The CoatBonusPool's poster is the keeper relay, whose key is already the
+# TESTNET_KEEPER_PRIVATE_KEY secret, so the root is posted from here and never from a laptop.
+#
+# Run by hand only (workflow_dispatch): pick the round file and the step. "post" posts the root,
+# "claim" sends the claims in batches (permissionless, resumable: claimed leaves are skipped),
+# "post-and-claim" does both. The tool asks the node first (static claims) and sends nothing if
+# any leaf would be refused. The updated round file (round id, transactions) is uploaded as an
+# artifact; commit it afterwards next to the snapshot.
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      round:
+        description: "round file, relative to desk/ (e.g. rounds/round-0.json)"
+        required: true
+        default: "rounds/round-0.json"
+      step:
+        description: "what to do"
+        required: true
+        default: "post-and-claim"
+        type: choice
+        options: [verify, post, claim, post-and-claim]
+
+concurrency:
+  group: desk-bonus-round
+  cancel-in-progress: false
+
+jobs:
+  pay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      RPC: ${{ secrets.RH_MAINNET_RPC_URL }}
+      RPC_ORIGIN: ${{ vars.RH_RPC_ORIGIN }}
+      DESK_ADDRESSES: rehearsal/mainnet-4663.json
+      KEEPER_KEY: ${{ secrets.TESTNET_KEEPER_PRIVATE_KEY }}
+      ROUND: ${{ inputs.round }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: indexer/requirements.txt
+      - run: pip install -r indexer/requirements.txt
+      - name: Verify the round file
+        working-directory: desk
+        run: python -u keeper/bonus_round.py verify "$ROUND"
+      - name: Post the round
+        if: ${{ inputs.step == 'post' || inputs.step == 'post-and-claim' }}
+        working-directory: desk
+        run: python -u keeper/bonus_round.py post "$ROUND"
+      - name: Send the claims
+        if: ${{ inputs.step == 'claim' || inputs.step == 'post-and-claim' }}
+        working-directory: desk
+        run: python -u keeper/bonus_round.py claim "$ROUND"
+      - name: Status
+        working-directory: desk
+        run: python -u keeper/bonus_round.py status
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && inputs.step != 'verify' }}
+        with:
+          name: ${{ inputs.step }}-round-file
+          path: desk/${{ inputs.round }}
