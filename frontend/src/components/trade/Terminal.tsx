@@ -12,6 +12,7 @@ import {
   boosterEthUsdAbi,
   aggregatorMiniAbi,
   coatRouterQuoteAbi,
+  floorSymbol,
 } from "@/lib/floor";
 import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt } from "@/lib/client";
@@ -45,8 +46,7 @@ export function Terminal() {
   // scales each leg down here.
   const sellPortion = (bal: bigint) => (sellPct === 100 ? bal : (bal * BigInt(sellPct)) / 100n);
 
-  const symbolOf = (a: string) =>
-    FLOOR.stocks.find((s) => s.address.toLowerCase() === a.toLowerCase())?.symbol ?? short(a);
+  const symbolOf = (a: string) => floorSymbol(a) ?? short(a);
   const decimalsOf = (c: Cur) => (c === "usdg" ? FLOOR.usdgDecimals : 18);
   // parseUnits throws on more fractional digits than the token carries (USDG has 6), which
   // used to disable Buy with no explanation. Detect it first so the input can say why.
@@ -92,6 +92,19 @@ export function Terminal() {
     args: [0n],
     query: { enabled: floorReady },
   });
+  // v2 routers say what a basket buy actually buys (names without a pool are skipped and
+  // their weight spread over the rest); a v1 router has no such view, so fall back to the
+  // preset as posted, where every name is bought.
+  const { data: liveLegs } = useReadContract({
+    address: floorReady ? router : undefined,
+    abi: basketRouterAbi,
+    functionName: "basketLegs",
+    args: [0n],
+    query: { enabled: floorReady, retry: false },
+  });
+  const tradeTokens: readonly `0x${string}`[] = liveLegs ? liveLegs[0] : livePreset ? livePreset[0] : [];
+  const tradeWeights: readonly number[] = liveLegs ? liveLegs[1] : livePreset ? livePreset[1] : [];
+  const skippedTokens: readonly `0x${string}`[] = liveLegs ? liveLegs[2] : [];
 
   const [sellQuote, setSellQuote] = useState<string>("");
   const [buyQuote, setBuyQuote] = useState<string>("");
@@ -158,7 +171,7 @@ export function Terminal() {
   }> {
     let floor = 0n;
     const held: { symbol: string; text: string }[] = [];
-    for (const tk of [...livePreset![0]]) {
+    for (const tk of [...tradeTokens]) {
       const bal = (await client.readContract({
         address: tk,
         abi: erc20MiniAbi,
@@ -313,13 +326,11 @@ export function Terminal() {
       if (timer) clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dir, cur, amount, address, offline, livePreset, feeBps, sellPct]);
+  }, [dir, cur, amount, address, offline, livePreset, liveLegs, feeBps, sellPct]);
 
   const feePct = feeBps !== undefined ? Number(feeBps) / 100 : 0.3;
   const presetName = livePreset ? livePreset[2] : FLOOR.presets[0].name;
-  const legs = livePreset
-    ? livePreset[0].map((t, i) => ({ symbol: symbolOf(t), pct: Number(livePreset[1][i]) / 100 }))
-    : [];
+  const legs = tradeTokens.map((t, i) => ({ symbol: symbolOf(t), pct: Number(tradeWeights[i]) / 100 }));
 
   const balOf = (c: Cur): bigint | undefined =>
     c === "eth" ? ethBal?.value : c === "coat" ? (coatBal as bigint | undefined) : (usdgBal as bigint | undefined);
@@ -406,9 +417,9 @@ export function Terminal() {
   }
 
   async function doSell() {
-    if (!livePreset) return;
+    if (tradeTokens.length === 0) return;
     const legsToSell: { t: `0x${string}`; a: bigint }[] = [];
-    for (const t of [...livePreset[0]]) {
+    for (const t of [...tradeTokens]) {
       const bal = (await client.readContract({
         address: t,
         abi: erc20MiniAbi,
@@ -497,6 +508,12 @@ export function Terminal() {
         </ul>
       ) : (
         <p className="text-sm text-ink-soft mt-0.5">{FLOOR.presets[0].blurb}</p>
+      )}
+      {skippedTokens.length > 0 && (
+        <p className="text-xs text-ink-soft mt-2">
+          {skippedTokens.map(symbolOf).join(", ")} {skippedTokens.length === 1 ? "has" : "have"} no pool
+          here, so {skippedTokens.length === 1 ? "its" : "their"} weight is spread over the rest.
+        </p>
       )}
     </div>
   );

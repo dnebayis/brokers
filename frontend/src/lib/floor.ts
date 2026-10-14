@@ -41,6 +41,7 @@ export const FLOOR: {
     ACTIVE_NETWORK === "testnet"
       ? [{ symbol: "tAAPL", address: "0x44B8DA4948e3Eacb0f2E20a42c694Af49942e5C9" }]
       : [
+          // every name the route manifest wires on v3 (26), the launch seven first
           { symbol: "INTC", address: "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681" },
           { symbol: "SPCX", address: "0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa" },
           { symbol: "MU", address: "0xfF080c8ce2E5feadaCa0Da81314Ae59D232d4afD" },
@@ -48,11 +49,53 @@ export const FLOOR: {
           { symbol: "AAPL", address: "0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9" },
           { symbol: "MSFT", address: "0xe93237C50D904957Cf27E7B1133b510C669c2e74" },
           { symbol: "AMD", address: "0x86923f96303D656E4aa86D9d42D1e57ad2023fdC" },
+          { symbol: "AMZN", address: "0x12f190a9F9d7D37a250758b26824B97CE941bF54" },
+          { symbol: "ASML", address: "0x47F93d52cBeC7C6D2CfC080e154002370a60dAEA" },
+          { symbol: "BABA", address: "0xad25Ac6C84D497db898fa1E8387bf6Af3532a1c4" },
+          { symbol: "CRCL", address: "0xdF0992E440dD0be65BD8439b609d6D4366bf1CB5" },
+          { symbol: "DELL", address: "0x941AE714EC6D8130c7B75d67160Ca08f1e7d11Dd" },
+          { symbol: "GME", address: "0x1b0E319c6A659F002271B69dB8A7df2F911c153E" },
+          { symbol: "GOOGL", address: "0x2e0847E8910a9732eB3fb1bb4b70a580ADAD4FE3" },
+          { symbol: "META", address: "0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35" },
+          { symbol: "MSTR", address: "0xec262a75e413fAfD0dF80480274532C79D42da09" },
+          { symbol: "PLTR", address: "0x894E1EC2D74FFE5AEF8Dc8A9e84686acCB964F2A" },
+          { symbol: "QQQ", address: "0xD5f3879160bc7c32ebb4dC785F8a4F505888de68" },
+          { symbol: "SGOV", address: "0x92FD66527192E3e61d4DDd13322Aa222DE86F9B5" },
+          { symbol: "SLV", address: "0x411eFb0E7f985935DAec3D4C3ebaEa0d0AD7D89f" },
+          { symbol: "SNDK", address: "0xB90A19fF0Af67f7779afF50A882A9CfF42446400" },
+          { symbol: "SPY", address: "0x117cc2133c37B721F49dE2A7a74833232B3B4C0C" },
+          { symbol: "TSLA", address: "0x322F0929c4625eD5bAd873c95208D54E1c003b2d" },
+          { symbol: "TSM", address: "0x58FfE4a942d3885bAa22D7520691F611EF09e7AA" },
+          { symbol: "USAR", address: "0xd917B029C761D264c6A312BBbcDA868658eF86a6" },
+          { symbol: "USO", address: "0xa30FA36Db767ad9eD3f7a60fC79526fB4d56D344" },
         ],
   // preset 0 always mirrors the live on-chain strategy basket; ids >= 1 are curated on the
   // contract and only listed here for labels.
   presets: [{ id: 0, name: "Congress Live", blurb: "The exact basket the engine runs, current epoch weights." }],
 };
+
+// Names the basket can hold that have no v3 pool (routed for the Booster through Rialto), so
+// the terminal can name what a basket buy skips instead of printing an address.
+const SKIP_ONLY: Record<string, string> =
+  ACTIVE_NETWORK === "testnet"
+    ? {}
+    : {
+  "0xcbb95bbf36099d34da091dc6fa6f49efa257cee3": "CLSK",
+  "0x6330d8c3178a418788df01a47479c0ce7ccf450b": "COIN",
+  "0x5f10a1c971b69e47e059e1dc91901b59b3fb49c3": "CRWV",
+  "0x7f0abef0c07280f82c6a08ead09ded6bae2c13fc": "EWY",
+  "0x558378e000d634a36593e338ebacdd6207640efe": "IONQ",
+  "0x9d9c6684f596f66a64c030b93a886d51fd4d7931": "NBIS",
+  "0xb0992820e760d836549ba69bc7598b4af75dee03": "ORCL",
+  "0x284358abc07f9359f19f4b5b4ac91901be2597ba": "RGTI",
+  "0x3b14c39e89d60d627b42a1a4ca45b5bb45fc12e2": "RKLB",
+      };
+
+/** Ticker for any stock token the basket can name, or undefined. */
+export function floorSymbol(address: string): string | undefined {
+  const a = address.toLowerCase();
+  return FLOOR.stocks.find((s) => s.address.toLowerCase() === a)?.symbol ?? SKIP_ONLY[a];
+}
 
 export const floorReady = FLOOR.router !== "";
 
@@ -62,6 +105,19 @@ export const floorReady = FLOOR.router !== "";
 export const TRADE_TAB_ENABLED = FLOOR.live || floorReady;
 
 export const basketRouterAbi = [
+  {
+    // v2 only: what a preset buy actually buys (routed names, weights spread to 10,000) and
+    // the names it skips for want of a pool. v1 has no such view; the terminal falls back.
+    type: "function",
+    name: "basketLegs",
+    stateMutability: "view",
+    inputs: [{ name: "id", type: "uint256" }],
+    outputs: [
+      { name: "tokens", type: "address[]" },
+      { name: "weights", type: "uint16[]" },
+      { name: "skipped", type: "address[]" },
+    ],
+  },
   {
     type: "function",
     name: "buyStockEth",
