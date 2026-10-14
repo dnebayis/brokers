@@ -14,7 +14,7 @@ script is done. The price is confirmed; the signature remains:
    About 160,000 COAT would be $10.60 today; the founder kept 120,000. `mintPrice` stays
    settable after deploy (`DeskNFT.setMintPrice`).
 2. **The broadcast.** The deployer signs it from their own terminal (command below). The
-   deployer wallet holds about 0.0092 ETH on mainnet; the dry run needs about 0.00116 ETH.
+   deployer wallet holds about 0.0117 ETH on mainnet (2026-10-14); the dry run needs about 0.00116 ETH.
 
 After the broadcast, work through [After the deploy](#after-the-deploy) in order.
 
@@ -52,6 +52,13 @@ Note for the launch post: the pilot was voted with a $1,000 cap and waves of 500
 lifted by the founder on 2026-10-07. A one-line mention is worth it.
 
 ## The broadcast
+
+Run it from an up-to-date checkout: `git pull --ff-only` first. On 2026-10-14 the main checkout
+was 88 commits behind and had no `DeployDeskMainnet.s.sol` at all; it was fast-forwarded and the
+dry run re-run from there (26 routes, ~0.00116 ETH, same addresses as the rehearsal; the deployed
+code is byte-identical to the rehearsed build, only compiler metadata differs between checkouts,
+so run the Blockscout script from the same checkout that broadcast). The frozen basket (epoch 59:
+META, NVDA, PLTR, MSTR, INTC, TSLA) is fully routed on v3 USDG pools with fresh feeds.
 
 ```bash
 cd desk && forge script script/DeployDeskMainnet.s.sol \
