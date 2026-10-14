@@ -25,9 +25,17 @@ Addresses: [ADDRESSES.md](ADDRESSES.md). The official explorer is
 
 A Desk is an NFT with its own wallet: the owner deposits USDG, ETH or COAT and the engine buys
 the live basket into that wallet; 0.5% per engine trade goes to the Booster. Built, audited,
-live on testnet, mainnet deploy script rehearsed on a fork; waiting for the mint-price
-confirmation and the broadcast. Current step, launch parameters and runbook:
+live on testnet, mainnet deploy script rehearsed on a fork; mint price confirmed (120,000
+COAT), waiting for the broadcast. Current step, launch parameters and runbook:
 [desk/STATUS.md](desk/STATUS.md).
+
+## In progress: The Floor v2
+
+The live Floor (v1.3) cannot buy the Congress basket since epoch 59 (2026-10-08): four of its
+six names have no pool on it and v1 reverts the whole buy. v2 skips such names, hands them back
+on sells, is wired to all 26 v3 names and brings the Desk audit's swap fixes and an ETH/USD
+floor. Built, 37 unit/fuzz tests, rehearsed on a mainnet fork 8/8; waiting for the broadcast.
+Runbook: [floor/STATUS.md](floor/STATUS.md).
 
 ## Metadata
 
@@ -87,7 +95,7 @@ strands funds. The Congress indexer republishes the basket hourly; an invalid sn
 never replace the last valid basket. **Paused 2026-10-09** (repository variable
 `INDEXER_PAUSED=1`, founder decision: no demand for the signal yet, the disclosure feed cost
 money every week): the basket is frozen at epoch 59 (META 50%, NVDA 36.3%, PLTR 5.9%, MSTR 3.6%,
-INTC 2.1%, TSLA 2.1%); the engine, Playbooks, the Floor and the Desk keep trading it; the
+INTC 2.1%, TSLA 2.1%); the engine, Playbooks and the Desk keep trading it (the Floor's basket buy needs v2, see above); the
 scorecard and activation files are still published each pass; the earlier-signal poll is off
 (`UW_SIGNAL_ENABLED=0`). Set `INDEXER_PAUSED=0` with a valid disclosure key to resume. All the value-moving entry points are permissionless —
 if our automation stops, anyone can call them.

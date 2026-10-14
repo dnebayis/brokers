@@ -58,3 +58,5 @@ desk/keeper/.testnet-keeper.json
 frontend/public/desk-testnet.json
 desk/rehearsal/testnet-keeper.log
 desk/rehearsal/bonus-round-fork-*.json
+floor/rehearsal/floor-v2-fork.json
+floor/rehearsal/.floor-v2-test.log

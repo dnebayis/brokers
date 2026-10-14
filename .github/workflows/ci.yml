@@ -61,6 +61,24 @@ jobs:
       - run: forge test --no-match-contract Fork
         working-directory: desk
 
+  floor:
+    # The Floor (BasketRouter). Same pinned libraries as the core; fork suites are skipped by
+    # contract name (they need a live RPC, which the public node refuses to CI runners).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.5.1
+      - run: forge install foundry-rs/forge-std@467ffd422ca01fed5797a4c766a1e4e3a5327902
+        working-directory: contracts
+      - run: forge install OpenZeppelin/openzeppelin-contracts@v5.1.0
+        working-directory: contracts
+      - run: forge fmt --check
+        working-directory: floor
+      - run: forge test --no-match-contract Fork
+        working-directory: floor
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

@@ -267,7 +267,9 @@ contract ForkUiMathTest is Test {
             router.sellBasket(t, a, BasketRouter.OutCurrency.USDG, 0, alice, block.timestamp + 600);
         }
         vm.prank(alice); // final 100% sweep via sentinels
-        router.sellBasket(t, new uint256[](t.length), BasketRouter.OutCurrency.USDG, 0, alice, block.timestamp + 600);
+        router.sellBasket(
+            t, new uint256[](t.length), BasketRouter.OutCurrency.USDG, 0, alice, block.timestamp + 600
+        );
         for (uint256 i; i < t.length; ++i) {
             assertEq(IERC20(t[i]).balanceOf(alice), 0, "swept clean");
         }

@@ -1070,6 +1070,49 @@ class PlaybookWorthTests(unittest.TestCase):
             self.assertEqual(_holdings_floor_usdg_many(self._ctx(), [7]), {7: None})
 
 
+class PlaybookSellableTests(unittest.TestCase):
+    """A TO_COAT minimum is sized on what the run will sell: routed at the venue and approved
+    for the engine, wallet plus claimable. An unrouted or unapproved name must not inflate it."""
+
+    A, B, C = "0x" + "aa" * 20, "0x" + "cc" * 20, "0x" + "dd" * 20  # routed+approved, unrouted, unapproved
+
+    def _ctx(self):
+        stocks = []
+        for a in (self.A, self.B, self.C):
+            m = Mock(); m.address = a; stocks.append(m)
+        return {"w3": Mock(), "brokers": Mock(), "floor": Mock(), "booster": Mock(), "stocks": stocks,
+                "engine_addr": "0x" + "ee" * 20, "routed": {self.A, self.C}}
+
+    def _mc(self, quotes=None, bal_fail=False):
+        def mc(w3, reqs, chunk=150):
+            fn = reqs[0][1] if reqs else None
+            if fn == "accountOf": return ["0x" + "bb" * 20]
+            if fn == "balanceOf": return [None, 10**18, 10**18] if bal_fail else [10**18, 10**18, 10**18]
+            if fn == "allowance": return [2**255, 2**255, 0]          # C is not approved
+            if fn == "claimable": return [([self.A], [10**18])]        # 1 more A owed
+            if fn == "minUsdgOut":
+                self.quoted = [r[2] for r in reqs]
+                return quotes if quotes is not None else [5_000_000] * len(reqs)
+            return [None] * len(reqs)
+        return mc
+
+    def test_only_routed_and_approved_legs_count(self):
+        from keeper import _sellable_floor_usdg
+        with patch("keeper._mc_call", side_effect=self._mc()):
+            self.assertEqual(_sellable_floor_usdg(self._ctx(), 7), 5_000_000)
+        self.assertEqual(self.quoted, [(self.A, 2 * 10**18)])  # wallet 1 + claimable 1, B and C left out
+
+    def test_nothing_sellable_is_zero_and_a_failed_read_is_none(self):
+        from keeper import _sellable_floor_usdg
+        ctx = self._ctx(); ctx["routed"] = set()
+        with patch("keeper._mc_call", side_effect=self._mc()):
+            self.assertEqual(_sellable_floor_usdg(ctx, 7), 0)
+        with patch("keeper._mc_call", side_effect=self._mc(bal_fail=True)):
+            self.assertIsNone(_sellable_floor_usdg(self._ctx(), 7))
+        with patch("keeper._mc_call", side_effect=self._mc(quotes=[None])):
+            self.assertIsNone(_sellable_floor_usdg(self._ctx(), 7))
+
+
 class PlaybookBatchSizingTests(unittest.TestCase):
     """An unaffordable batch shrinks to what the relay can carry instead of deferring whole."""
 

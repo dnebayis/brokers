@@ -265,6 +265,9 @@ def _pb_context(w3, engine, floor_addr):
              "inputs": [], "outputs": [{"name": "", "type": "address"}]},
             {"type": "function", "name": "coatRouter", "stateMutability": "view",
              "inputs": [], "outputs": [{"name": "", "type": "address"}]},
+            {"type": "function", "name": "routes", "stateMutability": "view",
+             "inputs": [{"name": "stock", "type": "address"}],
+             "outputs": [{"name": "pool", "type": "address"}, {"name": "usdgIsToken0", "type": "bool"}]},
         ])
         booster = w3.eth.contract(address=Web3.to_checksum_address(engine.functions.booster().call()), abi=[
             {"type": "function", "name": "knownTokenCount", "stateMutability": "view",
@@ -288,9 +291,18 @@ def _pb_context(w3, engine, floor_addr):
                   "inputs": [{"name": "a", "type": "address"}],
                   "outputs": [{"name": "", "type": "uint256"}]},
                  {"type": "function", "name": "decimals", "stateMutability": "view",
-                  "inputs": [], "outputs": [{"name": "", "type": "uint8"}]}]
+                  "inputs": [], "outputs": [{"name": "", "type": "uint8"}]},
+                 {"type": "function", "name": "allowance", "stateMutability": "view",
+                  "inputs": [{"name": "o", "type": "address"}, {"name": "s", "type": "address"}],
+                  "outputs": [{"name": "", "type": "uint256"}]}]
         stocks = [booster.functions.knownTokens(i).call()
                   for i in range(int(booster.functions.knownTokenCount().call()))]
+        # Which of them the venue can actually sell: a name without a pool there is skipped by the
+        # engine's sell (v2 hands it to dest raw, v1 reverts), so it must not size a minimum.
+        routed = set()
+        for stock, row in zip(stocks, _mc_call(w3, [(floor, "routes", (t,)) for t in stocks])):
+            if row is not None and int(str(row[0]), 16) != 0:
+                routed.add(str(stock).lower())
         return {
             "w3": w3,
             "brokers": w3.eth.contract(address=Web3.to_checksum_address(engine.functions.brokers().call()), abi=[
@@ -303,6 +315,8 @@ def _pb_context(w3, engine, floor_addr):
             ]),
             "booster": booster,
             "floor": floor,
+            "engine_addr": Web3.to_checksum_address(engine.address),
+            "routed": routed,
             "stocks": [w3.eth.contract(address=t, abi=erc20) for t in stocks],
             "fee_bps": int(floor.functions.feeBps().call()),
             "usdg_dec": int(w3.eth.contract(address=floor.functions.usdg().call(), abi=erc20)
@@ -332,6 +346,45 @@ def _holdings_floor_usdg(ctx, token_id):
         return None
 
 
+def _sellable_floor_usdg(ctx, token_id):
+    """Chainlink-floored USDG value of what a playbook's run will actually SELL, or None.
+
+    The engine claims first, then pulls only the stocks the Broker wallet has approved it for
+    (allowance >= the post-claim balance), and the venue sells only names it has a pool for.
+    A minimum sized on everything the wallet holds would sit above what the sale can pay
+    whenever an unapproved or unrouted name is in there, and the order would be deferred every
+    hour. So: wallet + claimable, per stock, counted only when routed and approved.
+    """
+    if ctx is None:
+        return None
+    w3 = ctx["w3"]
+    from web3 import Web3
+
+    tba = _mc_call(w3, [(ctx["brokers"], "accountOf", (token_id,))])[0]
+    if not tba:
+        return None
+    tba = Web3.to_checksum_address(tba)
+    stocks = ctx["stocks"]
+    bals = _mc_call(w3, [(s, "balanceOf", (tba,)) for s in stocks])
+    allows = _mc_call(w3, [(s, "allowance", (tba, ctx["engine_addr"])) for s in stocks])
+    owed_row = _mc_call(w3, [(ctx["booster"], "claimable", (token_id,))])[0]
+    if any(b is None for b in bals) or any(a is None for a in allows) or owed_row is None:
+        return None
+    owed = {str(t).lower(): int(a) for t, a in zip(owed_row[0], owed_row[1])}
+    legs = []
+    for s, bal, allow in zip(stocks, bals, allows):
+        total = int(bal) + owed.get(str(s.address).lower(), 0)
+        if total == 0 or str(s.address).lower() not in ctx["routed"] or int(allow) < total:
+            continue
+        legs.append((s.address, total))
+    if not legs:
+        return 0
+    quotes = _mc_call(w3, [(ctx["floor"], "minUsdgOut", (a, amt)) for a, amt in legs])
+    if any(q is None for q in quotes):
+        return None
+    return sum(int(q) for q in quotes)
+
+
 def _coat_min_out(ctx, token_id):
     """Minimum $COAT a TO_COAT playbook must deliver, or None if it cannot be priced.
 
@@ -343,10 +396,10 @@ def _coat_min_out(ctx, token_id):
     if ctx is None:
         return None
     try:
-        # Same measure as the run gate: wallet stock AND what the Booster still owes (the
-        # engine claims first, so the swap moves both). Pricing the wallet alone let a mostly
-        # claimable order pass the gate with a minOut sized for a fraction of what it swaps.
-        floor_usdg = _holdings_floor_usdg_many(ctx, [token_id]).get(token_id)
+        # Wallet stock AND what the Booster still owes (the engine claims first, so the swap
+        # moves both), but only the part the run can sell: routed at the venue and approved for
+        # the engine. Anything else stays in the wallet (or, on v2, reaches dest raw).
+        floor_usdg = _sellable_floor_usdg(ctx, token_id)
         if not floor_usdg:
             return None
         net = floor_usdg * (10_000 - ctx["fee_bps"]) // 10_000

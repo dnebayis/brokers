@@ -320,7 +320,20 @@ contract BasketRouterTest is Test {
         router.buyStock(address(intc), 1000 * U, 10 ether, alice, _dl());
     }
 
+    function test_flushFees_defaultAllToBooster() public {
+        vm.prank(alice);
+        router.buyStock(address(intc), 10_000 * U, 0, alice, _dl()); // fee 30 USDG
+        uint256 t0 = treasury.balance;
+        vm.prank(ownerA);
+        router.flushFees(0);
+        // 30 USDG at $2500 = 0.012 ETH, all of it to the Booster by default
+        assertEq(boosterSink.balance, 0.012 ether);
+        assertEq(treasury.balance, t0);
+    }
+
     function test_flushFees_8020() public {
+        vm.prank(ownerA);
+        router.setSplit(8000, boosterSink, treasury);
         vm.prank(alice);
         router.buyStock(address(intc), 10_000 * U, 0, alice, _dl()); // fee 30 USDG
         assertEq(router.feesAccrued(), 30 * U);
