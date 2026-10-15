@@ -189,7 +189,7 @@ The shared WETH/USDG mid pool is `0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca`. R
 |---|---|---|
 | BasketRouter v2 ("The Floor") | `0xb0614880C99a24ebE97379237D8044130c873B4a` | live since 2026-10-15 (block 89355052): one-tx basket entry/exit in $COAT, ETH or USDG over all 26 v3 names; skips a basket name without a pool, hands such a leg back on sells; 30 bps fee, all of it to the Booster as native ETH; Chainlink floors on stock and ETH legs; Sourcify exact match. Source: `floor/` |
 | BasketRouter v1.3 (retired) | `0x478F22A32663cF37702d65352A7579A73e61FDc7` | the Floor from 2026-08-27 to 2026-10-15; still deployed (its seven names trade), no longer used by the site or the keeper; fees flushed |
-| PlaybookEngine ("Playbooks") | `0x3b39C832a906E7fE5292F6872c3D3f9eE8340438` | per-Broker standing orders; **suspended 2026-10-15** (keeper stage off via `PLAYBOOKS_PAUSED=1`, panel off the site); still points at the v1.3 Floor; source-verified |
+| PlaybookEngine ("Playbooks") | `0x3b39C832a906E7fE5292F6872c3D3f9eE8340438` | per-Broker standing orders; **cancelled 2026-10-15** (keeper stage off via `PLAYBOOKS_PAUSED=1`, panel off the site, on-chain keeper to be set to address(0) by the deployer so nobody but the deployer can run an order; see `playbooks/STATUS.md`); still points at the v1.3 Floor; source-verified |
 
 Both are periphery: they hold no user funds between transactions, and neither required a change
 to the core contracts. Keeper relay for all of them: `0xa492c8fFa033016144B169501D2e428BeDD518CA`.

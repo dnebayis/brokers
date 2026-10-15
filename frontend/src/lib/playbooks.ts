@@ -12,8 +12,8 @@ export const PLAYBOOKS: { engine: Address | "" } = {
 
 export const playbooksReady = PLAYBOOKS.engine !== "";
 
-/** Playbooks are suspended (founder decision 2026-10-15): the panel is off the site and the
- *  keeper no longer runs orders (repository variable PLAYBOOKS_PAUSED=1). Enrolments and
+/** Playbooks are cancelled (founder decision 2026-10-15): the panel is off the site and the
+ *  keeper no longer runs orders (repository variable PLAYBOOKS_PAUSED=1; playbooks/STATUS.md). Enrolments and
  *  approvals stay on chain untouched, earnings stay claimable in the Booster. Set true, and
  *  PLAYBOOKS_PAUSED=0, to bring them back (move the engine onto the Floor v2 first). */
 export const PLAYBOOKS_ON_SITE = false;
