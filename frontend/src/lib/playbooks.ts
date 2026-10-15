@@ -12,6 +12,12 @@ export const PLAYBOOKS: { engine: Address | "" } = {
 
 export const playbooksReady = PLAYBOOKS.engine !== "";
 
+/** Playbooks are suspended (founder decision 2026-10-15): the panel is off the site and the
+ *  keeper no longer runs orders (repository variable PLAYBOOKS_PAUSED=1). Enrolments and
+ *  approvals stay on chain untouched, earnings stay claimable in the Booster. Set true, and
+ *  PLAYBOOKS_PAUSED=0, to bring them back (move the engine onto the Floor v2 first). */
+export const PLAYBOOKS_ON_SITE = false;
+
 // PlaybookEngine.Mode
 export const PB_MODE = { NONE: 0, SWEEP: 1, TO_USDG: 2, TO_COAT: 3 } as const;
 

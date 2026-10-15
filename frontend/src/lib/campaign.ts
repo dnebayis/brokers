@@ -39,6 +39,10 @@ const liveEnv = env(process.env.NEXT_PUBLIC_CAMPAIGN_LIVE, DEFAULTS.live);
 // Read on the server only (the proxy route); the browser never calls the partner directly.
 const feedUrl = env(process.env.CAMPAIGN_FEED_URL, DEFAULTS.feedUrl);
 
+/** The sponsored desk is off the site (founder decision 2026-10-15): no nav link, /campaign
+ *  answers 404, /start goes home. Whatever the Vercel env says. Set true to bring it back. */
+export const CAMPAIGN_ON_SITE = false;
+
 // A half-set config must not half-render the page: live needs the flag AND a usable wallet,
 // since every number on the page is derived from that wallet's roster.
 const wallet = /^0x[0-9a-fA-F]{40}$/.test(walletEnv) ? (walletEnv as Address) : "";
@@ -60,7 +64,7 @@ export const CAMPAIGN: {
   /** The partner's public campaign feed (server-side only); empty disables the feed. */
   feedUrl: string;
 } = {
-  live: liveEnv === "1" && wallet !== "",
+  live: CAMPAIGN_ON_SITE && liveEnv === "1" && wallet !== "",
   partnerName: partner,
   partnerUrl,
   wallet,

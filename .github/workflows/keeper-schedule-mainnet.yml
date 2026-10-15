@@ -66,7 +66,9 @@ jobs:
       # The Floor fee flush (stage is inert while this secret is empty).
       FLOOR_ROUTER: ${{ secrets.FLOOR_ROUTER }}
       # Playbooks standing-order execution (same env-gating: empty secret = inert stage).
-      PLAYBOOKS_ENGINE: ${{ secrets.PLAYBOOKS_ENGINE }}
+      # Playbooks suspended 2026-10-15 (founder): PLAYBOOKS_PAUSED=1 blanks the engine address, so
+      # the stage is inert exactly as before launch. Enrolments stay on chain; set it to 0 to resume.
+      PLAYBOOKS_ENGINE: ${{ vars.PLAYBOOKS_PAUSED != '1' && secrets.PLAYBOOKS_ENGINE || '' }}
       # Rialto legs: basket names routed through a RialtoLeg adapter need this hour's Rialto
       # quote staged in the same tx as the poke (RialtoPokeRunner.run). Both empty = the poke
       # goes straight to Booster.poke as before.

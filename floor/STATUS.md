@@ -1,16 +1,25 @@
 # The Floor: where it stands
 
-_Updated 2026-10-14._
+_Updated 2026-10-15._
 
-## Current step
+## Current state
 
-**v2 is built, tested and rehearsed; waiting for the deployer's broadcast.**
+**v2 is live:** `0xb0614880C99a24ebE97379237D8044130c873B4a` (deployed by the deployer
+2026-10-15, block 89355052, 26 routes; record `rehearsal/floor-v2-mainnet.json`).
 
-The live router v1.3 (`0x478F22A32663cF37702d65352A7579A73e61FDc7`) cannot buy the live Congress
-basket: since epoch 59 (2026-10-08) four of its six names (META, PLTR, MSTR, TSLA, about 62% of
-the weight) have no pool on it, and v1 reverts the whole buy (`RouteMissing`). Single-stock
-trades and sells of its seven names still work. v1 was wired to 7 names at launch; the route
-manifest has 26 v3 names.
+| Step | State |
+|---|---|
+| on-chain settings read back | fee 30 bps, 100% to the Booster, keeper relay, 96h stock / 30h ETH windows, Chips preset, `basketLegs(0)` = the six epoch-59 names, none skipped |
+| the deployed router driven on a mainnet fork (`FLOOR_V2=... script/rehearse_v2.sh`) | 8/8, `rehearsal/floor-v2-deployed-check.md` |
+| source verification | Sourcify exact match; Blockscout's API was behind a Cloudflare challenge at deploy time, retried |
+| site | `frontend/src/lib/floor.ts` router = v2 |
+| keeper fee flush | `FLOOR_ROUTER` secret = v2 |
+| v1.3 fees | flushed by the deployer (v1 holds 0 USDG) |
+| Playbooks | **suspended** (founder, 2026-10-15): keeper stage off (`PLAYBOOKS_PAUSED=1`), panel off the site. The engine still points at v1.3; before resuming, the deployer calls `PlaybookEngine.setFloor(0xb0614880C99a24ebE97379237D8044130c873B4a)` |
+| DefiLlama adapter | lists the v1 address; add v2 on the next update of PR DefiLlama/DefiLlama-Adapters#20930 |
+
+v1.3 (`0x478F22A32663cF37702d65352A7579A73e61FDc7`) stays deployed: its seven names still trade
+there for anyone calling it directly, but its Congress Live buy reverts since epoch 59.
 
 ## What v2 changes
 
@@ -36,29 +45,3 @@ preset, function signatures the site and Playbooks call) is unchanged.
 | unit, fuzz (`forge test --no-match-contract Fork`) | 37/37 (17 from v1, 20 new) |
 | dry run of `script/DeployMainnetFloorV2.s.sol` on mainnet | 26 routes wired, about 0.00037 ETH |
 | `script/rehearse_v2.sh` (the script broadcast on a mainnet fork, then `test/ForkFloorV2.t.sol`) | 8/8: config, live basket in USDG/ETH/COAT, a name without a pool skipped on the buy and handed back on the sell, Playbooks moved onto v2 and run for Broker #1422, flush to the Booster. Report: `rehearsal/floor-v2-rehearsal.md` |
-
-## The broadcast (the deployer signs)
-
-From an up-to-date checkout (`git pull --ff-only` first; `contracts/lib` must be present):
-
-```bash
-cd floor && forge script script/DeployMainnetFloorV2.s.sol \
-  --rpc-url https://rpc.mainnet.chain.robinhood.com \
-  --broadcast --slow --sender 0x9e643731dc9D8795573Aa34C410664407FfDC440 --interactives 1
-```
-
-Writes `rehearsal/floor-v2-mainnet.json`. Nothing on the live core changes. The Desk deploy is
-independent of it (each script reads the deployer nonce at run time).
-
-## After the deploy, in order
-
-1. **Check the real router on a fork:** `FLOOR_V2=<address> FORK_RPC=<metered url> bash script/rehearse_v2.sh`
-   (moves Playbooks onto it on the fork only).
-2. **Verify on Blockscout:** `bash script/verify_blockscout.sh`, from the checkout that broadcast.
-3. **Commit** `rehearsal/floor-v2-mainnet.json`; `ADDRESSES.md` row; `frontend/src/lib/floor.ts`
-   `router` = v2 (the site already reads `basketLegs` when the router has it).
-4. **Playbooks onto v2** (deployer signs): `PlaybookEngine(0x3b39…8438).setFloor(<v2>)`.
-5. **Keeper flush onto v2:** GitHub secret `FLOOR_ROUTER` = v2 address.
-6. **Last v1 fees:** the deployer calls `flushFees(0)` on v1 once (about 9.5 USDG; the keeper only
-   flushes above 20). v1 stays deployed; anyone can still trade its seven names there.
-7. DefiLlama adapter (PR DefiLlama/DefiLlama-Adapters#20930) lists the v1 address: add v2 on the next update.

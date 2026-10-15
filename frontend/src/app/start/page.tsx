@@ -6,12 +6,14 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { CAMPAIGN_ON_SITE } from "@/lib/campaign";
 
 export default function StartRedirect() {
   const router = useRouter();
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("broker");
-    router.replace(q ? `/campaign?broker=${encodeURIComponent(q)}` : "/campaign");
+    if (!CAMPAIGN_ON_SITE) router.replace("/");
+    else router.replace(q ? `/campaign?broker=${encodeURIComponent(q)}` : "/campaign");
   }, [router]);
   return (
     <p className="text-ink-soft text-sm p-6">Taking you to the desk…</p>

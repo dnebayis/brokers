@@ -29,13 +29,13 @@ live on testnet, mainnet deploy script rehearsed on a fork; mint price confirmed
 COAT), waiting for the broadcast. Current step, launch parameters and runbook:
 [desk/STATUS.md](desk/STATUS.md).
 
-## In progress: The Floor v2
+## The Floor v2 (live 2026-10-15)
 
-The live Floor (v1.3) cannot buy the Congress basket since epoch 59 (2026-10-08): four of its
-six names have no pool on it and v1 reverts the whole buy. v2 skips such names, hands them back
-on sells, is wired to all 26 v3 names and brings the Desk audit's swap fixes and an ETH/USD
-floor. Built, 37 unit/fuzz tests, rehearsed on a mainnet fork 8/8; waiting for the broadcast.
-Runbook: [floor/STATUS.md](floor/STATUS.md).
+The Floor moved to v2 (`0xb0614880C99a24ebE97379237D8044130c873B4a`): v1.3 could not buy the
+Congress basket after epoch 59 because four names had no pool on it. v2 skips such names and
+hands them back on sells, routes all 26 v3 names and carries the Desk audit's swap fixes.
+Playbooks are suspended the same day (keeper stage off, panel off the site) and the sponsored
+Geez desk page is off the site. Details: [floor/STATUS.md](floor/STATUS.md).
 
 ## Metadata
 
@@ -95,7 +95,7 @@ strands funds. The Congress indexer republishes the basket hourly; an invalid sn
 never replace the last valid basket. **Paused 2026-10-09** (repository variable
 `INDEXER_PAUSED=1`, founder decision: no demand for the signal yet, the disclosure feed cost
 money every week): the basket is frozen at epoch 59 (META 50%, NVDA 36.3%, PLTR 5.9%, MSTR 3.6%,
-INTC 2.1%, TSLA 2.1%); the engine, Playbooks and the Desk keep trading it (the Floor's basket buy needs v2, see above); the
+INTC 2.1%, TSLA 2.1%); the engine, the Floor and the Desk keep trading it; the
 scorecard and activation files are still published each pass; the earlier-signal poll is off
 (`UW_SIGNAL_ENABLED=0`). Set `INDEXER_PAUSED=0` with a valid disclosure key to resume. All the value-moving entry points are permissionless —
 if our automation stops, anyone can call them.

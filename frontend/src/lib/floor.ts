@@ -1,8 +1,8 @@
 import type { Address } from "viem";
 import { ACTIVE_NETWORK } from "./chains";
 
-// Trade-terminal config. LIVE on mainnet since 2026-08-27 (router deployed, smoke-tested
-// on-chain, keeper flush armed). The testnet addresses are the staging deployment used to
+// Trade-terminal config. LIVE on mainnet since 2026-08-27; the router is v2 since 2026-10-15
+// (skips basket names without a pool instead of reverting; floor/STATUS.md). The testnet addresses are the staging deployment used to
 // exercise the full flow end to end.
 export const FLOOR: {
   live: boolean;
@@ -19,7 +19,7 @@ export const FLOOR: {
   router:
     ACTIVE_NETWORK === "testnet"
       ? "0x927E23B683AcBbeB7F2FbBFa035aF80acfE0b31a"
-      : "0x478F22A32663cF37702d65352A7579A73e61FDc7",
+      : "0xb0614880C99a24ebE97379237D8044130c873B4a", // v2 (2026-10-15); v1.3 was 0x478F22A3
   usdg:
     ACTIVE_NETWORK === "testnet"
       ? "0xca71484e6FA828dc261C7b4e902d3DF47542aDa4"

@@ -13,6 +13,7 @@ import { useTx } from "@/lib/useTx";
 import { client, waitForSuccessfulReceipt, txEvents } from "@/lib/client";
 import { useOwnedBrokers } from "@/lib/useOwnedBrokers";
 import { PlaybookPanel } from "@/components/PlaybookPanel";
+import { PLAYBOOKS_ON_SITE } from "@/lib/playbooks";
 import { useBrokerBacking } from "@/lib/useBrokerBacking";
 import { useBrokerCoat } from "@/lib/useBrokerCoat";
 import { useCoatPrice, usdLabel } from "@/lib/useCoatPrice";
@@ -1031,11 +1032,13 @@ export function ActivateTab() {
       {!info && <StatusLine msg={act.msg} kind={act.kind} hash={act.hash} />}
       {!info && <StatusLine msg={claimTx.msg} kind={claimTx.kind} hash={claimTx.hash} />}
 
-      {/* ── 3. Playbooks: standing orders the hourly engine executes per Broker ── */}
-      <PlaybookPanel
-        brokers={playbookBrokers}
-        walletsById={walletsById as Record<string, `0x${string}` | undefined>}
-      />
+      {/* ── 3. Playbooks: standing orders the hourly engine executes per Broker (suspended) ── */}
+      {PLAYBOOKS_ON_SITE && (
+        <PlaybookPanel
+          brokers={playbookBrokers}
+          walletsById={walletsById as Record<string, `0x${string}` | undefined>}
+        />
+      )}
 
       {/* ── 4. Everything at once + power tools: at the top of the side panel, out of the
              portfolio's way. The card keeps this component's state, so it is portalled into

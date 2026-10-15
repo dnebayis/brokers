@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { CAMPAIGN } from "@/lib/campaign";
+import { notFound } from "next/navigation";
+import { CAMPAIGN, CAMPAIGN_ON_SITE } from "@/lib/campaign";
 
 // Public since the campaign was announced on both sides: indexable, linked from the app's
 // navigation, with its own preview card. Before a campaign goes live the page still renders
@@ -17,5 +18,6 @@ export const metadata: Metadata = {
 };
 
 export default function CampaignLayout({ children }: { children: React.ReactNode }) {
+  if (!CAMPAIGN_ON_SITE) notFound();
   return children;
 }
