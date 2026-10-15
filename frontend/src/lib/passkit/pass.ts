@@ -99,7 +99,7 @@ export function buildPassJson(p: PassInput): Record<string, unknown> {
   backFields.push(
     { key: "wallet", label: "BROKER WALLET", value: p.wallet },
     { key: "owner", label: "OWNER", value: p.owner },
-    { key: "site", label: "MY BROKERS", value: `${p.siteOrigin}/#activate` },
+    { key: "site", label: "MY BROKERS", value: `${p.siteOrigin}/activate` },
     { key: "card", label: "PUBLIC CARD", value: `${p.siteOrigin}/card/${p.id}` },
     { key: "explorer", label: "CHECK THE CHAIN", value: `${p.explorerBase}/address/${p.wallet}` },
     {

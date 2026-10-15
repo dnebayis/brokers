@@ -6,6 +6,7 @@ import { EXPLORER_BASE, explorerTx, explorerAddress } from "@/lib/chains";
 import { boosterAbi, buybackBurnerAbi, erc20Abi } from "@/lib/abis";
 import { publicClient as client } from "@/lib/client";
 import { useStoredQuery } from "@/lib/useStoredQuery";
+import { readLogWindows } from "@/lib/logRange";
 
 // Static, always-true facts anyone can verify on the explorer. These are structural properties
 // of the deployed contracts (immutable), not live numbers — so they never go stale.
@@ -72,23 +73,14 @@ export function ProofPanel() {
     staleTime: 180_000,
     refetchInterval: 180_000,
     queryFn: async () => {
-      // Both event streams are sparse (hourly keeper pokes; rare in-band buybacks), so a single
-      // full-range query per event is cheap and returns the complete history.
+      // Both event streams are sparse (hourly keeper pokes; rare in-band buybacks), so the
+      // complete history is cheap; it is read in windows under the RPC's per-request span cap.
+      const head = await client.getBlockNumber();
       const [burns, buys] = await Promise.all([
-        client.getContractEvents({
-          address: ADDR.buybackBurner,
-          abi: buybackBurnerAbi,
-          eventName: "BuybackExecuted",
-          fromBlock: BROKER_DEPLOYMENT_BLOCK,
-          toBlock: "latest",
-        }),
-        client.getContractEvents({
-          address: ADDR.booster,
-          abi: boosterAbi,
-          eventName: "Bought",
-          fromBlock: BROKER_DEPLOYMENT_BLOCK,
-          toBlock: "latest",
-        }),
+        readLogWindows(BROKER_DEPLOYMENT_BLOCK, head, (fromBlock, toBlock) =>
+          client.getContractEvents({ address: ADDR.buybackBurner, abi: buybackBurnerAbi, eventName: "BuybackExecuted", fromBlock, toBlock })),
+        readLogWindows(BROKER_DEPLOYMENT_BLOCK, head, (fromBlock, toBlock) =>
+          client.getContractEvents({ address: ADDR.booster, abi: boosterAbi, eventName: "Bought", fromBlock, toBlock })),
       ]);
 
       // Resolve symbol + decimals once per distinct stock token (multicall-batched).

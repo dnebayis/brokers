@@ -7,6 +7,7 @@ import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { brokerAbi } from "./abis";
 import { publicClient as client } from "./client";
 import { alchemyOwnedTokenIds } from "./alchemy";
+import { readLogWindows } from "./logRange";
 
 // `active: null` means the chain did not answer, NOT that the Broker is off. Rendering an
 // unanswered read as "OFF" was showing people's working Brokers as switched off whenever the
@@ -61,12 +62,9 @@ async function fetchOwned(ownerAddress: Address, ownerKey: string): Promise<Owne
       try {
         // ERC-721 Transfer logs are authoritative and return only this wallet's inbound IDs.
         // This replaces a 1,776-ID ownerOf scan when a third-party NFT API is delayed or denied.
-        const inbound = await client.getLogs({
-          address: ADDR.broker,
-          event: brokerAbi[0],
-          args: { to: ownerAddress },
-          fromBlock: BROKER_DEPLOYMENT_BLOCK,
-        });
+        const head = await client.getBlockNumber();
+        const inbound = await readLogWindows(BROKER_DEPLOYMENT_BLOCK, head, (fromBlock, toBlock) =>
+          client.getLogs({ address: ADDR.broker, event: brokerAbi[0], args: { to: ownerAddress }, fromBlock, toBlock }));
         candidateIds = [...new Set(inbound.map((log) => log.args.tokenId).filter((id): id is bigint => id !== undefined))];
       } catch {
         try {

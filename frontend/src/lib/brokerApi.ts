@@ -3,6 +3,7 @@ import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { brokerAbi, boosterAbi, erc20Abi } from "./abis";
 import { alchemyOwnedTokenIds } from "@/lib/alchemy";
 import { publicClient } from "./client";
+import { readLogWindows } from "./logRange";
 
 // Server-side reads behind the public Broker API (/api/broker/[id],
 // /api/wallet/[address]/brokers). Everything here is re-derivable by anyone from the
@@ -219,12 +220,9 @@ export async function walletBrokers(address: string): Promise<OwnedBrokerRow[] |
   } catch (err) {
     mark(`nft api failed (${String(err).slice(0, 80)}), scanning transfer logs`);
     try {
-      const inbound = await publicClient.getLogs({
-        address: ADDR.broker,
-        event: brokerAbi[0],
-        args: { to: address },
-        fromBlock: BROKER_DEPLOYMENT_BLOCK,
-      });
+      const head = await publicClient.getBlockNumber();
+      const inbound = await readLogWindows(BROKER_DEPLOYMENT_BLOCK, head, (fromBlock, toBlock) =>
+        publicClient.getLogs({ address: ADDR.broker, event: brokerAbi[0], args: { to: address }, fromBlock, toBlock }));
       candidateIds = [...new Set(inbound.map((log) => log.args.tokenId).filter((id): id is bigint => id !== undefined))];
       mark(`transfer logs gave ${candidateIds.length} candidates`);
     } catch (err) {

@@ -9,6 +9,7 @@ import { ADDR } from "./config";
 import { GIFTS, giftVaultAbi, giftsReady, nftAbi } from "./gifts";
 import { publicClient as client } from "./client";
 import { useStoredQuery } from "./useStoredQuery";
+import { readLogWindows } from "./logRange";
 
 export type Gift = {
   round: number;
@@ -63,7 +64,9 @@ async function loadGiftFeed(): Promise<GiftFeed> {
       { address: vault, abi: giftVaultAbi, functionName: "open" },
     ],
   });
-  const logs = await client.getLogs({ address: vault, event: GIFTED, fromBlock: GIFTS.fromBlock });
+  const head = await client.getBlockNumber();
+  const logs = await readLogWindows(GIFTS.fromBlock, head, (fromBlock, toBlock) =>
+    client.getLogs({ address: vault, event: GIFTED, fromBlock, toBlock }));
   const blocks = [...new Set(logs.map((l) => l.blockNumber))];
   const stamps = new Map<bigint, number>();
   await Promise.all(
@@ -127,12 +130,15 @@ export function useBrokerGifts(brokers: { id: bigint; wallet?: string }[], reloa
     }
     (async () => {
       try {
-        const logs = await client.getLogs({
-          address: GIFTS.vault as `0x${string}`,
-          event: GIFTED,
-          args: { brokerId: withWallet.map((b) => b.id) },
-          fromBlock: GIFTS.fromBlock,
-        });
+        const head = await client.getBlockNumber();
+        const logs = await readLogWindows(GIFTS.fromBlock, head, (fromBlock, toBlock) =>
+          client.getLogs({
+            address: GIFTS.vault as `0x${string}`,
+            event: GIFTED,
+            args: { brokerId: withWallet.map((b) => b.id) },
+            fromBlock,
+            toBlock,
+          }));
         if (logs.length === 0) {
           if (!stale) setGifts([]);
           return;

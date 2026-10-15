@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RoutingNotice } from "@/components/trade/RoutingNotice";
 import { ADDR, CONTRACTS_FOR_DOCS, PARAMS } from "@/lib/config";
@@ -264,7 +265,7 @@ export function DocsTab() {
         Rewards are <b>volume-funded, not guaranteed yield</b> — if trading dies, the Booster has nothing to
         spend. Access to third-party assets and venues can depend on their terms and applicable law. We use the descriptive name &quot;The Politician,&quot; never a person&apos;s name or likeness,
         and imply no affiliation with Robinhood. Not financial or legal advice. Who may use the stock token features,
-        where they are not offered, and the NFT art licence are set out in the <a className="underline" href="/terms">terms</a>.
+        where they are not offered, and the NFT art licence are set out in the <Link className="underline" href="/terms">terms</Link>.
       </P>
     </div>
   );

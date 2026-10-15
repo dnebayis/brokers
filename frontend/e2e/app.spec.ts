@@ -55,7 +55,7 @@ test("home and Activate render their live headings", async ({ page }) => {
 });
 
 test("Docs exposes tokenomics charts, randomness limits and two-NFT accounting", async ({ page }) => {
-  await page.goto("/#docs");
+  await page.goto("/docs");
   await page.getByRole("tab", { name: "Docs" }).click();
   await expect(page.getByRole("heading", { name: "Random IDs and fairness" })).toBeVisible();
   await expect(page.getByText(/timestamp alone is never used/i)).toBeVisible();

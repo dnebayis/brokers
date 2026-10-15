@@ -13,6 +13,7 @@ import { parseAbiItem } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { publicClient as client } from "./client";
 import { useStoredQuery } from "./useStoredQuery";
+import { readLogWindows } from "./logRange";
 
 export type LeaderEntry = { rank: number; id: bigint; sinceBlock: bigint; sinceMs: number | null };
 
@@ -29,9 +30,13 @@ function after(a: { blockNumber: bigint; logIndex: number }, b: { blockNumber: b
 }
 
 async function loadLeaderboard(limit: number): Promise<StoredEntry[]> {
+  // one pinned head for both replays, read in windows under the RPC's span cap
+  const head = await client.getBlockNumber();
   const [acts, deacts] = await Promise.all([
-    client.getLogs({ address: ADDR.broker, event: ACTIVATED, fromBlock: BROKER_DEPLOYMENT_BLOCK }),
-    client.getLogs({ address: ADDR.broker, event: DEACTIVATED, fromBlock: BROKER_DEPLOYMENT_BLOCK }),
+    readLogWindows(BROKER_DEPLOYMENT_BLOCK, head, (fromBlock, toBlock) =>
+      client.getLogs({ address: ADDR.broker, event: ACTIVATED, fromBlock, toBlock })),
+    readLogWindows(BROKER_DEPLOYMENT_BLOCK, head, (fromBlock, toBlock) =>
+      client.getLogs({ address: ADDR.broker, event: DEACTIVATED, fromBlock, toBlock })),
   ]);
 
   // Per token, keep the latest state-changing event. If it's an Activation, the token

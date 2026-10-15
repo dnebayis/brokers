@@ -6,6 +6,7 @@ import Link from "next/link";
 import { TRADE_TAB_ENABLED } from "@/lib/floor";
 import { CAMPAIGN } from "@/lib/campaign";
 import { DESK_TAB_ENABLED } from "@/lib/desk";
+import { tabPath } from "@/lib/tabRoutes";
 
 export type TabId = "home" | "trade" | "desk" | "activate" | "feed" | "leaders" | "stats" | "roadmap" | "docs";
 
@@ -37,7 +38,7 @@ export function NavLinks({ current }: { current: "campaign" }) {
   return (
     <nav className="sticky top-0 z-30 bg-cream flex overflow-x-auto border-b-2 border-ink mt-6" aria-label="Sections">
       {TABS.map((t) => (
-        <Link key={t.id} href={`/#${t.id}`} className={`${item} text-ink-soft border-transparent hover:text-ink-strong`}>
+        <Link key={t.id} href={tabPath(t.id)} className={`${item} text-ink-soft border-transparent hover:text-ink-strong`}>
           <Icon name={t.icon} className="w-[15px] h-[15px]" />
           {t.label}
         </Link>

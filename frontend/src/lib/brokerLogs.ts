@@ -14,6 +14,7 @@
 import { parseAbiItem } from "viem";
 import { ADDR, BROKER_DEPLOYMENT_BLOCK } from "./config";
 import { publicClient as client } from "./client";
+import { readLogWindows } from "./logRange";
 
 export type ActivationLog = { block: number; by: string };
 export type ClaimLog = { block: number; token: string; amount: string };
@@ -48,8 +49,10 @@ function writeCache(id: string, v: BrokerLogs): void {
 
 async function scanOne(id: bigint, from: bigint, to: bigint): Promise<{ activations: ActivationLog[]; claims: ClaimLog[] }> {
   const [acts, claims] = await Promise.all([
-    client.getLogs({ address: ADDR.broker, event: ACTIVATED, args: { tokenId: id }, fromBlock: from, toBlock: to }),
-    client.getLogs({ address: ADDR.booster, event: CLAIMED, args: { tokenId: id }, fromBlock: from, toBlock: to }),
+    readLogWindows(from, to, (fromBlock, toBlock) =>
+      client.getLogs({ address: ADDR.broker, event: ACTIVATED, args: { tokenId: id }, fromBlock, toBlock })),
+    readLogWindows(from, to, (fromBlock, toBlock) =>
+      client.getLogs({ address: ADDR.booster, event: CLAIMED, args: { tokenId: id }, fromBlock, toBlock })),
   ]);
   return {
     activations: acts.map((l) => ({ block: Number(l.blockNumber), by: String(l.args.owner).toLowerCase() })),
