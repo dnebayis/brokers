@@ -8,9 +8,9 @@ _Updated 2026-10-15._
 |---|---|
 | keeper | the Playbooks stage is off: repository variable `PLAYBOOKS_PAUSED=1` blanks `PLAYBOOKS_ENGINE` in `keeper-schedule-mainnet.yml`. The keeper run that had started before the switch was cancelled and a fresh one dispatched (2026-10-15) |
 | site | the panel is off the Activate tab (`PLAYBOOKS_ON_SITE = false` in `frontend/src/lib/playbooks.ts`) |
-| chain | the engine (`0x3b39C832a906E7fE5292F6872c3D3f9eE8340438`) has 780 enrolments. It has no function that lets the deployer delete them: only each Broker's owner can call `clearPlaybook`. What the deployer can do is take the keeper role away |
+| chain | **keeper set to address(0) by the deployer, 2026-10-15** (tx `0x08ee387be0b8af2150e3414986f7aa0098ae026737c7d57f687af5e3315aed93`, block 89372202); read back: `keeper()` = 0x0, the relay's `run` reverts `NotKeeper`. The 780 enrolments stay on chain; the engine has no deployer-side delete (only a Broker's owner can `clearPlaybook`) |
 
-## The on-chain shutdown (the deployer signs)
+## The on-chain shutdown (done 2026-10-15)
 
 ```bash
 cast send 0x3b39C832a906E7fE5292F6872c3D3f9eE8340438 'setKeeper(address)' 0x0000000000000000000000000000000000000000 \

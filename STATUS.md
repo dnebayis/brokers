@@ -34,7 +34,7 @@ COAT), waiting for the broadcast. Current step, launch parameters and runbook:
 The Floor moved to v2 (`0xb0614880C99a24ebE97379237D8044130c873B4a`): v1.3 could not buy the
 Congress basket after epoch 59 because four names had no pool on it. v2 skips such names and
 hands them back on sells, routes all 26 v3 names and carries the Desk audit's swap fixes.
-Playbooks are cancelled the same day (keeper stage off, panel off the site, on-chain keeper role to be removed; [playbooks/STATUS.md](playbooks/STATUS.md)) and the sponsored
+Playbooks are cancelled the same day (keeper stage off, panel off the site, on-chain keeper role removed; [playbooks/STATUS.md](playbooks/STATUS.md)) and the sponsored
 Geez desk page is off the site. Details: [floor/STATUS.md](floor/STATUS.md).
 
 ## Metadata

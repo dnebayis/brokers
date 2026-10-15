@@ -15,7 +15,7 @@ _Updated 2026-10-15._
 | site | `frontend/src/lib/floor.ts` router = v2 |
 | keeper fee flush | `FLOOR_ROUTER` secret = v2 |
 | v1.3 fees | flushed by the deployer (v1 holds 0 USDG) |
-| Playbooks | **cancelled** (founder, 2026-10-15): keeper stage off, panel off the site, on-chain keeper to address(0); see `playbooks/STATUS.md`. The engine still points at v1.3 |
+| Playbooks | **cancelled** (founder, 2026-10-15): keeper stage off, panel off the site, on-chain keeper set to address(0) (tx `0x08ee387b…aed93`); see `playbooks/STATUS.md`. The engine still points at v1.3 |
 | DefiLlama adapter | lists the v1 address; add v2 on the next update of PR DefiLlama/DefiLlama-Adapters#20930 |
 
 v1.3 (`0x478F22A32663cF37702d65352A7579A73e61FDc7`) stays deployed: its seven names still trade
