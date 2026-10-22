@@ -50,10 +50,34 @@ def shadow_history_row(divergence, smart_basket, conviction_basket, vetoed, mode
     }, sort_keys=True)
 
 
+def _redate_sample(rows, today=None):
+    """Shift the bundled sample so its newest trade is yesterday, gaps between rows kept.
+
+    The basket only counts trades inside the trailing window, so fixed sample dates aged out
+    of it: on 2026-10-22 every sample row was older than 90 days, `--sample` produced an empty
+    basket and the tests built on it failed although nothing in the code had changed.
+    """
+    from datetime import date, timedelta
+
+    keys = ("transactionDate", "disclosureDate")
+    dates = [date.fromisoformat(r[k][:10]) for r in rows for k in keys if r.get(k)]
+    if not dates:
+        return rows
+    shift = ((today or datetime.now(timezone.utc).date()) - timedelta(days=1)) - max(dates)
+    out = []
+    for r in rows:
+        r = dict(r)
+        for k in keys:
+            if r.get(k):
+                r[k] = (date.fromisoformat(r[k][:10]) + shift).isoformat()
+        out.append(r)
+    return out
+
+
 def _load_trades(sample: bool):
     if sample:
         path = os.path.join(os.path.dirname(__file__), "sample.json")
-        return "sample", json.load(open(path))
+        return "sample", _redate_sample(json.load(open(path)))
     from sources import fetch_live
     return fetch_live()
 

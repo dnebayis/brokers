@@ -688,6 +688,22 @@ class SendSignedTests(unittest.TestCase):
         self.assertIn("0x8b05c814", simulate_reason(bad, "0x1"))
 
 
+class SampleRedateTests(unittest.TestCase):
+    """The bundled sample must never age out of the trailing window."""
+
+    def test_newest_is_yesterday_and_gaps_are_kept(self):
+        from datetime import date
+        from run import _redate_sample
+        rows = [{"transactionDate": "2026-04-01", "disclosureDate": "2026-04-20"},
+                {"transactionDate": "2026-07-22"}, {"symbol": "X"}]
+        out = _redate_sample(rows, today=date(2027, 1, 10))
+        self.assertEqual(out[1]["transactionDate"], "2027-01-09")
+        self.assertEqual(out[0]["transactionDate"], "2026-09-19")   # 112 days before, as in the file
+        self.assertEqual(out[0]["disclosureDate"], "2026-10-08")
+        self.assertEqual(out[2], {"symbol": "X"})
+        self.assertEqual(rows[1]["transactionDate"], "2026-07-22")  # the bundled rows are not mutated
+
+
 class IndexerMainPreflightTests(unittest.TestCase):
     """main() must survive the on-chain pre-flight block, which `--sample` runs skip. The
     2026-09-03 typo str(poke_threshold, filed_window=...) crashed every mainnet pass while
